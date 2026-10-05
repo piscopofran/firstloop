@@ -787,6 +787,56 @@
   /* ----- end clips ----- */
 
   /* ===== feature: pads (css) ===== */
+  .spadbody{padding:0 17px 16px;display:flex;flex-direction:column;gap:11px;}
+  .spads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  @media (min-width:860px){ .spads{grid-template-columns:repeat(8,minmax(0,1fr));} }
+  .spad{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .spadhit{appearance:none;cursor:pointer;font:inherit;position:relative;min-width:0;width:100%;
+    min-height:78px;border-radius:13px;border:1px dashed var(--line-2);background:var(--surface-2);
+    color:var(--ink-3);padding:20px 5px 7px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2px;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+    -webkit-touch-callout:none;transition:transform .06s ease,background .1s ease;}
+  .spadkey{position:absolute;top:6px;left:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+    color:var(--ink-3);}
+  .spadbtn{position:absolute;top:6px;right:8px;font-size:9.5px;font-weight:700;color:var(--ink-3);}
+  .spadname{font-family:Sora,sans-serif;font-weight:700;font-size:12.5px;line-height:1.2;max-width:100%;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .spadnote{font-size:10.5px;line-height:1.2;color:var(--ink-3);text-align:center;}
+  .spad[data-state="loaded"] .spadhit,.spad[data-state="asleep"] .spadhit{border-style:solid;
+    border-color:color-mix(in srgb,var(--pt) 55%,transparent);
+    background:color-mix(in srgb,var(--pt) 20%,var(--surface-2));color:var(--ink);}
+  .spad[data-state="asleep"] .spadhit{background:color-mix(in srgb,var(--pt) 9%,var(--surface-2));}
+  .spad[data-state="loaded"] .spadkey,.spad[data-state="asleep"] .spadkey,
+  .spad[data-state="asleep"] .spadnote{color:var(--ink-2);}
+  .spad[data-hit="true"] .spadhit{background:var(--pt);color:var(--bg);transform:scale(.96);
+    box-shadow:0 0 24px -6px var(--pt);}
+  .spad[data-hit="true"] .spadkey,.spad[data-hit="true"] .spadnote,.spad[data-hit="true"] .spadbtn{color:var(--bg);}
+  .spad[data-open="true"] .spadhit{border-color:var(--ink-2);}
+  .spadfoot{display:flex;gap:4px;min-height:28px;}
+  .spadfoot button{appearance:none;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700;
+    border:1px solid var(--line-2);background:transparent;color:var(--ink-2);border-radius:7px;
+    padding:3px 4px;min-height:28px;min-width:0;}
+  .spadfoot button:hover{border-color:var(--ink-2);color:var(--ink);}
+  .spadfoot .spadren{flex:1 1 auto;}
+  .spadfoot .spadclr{flex:0 0 28px;}
+  .spadedit{border:1px solid var(--line);border-radius:13px;background:var(--surface-2);padding:11px 12px;
+    display:flex;flex-direction:column;gap:9px;}
+  .spadedit .spadrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .spadedit .spadwho{font-size:12px;font-weight:600;color:var(--ink-2);flex:0 0 100%;}
+  @media (min-width:620px){ .spadedit .spadwho{flex:0 0 170px;} }
+  .spadedit .spadttl{font-size:13px;font-weight:700;color:var(--ink);flex:1 1 auto;}
+  .spadedit .tinybtn{min-width:32px;}
+  .spadedit input{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line-2);border-radius:8px;padding:6px 9px;min-width:0;flex:1 1 120px;max-width:220px;}
+  .spadtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .spadchop{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .spadchop select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:var(--surface-2);
+    border:1px solid var(--line-2);border-radius:9px;padding:6px 8px;max-width:170px;min-height:32px;}
+  #spadq[aria-pressed="true"],#spadteach[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  #sec-pads[data-teach="pick"] .spadhit,body[data-padteach="pick"] #livepads .pad{outline:2px dashed var(--ink-2);outline-offset:2px;}
+  #sec-pads[data-teach="wait"] .spad[data-teach="true"] .spadhit{outline:2px solid var(--good);outline-offset:2px;}
+  .spadline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .spadline .sub{margin:0;}
   /* ----- end pads ----- */
 
   /* ===== feature: shelf (css) ===== */
@@ -1039,6 +1089,34 @@
   <!-- end styles -->
 
   <!-- ===== feature: pads (html, Make area) ===== -->
+  <section class="card" id="sec-pads" data-tab="make">
+    <div class="card-head">
+      <div>
+        <h2>Pads
+          <button class="help" type="button" data-help="pads" aria-expanded="false" aria-label="What are pads?">?</button>
+        </h2>
+        <p class="sub">Eight pads. Each one holds a short sound. Tap a pad or press its letter key to play it.</p>
+      </div>
+      <div class="headbtns">
+        <button class="ghost" id="spadq" type="button" aria-pressed="true" title="Wait for the next square of the song, so a pad lands in time (quantise)">Play in time: on</button>
+      </div>
+    </div>
+    <p class="explain" id="help-pads" hidden>A pad is a button that holds one sound, like the sampler on a DJ deck. <strong>Capture this bar</strong> copies the bar that is playing (or the bar you last tapped in the track) onto the next empty pad. <strong>Chop it onto the pads</strong> cuts one of your recordings into eight equal pieces &mdash; a slicer &mdash; so a sentence becomes eight sounds you can play in any order. Tap an empty pad to put one drum or one note on it. With <strong>Play in time</strong> on, a pad waits for the next square of the song, so it lands in time (quantise). Pads are for playing: they are not written into the grid and they are not in the file when you save the song. <strong>Record a live take</strong> in the Mix area records what comes out of the speakers, so it keeps your pad playing too. Pad sounds stay on this device. <strong>Teach a button</strong>: with a USB instrument plugged in, tap a pad, then hit a button on the instrument, and that button plays that pad from then on. The live effects in the Mix area can be taught the same way.</p>
+    <div class="spadbody">
+      <div class="spads" id="spads"></div>
+      <div class="spadedit" id="spadedit" hidden></div>
+      <div class="spadtools">
+        <button class="ghost" id="spadcap" type="button">Capture this bar</button>
+        <span class="spadchop">
+          <select id="spadtrack" aria-label="Which recording to chop"></select>
+          <button class="ghost" id="spadchopgo" type="button">Chop it onto the pads</button>
+        </span>
+        <button class="ghost" id="spadteach" type="button" aria-pressed="false">Teach a button</button>
+      </div>
+      <p class="sub" id="spadmidi" hidden></p>
+      <div class="spadline" id="spadtaught" hidden></div>
+    </div>
+  </section>
   <!-- end pads -->
 
   <div class="starts" id="sec-starts" hidden data-tab="make">
@@ -1757,6 +1835,7 @@
         });
         if(legacyAudio){ legacyAudio = false; markDirty(); }
         buildAudioUI(); buildLibrary(); buildTrack(); buildFaders();
+        if(typeof padsWoke === "function") padsWoke();
         if(playing) scheduleVoice(ac.currentTime + 0.05, 0);
       };
       rq.onerror = function(){};
@@ -3652,6 +3731,7 @@
   }
 
   function onMIDI(e){
+    if(typeof padsOnMIDI === "function" && padsOnMIDI(e)) return;
     var d = e.data; if(!d || d.length < 3) return;
     var cmd = d[0] & 0xF0, note = d[1], vel = d[2];
     if(cmd !== 0x90 || vel === 0) return;    // note-on only
@@ -4888,6 +4968,7 @@
         });
       }
     });
+    if(typeof padsSongGone === "function") padsSongGone(sg);
     if(sg === cur){
       cur = null;
       if(songs.length){ var nxt = songs[Math.min(i, songs.length - 1)]; openSong(nxt); }
@@ -5804,6 +5885,7 @@
     var want = {}, a = sg.x && sg.x.audio;
     if(a) AUDIO_TRACKS.forEach(function(k){ if(a[k]) want[a[k]] = true; });
     (String(sg.code).match(/s:c\d+/g) || []).forEach(function(m){ want[m.slice(2)] = true; });
+    if(typeof padsClipIds === "function") padsClipIds(sg, want);
     return want;
   }
   function makeBackup(only){
@@ -5865,7 +5947,7 @@
             var n = parseInt(id.replace(/\D/g, ""), 10);
             if(n >= clipSeq) clipSeq = n + 1;
           }
-          writes.push({ id:id, name:String(c.name || "Sound").slice(0, 24), kind:c.kind === "sample" ? "sample" : "track",
+          writes.push({ id:id, name:String(c.name || "Sound").slice(0, 24), kind:c.kind === "sample" ? "sample" : (c.kind === "pad" ? "pad" : "track"),
                         rate:c.rate || 44100, chans:chans, slot:null });
         });
         try { window.localStorage.setItem("firstloop.clipseq", String(clipSeq)); } catch(e){}
@@ -5887,6 +5969,7 @@
           };
           Object.keys(remap).forEach(function(old){
             if(sg.x && sg.x.audio) AUDIO_TRACKS.forEach(function(k){ if(sg.x.audio[k] === old) sg.x.audio[k] = remap[old]; });
+            if(typeof padsRemap === "function") padsRemap(sg, old, remap[old]);
             sg.code = sg.code.split("s:" + old + ".").join("s:" + remap[old] + ".")
                              .split("s:" + old + "~").join("s:" + remap[old] + "~");
           });
@@ -6001,6 +6084,668 @@
   // ----- end clips -----
 
   // ===== feature: pads (js) =====
+  // Eight pads that each hold one short sound: a sampler. They are for playing
+  // along, so nothing here writes into the song grid or the exported file.
+  // The sounds are clip records of kind "pad" (same IndexedDB store as the
+  // recordings); which clip sits on which pad is saved with the song.
+  var PADN = 8, PADKEYS = ["q","w","e","r","a","s","d","f"];
+  var PADTINT = ["--thump","--snap","--tick","--clap","--bass","--chord","--melody","--good"];
+  var PADFX = { echo:"Echo", roll:"Stutter", muffle:"Muffle", build:"Build-up" };
+  var padMap = [];                 // per song: { id:clipId, name } or null, one per pad
+  var padGain = null, padVoices = [], padsAwake = false, padWant = -1;
+  var padQ = true, padBar = -1, padEdit = null, padSkipClick = 0, padChopArmed = 0;
+  var padMidi = {}, padTeach = null, padMidiAsked = false, padMidiSeen = 0;
+  try { padQ = window.localStorage.getItem("firstloop.padq") !== "off"; } catch(e){}
+  try {
+    var pmv = JSON.parse(window.localStorage.getItem("firstloop.padmidi") || "{}");
+    if(pmv && typeof pmv === "object") Object.keys(pmv).forEach(function(n){
+      if(/^\d+$/.test(n) && /^(p[0-7]|fx:(echo|roll|muffle|build))$/.test(pmv[n])) padMidi[n] = pmv[n];
+    });
+  } catch(e){}
+  function padBlank(){ padMap = []; for(var i = 0; i < PADN; i++) padMap.push(null); }
+  padBlank();
+  function padFree(){ for(var i = 0; i < PADN; i++) if(!padMap[i]) return i; return -1; }
+  function padLog(what){
+    LOG.pads = LOG.pads || {};
+    LOG.pads[what] = (LOG.pads[what] || 0) + 1;
+    if(what !== "hits" || LOG.pads.hits % 25 === 1) saveLog();
+  }
+  function padRendering(){ return !!ac && typeof ac.startRendering === "function"; }
+
+  EXTRA_HOOKS.push({
+    save:function(x){
+      x.pads = padMap.map(function(p){ return p ? { id:p.id, name:p.name } : null; });
+    },
+    load:function(x){
+      padBlank();
+      if(x && Array.isArray(x.pads)) x.pads.slice(0, PADN).forEach(function(p, i){
+        if(p && typeof p.id === "string") padMap[i] = { id:p.id, name:String(p.name || "Sound").slice(0, 16) };
+      });
+      padEdit = null; padWant = -1;
+      padsPaint();
+    }
+  });
+
+  // --- hooks called from outside this block ---
+  // restoreClips: the saved sounds are in memory now
+  function padsWoke(){
+    padsAwake = true;
+    padsPaint();
+    if(padWant >= 0){
+      var i = padWant; padWant = -1;
+      if(padMap[i] && clips[padMap[i].id] && !padRendering()) padFire(i, clips[padMap[i].id]);
+    }
+  }
+  // clipIdsOf: a song file carries its pad sounds too
+  function padsClipIds(sg, want){
+    var l = sg && sg.x && sg.x.pads;
+    if(Array.isArray(l)) l.forEach(function(p){ if(p && p.id) want[p.id] = true; });
+  }
+  // restoreBackup: a clip that had to be renumbered on the way in
+  function padsRemap(sg, oldId, newId){
+    var l = sg && sg.x && sg.x.pads;
+    if(Array.isArray(l)) l.forEach(function(p){ if(p && p.id === oldId) p.id = newId; });
+  }
+  function padUsedBy(id, skip){
+    if(cur && cur !== skip && padMap.some(function(p){ return p && p.id === id; })) return true;
+    return songs.some(function(sg){
+      if(sg === skip || sg === cur) return false;
+      var l = sg.x && sg.x.pads;
+      return Array.isArray(l) && l.some(function(p){ return p && p.id === id; });
+    });
+  }
+  function padDrop(id){
+    delete clips[id];
+    whenDB().then(function(){
+      try { if(CDB) CDB.transaction("clips","readwrite").objectStore("clips").delete(id); } catch(e){}
+    });
+  }
+  // a pad sound is only thrown away once no song has it on a pad
+  function padsForget(id){ if(id && !padUsedBy(id, null)) padDrop(id); }
+  // deleteSong: sg has just been taken out of the list
+  function padsSongGone(sg){
+    var l = (sg === cur) ? padMap : (sg.x && sg.x.pads);
+    if(!Array.isArray(l)) return;
+    l.slice().forEach(function(p){ if(p && p.id && !padUsedBy(p.id, sg)) padDrop(p.id); });
+  }
+
+  // --- making sounds for pads ---
+  // The same trick renderSong uses: point the audio globals at an offline
+  // context so the ordinary synth functions draw into it. This one builds its
+  // own small graph (tracks -> master, no studio knobs: a pad is played back
+  // through those live) and puts the globals back before rendering starts, so
+  // the song can keep playing while it works.
+  function padOffline(secs, fill, flat){
+    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if(!OC) return Promise.reject(new Error("no offline audio"));
+    if(padRendering()) return Promise.reject(new Error("busy"));
+    var off, err = null;
+    try { off = new OC(2, Math.ceil(secs * 44100), 44100); } catch(e){ return Promise.reject(e); }
+    var keep = { ac:ac, master:master, bus:bus, noiseBuf:noiseBuf };
+    try {
+      ac = off; noiseBuf = null;
+      master = off.createGain(); master.gain.value = 1; master.connect(off.destination);
+      bus = {};
+      TRACKS.forEach(function(tr){
+        var k = tr.id, g = off.createGain(), v = flat ? 0 : (toneAmt[k] || 0);
+        g.gain.value = flat ? 1 : laneGain(k);
+        var lp = off.createBiquadFilter(); lp.type = "lowpass";
+        lp.frequency.value = v < 0 ? 20000 * Math.pow(260/20000, -v) : 20000;
+        var hp = off.createBiquadFilter(); hp.type = "highpass";
+        hp.frequency.value = v > 0 ? 20 * Math.pow(3600/20, v) : 20;
+        g.connect(lp); lp.connect(hp); hp.connect(master);
+        bus[k] = g;
+      });
+      fill(off);
+    } catch(e2){ err = e2; }
+    ac = keep.ac; master = keep.master; bus = keep.bus; noiseBuf = keep.noiseBuf;
+    if(err) return Promise.reject(err);
+    return off.startRendering();
+  }
+  // a copy of part of a buffer, with soft edges so it does not click
+  function padCopy(buf, from, to, fadeOut, ceiling){
+    var n = Math.max(1, to - from), rate = buf.sampleRate;
+    var o = ac.createBuffer(buf.numberOfChannels, n, rate);
+    var fi = Math.min(Math.floor(rate * 0.003), n >> 1), fo = Math.min(Math.floor(rate * (fadeOut || 0.01)), n >> 1);
+    var gain = 1;
+    if(ceiling){ var pk = bufPeak(buf); if(pk > ceiling) gain = ceiling / pk; }
+    for(var c = 0; c < buf.numberOfChannels; c++){
+      var s = buf.getChannelData(c), d = o.getChannelData(c);
+      for(var i = 0; i < n; i++){
+        var x = (s[from + i] || 0) * gain;
+        if(i < fi) x *= i / fi;
+        if(i >= n - fo) x *= (n - 1 - i) / fo;
+        d[i] = x;
+      }
+    }
+    return o;
+  }
+  // where the sound in a buffer starts and stops: [first, last] sample, or null if silent
+  function padSpan(buf, floor){
+    var first = -1, last = -1;
+    for(var c = 0; c < buf.numberOfChannels; c++){
+      var d = buf.getChannelData(c), i;
+      for(i = 0; i < d.length; i++) if(Math.abs(d[i]) > floor){ if(first < 0 || i < first) first = i; break; }
+      for(i = d.length - 1; i >= 0; i--) if(Math.abs(d[i]) > floor){ if(i > last) last = i; break; }
+    }
+    return (first < 0 || last <= first) ? null : [first, last];
+  }
+  function padPut(i, buf, name){
+    var c = addClip(buf, String(name).slice(0, 16), "pad", null);
+    var old = padMap[i];
+    padMap[i] = { id:c.id, name:c.name };
+    if(old) padsForget(old.id);
+    markDirty();
+  }
+
+  function padWhichBar(){
+    if(playing && currentBar >= 0) return Math.min(currentBar, ORDER.length - 1);
+    if(padBar >= 0 && padBar < ORDER.length) return padBar;
+    return Math.max(0, Math.min(secStart(selSec), ORDER.length - 1));
+  }
+  function padCapture(){
+    if(padFree() < 0){ say("All eight pads are full. Clear one, then capture."); return; }
+    if(!audio()) return;
+    var btn = document.getElementById("spadcap"), b = padWhichBar();
+    btn.disabled = true;
+    ensureClips().then(function(){
+      var sd = stepDur(), barDur = STEPS * sd, loopLen = songSeconds();
+      return padOffline(barDur + 0.45, function(off){
+        for(var s = 0; s < STEPS; s++){
+          var nudge = (s % 2 === 1) ? (swing/100) * sd * 0.66 : 0;
+          fireStep(ORDER[b], s, 0.005 + s * sd + nudge);
+        }
+        AUDIO_TRACKS.forEach(function(k){
+          var c = clipOn(k);
+          if(!c || !bus[k]) return;
+          var v = off.createBufferSource();
+          v.buffer = c.buf; v.loop = true;
+          v.loopEnd = Math.min(c.buf.duration, loopLen);
+          v.connect(bus[k]);
+          v.start(0.005, v.loopEnd > 0 ? ((b * barDur) % v.loopEnd) : 0);
+          v.stop(0.005 + barDur);
+        });
+      }, false);
+    }).then(function(buf){
+      btn.disabled = false;
+      if(bufPeak(buf) < 0.003){ say("Bar " + (b + 1) + " has no sound in it, so there is nothing to capture."); return; }
+      var i = padFree();
+      if(i < 0){ say("All eight pads are full. Clear one, then capture."); return; }
+      padPut(i, padCopy(buf, 0, buf.length, 0.05, 0.9), "Bar " + (b + 1));
+      padsPaint(); padLog("capture");
+      say("Bar " + (b + 1) + " is on pad " + (i + 1) + ". Tap it, or press " + PADKEYS[i].toUpperCase() + ".");
+    }).catch(function(e){
+      btn.disabled = false;
+      say(e && e.message === "busy" ? "A file is being made. Try again when it is done."
+                                    : "That did not work on this device.");
+    });
+  }
+
+  function padLoadSound(i, spec){
+    if(!audio()) return;
+    var name = spec.drum
+      ? (DRUMS.filter(function(d){ return d.id === spec.drum; })[0] || { label:"Drum" }).label
+      : pitchOf(spec.lane).name.slice(0, 13) + " " + (spec.row + 1);
+    padOffline(1.9, function(){
+      if(spec.drum) DRUMFN[spec.drum](0.005);
+      else playNote(spec.lane, spec.row, 0.005);
+    }, true).then(function(buf){
+      var span = padSpan(buf, 0.0015);
+      if(!span){ say("That sound is not ready yet. Try once more in a moment."); return; }
+      var end = Math.min(buf.length, span[1] + Math.floor(buf.sampleRate * 0.03));
+      padPut(i, padCopy(buf, 0, end, 0.02), name);
+      if(padEdit && padEdit.i === i) padEdit = null;
+      padsPaint(); padLog("sound");
+      say(name + " is on pad " + (i + 1) + ".");
+      if(clips[padMap[i].id] && !padRendering()) padFire(i, clips[padMap[i].id]);
+    }).catch(function(e){
+      say(e && e.message === "busy" ? "A file is being made. Try again when it is done."
+                                    : "That did not work on this device.");
+    });
+  }
+
+  function padChop(){
+    var sel = document.getElementById("spadtrack"), go = document.getElementById("spadchopgo");
+    var k = sel.value;
+    if(!audio()) return;
+    var c = clipOn(k);
+    if(!c){
+      say(atrack[k] && !padsAwake ? "Waking your recordings. Press it again in a moment."
+        : "There is no recording on " + slotName(k) + " yet. Record or import one in the Mix area, then chop it here.");
+      return;
+    }
+    if(padMap.some(function(p){ return !!p; }) && Date.now() - padChopArmed > 6000){
+      padChopArmed = Date.now();
+      go.textContent = "Replace all eight pads";
+      setTimeout(function(){ if(Date.now() - padChopArmed >= 5900) go.textContent = "Chop it onto the pads"; }, 6000);
+      say("This puts eight new sounds on the pads in place of what is there. Press again to go ahead.");
+      return;
+    }
+    padChopArmed = 0; go.textContent = "Chop it onto the pads";
+    var pk = bufPeak(c.buf), span = pk > 0.004 ? padSpan(c.buf, Math.max(0.004, pk * 0.06)) : null;
+    if(!span){ say(c.name + " is silent, so there is nothing to chop."); return; }
+    var rate = c.buf.sampleRate, pad = Math.floor(rate * 0.02);
+    var a = Math.max(0, span[0] - pad), z = Math.min(c.buf.length, span[1] + pad);
+    var n = Math.floor((z - a) / PADN);
+    if(n < rate * 0.03){ say(c.name + " is too short to cut into eight pieces."); return; }
+    var old = padMap.slice();
+    for(var i = 0; i < PADN; i++){
+      var made = addClip(padCopy(c.buf, a + i * n, a + (i + 1) * n, 0.006), "Slice " + (i + 1), "pad", null);
+      padMap[i] = { id:made.id, name:made.name };
+    }
+    old.forEach(function(p){ if(p) padsForget(p.id); });
+    padEdit = null;
+    markDirty(); padsPaint(); padLog("chop");
+    say(c.name + " is cut into eight pieces. Play them in any order with Q W E R and A S D F.");
+  }
+
+  // --- playing ---
+  function padBus(){
+    if(!padGain){
+      padGain = ac.createGain(); padGain.gain.value = 0.9;
+      padGain.connect(fxIn || master);       // through the studio knobs, on to master and the live-take recorder
+    }
+    return padGain;
+  }
+  function padFlash(i){
+    var el = document.getElementById("spads");
+    el = el && el.children[i];
+    if(!el) return;
+    el.dataset.hit = "true";
+    setTimeout(function(){
+      var e2 = document.getElementById("spads"); e2 = e2 && e2.children[i];
+      if(e2) delete e2.dataset.hit;
+    }, 150);
+  }
+  function padFire(i, c){
+    var now = ac.currentTime, t = now + 0.003;
+    if(padQ && playing){
+      // the next square of the song
+      var g = nextTime, sd = stepDur(), guard = 0;
+      while(g - sd > now + 0.004 && guard++ < 16) g -= sd;
+      if(g > now) t = g;
+    }
+    var was = padVoices[i];
+    if(was){
+      try { was.g.gain.setTargetAtTime(0.0001, t, 0.004); was.src.stop(t + 0.04); } catch(e){}
+    }
+    var src = ac.createBufferSource(); src.buffer = c.buf;
+    var vg = ac.createGain(); vg.gain.value = 1;
+    src.connect(vg); vg.connect(padBus());
+    src.start(t);
+    padVoices[i] = { src:src, g:vg };
+    var wait = (t - now) * 1000;
+    if(wait > 12) setTimeout(function(){ padFlash(i); }, wait); else padFlash(i);
+    padLog("hits");
+  }
+  function padPress(i, how){
+    if(padTeach && padTeach.step === "pick" && how !== "midi"){ padTeachPick("p" + i); return; }
+    var slot = padMap[i];
+    if(!slot){
+      if(how === "tap"){ padEdit = (padEdit && padEdit.i === i && padEdit.mode === "menu") ? null : { i:i, mode:"menu" }; padsPaint(); }
+      else say("Pad " + (i + 1) + " is empty. Tap it to put a sound on it.");
+      return;
+    }
+    if(!audio()) return;
+    if(padRendering()){ say("A file is being made. The pads are back when it is done."); return; }
+    var c = clips[slot.id];
+    if(!c){
+      if(!padsAwake){
+        padWant = i;
+        say("Waking the pads. One moment.");
+        setTimeout(function(){ if(!padsAwake){ padsAwake = true; padWant = -1; padsPaint(); } }, 2500);
+      } else {
+        padMap[i] = null; markDirty(); padsPaint();
+        say("That sound is no longer on this device, so pad " + (i + 1) + " is empty again.");
+      }
+      return;
+    }
+    padFire(i, c);
+  }
+  function padClear(i){
+    var slot = padMap[i];
+    if(!slot) return;
+    var v = padVoices[i];
+    if(v){ try { v.src.stop(); } catch(e){} padVoices[i] = null; }
+    padMap[i] = null;
+    padsForget(slot.id);
+    if(padEdit && padEdit.i === i) padEdit = null;
+    markDirty(); padsPaint();
+    say("Pad " + (i + 1) + " is empty.");
+  }
+  function padRename(i, v){
+    var slot = padMap[i];
+    v = String(v || "").replace(/\s+/g, " ").trim().slice(0, 16);
+    if(!slot || !v) return;
+    slot.name = v;
+    var c = clips[slot.id];
+    if(c){ c.name = v; putClip(c); }
+    padEdit = null;
+    markDirty(); padsPaint();
+  }
+
+  // --- drawing ---
+  function padMidiFor(target){
+    var hit = null;
+    Object.keys(padMidi).forEach(function(n){ if(padMidi[n] === target) hit = n; });
+    return hit;
+  }
+  function padsTracks(){
+    var sel = document.getElementById("spadtrack");
+    if(!sel || document.activeElement === sel) return;
+    var was = sel.value, firstFull = null;
+    sel.innerHTML = "";
+    AUDIO_TRACKS.forEach(function(k){
+      var o = document.createElement("option"), c = clipOn(k);
+      o.value = k;
+      o.textContent = c ? c.name : (atrack[k] ? slotName(k) : slotName(k) + " (empty)");
+      if((c || atrack[k]) && !firstFull) firstFull = k;
+      sel.appendChild(o);
+    });
+    sel.value = (was && (clipOn(was) || atrack[was])) ? was : (firstFull || was || AUDIO_TRACKS[0]);
+  }
+  function padsEditPaint(){
+    var box = document.getElementById("spadedit");
+    if(!box) return;
+    box.innerHTML = "";
+    if(!padEdit){ box.hidden = true; return; }
+    box.hidden = false;
+    var i = padEdit.i;
+    function row(){ var r = document.createElement("div"); r.className = "spadrow"; box.appendChild(r); return r; }
+    function btn(host, text, fn, label){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tinybtn"; b.textContent = text;
+      if(label) b.setAttribute("aria-label", label);
+      b.addEventListener("click", fn);
+      host.appendChild(b);
+      return b;
+    }
+    var head = row(), ttl = document.createElement("span");
+    ttl.className = "spadttl";
+    head.appendChild(ttl);
+    btn(head, "Close", function(){ padEdit = null; padsPaint(); });
+    if(padEdit.mode === "name"){
+      ttl.textContent = "Name for pad " + (i + 1);
+      var r1 = row(), inp = document.createElement("input");
+      inp.type = "text"; inp.maxLength = 16; inp.value = padMap[i] ? padMap[i].name : "";
+      inp.setAttribute("aria-label", "Name for pad " + (i + 1));
+      inp.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); padRename(i, inp.value); }
+      });
+      r1.appendChild(inp);
+      btn(r1, "Save", function(){ padRename(i, inp.value); });
+      return;
+    }
+    ttl.textContent = "Put a sound on pad " + (i + 1);
+    var rd = row(), wd = document.createElement("span");
+    wd.className = "spadwho"; wd.textContent = "Drums: " + kitOf().name;
+    rd.appendChild(wd);
+    DRUMS.forEach(function(d){
+      btn(rd, d.label, function(){ padLoadSound(i, { drum:d.id }); });
+    });
+    LANES.forEach(function(l){
+      var r = row(), w = document.createElement("span");
+      w.className = "spadwho";
+      w.textContent = l.charAt(0).toUpperCase() + l.slice(1) + ": " + pitchOf(l).name;
+      r.appendChild(w);
+      for(var n = 0; n < ROWS; n++){
+        (function(rowN){
+          btn(r, String(rowN + 1), function(){ padLoadSound(i, { lane:l, row:rowN }); },
+              l + " note " + (rowN + 1) + " of " + ROWS + ", low to high");
+        })(n);
+      }
+    });
+    var foot = document.createElement("p");
+    foot.className = "sub"; foot.style.margin = "0";
+    foot.textContent = "Notes go from 1 (low) to 8 (high). Or use Capture this bar, or chop a recording.";
+    box.appendChild(foot);
+  }
+  function padsPaint(){
+    var host = document.getElementById("spads");
+    if(!host) return;
+    host.innerHTML = "";
+    for(var i = 0; i < PADN; i++){
+      var slot = padMap[i];
+      var state = !slot ? "empty" : (clips[slot.id] ? "loaded" : "asleep");
+      var el = document.createElement("div");
+      el.className = "spad"; el.dataset.i = i; el.dataset.state = state;
+      el.style.setProperty("--pt", "var(" + PADTINT[i] + ")");
+      if(padEdit && padEdit.i === i) el.dataset.open = "true";
+      if(padTeach && padTeach.target === "p" + i) el.dataset.teach = "true";
+      var hit = document.createElement("button");
+      hit.type = "button"; hit.className = "spadhit";
+      var key = PADKEYS[i].toUpperCase();
+      hit.setAttribute("aria-label", "Pad " + (i + 1) + ", key " + key + ", " +
+        (state === "empty" ? "empty. Put a sound on it" : slot.name + (state === "asleep" ? ". Tap to wake" : "")));
+      var k = document.createElement("span"); k.className = "spadkey"; k.textContent = key;
+      var nm = document.createElement("span"); nm.className = "spadname";
+      nm.textContent = slot ? slot.name : "Empty";
+      var nt = document.createElement("span"); nt.className = "spadnote";
+      nt.textContent = state === "empty" ? "add a sound" : (state === "asleep" ? "tap to wake" : "");
+      hit.appendChild(k); hit.appendChild(nm); hit.appendChild(nt);
+      var mn = padMidiFor("p" + i);
+      if(mn !== null){
+        var mb = document.createElement("span"); mb.className = "spadbtn"; mb.textContent = "btn " + mn;
+        hit.appendChild(mb);
+      }
+      el.appendChild(hit);
+      var foot = document.createElement("div"); foot.className = "spadfoot";
+      if(slot){
+        var ren = document.createElement("button");
+        ren.type = "button"; ren.className = "spadren"; ren.textContent = "Name";
+        ren.setAttribute("aria-label", "Name pad " + (i + 1));
+        var clr = document.createElement("button");
+        clr.type = "button"; clr.className = "spadclr"; clr.textContent = "×";
+        clr.setAttribute("aria-label", "Clear pad " + (i + 1));
+        foot.appendChild(ren); foot.appendChild(clr);
+      }
+      el.appendChild(foot);
+      host.appendChild(el);
+    }
+    padsEditPaint();
+    padsTracks();
+    var q = document.getElementById("spadq");
+    if(q){ q.setAttribute("aria-pressed", padQ ? "true" : "false"); q.textContent = "Play in time: " + (padQ ? "on" : "off"); }
+    var sec = document.getElementById("sec-pads"), tb = document.getElementById("spadteach");
+    if(sec){ if(padTeach) sec.dataset.teach = padTeach.step; else delete sec.dataset.teach; }
+    if(padTeach && padTeach.step === "pick") document.body.dataset.padteach = "pick"; else delete document.body.dataset.padteach;
+    if(tb){
+      tb.setAttribute("aria-pressed", padTeach ? "true" : "false");
+      tb.textContent = !padTeach ? "Teach a button" : (padTeach.step === "pick" ? "Tap a pad… (cancel)" : "Now hit a button… (cancel)");
+    }
+    var tl = document.getElementById("spadtaught");
+    if(tl){
+      var notes = Object.keys(padMidi);
+      tl.innerHTML = "";
+      tl.hidden = !notes.length;
+      if(notes.length){
+        var p = document.createElement("p"); p.className = "sub";
+        p.textContent = "Taught: " + notes.map(function(n){
+          return padTargetName(padMidi[n]) + " (button " + n + ")";
+        }).join(", ") + ".";
+        var fg = document.createElement("button");
+        fg.type = "button"; fg.className = "tinybtn"; fg.textContent = "Forget them";
+        fg.addEventListener("click", function(){
+          padMidi = {}; padMidiSave(); padsPaint();
+          say("The taught buttons are forgotten.");
+        });
+        tl.appendChild(p); tl.appendChild(fg);
+      }
+    }
+  }
+
+  // --- teaching hardware buttons (MIDI learn) ---
+  function padTargetName(tg){
+    return tg.charAt(0) === "p" ? "Pad " + (+tg.slice(1) + 1) : (PADFX[tg.slice(3)] || "Effect");
+  }
+  function padMidiSave(){
+    try { window.localStorage.setItem("firstloop.padmidi", JSON.stringify(padMidi)); } catch(e){}
+  }
+  function padMidiNote(msg){
+    var el = document.getElementById("spadmidi");
+    if(!el) return;
+    el.textContent = msg || ""; el.hidden = !msg;
+  }
+  // used only when the app is not already listening for an instrument
+  function padMidiIn(e){
+    if(midiOK === true) return;          // the main listener is on and calls padsOnMIDI itself
+    padsOnMIDI(e);
+  }
+  function padMidiOpen(quiet){
+    if(!navigator.requestMIDIAccess){
+      if(!quiet) padMidiNote("This browser cannot hear a plugged-in instrument, so buttons cannot be taught here. " +
+        "Chrome or Edge on a computer or an Android phone can. Safari, Firefox, iPhones and iPads cannot. The pads still work by tap and by key.");
+      return false;
+    }
+    if(midiOK === true || padMidiAsked) return true;
+    padMidiAsked = true;
+    navigator.requestMIDIAccess({ sysex:false }).then(function(access){
+      function hook(){
+        padMidiSeen = 0;
+        access.inputs.forEach(function(inp){ inp.onmidimessage = padMidiIn; padMidiSeen++; });
+      }
+      access.onstatechange = hook;
+      hook();
+      if(!quiet && !padMidiSeen && padTeach) say("No instrument is plugged in yet. Plug one in with USB and carry on.");
+    }, function(){
+      padMidiAsked = false;
+      if(!quiet){
+        padTeach = null; padsPaint();
+        padMidiNote("The browser did not allow a plugged-in instrument. Allow MIDI for this page and press Teach a button again.");
+      }
+    });
+    return true;
+  }
+  function padTeachToggle(){
+    if(padTeach){ padTeach = null; padsPaint(); say("Teaching is off."); return; }
+    if(!padMidiOpen(false)) return;
+    padMidiNote("");
+    padTeach = { step:"pick", target:null };
+    padsPaint();
+    say("Tap the pad you want to teach. A live effect in the Mix area works too.");
+  }
+  function padTeachPick(target){
+    padTeach = { step:"wait", target:target };
+    padSkipClick = Date.now();
+    padsPaint();
+    say("Now hit a button or key on your instrument for " + padTargetName(target) + ".");
+  }
+  // onMIDI calls this first. True means the message was for a pad or an effect.
+  function padsOnMIDI(e){
+    var d = e && e.data;
+    if(!d || d.length < 3) return false;
+    var cmd = d[0] & 0xF0, note = d[1], vel = d[2];
+    var on = cmd === 0x90 && vel > 0, offm = cmd === 0x80 || (cmd === 0x90 && vel === 0);
+    if(!on && !offm) return false;
+    if(padTeach && padTeach.step === "wait"){
+      if(!on) return true;
+      var target = padTeach.target;
+      Object.keys(padMidi).forEach(function(n){ if(padMidi[n] === target) delete padMidi[n]; });
+      padMidi[note] = target;
+      padMidiSave();
+      padTeach = null;
+      padsPaint(); padLog("teach");
+      say("Done. Button " + note + " now plays " + padTargetName(target) + ".");
+      return true;
+    }
+    var tg = padMidi[note];
+    if(!tg) return false;
+    if(tg.charAt(0) === "p"){ if(on) padPress(+tg.slice(1), "midi"); return true; }
+    var kind = tg.slice(3);
+    if(on){ if(audio() && !padRendering()) fxOn(kind); }
+    else fxOff(kind);
+    return true;
+  }
+
+  // --- wiring ---
+  (function(){
+    var host = document.getElementById("spads");
+    if(!host) return;
+    function idx(e, cls){
+      var b = e.target.closest ? e.target.closest(cls) : null;
+      return b ? +b.parentNode.dataset.i : -1;
+    }
+    host.addEventListener("pointerdown", function(e){
+      var i = idx(e, ".spadhit");
+      if(i < 0) return;
+      if(e.button) return;
+      // an empty pad opens its menu on the click instead, so scrolling past on a phone does not
+      if(!padMap[i] && !(padTeach && padTeach.step === "pick")) return;
+      padSkipClick = Date.now();
+      padPress(i, "tap");
+    });
+    host.addEventListener("click", function(e){
+      var i = idx(e, ".spadhit");
+      if(i >= 0){
+        if(Date.now() - padSkipClick < 700) return;
+        if(e.detail === 0 || !padMap[i]) padPress(i, "tap");   // keyboard press, or an empty pad
+        return;
+      }
+      var f = e.target.closest ? e.target.closest(".spadfoot button") : null;
+      if(!f) return;
+      i = +f.parentNode.parentNode.dataset.i;
+      if(f.className === "spadclr") padClear(i);
+      else {
+        padEdit = (padEdit && padEdit.i === i && padEdit.mode === "name") ? null : { i:i, mode:"name" };
+        padsPaint();
+        var inp = document.querySelector("#spadedit input");
+        if(inp){ inp.focus(); inp.select(); }
+      }
+    });
+    document.getElementById("spadcap").addEventListener("click", padCapture);
+    document.getElementById("spadchopgo").addEventListener("click", padChop);
+    document.getElementById("spadteach").addEventListener("click", padTeachToggle);
+    document.getElementById("spadq").addEventListener("click", function(){
+      padQ = !padQ;
+      try { window.localStorage.setItem("firstloop.padq", padQ ? "on" : "off"); } catch(e){}
+      padsPaint();
+      say(padQ ? "Pads now wait for the next square of the song, so they land in time."
+               : "Pads now play the instant you hit them.");
+    });
+    var sec = document.getElementById("sec-pads");
+    sec.addEventListener("pointerenter", padsTracks);
+    sec.addEventListener("focusin", padsTracks);
+
+    document.addEventListener("keydown", function(e){
+      if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable ||
+         e.metaKey || e.ctrlKey || e.altKey) return;
+      if(e.key === "Escape" && (padTeach || padEdit)){ padTeach = null; padEdit = null; padsPaint(); return; }
+      if(e.repeat || !e.key || e.key.length !== 1) return;
+      var i = PADKEYS.indexOf(e.key.toLowerCase());
+      if(i < 0) return;
+      e.preventDefault();
+      padPress(i, "key");
+    });
+    document.addEventListener("click", function(e){
+      if(!e.target.closest) return;
+      var r = e.target.closest(".region[data-bar]");
+      if(r) padBar = +r.dataset.bar;            // the bar Capture uses while the song is stopped
+      if(e.target.closest(".viewtab")) setTimeout(padsPaint, 0);
+    });
+    // teaching one of the live effects: take the tap before the effect does
+    document.addEventListener("pointerdown", function(e){
+      if(!padTeach || padTeach.step !== "pick" || !e.target.closest) return;
+      var p = e.target.closest("#livepads .pad[data-fx]");
+      if(!p) return;
+      e.stopPropagation(); e.preventDefault();
+      padTeachPick("fx:" + p.dataset.fx);
+    }, true);
+
+    CMDS.push({ name:"Capture this bar onto a pad", keys:"pads capture sampler sample bar",
+      help:"Copies the bar that is playing onto the next empty pad.",
+      run:function(){ setView("make"); reveal(sec); padCapture(); } });
+    CMDS.push({ name:"Go to the pads", keys:"pads sampler slicer chop teach midi learn",
+      help:"Eight pads that each hold one short sound.",
+      run:function(){ setView("make"); reveal(sec); } });
+    GLOSSARY.push({ term:"Sampler", text:"Something that holds short recorded sounds and plays one each time you hit a pad or key. The Pads are a sampler." });
+    GLOSSARY.push({ term:"Slicer", text:"Cuts one recording into equal pieces, one per pad, so you can play the pieces in any order." });
+    GLOSSARY.push({ term:"Quantise", text:"Moving what you play onto the nearest square of the grid so it lands in time. Play in time on the Pads does this." });
+
+    padsPaint();
+    // buttons taught earlier should work straight away, even with no instrument in the profile
+    var wants = profile && profile.gear && (profile.gear.indexOf("keys") >= 0 || profile.gear.indexOf("drums") >= 0);
+    if(Object.keys(padMidi).length && !wants) padMidiOpen(true);
+  })();
   // ----- end pads -----
 
   // ===== feature: shelf (js) =====

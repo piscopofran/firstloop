@@ -781,6 +781,42 @@
   /* . */
 
   /* ===== feature: styles (css) ===== */
+  .stylebody{padding:0 17px 16px;display:flex;flex-direction:column;gap:11px;}
+  .stychips{display:flex;flex-wrap:wrap;gap:7px;}
+  .stychip{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:600;
+    font-family:Sora,sans-serif;border:1px solid var(--line-2);background:transparent;
+    color:var(--ink-2);border-radius:999px;padding:8px 13px;min-height:36px;transition:all .14s ease;}
+  .stychip:hover{border-color:var(--ink-2);color:var(--ink);}
+  .stychip[aria-pressed="true"]{background:color-mix(in srgb,var(--chord) 18%,transparent);
+    border-color:color-mix(in srgb,var(--chord) 60%,transparent);color:var(--ink);}
+  .stylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .stylist li{display:flex;align-items:flex-start;gap:10px;background:var(--surface-2);
+    border-radius:12px;padding:10px 12px;}
+  .stylist .dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:5px;
+    border:1.5px solid var(--ink-3);box-sizing:border-box;}
+  .stylist li[data-in="true"] .dot{background:var(--good);border-color:var(--good);}
+  .stylist .txt{flex:1 1 auto;min-width:0;font-size:13px;line-height:1.5;color:var(--ink-2);margin:0;}
+  .stylist .txt b{color:var(--ink);font-weight:600;}
+  .stylist .tinybtn{flex:none;white-space:nowrap;}
+  .styfoot{font-size:12.5px;color:var(--ink-3);margin:0;line-height:1.5;}
+  .stysnds{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;}
+  .stysnd{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;
+    padding:8px 10px;min-width:0;}
+  .stysnd .hear{appearance:none;cursor:pointer;font:inherit;text-align:left;background:transparent;
+    border:none;color:var(--ink);padding:2px 0;flex:1 1 auto;min-width:0;display:flex;
+    flex-direction:column;gap:1px;}
+  .stysnd .hear b{font-family:Sora,sans-serif;font-size:13.5px;font-weight:700;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+  .stysnd .hear small{font-size:11.5px;color:var(--ink-2);}
+  .stysnd::before{content:"";flex:none;border-left:9px solid var(--ink-3);border-top:6px solid transparent;
+    border-bottom:6px solid transparent;margin-left:3px;}
+  .stysnd:hover::before{border-left-color:var(--ink);}
+  .stysnd .tinybtn{flex:none;}
+  @media (max-width:540px){
+    .stylist li{flex-wrap:wrap;}
+    .stylist .txt{flex-basis:calc(100% - 19px);}
+    .stylist .tinybtn{margin-left:19px;}
+  }
   /* ----- end styles ----- */
 
   /* ===== feature: clips (css) ===== */
@@ -1036,6 +1072,25 @@
   </section>
 
   <!-- ===== feature: styles (html, Make area) ===== -->
+  <section class="card" id="sec-style" hidden data-tab="make">
+    <div class="card-head">
+      <div>
+        <h2>What are you going for?
+          <button class="help" type="button" data-help="style" aria-expanded="false" aria-label="What is a style?">?</button>
+        </h2>
+        <p class="sub">Pick a style and the helper compares your song to it. Nothing changes unless you tap a Try button.</p>
+      </div>
+    </div>
+    <p class="explain" id="help-style" hidden>A style (musicians say genre) is a set of habits that lots of songs share: how fast, how busy, which sounds. They are habits, not rules, and plenty of well-loved songs ignore them. Picking one gives the helper something to measure your song against. &ldquo;No style, my own thing&rdquo; switches all of this off.</p>
+    <div class="stylebody">
+      <div class="stychips" id="stychips" role="group" aria-label="Style"></div>
+      <ul class="stylist" id="stylist" hidden></ul>
+      <p class="styfoot" id="styfoot" hidden></p>
+      <span class="lbl">Sounds that go with this</span>
+      <p class="sub" id="stysndnote" style="margin:0;"></p>
+      <div class="stysnds" id="stysnds"></div>
+    </div>
+  </section>
   <!-- end styles -->
 
   <!-- ===== feature: pads (html, Make area) ===== -->
@@ -2755,6 +2810,7 @@
       var a = count(song.A.drums[d.id]), z = count(song.B.drums[d.id]);
       return (a>0 && z===0) || (z>0 && a===0);
     });
+    if(typeof styleFacts === "function") styleFacts(f);
     return f;
   }
 
@@ -2841,6 +2897,8 @@
       doLabel:"Duplicate it for me",
       apply:function(){ selSec = 0; secDuplicate(); secRename("Chorus"); } },
 
+    styleFocusEntry(),
+
     { id:"healthy", when:function(){ return true; },
       obs:function(f){
         var bits = [];
@@ -2878,6 +2936,7 @@
     ];
     if(unlocked("mood"))  L.push("mood: " + M().name);
     if(unlocked("swing")) L.push("swing: " + swing + "%");
+    if(typeof styleFactLine === "function" && styleFactLine()) L.push(styleFactLine());
     return L.join("\n");
   }
 
@@ -4638,6 +4697,7 @@
     if(codeEl) codeEl.value = encode();
     evaluate();
     if(typeof buildTrack === "function") buildTrack();
+    if(typeof paintStyle === "function") paintStyle();
     markDirty();
   }
 
@@ -5995,6 +6055,469 @@
   //
   //
   // ===== feature: styles (js) =====
+  // A style is only data: the habits most songs of that kind share, each with
+  // the reason behind it. The checklist compares the song to those habits and
+  // says what is true. It never says which is better.
+  //   tempo / swing / busy: [low, high, reason]   kits: [ids from KITS], kitWhy
+  //   mood: suggested id from MOODS   sounds: ids from PITCHED per lane
+  //   tricks: { conv, why, fact(), test(), and when it can be tried: tryLabel, tut, fix() }
+  var styleId = "", styleHeard = {};
+  function styHas(id, idx){ var h = hits("A", id); return idx.every(function(i){ return h[i]; }); }
+  function styBackbeat(){
+    var s = hits("A","snare"), c = hits("A","clap");
+    return !!((s[4] || c[4]) && (s[12] || c[12]));
+  }
+  function styGap(){
+    var run = 0;
+    for(var i = 0; i < STEPS; i++){
+      if(!anyDrumAt("A", i)){ run++; if(run >= 4) return true; } else run = 0;
+    }
+    return false;
+  }
+  function styLayers(){
+    return (drumTotal("A") ? 1 : 0) + LANES.filter(function(l){ return laneCount("A", l) > 0; }).length;
+  }
+  function styDrop(){
+    return LANES.some(function(l){
+      var a = laneCount("A",l), z = laneCount("B",l);
+      return (a>0 && z===0) || (z>0 && a===0);
+    }) || DRUMS.some(function(d){
+      var a = count(song.A.drums[d.id]), z = count(song.B.drums[d.id]);
+      return (a>0 && z===0) || (z>0 && a===0);
+    });
+  }
+  function stySetInst(lane, id){
+    inst[lane] = id; saveInst();
+    try { previewSound(lane); } catch(e){}
+  }
+  function stySetMood(id){ mood = id; }
+  function styInstFact(lane){ return "Your " + lane + (lane === "chords" ? " are" : " is") + " playing " + pitchOf(lane).name; }
+  var STY_BACKBEAT = {
+    conv:"usually has a snare or clap on squares 5 and 13",
+    why:"that crack halfway between the kicks is the spot people clap along to",
+    fact:function(){ return styBackbeat() ? "Part A has a snare or clap on squares 5 and 13"
+                                          : "Part A does not have a snare or clap on both squares 5 and 13"; },
+    test:styBackbeat, tryLabel:"Try it", tut:"Put a snare on squares 5 and 13 and listen",
+    fix:function(){ song.A.drums.snare[4] = true; song.A.drums.snare[12] = true; } };
+
+  var STYLES = [
+    { id:"lofi", name:"Lo-fi", word:"lo-fi",
+      tempo:[70,90,"that is about a slow walking pace, which feels relaxed"],
+      swing:[20,40,"notes that land a little late sound like a person playing, not a machine"],
+      kits:["lofi"], kitWhy:"soft, dull drums sound like an old tape",
+      busy:[8,18,"the gaps are what make it feel unhurried"],
+      mood:"dreamy", sounds:{ bass:"ebass", chords:"epiano", melody:"musicbox" },
+      tricks:[
+        { conv:"usually puts the chords on a soft sound like Electric piano or Dream pad",
+          why:"round sounds with no sharp edge blur together the way an old recording does",
+          fact:function(){ return styInstFact("chords"); },
+          test:function(){ return inst.chords === "epiano" || inst.chords === "pad"; },
+          tryLabel:"Try Electric piano", tut:"Put the chords on Electric piano and listen",
+          fix:function(){ stySetInst("chords","epiano"); } },
+        { conv:"usually uses the Sad or Dreamy mood", why:"it leans thoughtful rather than bouncy",
+          fact:function(){ return "Mood is " + M().name; },
+          test:function(){ return mood === "sad" || mood === "dreamy"; },
+          tryLabel:"Try Dreamy", tut:"Switch the mood to Dreamy and listen",
+          fix:function(){ stySetMood("dreamy"); } }
+      ] },
+
+    { id:"house", name:"House / dance", word:"house",
+      tempo:[118,128,"that is a comfortable dancing pace"],
+      swing:[0,10,"dancers lock on to a perfectly even pulse"],
+      kits:["electro","studio"], kitWhy:"short, tight drums stay clear at that speed",
+      busy:[16,30,"the drums keep going the whole time so the dancing never has to stop"],
+      mood:"happy", sounds:{ bass:"synbass", chords:"organ", melody:"lead" },
+      tricks:[
+        { conv:"usually has a kick on every beat, which is squares 1, 5, 9 and 13",
+          why:"that steady thump is the thing people dance to",
+          fact:function(){
+            var k = hits("A","kick"), n = [0,4,8,12].filter(function(i){ return k[i]; }).length;
+            return "Part A has a kick on " + n + " of the 4 beats"; },
+          test:function(){ return styHas("kick",[0,4,8,12]); },
+          tryLabel:"Try it", tut:"Put a kick on squares 1, 5, 9 and 13 and listen",
+          fix:function(){ [0,4,8,12].forEach(function(i){ song.A.drums.kick[i] = true; }); } },
+        { conv:"usually has a hi-hat halfway between the kicks, on squares 3, 7, 11 and 15",
+          why:"the tick answering the thump is what gives it bounce",
+          fact:function(){
+            var h = hits("A","hat"), n = [2,6,10,14].filter(function(i){ return h[i]; }).length;
+            return "Part A has a hi-hat on " + n + " of those 4 in-between squares"; },
+          test:function(){ return styHas("hat",[2,6,10,14]); },
+          tryLabel:"Try it", tut:"Put a hi-hat on squares 3, 7, 11 and 15 and listen",
+          fix:function(){ [2,6,10,14].forEach(function(i){ song.A.drums.hat[i] = true; }); } }
+      ] },
+
+    { id:"hiphop", name:"Hip hop", word:"hip hop",
+      tempo:[80,100,"that is slow enough to nod your head to and fit words over"],
+      swing:[10,30,"a little lateness gives the beat its lazy bounce"],
+      kits:["eight"], kitWhy:"the long booming 808 kick is the sound hip hop is known for",
+      busy:[10,20,"space in the beat leaves room for a voice"],
+      mood:"sad", sounds:{ bass:"sub", chords:"piano", melody:"bells" },
+      tricks:[
+        STY_BACKBEAT,
+        { conv:"usually has a very deep bass, like Sub bass",
+          why:"a low note you feel more than hear fills the bottom without getting in the way",
+          fact:function(){ return styInstFact("bass"); },
+          test:function(){ return inst.bass === "sub"; },
+          tryLabel:"Try Sub bass", tut:"Put the bass on Sub bass and listen",
+          fix:function(){ stySetInst("bass","sub"); } }
+      ] },
+
+    { id:"pop", name:"Pop", word:"pop",
+      tempo:[100,124,"that is about the pace of a brisk walk, easy to move and sing to"],
+      swing:[0,10,"even timing is easy to sing along with"],
+      kits:["studio","electro"], kitWhy:"clean drums keep the tune in front",
+      busy:[16,28,"that is enough to feel full without burying the tune"],
+      mood:"happy", sounds:{ bass:"ebass", chords:"piano", melody:"guitar" },
+      tricks:[
+        STY_BACKBEAT,
+        { conv:"is usually built around a tune of three melody notes or more",
+          why:"the tune is the part people hum afterwards",
+          fact:function(){ var n = laneCount("A","melody"); return "Part A has " + n + (n === 1 ? " melody note" : " melody notes"); },
+          test:function(){ return laneCount("A","melody") >= 3; } },
+        { conv:"usually has two or more sections taking turns, like Verse and Chorus",
+          why:"a part that goes away and comes back is what people end up singing",
+          fact:function(){ return "Your song has " + SECS.length + (SECS.length === 1 ? " section" : " sections"); },
+          test:function(){ return SECS.length >= 2; } }
+      ] },
+
+    { id:"spooky", name:"Spooky / sneaking", word:"sneaking music",
+      tempo:[70,96,"slow steps sound like creeping"],
+      swing:[0,20,"even steps sound like careful footsteps"],
+      kits:["toybox","lofi"], kitWhy:"small, quiet clicks sound like someone on tiptoe",
+      busy:[5,14,"the quiet between the sounds is where the suspense is"],
+      mood:"spooky", sounds:{ bass:"sub", chords:"strings", melody:"musicbox" },
+      tricks:[
+        { conv:"usually uses the Spooky mood",
+          why:"two of its notes sit a tiny step apart, and the ear hears that as uneasy",
+          fact:function(){ return "Mood is " + M().name; },
+          test:function(){ return mood === "spooky"; },
+          tryLabel:"Try Spooky", tut:"Switch the mood to Spooky and listen",
+          fix:function(){ stySetMood("spooky"); } },
+        { conv:"usually puts the tune on a small, pretty sound like Music box or Bells",
+          why:"something sweet playing uneasy notes is what makes it creepy",
+          fact:function(){ return styInstFact("melody"); },
+          test:function(){ return inst.melody === "musicbox" || inst.melody === "bells"; },
+          tryLabel:"Try Music box", tut:"Put the melody on Music box and listen",
+          fix:function(){ stySetInst("melody","musicbox"); } },
+        { conv:"usually leaves the drums silent for four squares in a row somewhere",
+          why:"a silence makes the listener wait for what comes next",
+          fact:function(){ return styGap() ? "Part A has a gap of four silent drum squares" : "Part A has no gap of four silent drum squares"; },
+          test:styGap }
+      ] },
+
+    { id:"epic", name:"Big and epic", word:"epic music",
+      tempo:[84,112,"that is slow enough to feel heavy, like marching"],
+      swing:[0,10,"everything landing at exactly the same moment sounds huge"],
+      kits:["eight","studio"], kitWhy:"deep, booming drums sound large",
+      busy:[18,34,"big comes from a lot happening at once"],
+      mood:"sad", sounds:{ bass:"sub", chords:"strings", melody:"lead" },
+      tricks:[
+        { conv:"usually puts the chords on Strings",
+          why:"long held notes fill the space the way an orchestra does",
+          fact:function(){ return styInstFact("chords"); },
+          test:function(){ return inst.chords === "strings"; },
+          tryLabel:"Try Strings", tut:"Put the chords on Strings and listen",
+          fix:function(){ stySetInst("chords","strings"); } },
+        { conv:"usually has drums, bass, chords and melody all going in the big part",
+          why:"each layer fills a different height, so together they sound wide",
+          fact:function(){ return "Part A uses " + styLayers() + " of the 4 layers"; },
+          test:function(){ return styLayers() === 4; } },
+        { conv:"usually has a part with one whole layer missing",
+          why:"big only sounds big next to something small",
+          fact:function(){ return styDrop() ? "One of your layers plays in only one of parts A and B"
+                                            : "Every layer you use plays in both part A and part B"; },
+          test:styDrop }
+      ] },
+
+    { id:"chill", name:"Chill", word:"chill music",
+      tempo:[76,98,"that is close to a resting heartbeat"],
+      swing:[10,30,"a loose feel sounds relaxed"],
+      kits:["lofi","studio"], kitWhy:"soft drums stay in the background",
+      busy:[8,18,"space is what makes it calm"],
+      mood:"dreamy", sounds:{ bass:"ebass", chords:"pad", melody:"flute" },
+      tricks:[
+        { conv:"usually puts the chords on a slow, soft sound like Dream pad",
+          why:"a sound that fades in has no sharp edge to startle anyone",
+          fact:function(){ return styInstFact("chords"); },
+          test:function(){ return inst.chords === "pad" || inst.chords === "epiano"; },
+          tryLabel:"Try Dream pad", tut:"Put the chords on Dream pad and listen",
+          fix:function(){ stySetInst("chords","pad"); } },
+        { conv:"usually has eight drum hits or fewer in a bar",
+          why:"fewer hits leave room to breathe",
+          fact:function(){ var n = drumTotal("A"); return "Part A has " + n + (n === 1 ? " drum hit" : " drum hits"); },
+          test:function(){ return drumTotal("A") <= 8; } }
+      ] }
+  ];
+
+  function styleNow(){
+    if(!STYLES || !styleId) return null;
+    return STYLES.filter(function(s){ return s.id === styleId; })[0] || null;
+  }
+  function styCap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+  function styPerBar(){
+    var n = 0;
+    ORDER.forEach(function(k){ n += partEvents(k); });
+    return ORDER.length ? Math.round(n / ORDER.length) : 0;
+  }
+  function styKitName(id){
+    var k = KITS.filter(function(x){ return x.id === id; })[0];
+    return k ? k.name : id;
+  }
+
+  // One line per habit. fact = what the song does, conv + why = what the style
+  // usually does and the reason, where = how the two compare, hatch = the way out.
+  // clear = far enough outside that the tutor may bring it up.
+  function styleLines(){
+    var s = styleNow(), L = [];
+    if(!s) return L;
+    var W = styCap(s.word), lo, hi, to;
+
+    lo = s.tempo[0]; hi = s.tempo[1];
+    var tIn = tempo >= lo && tempo <= hi, slow = tempo < lo;
+    to = slow ? lo : hi;
+    L.push({ fact:"Speed is " + tempo, conv:W + " usually sits between " + lo + " and " + hi, why:s.tempo[2],
+      ok:tIn, clear:!tIn && (slow ? lo - tempo : tempo - hi) >= 8,
+      where:tIn ? "you are in that range" : ("you are " + (slow ? "slower" : "faster") + " than most " + s.word),
+      hatch:(slow ? "Slower" : "Faster") + " is fine if that is what you want.",
+      tryLabel:"Try " + to, tut:"Try the speed at " + to + " and listen",
+      run:(function(v){ return function(){ tempo = v; tempoTouched = true; }; })(to) });
+
+    lo = s.swing[0]; hi = s.swing[1];
+    var sIn = swing >= lo && swing <= hi, straight = swing < lo;
+    to = straight ? lo : hi;
+    L.push({ fact:"Swing is " + swing + "%",
+      conv:W + (lo === 0 ? " usually keeps swing at " + hi + "% or less" : " usually has " + lo + " to " + hi + "% swing"),
+      why:s.swing[2], ok:sIn, clear:!sIn && (straight ? lo - swing : swing - hi) >= 10,
+      where:sIn ? "you are in that range" : ("yours is " + (straight ? "straighter" : "looser") + " than most " + s.word),
+      hatch:(straight ? "Straighter" : "Looser") + " is fine if you like it that way.",
+      tryLabel:"Try " + to + "%", tut:"Try the swing at " + to + "% and listen",
+      run:(function(v){ return function(){ swing = v; }; })(to) });
+
+    var kIn = s.kits.indexOf(inst.drums) >= 0, kn = styKitName(s.kits[0]);
+    L.push({ fact:"Your drums are the " + kitOf().name + " kit",
+      conv:W + " usually uses the " + kn + (s.kits.length > 1 ? " or " + styKitName(s.kits[1]) : "") + " kit",
+      why:s.kitWhy, ok:kIn, clear:false,
+      where:kIn ? "that is what you have" : "yours is a different one",
+      hatch:"Or are you making your own thing?",
+      tryLabel:"Try " + kn, tut:"Try the " + kn + " kit and listen",
+      run:(function(id){ return function(){ stySetInst("drums", id); }; })(s.kits[0]) });
+
+    lo = s.busy[0]; hi = s.busy[1];
+    var n = styPerBar(), bIn = n >= lo && n <= hi, thin = n < lo;
+    L.push({ fact:"About " + n + (n === 1 ? " sound plays" : " sounds play") + " in each bar",
+      conv:W + " usually has " + lo + " to " + hi, why:s.busy[2], ok:bIn, clear:false,
+      where:bIn ? "you are in that range" : ("yours is " + (thin ? "emptier" : "busier") + " than most " + s.word),
+      hatch:(thin ? "Emptier" : "Busier") + " is fine if you mean it." });
+
+    s.tricks.forEach(function(t){
+      var ok = !!t.test();
+      L.push({ fact:t.fact(), conv:W + " " + t.conv, why:t.why, ok:ok, clear:!ok && !!t.fix,
+        where:ok ? "your song does that" : "your song does something else",
+        hatch:"Or are you making your own thing?",
+        tryLabel:t.fix ? t.tryLabel : "", tut:t.tut || "", run:t.fix || null, trick:true });
+    });
+    return L;
+  }
+  function styleText(l){
+    return l.conv + ", because " + l.why + " — " + l.where + "." + (l.ok ? "" : " " + l.hatch);
+  }
+
+  // Put how it was aside first, so a try can always be undone from Earlier
+  // versions. Several tries in a row share one copy rather than flooding the list.
+  function styleSnapLabel(){
+    var s = styleNow();
+    return "Before trying " + (s ? s.name : "a new sound");
+  }
+  function styleSnap(){
+    var label = styleSnapLabel(), vs = cur && versions[cur.id];
+    if(vs && vs[0] && vs[0].label === label) return;
+    snapshot(label);
+  }
+  function styleSync(){
+    syncControls(); applyFX();
+    buildDrums(); buildNotes(); buildLibrary();
+    refreshCode(); recheck();
+  }
+  function styleTry(l){
+    if(!l || !l.run) return;
+    styleSnap();
+    l.run();
+    styleSync();
+    say("Tried it. If you liked it better before, My songs keeps an earlier version called “" +
+        styleSnapLabel() + "”.");
+  }
+
+  // ---- sounds that go with this ----
+  var STY_MOODSND = {
+    sad:{ chords:"epiano", melody:"flute" }, happy:{ chords:"piano", melody:"guitar" },
+    dreamy:{ chords:"pad", melody:"bells" }, spooky:{ chords:"strings", melody:"musicbox" }
+  };
+  function stySoundName(lane, id){
+    if(lane === "drums") return styKitName(id) + " kit";
+    var p = PITCHED.filter(function(x){ return x.id === id; })[0];
+    return p ? p.name : id;
+  }
+  function styleSounds(){
+    var s = styleNow(), all = [];
+    if(s){
+      all.push({ lane:"drums", id:s.kits[0] });
+      ["chords","melody","bass"].forEach(function(l){ all.push({ lane:l, id:s.sounds[l] }); });
+      all.forEach(function(x){ x.why = "goes with " + s.word; });
+    } else {
+      var speed = tempo < 88 ? "a slow speed" : (tempo > 112 ? "a fast speed" : "a middle speed");
+      var ms = STY_MOODSND[mood] || STY_MOODSND.sad;
+      all.push({ lane:"chords", id:ms.chords, why:"suits the " + M().name + " mood" });
+      all.push({ lane:"melody", id:ms.melody, why:"suits the " + M().name + " mood" });
+      all.push({ lane:"drums", id:tempo < 88 ? "lofi" : (tempo > 112 ? "electro" : "studio"), why:"suits " + speed });
+      all.push({ lane:"bass", id:tempo < 88 ? "sub" : (tempo > 112 ? "synbass" : "ebass"), why:"suits " + speed });
+    }
+    return all.filter(function(x){ return inst[x.lane] !== x.id && laneVisible(x.lane); }).slice(0, 3);
+  }
+  // hear a sound without choosing it: borrow the lane for the length of one call
+  function stylePreview(lane, id){
+    var keep = inst[lane];
+    inst[lane] = id;
+    try { previewSound(lane); } catch(e){}
+    inst[lane] = keep;
+  }
+  function styleUse(x){
+    styleSnap();
+    inst[x.lane] = x.id; saveInst();
+    styleSync();
+    say(stySoundName(x.lane, x.id) + " on the " + x.lane + ". Your notes have not moved.");
+  }
+
+  // ---- drawing ----
+  function styleChips(){
+    var host = document.getElementById("stychips");
+    if(!host) return;
+    if(!host.firstChild){
+      [{ id:"", name:"No style, my own thing" }].concat(STYLES).forEach(function(s){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "stychip"; b.textContent = s.name; b.dataset.style = s.id;
+        b.addEventListener("click", function(){ setStyle(s.id); });
+        host.appendChild(b);
+      });
+    }
+    Array.prototype.forEach.call(host.children, function(b){
+      b.setAttribute("aria-pressed", b.dataset.style === (styleId || "") ? "true" : "false");
+    });
+  }
+  function paintStyle(){
+    var panel = document.getElementById("sec-style"), starts = document.getElementById("sec-starts");
+    if(!panel || !STYLES) return;
+    panel.hidden = !!(starts && starts.hidden);
+    styleChips();
+    var s = styleNow(), list = document.getElementById("stylist"), foot = document.getElementById("styfoot");
+    list.innerHTML = "";
+    list.hidden = !s; foot.hidden = !s;
+    if(s){
+      styleLines().forEach(function(l){
+        var li = document.createElement("li");
+        li.dataset.in = l.ok ? "true" : "false";
+        var dot = document.createElement("span"); dot.className = "dot"; dot.setAttribute("aria-hidden","true");
+        var p = document.createElement("p"); p.className = "txt";
+        var b = document.createElement("b"); b.textContent = l.fact + ".";
+        p.appendChild(b); p.appendChild(document.createTextNode(" " + styleText(l)));
+        li.appendChild(dot); li.appendChild(p);
+        if(!l.ok && l.run){
+          var t = document.createElement("button");
+          t.type = "button"; t.className = "tinybtn"; t.textContent = l.tryLabel;
+          t.addEventListener("click", function(){ styleTry(l); });
+          li.appendChild(t);
+        }
+        list.appendChild(li);
+      });
+      foot.textContent = "A filled dot means your song does what " + s.word + " usually does. An empty dot means it " +
+        "does something else. These are habits, not rules. A Try button first keeps a copy of your song in My songs, under Earlier versions.";
+    }
+
+    var note = document.getElementById("stysndnote"), host = document.getElementById("stysnds");
+    var snds = styleSounds();
+    host.innerHTML = "";
+    note.textContent = snds.length
+      ? "Tap a sound to hear it. Nothing changes until you tap Use it."
+      : (s ? "You are already using the sounds that usually go with " + s.word + "."
+           : "You are already using the sounds that suit your mood and speed.");
+    snds.forEach(function(x){
+      var key = x.lane + ":" + x.id;
+      var row = document.createElement("div"); row.className = "stysnd";
+      var h = document.createElement("button"); h.type = "button"; h.className = "hear";
+      var nm = document.createElement("b"); nm.textContent = stySoundName(x.lane, x.id);
+      var sm = document.createElement("small");
+      sm.textContent = (x.lane === "drums" ? "Drums" : styCap(x.lane)) + " · " + x.why;
+      h.appendChild(nm); h.appendChild(sm);
+      h.setAttribute("aria-label", "Hear " + nm.textContent + ", " + sm.textContent);
+      var u = document.createElement("button"); u.type = "button"; u.className = "tinybtn";
+      u.textContent = "Use it"; u.hidden = !styleHeard[key];
+      h.addEventListener("click", function(){
+        stylePreview(x.lane, x.id);
+        styleHeard[key] = true; u.hidden = false;
+      });
+      u.addEventListener("click", function(){ styleUse(x); });
+      row.appendChild(h); row.appendChild(u);
+      host.appendChild(row);
+    });
+  }
+  function setStyle(id){
+    styleId = STYLES.some(function(s){ return s.id === id; }) ? id : "";
+    var s = styleNow();
+    paintStyle(); markDirty();
+    say(s ? "Going for " + s.name + ". The list shows how your song compares. Nothing has changed."
+          : "No style. You are making your own thing.");
+  }
+
+  // ---- saved with the song ----
+  EXTRA_HOOKS.push({
+    save:function(x){ if(styleId) x.style = styleId; },
+    load:function(x){
+      styleId = (x && typeof x.style === "string" && STYLES.some(function(s){ return s.id === x.style; })) ? x.style : "";
+      styleHeard = {};
+      paintStyle();
+    }
+  });
+
+  // ---- tutor ----
+  // analyse() calls this, so the facts carry the goal, plus the first habit the
+  // song is clearly outside of that also has something to try.
+  function styleFacts(f){
+    var s = styleNow();
+    f.style = s ? s.name : "";
+    f.styleMiss = s ? (styleLines().filter(function(l){ return l.clear && l.run; })[0] || null) : null;
+  }
+  function styleFactLine(){
+    var s = styleNow();
+    return s ? "style they chose to aim for: " + s.name + " (their own goal, not a rule)" : "";
+  }
+  function styleFocusEntry(){
+    var e = { id:"style", when:function(f){ return !!f.styleMiss; },
+      obs:function(f){
+        var l = f.styleMiss;
+        return "You said you are going for " + f.style + ". " + l.fact + (l.trick ? "." : ", so " + l.where + "."); },
+      sug:function(f){
+        var l = f.styleMiss;
+        return l.conv + ". " + l.tut + " — or are you making your own thing? Then leave it as it is."; },
+      doLabel:"Try it for me",
+      apply:function(f){ styleTry(f.styleMiss); } };
+    Object.defineProperty(e, "why", { enumerable:true, get:function(){
+      var l = currentFocus && currentFocus.facts && currentFocus.facts.styleMiss;
+      return l ? "Because " + l.why + ". That is a habit of the style, not a rule."
+               : "A style is a set of habits, not rules.";
+    } });
+    return e;
+  }
+  GLOSSARY.push({ term:"Style", text:"A set of habits lots of songs share, such as how fast they go and which sounds they use. Musicians also say genre. Habits, not rules." });
+  CMDS.push({ name:"What are you going for?", keys:"style genre lofi house hip hop pop spooky epic chill goal",
+    help:"Pick a style for the helper to compare your song to",
+    run:function(){ reveal(document.getElementById("sec-style"), "start"); } });
+
+  (function(){
+    var starts = document.getElementById("sec-starts");
+    if(starts && window.MutationObserver){
+      new MutationObserver(function(){ paintStyle(); }).observe(starts, { attributes:true, attributeFilter:["hidden"] });
+    }
+    setTimeout(paintStyle, 0);
+  })();
   // ----- end styles -----
 
   // ===== feature: clips (js) =====

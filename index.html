@@ -620,6 +620,11 @@
     background:color-mix(in srgb,var(--snap) 12%,transparent);
     border-color:color-mix(in srgb,var(--snap) 45%,transparent);}
   body[data-guided="on"] .viewbar{display:none;}
+  /* the walkthrough shows only what its own steps reveal */
+  body[data-guided="on"] #sec-pads, body[data-guided="on"] #sec-auto, body[data-guided="on"] #sec-words,
+  body[data-guided="on"] #sec-live, body[data-guided="on"] #queststrip, body[data-guided="on"] #sec-style,
+  body[data-guided="on"] #sec-shelf, body[data-guided="on"] #sec-shelfplay, body[data-guided="on"] #shelfnote,
+  body[data-guided="on"] #unlockcard, body[data-guided="on"] #palbtn, body[data-guided="on"] #ask2{display:none !important;}
   body:not([data-guided="on"])[data-view="make"]  [data-tab]:not([data-tab="make"]),
   body:not([data-guided="on"])[data-view="mix"]   [data-tab]:not([data-tab="mix"]),
   body:not([data-guided="on"])[data-view="learn"] [data-tab]:not([data-tab="learn"]),
@@ -738,41 +743,17 @@
   #sec-sounds .libtabs,#sec-sounds .libgrid,#sec-sounds .libnote{margin-left:17px;margin-right:17px;}
   .start{color:var(--ink);}
 
-  /* ===== @clips css: begin ===== */
-  /* ===== @clips css: end ===== */
 
-  /* . */
-  /* . */
 
-  /* ===== @pads css: begin ===== */
-  /* ===== @pads css: end ===== */
 
-  /* . */
-  /* . */
 
-  /* ===== @styles css: begin ===== */
-  /* ===== @styles css: end ===== */
 
-  /* . */
-  /* . */
 
-  /* ===== @demos css: begin ===== */
-  /* ===== @demos css: end ===== */
 
-  /* . */
-  /* . */
 
-  /* ===== @palette css: begin ===== */
-  /* ===== @palette css: end ===== */
 
-  /* . */
-  /* . */
 
-  /* ===== @sends css: begin ===== */
-  /* ===== @sends css: end ===== */
 
-  /* . */
-  /* . */
 
   /* ===== @meter css: begin ===== */
   .meterrow{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:11px;}
@@ -789,8 +770,6 @@
   .tick[data-beat="half"]{color:var(--ink-2);}
   /* ===== @meter css: end ===== */
 
-  /* . */
-  /* . */
 
   /* ===== feature: styles (css) ===== */
   .stylebody{padding:0 17px 16px;display:flex;flex-direction:column;gap:11px;}
@@ -810,6 +789,7 @@
   .stylist .txt{flex:1 1 auto;min-width:0;font-size:13px;line-height:1.5;color:var(--ink-2);margin:0;}
   .stylist .txt b{color:var(--ink);font-weight:600;}
   .stylist .tinybtn{flex:none;white-space:nowrap;}
+  .stylist li.styfold{background:none;border:0;padding:0;}
   .styfoot{font-size:12.5px;color:var(--ink-3);margin:0;line-height:1.5;}
   .stysnds{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;}
   .stysnd{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;
@@ -912,10 +892,14 @@
   /* ----- end pads ----- */
 
   /* ===== feature: shelf (css) ===== */
-  .shelflist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
-  .shelfcard{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0;
-    border:1px solid var(--line);border-top:3px solid var(--st,var(--chord));border-radius:12px;
-    padding:11px 12px 12px;background:var(--surface-2);}
+  .shelflist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;}
+  .shelfcard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;min-width:0;
+    border:1px solid var(--line);border-left:3px solid var(--st,var(--chord));border-radius:12px;
+    padding:8px 10px 8px 12px;background:var(--surface-2);}
+  .shelfcard p, .shelfcard details{grid-column:1 / -1;margin:0;}
+  .shelfcard p{font-size:12.5px;line-height:1.4;}
+  .shelfcard .ghost{padding:5px 10px;font-size:12.5px;}
+  .shelfcard details .smeta{display:block;margin:2px 0 4px;}
   .shelfcard .shelftitle{font-family:Sora,sans-serif;font-size:14.5px;color:var(--ink);}
   .shelfcard .smeta{white-space:normal;}
   .shelfcard p{flex:1 1 auto;}
@@ -937,6 +921,10 @@
   .strip .knob.send .dial{width:38px;height:38px;}
   .strip .knob.send .ind{transform-origin:50% 14px;height:11px;}
   .strip .knob.send .kn{font-size:9.5px;}
+  .mixer[data-sends="off"] .knob.send{display:none;}
+  .knob.send[data-idle="true"] .dial, .knob.send[data-idle="true"] .kn{opacity:.45;}
+  .mxsendrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .mxsendrow .sub{margin:0;flex:1 1 220px;}
   .knob[data-auto="true"]{position:relative;}
   .knob[data-auto="true"] .dial{opacity:.5;}
   .knob[data-auto="true"]::after{content:"auto";position:absolute;top:-7px;left:50%;transform:translateX(4px);
@@ -1297,20 +1285,20 @@
         <p class="sub">Eight pads. Each one holds a short sound. Tap a pad or press its letter key to play it.</p>
       </div>
       <div class="headbtns">
-        <button class="ghost" id="spadq" type="button" aria-pressed="true" title="Wait for the next square of the song, so a pad lands in time (quantise)">Play in time: on</button>
+        <button class="ghost" id="spadq" type="button" data-find="padintime" aria-pressed="true" title="Wait for the next square of the song, so a pad lands in time (quantise)">Play in time: on</button>
       </div>
     </div>
-    <p class="explain" id="help-pads" hidden>A pad is a button that holds one sound, like the sampler on a DJ deck. <strong>Capture this bar</strong> copies the bar that is playing (or the bar you last tapped in the track) onto the next empty pad. <strong>Chop it onto the pads</strong> cuts one of your recordings into eight equal pieces &mdash; a slicer &mdash; so a sentence becomes eight sounds you can play in any order. Tap an empty pad to put one drum or one note on it. With <strong>Play in time</strong> on, a pad waits for the next square of the song, so it lands in time (quantise). Pads are for playing: they are not written into the grid and they are not in the file when you save the song. <strong>Record a live take</strong> in the Mix area records what comes out of the speakers, so it keeps your pad playing too. Pad sounds stay on this device. <strong>Teach a button</strong>: with a USB instrument plugged in, tap a pad, then hit a button on the instrument, and that button plays that pad from then on. The live effects in the Mix area can be taught the same way.</p>
+    <p class="explain" id="help-pads" hidden>A pad is a button that holds one sound, like the sampler on a DJ deck. <strong>Capture this bar</strong> copies the bar that is playing (or the bar you last tapped in the track) onto the next empty pad. What lands on the pad is that bar&rsquo;s instruments and recordings, at their mixer levels and tone. The studio knobs and the automation are left out, because the pad plays through those knobs when you hit it. <strong>Chop it onto the pads</strong> cuts one of your recordings into eight equal pieces &mdash; a slicer &mdash; so a sentence becomes eight sounds you can play in any order. Tap an empty pad to put one drum or one note on it. With <strong>Play in time</strong> on, a pad waits for the next square of the song, so it lands in time (quantise). Pads are for playing: they are not written into the grid and they are not in the file when you save the song. <strong>Record a live take</strong> in the Mix area records what comes out of the speakers, so it keeps your pad playing too. Pad sounds stay on this device. <strong>Teach a button</strong>: with a USB instrument plugged in, tap a pad, then hit a button on the instrument, and that button plays that pad from then on. The live effects in the Mix area can be taught the same way.</p>
     <div class="spadbody">
       <div class="spads" id="spads"></div>
       <div class="spadedit" id="spadedit" hidden></div>
       <div class="spadtools">
-        <button class="ghost" id="spadcap" type="button">Capture this bar</button>
+        <button class="ghost" id="spadcap" type="button" data-find="padcapture">Capture this bar</button>
         <span class="spadchop">
           <select id="spadtrack" aria-label="Which recording to chop"></select>
-          <button class="ghost" id="spadchopgo" type="button">Chop it onto the pads</button>
+          <button class="ghost" id="spadchopgo" type="button" data-find="padchop">Chop it onto the pads</button>
         </span>
-        <button class="ghost" id="spadteach" type="button" aria-pressed="false">Teach a button</button>
+        <button class="ghost" id="spadteach" type="button" aria-pressed="false" data-find="padteach">Teach a button</button>
       </div>
       <p class="sub" id="spadmidi" hidden></p>
       <div class="spadline" id="spadtaught" hidden></div>
@@ -1525,15 +1513,24 @@
   </div>
 
   <!-- ===== feature: shelf (html, My songs area) ===== -->
-  <div class="share" id="sec-shelf" hidden data-tab="songs">
-    <span class="lbl">Songs to pull apart
-      <button class="help" type="button" data-help="shelf" aria-expanded="false" aria-label="What are these songs for?">?</button>
+  <!-- end shelf -->
+
+  <div class="share" id="sec-backup" hidden data-tab="songs">
+    <span class="lbl">Keep everything safe
+      <button class="help" type="button" data-help="backup" aria-expanded="false" aria-label="Why back up?">?</button>
     </span>
-    <p>Five finished little songs made in this app. Open a copy and take it to bits. A copy is a new song of your own, so your other songs stay exactly as they are.</p>
-    <p class="explain" id="help-shelf" hidden style="margin:0;">A quick way to learn how a song works is to open one that is finished and change things: switch a track off, loop one section, move a note. Each of these shows one or two ideas, and comes with a short list of things to try. You can open the same one as many times as you like; each time is a fresh copy.</p>
-    <div class="shelflist" id="shelflist"></div>
+    <p>Your songs live in this browser on this device. A backup is one file with every song, every earlier version and every recording in it. Keep it somewhere safe, or open it on another device to move everything across.</p>
+    <p class="explain" id="help-backup" hidden style="margin:0;">Browsers sometimes clear what a website has stored, for example when the device runs low on space or someone clears the browsing data. A backup file cannot be cleared that way. Bringing a backup in never deletes anything that is already here &mdash; it only adds.</p>
+    <div class="sendrow">
+      <button class="ghost" id="savebackup" type="button">Download a backup of everything</button>
+      <button class="ghost" id="savesongfile" type="button">Download just this song</button>
+      <button class="ghost" id="loadbackup" type="button">Bring in a backup or a song file</button>
+      <input type="file" id="backupfile" accept=".json,.firstloop,application/json" hidden>
+    </div>
+    <div class="status" id="backupstatus" role="status"></div>
   </div>
 
+  <!-- shelf: Listen to your songs, then Songs to pull apart, sit after Keep everything safe -->
   <div class="share" id="sec-shelfplay" hidden data-tab="songs" data-on="false">
     <span class="lbl">Listen to your songs
       <button class="help" type="button" data-help="shelfplay" aria-expanded="false" aria-label="What does Play my songs do?">?</button>
@@ -1553,21 +1550,13 @@
     <div class="status" id="shelfnow" role="status"></div>
     <p class="shelfremind" id="shelfremind" hidden></p>
   </div>
-  <!-- end shelf -->
-
-  <div class="share" id="sec-backup" hidden data-tab="songs">
-    <span class="lbl">Keep everything safe
-      <button class="help" type="button" data-help="backup" aria-expanded="false" aria-label="Why back up?">?</button>
+  <div class="share" id="sec-shelf" hidden data-tab="songs">
+    <span class="lbl">Songs to pull apart
+      <button class="help" type="button" data-help="shelf" aria-expanded="false" aria-label="What are these songs for?">?</button>
     </span>
-    <p>Your songs live in this browser on this device. A backup is one file with every song, every earlier version and every recording in it. Keep it somewhere safe, or open it on another device to move everything across.</p>
-    <p class="explain" id="help-backup" hidden style="margin:0;">Browsers sometimes clear what a website has stored, for example when the device runs low on space or someone clears the browsing data. A backup file cannot be cleared that way. Bringing a backup in never deletes anything that is already here &mdash; it only adds.</p>
-    <div class="sendrow">
-      <button class="ghost" id="savebackup" type="button">Download a backup of everything</button>
-      <button class="ghost" id="savesongfile" type="button">Download just this song</button>
-      <button class="ghost" id="loadbackup" type="button">Bring in a backup or a song file</button>
-      <input type="file" id="backupfile" accept=".json,.firstloop,application/json" hidden>
-    </div>
-    <div class="status" id="backupstatus" role="status"></div>
+    <p>Five finished little songs made in this app. Open a copy and take it to bits. A copy is a new song of your own, so your other songs stay exactly as they are.</p>
+    <p class="explain" id="help-shelf" hidden style="margin:0;">A quick way to learn how a song works is to open one that is finished and change things: switch a track off, loop one section, move a note. Each of these shows one or two ideas, and comes with a short list of things to try. You can open the same one as many times as you like; each time is a fresh copy.</p>
+    <div class="shelflist" id="shelflist"></div>
   </div>
 
   <div class="share" id="sec-code" hidden data-tab="songs">
@@ -1586,7 +1575,7 @@
       <button class="help" type="button" data-help="words" aria-expanded="false" aria-label="What is this list?">?</button>
     </span>
     <p>What the music words mean, in plain language. Tap one to open it.</p>
-    <p class="explain" id="help-words" hidden style="margin:0;">Every music word this app uses is in this list. <strong>Take me there</strong> shows you the control the word belongs to. The <strong>Find</strong> button at the top of the screen searches these words and every control at once, so you can type a plain word like &ldquo;louder&rdquo; and be taken to the right knob.</p>
+    <p class="explain" id="help-words" hidden style="margin:0;">These are the music words the app uses most. <strong>Take me there</strong> shows you the control the word belongs to. The <strong>Find</strong> button at the top of the screen searches these words and every control at once, so you can type a plain word like &ldquo;louder&rdquo; and be taken to the right knob.</p>
     <div class="saverow">
       <input id="wordsfilter" maxlength="40" autocomplete="off" placeholder="Look up a word" aria-label="Look up a word">
       <button class="ghost" id="wordsfind" type="button">Find anything</button>
@@ -2398,6 +2387,7 @@
     playBtn.setAttribute("aria-label","Stop");
     playIcon.innerHTML = '<rect x="6.5" y="5" width="4" height="14" rx="1.3"></rect><rect x="13.5" y="5" width="4" height="14" rx="1.3"></rect>';
     everPlayed = true; recheck();
+    if(typeof mxWatch === "function") mxWatch();
     requestAnimationFrame(follow);
   }
   function stop(){
@@ -2564,13 +2554,13 @@
       test:function(){ return ORDER.length >= 6; } },
     { id:"shaped", name:"Shaped a sound",
       hint:"Turn one of the studio knobs and hear everything change.",
-      test:function(){ return !!LOG.fxTouched; } },
+      own:true, test:function(){ return !!LOG.fxTouched; } },
     { id:"yourvoice", name:"Put your own voice in it",
       hint:"Record yourself onto the track.",
-      test:function(){ return !!LOG.voiceRecorded; } },
+      own:true, test:function(){ return !!LOG.voiceRecorded; } },
     { id:"sitmix", name:"Sat your voice in the mix",
       hint:"In the Mix area, turn your recording\u2019s Level knob so it sits with the music instead of on top of it.",
-      test:function(){ return !!LOG.voiceMixed; } }
+      own:true, test:function(){ return !!LOG.voiceMixed; } }
   ];
 
   // ---------- the ladder ----------
@@ -2683,9 +2673,20 @@
     document.getElementById("unlockname").textContent = fresh.name;
     document.getElementById("unlockblurb").textContent = fresh.blurb;
     var card = document.getElementById("unlockcard");
-    card.hidden = false;
     card.dataset.target = fresh.sec;
+    // never while a finger or the mouse is still down: a card appearing under
+    // a press moves the page and the tap is lost
+    (function show(){
+      if(pressDown){ setTimeout(show, 80); return; }
+      setTimeout(function(){ card.hidden = false; }, 60);
+    })();
   }
+  var pressDown = false;
+  document.addEventListener("pointerdown", function(){ pressDown = true; }, true);
+  ["pointerup","pointercancel"].forEach(function(n){
+    document.addEventListener(n, function(){ pressDown = false; }, true);
+  });
+  window.addEventListener("blur", function(){ pressDown = false; });
 
   // ---------- the sound browser ----------
   var libLane = "drums";
@@ -3026,6 +3027,7 @@
       if(cleared[c.id]) return;
       var ok = false;
       try { ok = c.test(); } catch(e){ ok = false; }
+      if(heldBack("c:" + c.id, ok)) return;
       if(ok){ cleared[c.id] = true; if(!fresh) fresh = c; }
     });
     if(fresh){
@@ -3041,6 +3043,28 @@
   }
 
   var touched = false, firstEval = true;
+  // Progress is only for things the learner did. When a song arrives whole (a
+  // demo, a pasted code, an earlier version, another saved song, a ready-made
+  // idea), every test it already passes is held back, and is looked at again
+  // only once the learner has changed the song so that the test stopped
+  // passing. Tests about a gesture (own:true) are never held.
+  var held = {};
+  function holdLoaded(){
+    held = {};
+    SKILLS.forEach(function(s){
+      if(got[s.id] || s.own) return;
+      try { if(s.test()) held["s:" + s.id] = true; } catch(e){}
+    });
+    CHALLENGES.forEach(function(c){
+      if(cleared[c.id]) return;
+      try { if(c.test()) held["c:" + c.id] = true; } catch(e){}
+    });
+  }
+  function heldBack(key, ok){
+    if(!held[key]) return false;
+    if(!ok){ delete held[key]; }
+    return true;
+  }
   function evaluate(){
     if(!touched) return;
     if(firstEval){            // the starter beat's ticks land silently, once
@@ -3057,6 +3081,7 @@
       if(got[s.id]) return;
       var ok = false;
       try { ok = s.test(); } catch(e){ ok = false; }
+      if(heldBack("s:" + s.id, ok)) return;
       if(ok){ got[s.id] = true; if(!fresh) fresh = s; }
     });
     if(fresh){
@@ -4288,6 +4313,12 @@
     saveLog();
     setTimeout(function(){ promptOnce("aftertour"); }, 1200);
   }
+  // pad keys and the Find shortcut stay out of the way during the walkthrough
+  // and while the greeting or Setup is open
+  function shortcutsOff(){
+    var g = document.getElementById("greet");
+    return !tourDone || (!!g && !g.hidden);
+  }
   function restartTour(){
     tourDone = false; tourIndex = 0;
     coach.hidden = false;
@@ -4357,6 +4388,7 @@
     song.A = a; song.B = clonePart(a);
     tempo = s.bpm || (80 + Math.floor(Math.random()*50));
     tempoEl.value = tempo; bpmVal.textContent = tempo;
+    holdLoaded();
     buildDrums(); buildNotes(); refreshCode();
     say("Loaded “" + s.name + "”. Part B is a copy of Part A — change it so the song goes somewhere.");
   }
@@ -4476,6 +4508,7 @@
         label:k[1], tint:k[2], min:0, max:1, value:fx[k[0]],
         onChange:function(v){
           fx[k[0]] = v; applyFX();
+          if(typeof mxSendsPaint === "function") mxSendsPaint();
           LOG.fxTouched = true; saveLog(); markDirty(); recheck();
         }
       }));
@@ -4518,6 +4551,7 @@
       strip.appendChild(kn);
       host.appendChild(strip);
     });
+    if(typeof mxSendsPaint === "function") mxSendsPaint();
   }
   function buildKey(){
     var el = document.getElementById("keyval");
@@ -4878,6 +4912,7 @@
     }
     document.querySelectorAll(".partname").forEach(function(el){ el.textContent = "— Part " + which; });
     buildDrums(); buildNotes(); lastKey = ""; paintNow(); recheck();
+    if(typeof paintStyle === "function") paintStyle();
   }
 
   // ---------- code ----------
@@ -5050,6 +5085,7 @@
       AUDIO_TRACKS.forEach(function(k){ atrack[k] = (x.audio && x.audio[k]) || null; });
     }
     EXTRA_HOOKS.forEach(function(h){ try { if(h.load) h.load(x); } catch(e){} });
+    holdLoaded();
     applyLevels(); applyTone(); applyFX();
     buildFaders(); buildFXKnobs(); buildAudioUI(); buildLibrary(); buildTrack();
     if(playing && ac) scheduleVoice(ac.currentTime + 0.05, playOffset());
@@ -5097,7 +5133,12 @@
     if(songs.indexOf(cur) < 0) songs.unshift(cur);
     var vs = versions[cur.id] || (versions[cur.id] = []);
     var lastV = vs[0];
-    if((!lastV || lastV.code !== code) && (label || !lastV || Date.now() - lastV.t > VERSION_GAP)){
+    var same = !!lastV && lastV.code === code;
+    if(same && label && !lastV.label){
+      // nothing has changed since the newest version: give that one the name,
+      // so the entry a message points at really is in the list
+      lastV.label = label; lastV.t = Date.now();
+    } else if((!same || (label && lastV.label !== label)) && (label || !lastV || Date.now() - lastV.t > VERSION_GAP)){
       vs.unshift({ t:Date.now(), code:code, label:label || "" });
       if(vs.length > MAXVERSIONS) vs.length = MAXVERSIONS;
     }
@@ -5133,6 +5174,7 @@
     if(ORDER.indexOf(editPart) < 0) editPart = ORDER[0];
     syncControls();
     setPart(editPart);
+    holdLoaded();
     buildLibrary(); refreshCode(); applyFX();
   }
 
@@ -5430,6 +5472,7 @@
     });
     if(v === "songs"){ syncSongPanel(); renderSongs(); renderVersions(); paintSave(); }
     if(v === "mix") buildFaders();
+    if(typeof mxWatch === "function") mxWatch();
     if(changed && !keepScroll) window.scrollTo(0, 0);
     if(changed && !booting){ LOG.views = LOG.views || {}; LOG.views[v] = (LOG.views[v] || 0) + 1; saveLog(); }
   }
@@ -5440,7 +5483,11 @@
     if(home && tourDone && home.dataset.tab !== view) setView(home.dataset.tab, true);
     if(el.hidden) return;
     setTimeout(function(){
-      try { el.scrollIntoView({ behavior:"smooth", block:block || "center" }); } catch(e){}
+      // keep the top of the thing clear of the bar that stays at the top of the screen
+      var dock = document.querySelector(".dock"), dh = dock ? dock.offsetHeight : 0;
+      var tall = el.getBoundingClientRect().height > window.innerHeight - 2 * dh - 20;
+      try { el.style.scrollMarginTop = (dh + 12) + "px"; } catch(e0){}
+      try { el.scrollIntoView({ behavior:"smooth", block:block || (tall ? "start" : "center") }); } catch(e){}
     }, 30);
   }
   document.querySelectorAll(".viewtab").forEach(function(t){
@@ -5546,6 +5593,7 @@
   function secAddBar(){
     if(ORDER.length >= MAXBARS){ say("That is as long as a song gets in here: " + MAXBARS + " bars."); return; }
     var a = secStart(selSec), l = SECS[selSec].len;
+    if(typeof mixplusBars === "function") mixplusBars("insert", a + l, 1, a + l - 1);
     ORDER.splice(a + l, 0, ORDER[a + l - 1]);
     SECS[selSec].len++;
     afterArrange(SECS[selSec].name + " is now " + barsWord(SECS[selSec].len) + ".");
@@ -5553,6 +5601,7 @@
   function secDelBar(){
     var a = secStart(selSec), l = SECS[selSec].len;
     if(l <= 1 || ORDER.length <= 2) return;
+    if(typeof mixplusBars === "function") mixplusBars("remove", a + l - 1, 1);
     ORDER.splice(a + l - 1, 1);
     SECS[selSec].len--;
     afterArrange(SECS[selSec].name + " is now " + barsWord(SECS[selSec].len) + ".");
@@ -5562,6 +5611,7 @@
     if(SECS.length >= MAXSECS){ say("Eight sections is the most a song can have in here."); return false; }
     if(ORDER.length + l > MAXBARS){ say("No room for a copy that long. Shorten a section first."); return false; }
     var a = secStart(selSec), bars = secBars(selSec);
+    if(typeof mixplusBars === "function") mixplusBars("insert", a + l, l, a);
     ORDER.splice.apply(ORDER, [a + l, 0].concat(bars));
     SECS.splice(selSec + 1, 0, { name:sc.name, len:l });
     selSec++;
@@ -5576,6 +5626,7 @@
     var l = Math.min(NEWSECLEN, room), src = secBars(selSec), bars = [];
     for(var i = 0; i < l; i++) bars.push(src[i % src.length]);
     var a = secStart(selSec), prev = SECS[selSec].name;
+    if(typeof mixplusBars === "function") mixplusBars("insert", a + SECS[selSec].len, l);
     ORDER.splice.apply(ORDER, [a + SECS[selSec].len, 0].concat(bars));
     SECS.splice(selSec + 1, 0, { name:name, len:l });
     selSec++;
@@ -5612,6 +5663,8 @@
     var j = selSec + dir;
     if(j < 0 || j >= SECS.length) return;
     var chunks = SECS.map(function(sc, si){ return { sc:sc, bars:secBars(si) }; });
+    var lo = Math.min(selSec, j);
+    if(typeof mixplusBars === "function") mixplusBars("swap", secStart(lo), SECS[lo].len, SECS[lo + 1].len);
     var t = chunks[selSec]; chunks[selSec] = chunks[j]; chunks[j] = t;
     ORDER.length = 0; SECS = [];
     chunks.forEach(function(c){ c.bars.forEach(function(b){ ORDER.push(b); }); SECS.push(c.sc); });
@@ -5623,6 +5676,7 @@
     if(SECS.length <= 1){ say("A song needs at least one section."); return; }
     if(ORDER.length - sc.len < 2) return;
     snapshot("Before deleting " + sc.name);
+    if(typeof mixplusBars === "function") mixplusBars("remove", secStart(selSec), sc.len);
     ORDER.splice(secStart(selSec), sc.len);
     SECS.splice(selSec, 1);
     selSec = Math.max(0, selSec - 1);
@@ -6200,6 +6254,13 @@
       return readAllClips().then(function(rows){
         var have = {}, remap = {};
         rows.forEach(function(r){ have[r.id] = r; });
+        // a renumbered clip must not land on any number used here or anywhere
+        // else in the file, so new numbers start past the highest of both
+        rows.map(function(r){ return r.id; }).concat(Object.keys(clips))
+            .concat((data.clips || []).map(function(c){ return c && c.id; })).forEach(function(cid){
+          var n = parseInt(String(cid || "").replace(/\D/g, ""), 10);
+          if(n >= clipSeq) clipSeq = n + 1;
+        });
         var writes = [];
         (data.clips || []).forEach(function(c){
           if(!c || !c.id || !Array.isArray(c.chans) || !c.chans.length) return;
@@ -6238,6 +6299,9 @@
           };
           Object.keys(remap).forEach(function(old){
             if(sg.x && sg.x.audio) AUDIO_TRACKS.forEach(function(k){ if(sg.x.audio[k] === old) sg.x.audio[k] = remap[old]; });
+            if(sg.x && sg.x.clipset) Object.keys(sg.x.clipset).forEach(function(k){
+              var cs = sg.x.clipset[k]; if(cs && cs.id === old) cs.id = remap[old];
+            });
             if(typeof padsRemap === "function") padsRemap(sg, old, remap[old]);
             sg.code = sg.code.split("s:" + old + ".").join("s:" + remap[old] + ".")
                              .split("s:" + old + "~").join("s:" + remap[old] + "~");
@@ -6298,47 +6362,17 @@
   });
 
 
-  // ===== @clips js: begin =====
-  // ===== @clips js: end =====
 
-  //
-  //
-  //
 
-  // ===== @pads js: begin =====
-  // ===== @pads js: end =====
 
-  //
-  //
-  //
 
-  // ===== @styles js: begin =====
-  // ===== @styles js: end =====
 
-  //
-  //
-  //
 
-  // ===== @demos js: begin =====
-  // ===== @demos js: end =====
 
-  //
-  //
-  //
 
-  // ===== @palette js: begin =====
-  // ===== @palette js: end =====
 
-  //
-  //
-  //
 
-  // ===== @sends js: begin =====
-  // ===== @sends js: end =====
 
-  //
-  //
-  //
 
   // ===== @meter js: begin =====
   // Time signatures. A song is in 4/4, 3/4 or 6/8. The stored rows stay sixteen
@@ -6562,17 +6596,14 @@
       : (m === "3/4" ? "Three beats in a bar: ONE two three. " : "Six in a bar, felt as two big beats: ONE-two-three FOUR-five-six. ") +
         "The row has twelve squares now. The last four are tucked away, not deleted.");
   }
-  CMDS.push({ name:"Four beats in a bar", keys:"time signature 4/4 four beats meter metre", help:"What most songs use.",
+  CMDS.push({ a:"make", name:"Four beats in a bar", keys:"time signature 4/4 four beats meter metre", help:"What most songs use.",
     run:function(){ setView("make"); setMeter("4/4"); } });
-  CMDS.push({ name:"Three beats in a bar (a waltz)", keys:"time signature 3/4 three beats waltz meter metre", help:"ONE two three.",
+  CMDS.push({ a:"make", name:"Three beats in a bar (a waltz)", keys:"time signature 3/4 three beats waltz meter metre", help:"ONE two three.",
     run:function(){ setView("make"); setMeter("3/4"); } });
-  CMDS.push({ name:"Six in a bar (a rolling two)", keys:"time signature 6/8 six beats rolling meter metre", help:"ONE-two-three FOUR-five-six.",
+  CMDS.push({ a:"make", name:"Six in a bar (a rolling two)", keys:"time signature 6/8 six beats rolling meter metre", help:"ONE-two-three FOUR-five-six.",
     run:function(){ setView("make"); setMeter("6/8"); } });
   // ===== @meter js: end =====
 
-  //
-  //
-  //
   // ===== feature: styles (js) =====
   // A style is only data: the habits most songs of that kind share, each with
   // the reason behind it. The checklist compares the song to those habits and
@@ -6580,30 +6611,33 @@
   //   tempo / swing / busy: [low, high, reason]   kits: [ids from KITS], kitWhy
   //   mood: suggested id from MOODS   sounds: ids from PITCHED per lane
   //   tricks: { conv, why, fact(), test(), and when it can be tried: tryLabel, tut, fix() }
-  var styleId = "", styleHeard = {};
-  function styHas(id, idx){ var h = hits("A", id); return idx.every(function(i){ return h[i]; }); }
+  var styleId = "", styleHeard = {}, styShowFit = false;
+  // the checks and the Try buttons look at the part on screen (the one being
+  // edited), as long as it is in the song; otherwise the selected section's first part
+  function styP(){
+    if(ORDER.indexOf(editPart) >= 0) return editPart;
+    return ORDER[secStart(selSec)] || ORDER[0] || "A";
+  }
+  function styHas(id, idx){ var h = hits(styP(), id); return idx.every(function(i){ return h[i]; }); }
   function styBackbeat(){
-    var s = hits("A","snare"), c = hits("A","clap");
+    var s = hits(styP(),"snare"), c = hits(styP(),"clap");
     return backSteps().every(function(i){ return s[i] || c[i]; });
   }
   function styGap(){
     var run = 0;
     for(var i = 0; i < barSteps(); i++){
-      if(!anyDrumAt("A", i)){ run++; if(run >= 4) return true; } else run = 0;
+      if(!anyDrumAt(styP(), i)){ run++; if(run >= 4) return true; } else run = 0;
     }
     return false;
   }
   function styLayers(){
-    return (drumTotal("A") ? 1 : 0) + LANES.filter(function(l){ return laneCount("A", l) > 0; }).length;
+    return (drumTotal(styP()) ? 1 : 0) + LANES.filter(function(l){ return laneCount(styP(), l) > 0; }).length;
   }
   function styDrop(){
-    return LANES.some(function(l){
-      var a = laneCount("A",l), z = laneCount("B",l);
-      return (a>0 && z===0) || (z>0 && a===0);
-    }) || DRUMS.some(function(d){
-      var a = count(song.A.drums[d.id]), z = count(song.B.drums[d.id]);
-      return (a>0 && z===0) || (z>0 && a===0);
-    });
+    var ps = PARTS.filter(function(k){ return ORDER.indexOf(k) >= 0; });
+    function gap(n){ return n.some(function(v){ return v > 0; }) && n.some(function(v){ return v === 0; }); }
+    return LANES.some(function(l){ return gap(ps.map(function(k){ return laneCount(k, l); })); }) ||
+           DRUMS.some(function(d){ return gap(ps.map(function(k){ return count(song[k].drums[d.id]); })); });
   }
   function stySetInst(lane, id){
     inst[lane] = id; saveInst();
@@ -6616,10 +6650,10 @@
     get why(){ return meter === "3/4" ? "in three, the lighter taps after the kick are what make it sway"
                                       : "that crack halfway between the kicks is the spot people clap along to"; },
     fact:function(){ var n = backSteps().length, w = sqWord(backSteps());
-      return styBackbeat() ? "Part A has a snare or clap on " + w
-                           : "Part A does not have a snare or clap on " + (n > 1 ? "both " : "") + w; },
+      return styBackbeat() ? "Part " + styP() + " has a snare or clap on " + w
+                           : "Part " + styP() + " does not have a snare or clap on " + (n > 1 ? "both " : "") + w; },
     test:styBackbeat, tryLabel:"Try it", get tut(){ return "Put a snare on " + sqWord(backSteps()) + " and listen"; },
-    fix:function(){ backSteps().forEach(function(i){ song.A.drums.snare[i] = true; }); } };
+    fix:function(){ backSteps().forEach(function(i){ song[styP()].drums.snare[i] = true; }); } };
 
   var STYLES = [
     { id:"lofi", name:"Lo-fi", word:"lo-fi",
@@ -6652,19 +6686,19 @@
         { get conv(){ return "usually has a kick on every beat, which is " + sqWord(beatSteps()); },
           why:"that steady thump is the thing people dance to",
           fact:function(){
-            var k = hits("A","kick"), n = beatSteps().filter(function(i){ return k[i]; }).length;
-            return "Part A has a kick on " + n + " of the " + beatSteps().length + " beats"; },
+            var k = hits(styP(),"kick"), n = beatSteps().filter(function(i){ return k[i]; }).length;
+            return "Part " + styP() + " has a kick on " + n + " of the " + beatSteps().length + " beats"; },
           test:function(){ return styHas("kick",beatSteps()); },
           tryLabel:"Try it", get tut(){ return "Put a kick on " + sqWord(beatSteps()) + " and listen"; },
-          fix:function(){ beatSteps().forEach(function(i){ song.A.drums.kick[i] = true; }); } },
+          fix:function(){ beatSteps().forEach(function(i){ song[styP()].drums.kick[i] = true; }); } },
         { get conv(){ return "usually has a hi-hat halfway between the kicks, on " + sqWord(offSteps()); },
           why:"the tick answering the thump is what gives it bounce",
           fact:function(){
-            var h = hits("A","hat"), n = offSteps().filter(function(i){ return h[i]; }).length;
-            return "Part A has a hi-hat on " + n + " of those " + offSteps().length + " in-between squares"; },
+            var h = hits(styP(),"hat"), n = offSteps().filter(function(i){ return h[i]; }).length;
+            return "Part " + styP() + " has a hi-hat on " + n + " of those " + offSteps().length + " in-between squares"; },
           test:function(){ return styHas("hat",offSteps()); },
           tryLabel:"Try it", get tut(){ return "Put a hi-hat on " + sqWord(offSteps()) + " and listen"; },
-          fix:function(){ offSteps().forEach(function(i){ song.A.drums.hat[i] = true; }); } }
+          fix:function(){ offSteps().forEach(function(i){ song[styP()].drums.hat[i] = true; }); } }
       ] },
 
     { id:"hiphop", name:"Hip hop", word:"hip hop",
@@ -6693,8 +6727,8 @@
         STY_BACKBEAT,
         { conv:"is usually built around a tune of three melody notes or more",
           why:"the tune is the part people hum afterwards",
-          fact:function(){ var n = laneCount("A","melody"); return "Part A has " + n + (n === 1 ? " melody note" : " melody notes"); },
-          test:function(){ return laneCount("A","melody") >= 3; } },
+          fact:function(){ var n = laneCount(styP(),"melody"); return "Part " + styP() + " has " + n + (n === 1 ? " melody note" : " melody notes"); },
+          test:function(){ return laneCount(styP(),"melody") >= 3; } },
         { conv:"usually has two or more sections taking turns, like Verse and Chorus",
           why:"a part that goes away and comes back is what people end up singing",
           fact:function(){ return "Your song has " + SECS.length + (SECS.length === 1 ? " section" : " sections"); },
@@ -6722,7 +6756,7 @@
           fix:function(){ stySetInst("melody","musicbox"); } },
         { conv:"usually leaves the drums silent for four squares in a row somewhere",
           why:"a silence makes the listener wait for what comes next",
-          fact:function(){ return styGap() ? "Part A has a gap of four silent drum squares" : "Part A has no gap of four silent drum squares"; },
+          fact:function(){ return styGap() ? "Part " + styP() + " has a gap of four silent drum squares" : "Part " + styP() + " has no gap of four silent drum squares"; },
           test:styGap }
       ] },
 
@@ -6741,12 +6775,12 @@
           fix:function(){ stySetInst("chords","strings"); } },
         { conv:"usually has drums, bass, chords and melody all going in the big part",
           why:"each layer fills a different height, so together they sound wide",
-          fact:function(){ return "Part A uses " + styLayers() + " of the 4 layers"; },
+          fact:function(){ return "Part " + styP() + " uses " + styLayers() + " of the 4 layers"; },
           test:function(){ return styLayers() === 4; } },
         { conv:"usually has a part with one whole layer missing",
           why:"big only sounds big next to something small",
-          fact:function(){ return styDrop() ? "One of your layers plays in only one of parts A and B"
-                                            : "Every layer you use plays in both part A and part B"; },
+          fact:function(){ return styDrop() ? "One of your layers is missing from at least one part of your song"
+                                            : "Every layer you use plays in every part of your song"; },
           test:styDrop }
       ] },
 
@@ -6765,8 +6799,8 @@
           fix:function(){ stySetInst("chords","pad"); } },
         { conv:"usually has eight drum hits or fewer in a bar",
           why:"fewer hits leave room to breathe",
-          fact:function(){ var n = drumTotal("A"); return "Part A has " + n + (n === 1 ? " drum hit" : " drum hits"); },
-          test:function(){ return drumTotal("A") <= 8; } }
+          fact:function(){ var n = drumTotal(styP()); return "Part " + styP() + " has " + n + (n === 1 ? " drum hit" : " drum hits"); },
+          test:function(){ return drumTotal(styP()) <= 8; } }
       ] }
   ];
 
@@ -6841,7 +6875,7 @@
     return L;
   }
   function styleText(l){
-    return l.conv + ", because " + l.why + " — " + l.where + "." + (l.ok ? "" : " " + l.hatch);
+    return l.conv + ", because " + l.why + ".";
   }
 
   // Put how it was aside first, so a try can always be undone from Earlier
@@ -6934,7 +6968,21 @@
     list.innerHTML = "";
     list.hidden = !s; foot.hidden = !s;
     if(s){
-      styleLines().forEach(function(l){
+      // what differs comes first; what already fits is folded away
+      var lines = styleLines(), fits = lines.filter(function(l){ return l.ok; });
+      var fold = fits.length > 0 && fits.length < lines.length;
+      lines.filter(function(l){ return !l.ok; }).concat(fits).forEach(function(l, idx, all){
+        if(fold && l === fits[0]){
+          var tg = document.createElement("li"); tg.className = "styfold";
+          var tb = document.createElement("button");
+          tb.type = "button"; tb.className = "tinybtn";
+          tb.setAttribute("aria-expanded", styShowFit ? "true" : "false");
+          tb.textContent = fits.length + (fits.length === 1 ? " thing already fits" : " things already fit") +
+            " \u2014 " + (styShowFit ? "hide" : "show");
+          tb.addEventListener("click", function(){ styShowFit = !styShowFit; paintStyle(); });
+          tg.appendChild(tb); list.appendChild(tg);
+        }
+        if(fold && l.ok && !styShowFit) return;
         var li = document.createElement("li");
         li.dataset.in = l.ok ? "true" : "false";
         var dot = document.createElement("span"); dot.className = "dot"; dot.setAttribute("aria-hidden","true");
@@ -6950,8 +6998,8 @@
         }
         list.appendChild(li);
       });
-      foot.textContent = "A filled dot means your song does what " + s.word + " usually does. An empty dot means it " +
-        "does something else. These are habits, not rules. A Try button first keeps a copy of your song in My songs, under Earlier versions.";
+      foot.textContent = "This looks at part " + styP() + ", the part on screen. An empty dot means your song does something else, " +
+        "which is fine if you mean it. These are habits, not rules. Try keeps a copy first, under Earlier versions in My songs.";
     }
 
     var note = document.getElementById("stysndnote"), host = document.getElementById("stysnds");
@@ -6994,7 +7042,7 @@
     save:function(x){ if(styleId) x.style = styleId; },
     load:function(x){
       styleId = (x && typeof x.style === "string" && STYLES.some(function(s){ return s.id === x.style; })) ? x.style : "";
-      styleHeard = {};
+      if(!shelfSwapping) styleHeard = {};
       paintStyle();
     }
   });
@@ -7029,9 +7077,6 @@
     return e;
   }
   GLOSSARY.push({ term:"Style", text:"A set of habits lots of songs share, such as how fast they go and which sounds they use. Musicians also say genre. Habits, not rules." });
-  CMDS.push({ name:"What are you going for?", keys:"style genre lofi house hip hop pop spooky epic chill goal",
-    help:"Pick a style for the helper to compare your song to",
-    run:function(){ reveal(document.getElementById("sec-style"), "start"); } });
 
   (function(){
     var starts = document.getElementById("sec-starts");
@@ -7242,6 +7287,7 @@
   function clipStartPreview(k){
     if(!audio()) return false;
     if(playing) stop();
+    if(typeof shelfStop === "function") shelfStop();
     clipStopPreview();
     var p = clipPlayback(k);
     if(!p) return false;
@@ -7307,6 +7353,19 @@
     r.setAttribute("aria-label", label);
     return r;
   }
+  // Find: open the "Line it up" panel of the first track that has a recording.
+  // With no recording yet there is nothing to open, and the message line says so.
+  function clipFindOpen(){
+    var k = AUDIO_TRACKS.filter(function(t){ var c = clipOn(t); return !!(c && c.buf); })[0];
+    if(!k){
+      setView("mix");
+      setTimeout(function(){ say("Trim, Nudge, Fit to bars and Tap along appear here once a track has a recording."); }, 0);
+      return;
+    }
+    setView("mix");
+    var b = document.querySelector('#slots [data-clipopen="' + k + '"]');
+    if(b && !clipOpen[k]) b.click();
+  }
   function clipsDecorate(){
     var host = document.getElementById("slots");
     if(!host) return;
@@ -7341,6 +7400,7 @@
         open.setAttribute("aria-expanded", clipOpen[k] ? "true" : "false");
         if(!clipOpen[k] && clipPrev && clipPrev.k === k) clipStopPreview();
       });
+      open.dataset.clipopen = k;
 
       var head = clipEl("div", "cliphead");
       var key = clipEl("div", "clipkey");
@@ -7366,7 +7426,7 @@
 
       // 1. trim
       var r1 = clipEl("div", "cliprow");
-      r1.appendChild(clipEl("span", "lbl", "Trim · cut the edges"));
+      r1.dataset.find = "cliptrim"; r1.appendChild(clipEl("span", "lbl", "Trim · cut the edges"));
       var l1 = clipEl("label", "clipline"); l1.appendChild(clipEl("span", "cliplab", "Start"));
       var sS = clipRange("clipstart", 0, 1000, 1, Math.round(st.s * 1000), "Where the clip starts");
       l1.appendChild(sS);
@@ -7390,7 +7450,7 @@
 
       // 2. nudge
       var r2 = clipEl("div", "cliprow");
-      r2.appendChild(clipEl("span", "lbl", "Nudge · earlier or later"));
+      r2.dataset.find = "clipnudge"; r2.appendChild(clipEl("span", "lbl", "Nudge · earlier or later"));
       var l3 = clipEl("div", "clipline");
       var bE = clipEl("button", "tinybtn clipearlier", "Earlier"); bE.type = "button";
       var sN = clipRange("clipnudge", -CLIP_NUDGE, CLIP_NUDGE, 5, st.n, "Nudge earlier or later, in thousandths of a second");
@@ -7410,7 +7470,7 @@
 
       // 3. fit to bars
       var r3 = clipEl("div", "cliprow");
-      r3.appendChild(clipEl("span", "lbl", "Fit to bars · this clip is"));
+      r3.dataset.find = "clipfit"; r3.appendChild(clipEl("span", "lbl", "Fit to bars · this clip is"));
       var l4 = clipEl("div", "clipline cwrap");
       var seg = clipEl("div", "seg clipfit");
       seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "How many bars long this clip is");
@@ -7429,7 +7489,7 @@
 
       // 4. tap along
       var r4 = clipEl("div", "cliprow");
-      r4.appendChild(clipEl("span", "lbl", "Tap along · find the clip’s speed"));
+      r4.dataset.find = "taptempo"; r4.appendChild(clipEl("span", "lbl", "Tap along · find the clip’s speed"));
       var l5 = clipEl("div", "clipline cwrap");
       var go = clipEl("button", "ghost cliptapgo", "Tap along"); go.type = "button";
       l5.appendChild(go);
@@ -7557,6 +7617,9 @@
       if(x && Array.isArray(x.pads)) x.pads.slice(0, PADN).forEach(function(p, i){
         if(p && typeof p.id === "string") padMap[i] = { id:p.id, name:String(p.name || "Sound").slice(0, 16) };
       });
+      // "Play my songs" borrows the loaders for a moment and then puts this
+      // song straight back: an open name box or sound menu must survive that
+      if(shelfSwapping) return;
       padEdit = null; padWant = -1;
       padsPaint();
     }
@@ -7685,21 +7748,15 @@
     var btn = document.getElementById("spadcap"), b = padWhichBar();
     btn.disabled = true;
     ensureClips().then(function(){
-      var sd = stepDur(), barDur = barSteps() * sd, loopLen = songSeconds();
+      var sd = stepDur(), barDur = barSteps() * sd;
       return padOffline(barDur + 0.45, function(off){
         for(var s = 0; s < barSteps(); s++){
           var nudge = swingNudge(s);
           fireStep(ORDER[b], s, 0.005 + s * sd + nudge);
         }
+        // recordings are heard the way the song plays them: trim, nudge and fit
         AUDIO_TRACKS.forEach(function(k){
-          var c = clipOn(k);
-          if(!c || !bus[k]) return;
-          var v = off.createBufferSource();
-          v.buffer = c.buf; v.loop = true;
-          v.loopEnd = Math.min(c.buf.duration, loopLen);
-          v.connect(bus[k]);
-          v.start(0.005, v.loopEnd > 0 ? ((b * barDur) % v.loopEnd) : 0);
-          v.stop(0.005 + barDur);
+          if(clipOn(k) && bus[k]) clipVoice(off, k, bus[k], 0.005, b * barDur, 0.005 + barDur);
         });
       }, false);
     }).then(function(buf){
@@ -7721,7 +7778,7 @@
     if(!audio()) return;
     var name = spec.drum
       ? (DRUMS.filter(function(d){ return d.id === spec.drum; })[0] || { label:"Drum" }).label
-      : pitchOf(spec.lane).name.slice(0, 13) + " " + (spec.row + 1);
+      : spec.lane.charAt(0).toUpperCase() + spec.lane.slice(1) + " " + (spec.row + 1);   // "Bass 1", "Melody 5": the part that differs comes first
     padOffline(1.9, function(){
       if(spec.drum) DRUMFN[spec.drum](0.005);
       else playNote(spec.lane, spec.row, 0.005);
@@ -7962,6 +8019,8 @@
       var mn = padMidiFor("p" + i);
       if(mn !== null){
         var mb = document.createElement("span"); mb.className = "spadbtn"; mb.textContent = "btn " + mn;
+        mb.title = "Played by button " + mn + " on your controller";
+        hit.setAttribute("aria-label", hit.getAttribute("aria-label") + ". Also played by button " + mn + " on your controller");
         hit.appendChild(mb);
       }
       el.appendChild(hit);
@@ -8143,6 +8202,7 @@
     sec.addEventListener("focusin", padsTracks);
 
     document.addEventListener("keydown", function(e){
+      if(shortcutsOff()) return;
       if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable ||
          e.metaKey || e.ctrlKey || e.altKey) return;
       if(e.key === "Escape" && (padTeach || padEdit)){ padTeach = null; padEdit = null; padsPaint(); return; }
@@ -8167,12 +8227,9 @@
       padTeachPick("fx:" + p.dataset.fx);
     }, true);
 
-    CMDS.push({ name:"Capture this bar onto a pad", keys:"pads capture sampler sample bar",
+    CMDS.push({ a:"make", name:"Capture this bar onto a pad", keys:"pads capture sampler sample bar",
       help:"Copies the bar that is playing onto the next empty pad.",
       run:function(){ setView("make"); reveal(sec); padCapture(); } });
-    CMDS.push({ name:"Go to the pads", keys:"pads sampler slicer chop teach midi learn",
-      help:"Eight pads that each hold one short sound.",
-      run:function(){ setView("make"); reveal(sec); } });
     GLOSSARY.push({ term:"Sampler", text:"Something that holds short recorded sounds and plays one each time you hit a pad or key. The Pads are a sampler." });
     GLOSSARY.push({ term:"Slicer", text:"Cuts one recording into equal pieces, one per pad, so you can play the pieces in any order." });
     GLOSSARY.push({ term:"Quantise", text:"Moving what you play onto the nearest square of the grid so it lands in time. Play in time on the Pads does this." });
@@ -8317,20 +8374,20 @@
       var meta = document.createElement("span"); meta.className = "smeta";
       if(p){
         var m = MOODS.filter(function(x){ return x.id === p.mood; })[0];
-        meta.textContent = p.order.length + " bars · " + p.tempo + " BPM" + (m ? " · " + m.name : "") +
-          " · " + p.secs.map(function(s){ return s.name; }).join(", ");
+        meta.textContent = p.order.length + " bars · " + p.tempo + " BPM · " +
+          p.secs.map(function(s){ return s.name; }).join(", ") + (m ? " · mood: " + m.name : "");
       }
       var d = document.createElement("p"); d.textContent = dm.desc;
       var det = document.createElement("details");
       var sum = document.createElement("summary"); sum.textContent = "Things to try";
       var ol = document.createElement("ol");
       dm.tries.forEach(function(s){ var li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
-      det.appendChild(sum); det.appendChild(ol);
+      det.appendChild(sum); det.appendChild(meta); det.appendChild(ol);
       var b = document.createElement("button");
       b.type = "button"; b.className = "ghost"; b.textContent = "Open a copy";
       b.setAttribute("aria-label", "Open a copy of " + dm.title + " as a new song");
       b.addEventListener("click", function(){ shelfOpen(dm); });
-      card.appendChild(h); card.appendChild(meta); card.appendChild(d); card.appendChild(det); card.appendChild(b);
+      card.appendChild(h); card.appendChild(b); card.appendChild(d); card.appendChild(det);
       host.appendChild(card);
     });
   }
@@ -8379,29 +8436,46 @@
     // ...so the live sound graph can be handed back at once instead of when the
     // render lands. Nothing else on the page ever sees the offline one.
     try { if(ropts._restore) ropts._restore(); } catch(e0){ failed = e0; }
-    try {
+    function putBack(pd, x, exact){
       ac = null;
-      applyDecoded(back);
-      applyExtras(keep.x);
-      Object.keys(keep.inst).forEach(function(k){ inst[k] = keep.inst[k]; });
-      Object.keys(keep.muted).forEach(function(k){ muted[k] = keep.muted[k]; soloed[k] = keep.soloed[k]; });
-      selSec = keep.selSec; loopSec = keep.loopSec; normSecs();
-      if(PARTS.indexOf(keep.editPart) >= 0) setPart(keep.editPart);
+      applyDecoded(pd);
+      applyExtras(x);
+      if(exact){
+        Object.keys(keep.inst).forEach(function(k){ inst[k] = keep.inst[k]; });
+        Object.keys(keep.muted).forEach(function(k){ muted[k] = keep.muted[k]; soloed[k] = keep.soloed[k]; });
+        selSec = keep.selSec; loopSec = keep.loopSec; normSecs();
+        if(PARTS.indexOf(keep.editPart) >= 0) setPart(keep.editPart);
+      }
       buildLibrary(); buildFaders(); buildTrack();
       if(typeof paintSecTools === "function") paintSecTools();
-      if(codeEl && keep.codeVal !== null) codeEl.value = keep.codeVal;
-    } catch(e2){ failed = e2; }
+      if(codeEl) codeEl.value = exact && keep.codeVal !== null ? keep.codeVal : encode();
+    }
+    var safe = false;       // true once the page is holding the learner's own song again
+    try { putBack(back, keep.x, true); safe = encode() === keepCode; if(!safe) failed = new Error("restore"); }
+    catch(e2){ failed = e2; }
     try {
       if(keep.instRaw === null) window.localStorage.removeItem("firstloop.inst");
       else window.localStorage.setItem("firstloop.inst", keep.instRaw);
     } catch(e3){}
     shelfDemo = keep.demo;
+    if(!safe){
+      // Putting it back failed part way. Load the open song again from its
+      // saved copy, still with saving held off, so that whatever is on the page
+      // when saving comes back on is the learner's song and nothing else.
+      try {
+        var sv = cur && cur.code ? decode(cur.code) : null;
+        if(sv){ putBack(sv, cur.x, false); safe = encode() === cur.code; }
+      } catch(e4){ safe = false; }
+    }
     ac = keep.realAc;
-    shelfSwapping = false; quiet = keep.quiet; touched = keep.touched; booting = keep.booting;
+    shelfSwapping = false; quiet = keep.quiet; touched = keep.touched;
+    booting = safe ? keep.booting : true;      // never save a song that is not known to be theirs
+    if(failed){ try { padEdit = null; padsPaint(); } catch(e5){} }
     shelfPaintNote();
-    if(failed || encode() !== keepCode){
+    if(failed || !safe){
       // should never happen; if it does, stop for good rather than carry on
       prom.then(null, function(){});
+      if(!safe) say("Something went astray while getting the next song ready, so saving is paused. Reload the page: your saved songs are safe.");
       return Promise.reject(new Error("restore"));
     }
     return prom.then(function(buf){ return { buf:buf, content:content }; });
@@ -8464,6 +8538,7 @@
     var ctx = OC ? audio() : null;
     if(!ctx){ say("This device cannot play songs back to back."); return; }
     if(playing) stop();
+    if(typeof clipStopPreview === "function") clipStopPreview();   // a clip playing on its own for Tap along
     if(!booting && cur) saveNow();
     var list = shelfPool(shelfWhich);
     if(!list.length){ say("There are no songs to play yet."); return; }
@@ -8589,12 +8664,9 @@
       mo.observe(document.body, { attributes:true, attributeFilter:["data-view"] });
     }
     shelfPaint();
-    CMDS.push({ name:"Play my songs back to back", keys:"listen play all songs album",
+    CMDS.push({ a:"songs", name:"Play my songs back to back", keys:"listen play all songs album",
                 help:"Plays the songs in My songs one after another.",
                 run:function(){ setView("songs"); shelfBegin(); } });
-    CMDS.push({ name:"Songs to pull apart", keys:"demo example songs learn pull apart",
-                help:"Five finished songs to open and take to bits.",
-                run:function(){ reveal(document.getElementById("sec-shelf")); } });
   })();
   // ----- end shelf -----
 
@@ -8606,7 +8678,7 @@
   var mxAuto = { target:"none", values:[], drawn:"none" };
   var mxG = null;                            // the extra audio nodes for the current graph
   var mxLast = null, mxPrev = null;          // the last bars handed to the lane
-  var mxSig = "", mxDrag = null;
+  var mxSig = "", mxDrag = null, mxWatch = null;   // mxWatch: start following bars (set below)
 
   function mxSend(which, k){
     var o = which === "s" ? mxSendS : mxSendE;
@@ -8673,16 +8745,66 @@
     [["s","Space"],["e","Echo"]].forEach(function(d){
       var k = makeKnob({
         label:d[1], tint:tr.tint, min:0, max:1, value:mxSend(d[0], tr.id),
+        format:function(v){ return mxMainOff(d[0]) ? "off" : Math.round(v * 100) + "%"; },
         onChange:function(v){
           (d[0] === "s" ? mxSendS : mxSendE)[tr.id] = v; mxApplySends();
           LOG.mixerTouched = true; LOG.sendTouched = true; saveLog(); markDirty(); recheck();
         }
       });
       k.className += " send";
+      k.dataset.send = d[0]; k.dataset.lane = tr.id;
       var dial = k.querySelector(".dial");
-      if(dial) dial.setAttribute("aria-label", tr.name + ", how much goes to " + d[1]);
+      if(dial){
+        dial.setAttribute("aria-label", tr.name + ", how much goes to " + d[1]);
+        // the Find box lands on the first strip's pair
+        if(!kn.parentNode && !document.querySelector('#faders [data-find="send' + (d[0] === "s" ? "space" : "echo") + '"]'))
+          dial.dataset.find = d[0] === "s" ? "sendspace" : "sendecho";
+      }
       kn.appendChild(k);
     });
+  }
+  // A send feeds the room or the echo. While the big knob for that effect is
+  // all the way down there is nothing to hear, and the small knobs say so.
+  function mxMainOff(which){
+    var tg = which === "s" ? "space" : "echo";
+    return fx[tg] <= 0.001 && mxAuto.target !== tg;
+  }
+  function mxSendsUsed(){
+    return Object.keys(levels).some(function(k){ return mxSend("s", k) < 0.999 || mxSend("e", k) < 0.999; });
+  }
+  var mxSendsPref = false;
+  try { mxSendsPref = window.localStorage.getItem("firstloop.showsends") === "on"; } catch(e){}
+  function mxSendsShown(){ return mxSendsPref || mxSendsUsed(); }
+  function mxSendsShow(on){
+    mxSendsPref = !!on;
+    try { window.localStorage.setItem("firstloop.showsends", on ? "on" : "off"); } catch(e){}
+    mxSendsPaint();
+  }
+  function mxSendsPaint(){
+    var host = document.getElementById("faders"), row = document.getElementById("mxsendrow");
+    if(!host || !row) return;
+    var shown = mxSendsShown(), sOff = mxMainOff("s"), eOff = mxMainOff("e");
+    host.dataset.sends = shown ? "on" : "off";
+    host.querySelectorAll(".knob.send").forEach(function(k){
+      var w = k.dataset.send;
+      k.dataset.idle = (w === "s" ? sOff : eOff) ? "true" : "false";
+      if(k.setValue) k.setValue(mxSend(w, k.dataset.lane));      // repaints the number, or "off"
+    });
+    var btn = document.getElementById("mxsendbtn"), note = document.getElementById("mxsendnote");
+    btn.textContent = shown ? "Hide sends" : "Show sends";
+    btn.setAttribute("aria-expanded", shown ? "true" : "false");
+    // a song with a send turned down keeps them in view, so nothing works unseen
+    var pinned = shown && !mxSendsPref;
+    btn.hidden = pinned;
+    var txt = "";
+    if(shown && (sOff || eOff)){
+      txt = (sOff && eOff ? "Space and Echo are" : (sOff ? "Space is" : "Echo is")) +
+        " turned all the way down in Studio knobs, so " + (sOff && eOff ? "these do" : (sOff ? "the Space sends do" : "the Echo sends do")) +
+        " nothing yet.";
+    } else if(!shown){
+      txt = "Sends choose how much of each track goes into the room (Space) and the echo.";
+    }
+    note.textContent = txt;
   }
 
   // ----- the lane -----
@@ -8709,13 +8831,36 @@
     else if(id) v = (typeof levels[id] === "number" ? levels[id] : 1) / mxLevelMax(id);
     return Math.max(0, Math.min(1, v));
   }
-  // always one value per bar: bars get added, removed and moved by other code
+  // At least one value per bar. Values past the end of the song are kept, not
+  // cut: Start over followed by Undo, or bringing back a longer earlier
+  // version, makes the song shorter only for a moment. They are let go the
+  // next time a bar is drawn or the sections are changed.
   function mxVals(){
     var v = mxAuto.values, n = ORDER.length;
     if(!v.length) v.push(mxBase(mxAuto.target));
     while(v.length < n) v.push(v[v.length - 1]);
-    if(v.length > n) v.length = n;
     return v;
+  }
+  // Called by the section tools just BEFORE they change the bars, so each drawn
+  // value stays with the bar it was drawn on.
+  //   insert: n new bars at `at`, copying the values from `from` on (or the bar before)
+  //   remove: n bars from `at`
+  //   swap:   the n bars at `at` change places with the `from` bars after them
+  function mixplusBars(op, at, n, from){
+    var v = mxAuto.values, i;
+    if(!v.length) return;
+    mxVals(); v.length = ORDER.length;
+    mxSig = "";                       // the picture is redrawn even if the bar count ends up the same
+    if(op === "insert"){
+      var add = [];
+      for(i = 0; i < n; i++) add.push(typeof from === "number" ? v[from + i] : v[Math.max(0, at - 1)]);
+      v.splice.apply(v, [at, 0].concat(add));
+    } else if(op === "remove"){
+      v.splice(at, n);
+    } else if(op === "swap"){
+      var first = v.splice(at, n), second = v.splice(at, from);
+      v.splice.apply(v, [at, 0].concat(second, first));
+    }
   }
   function mxHz(v){ return 340 * Math.pow(20000/340, v); }
   function mxLaneMuted(id){
@@ -8794,7 +8939,7 @@
       mxLast = { bar:currentBar, time:ac.currentTime }; mxPrev = null;
       mixplusAssert();
     }
-    mxBuildLane(); mxTags();
+    mxBuildLane(); mxTags(); mxSendsPaint();
     markDirty();
     say(tg === "none" ? "Automation is off. The knobs are in charge again."
       : "The song now turns " + mxLabel(tg) + ". Draw a height for each bar.");
@@ -8836,7 +8981,8 @@
   function mxSet(bar, v){
     if(mxAuto.target === "none") return;
     var vals = mxVals();
-    if(bar < 0 || bar >= vals.length) return;
+    if(bar < 0 || bar >= ORDER.length) return;
+    if(vals.length > ORDER.length) vals.length = ORDER.length;
     vals[bar] = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
     mxPaintBar(bar);
     if(playing && mxLast && mxLast.bar === bar) mixplusAssert();
@@ -8942,10 +9088,17 @@
       if(home && home.parentNode) home.parentNode.removeChild(home);
     }
     // the mixer's own words gain the two new knobs
-    var sub = document.querySelector("#sec-mixer .sub");
-    if(sub) sub.appendChild(document.createTextNode(" Space and Echo are sends: how much of this track goes into the room, and into the echo."));
+    var fd = document.getElementById("faders");
+    if(fd && fd.parentNode){
+      var row = document.createElement("div"); row.className = "mxsendrow"; row.id = "mxsendrow";
+      var sb = document.createElement("button"); sb.type = "button"; sb.className = "ghost"; sb.id = "mxsendbtn";
+      var sn = document.createElement("p"); sn.className = "sub"; sn.id = "mxsendnote";
+      sb.addEventListener("click", function(){ mxSendsShow(!mxSendsShown()); });
+      row.appendChild(sb); row.appendChild(sn);
+      fd.parentNode.insertBefore(row, fd.nextSibling);
+    }
     var hm = document.getElementById("help-mixer");
-    if(hm) hm.appendChild(document.createTextNode(" Space is one room, and every track shares it. Each track decides how much of itself to send into that room with its own small Space knob; the big Space knob in Studio knobs sets how big the room sounds overall. The small Echo knob works the same way for the echo. Producers call these sends. A bass with no Space and a melody with lots is the classic move, because low sounds turn to mud in a room."));
+    if(hm) hm.appendChild(document.createTextNode(" Space is one room, and every track shares it. Each track decides how much of itself to send into that room with its own small Space knob; the big Space knob in Studio knobs sets how much of the room is heard overall. While the big knob is all the way down, the small ones have nothing to feed and read \u201coff\u201d. Show sends, under the mixer, brings the small knobs out. The small Echo knob works the same way for the echo. Producers call these sends. A bass with no Space and a melody with lots is the classic move, because low sounds turn to mud in a room."));
 
     sel.addEventListener("change", function(){ mxSetTarget(sel.value); });
     document.getElementById("mxflat").addEventListener("click", function(){
@@ -9013,7 +9166,7 @@
         if(["none","bright","space","echo"].indexOf(tg) < 0 && !(mxLevelId(tg) && levels[mxLevelId(tg)] !== undefined)) tg = "none";
         var vals = [];
         if(a.values && a.values.length){
-          for(var i = 0; i < a.values.length; i++){
+          for(var i = 0; i < a.values.length && i < 256; i++){
             var n = +a.values[i];
             vals.push(isFinite(n) ? Math.max(0, Math.min(1, n)) : 1);
           }
@@ -9036,8 +9189,10 @@
       });
     } catch(e){}
     // bars and sections are changed by other code too; follow them, and show the bar that is playing
-    var shown = -2;
-    setInterval(function(){
+    // This only runs while the Mix area is showing or the song is playing.
+    var shown = -2, watch = null;
+    function tick(){
+      if(view !== "mix" && !playing){ clearInterval(watch); watch = null; }
       if(mxSigNow() !== mxSig){ mxBuildLane(); shown = -2; }
       var now = playing ? currentBar : -1;
       if(now !== shown){
@@ -9045,7 +9200,12 @@
         var c = now >= 0 ? lane.querySelector('.mxbar[data-bar="' + now + '"]') : null; if(c) c.dataset.now = "true";
         shown = now;
       }
-    }, 120);
+    }
+    mxWatch = function(){
+      if(view !== "mix" && !playing) return;
+      tick();
+      if(!watch) watch = setInterval(tick, 120);
+    };
     mxBuildLane(); mxTags();
   })();
   // ----- end mixplus -----
@@ -9068,6 +9228,12 @@
     if(x) for(key in x) if(x.hasOwnProperty(key)) e[key] = x[key];
     if(e.run) e.kind = "do";
     PAL_ACTIONS.push(e); PAL_BY_ID[id] = e;
+  }
+  // run just before "take me there" looks for the control: open what holds it
+  function palClipPre(){ if(typeof clipFindOpen === "function") clipFindOpen(); }
+  function palSendPre(){
+    if(view !== "mix") setView("mix", true);
+    if(typeof mxSendsShow === "function" && !mxSendsShown()) mxSendsShow(true);
   }
   function palPress(sel){
     return function(){ var b = document.querySelector(sel); if(b) b.click(); };
@@ -9166,19 +9332,21 @@
   // ----- panels other people are building right now -----
   // Guesses. The first selector in each list, [data-find="..."], is a hook:
   // putting that attribute on the real element is enough to switch the entry on.
-  palAdd("styles", "Pick what you are going for", "Style profiles", "style, styles, genre, what are you going for, vibe, hip hop, house, pop, lofi, rock, sound like", "make", ['[data-find="styles"]', "#sec-styles", "#sec-style", "#styles"], { lazy:true });
-  palAdd("cliptrim", "Cut the start or end off a recording", "Trim", "trim, cut, crop, shorten, chop the start, cut the end", "mix", ['[data-find="cliptrim"]', "#cliptrim", '#sec-voice [data-clip="trim"]', "#sec-voice"], { lazy:true });
-  palAdd("clipnudge", "Slide a recording earlier or later", "Nudge", "nudge, slide, shift, late, early, out of time, move recording", "mix", ['[data-find="clipnudge"]', "#clipnudge", '#sec-voice [data-clip="nudge"]', "#sec-voice"], { lazy:true });
-  palAdd("clipfit", "Make a recording fit the bars", "Fit to bars", "fit, fit to bars, stretch, match the speed, in time, line up", "mix", ['[data-find="clipfit"]', "#clipfit", '#sec-voice [data-clip="fit"]', "#sec-voice"], { lazy:true });
-  palAdd("taptempo", "Tap the speed with your finger", "Tap tempo", "tap, tap tempo, tap the speed, find the speed, bpm", "mix", ['[data-find="taptempo"]', "#taptempo", "#cliptap", '#sec-voice [data-clip="tap"]', "#sec-voice"], { lazy:true });
+  palAdd("styles", "Pick what you are going for", "Style profiles", "style, styles, genre, what are you going for, vibe, hip hop, house, pop, lofi, lo-fi, spooky, epic, chill, rock, sound like", "make", ['[data-find="styles"]', "#sec-styles", "#sec-style", "#styles"], { lazy:true });
+  palAdd("cliptrim", "Cut the start or end off a recording", "Trim", "trim, cut, crop, shorten, chop the start, cut the end", "mix", ['[data-find="cliptrim"]', "#sec-voice"], { lazy:true, pre:palClipPre });
+  palAdd("clipnudge", "Slide a recording earlier or later", "Nudge", "nudge, slide, shift, late, early, out of time, move recording", "mix", ['[data-find="clipnudge"]', "#sec-voice"], { lazy:true, pre:palClipPre });
+  palAdd("clipfit", "Make a recording fit the bars", "Fit to bars", "fit, fit to bars, stretch, match the speed, in time, line up", "mix", ['[data-find="clipfit"]', "#sec-voice"], { lazy:true, pre:palClipPre });
+  palAdd("taptempo", "Tap the speed with your finger", "Tap tempo", "tap, tap tempo, tap along, tap the speed, find the speed, bpm", "mix", ['[data-find="taptempo"]', "#sec-voice"], { lazy:true, pre:palClipPre });
+  palAdd("padintime", "Make the pads land in time", "Play in time (quantise)", "play in time, in time, quantise, quantize, snap, on the beat, late pads", "make", ['[data-find="padintime"]', "#sec-pads"], { lazy:true });
+  palAdd("waveform", "See the picture of a recording", "Waveform", "waveform, wave, picture of the sound, shape of the sound, see my recording", "mix", ["#slots .clipwave", "#slots .voicewave", "#sec-voice"]);
   palAdd("pads", "Play sounds on eight pads", "Pads", "pads, pad, drum pads, finger drumming, buttons, launchpad, mpc", "make", ['[data-find="pads"]', "#sec-pads", "#padgrid"], { lazy:true });
   palAdd("padcapture", "Put this bar on a pad", "Capture this bar", "capture, capture this bar, grab, save bar to pad", "make", ['[data-find="padcapture"]', "#padcapture", "#sec-pads"], { lazy:true });
   palAdd("padchop", "Chop a recording onto the pads", "Chop", "chop, slice, cut up, pieces, sample chops", "make", ['[data-find="padchop"]', "#padchop", "#sec-pads"], { lazy:true });
   palAdd("padteach", "Teach a button to play a pad", "Teach a button", "teach, teach a button, learn, controller, keyboard keys, map", "make", ['[data-find="padteach"]', "#padteach", "#padlearn", "#sec-pads"], { lazy:true });
   palAdd("demos", "Songs to pull apart", "Demo songs", "songs to pull apart, demo, demos, example songs, examples, take apart, see how it is made", "songs", ['[data-find="demos"]', "#sec-shelf", "#sec-demos", "#demolist"], { lazy:true });
   palAdd("playall", "Play my songs one after another", "Play my songs", "play my songs, play all, playlist, jukebox, listen to all, one after another", "songs", ['[data-find="playall"]', "#playmysongs", "#playall", "#shelfplay"], { lazy:true });
-  palAdd("sendspace", "Put just one instrument in the big room", "Space send", "send, space send, reverb send, room on one instrument, reverb on drums", "mix", ['[data-find="sendspace"]', '#faders .dial[aria-label="Space"]', '#faders .dial[aria-label^="Space"]'], { lazy:true });
-  palAdd("sendecho", "Put echo on just one instrument", "Echo send", "send, echo send, delay send, echo on one instrument, echo on melody", "mix", ['[data-find="sendecho"]', '#faders .dial[aria-label="Echo"]', '#faders .dial[aria-label^="Echo"]'], { lazy:true });
+  palAdd("sendspace", "Put just one instrument in the big room", "Space send", "send, space send, reverb send, room on one instrument, reverb on drums", "mix", ['[data-find="sendspace"]', "#sec-mixer"], { lazy:true, pre:palSendPre });
+  palAdd("sendecho", "Put echo on just one instrument", "Echo send", "send, echo send, delay send, echo on one instrument, echo on melody", "mix", ['[data-find="sendecho"]', "#sec-mixer"], { lazy:true, pre:palSendPre });
   palAdd("auto", "Make a knob move by itself", "Automation lane", "automation, automate, move by itself, draw, sweep, fade in, fade out, change over time", "mix", ['[data-find="auto"]', "#sec-auto", "#sec-automation", "#autolane"], { lazy:true });
   palAdd("timesig", "Change how many beats are in a bar", "Time signature (3/4, 6/8)", "time signature, 3/4, 6/8, 4/4, waltz, three beats, beats in a bar, meter, metre", "make", ['[data-find="timesig"]', "#timesig", "#sec-timesig", "#meter"], { lazy:true });
 
@@ -9304,7 +9472,7 @@
     "A flat is the note just below. B flat is one small step lower than B. A sharp is the other way round: the note just above.",
     "", [["names", "Real names shows flats with the sign ♭."]]);
   palWord("mix", "Mix", "the balance", "mixing, mixer, balance",
-    "How loud each instrument is compared with the others. In a good mix you can hear every part.",
+    "How loud each instrument is compared with the others. Most mixes are set so that every part can be heard, because a part nobody can hear might as well not be there.",
     "If everything is at full volume nothing stands out, so turning one thing down often works better than turning another up.",
     [["level", "The Mixer has one strip for each instrument."]]);
   palWord("level", "Level", "volume", "volume, loud, loudness, gain, fader",
@@ -9339,12 +9507,10 @@
     [["echoknob", "The Echo knob in Studio knobs. Each repeat comes back three squares later."]]);
   palWord("send", "Send", "", "sends, send knob, aux",
     "A knob that feeds some of one instrument into an effect such as reverb or echo. It lets one instrument have the effect while the others stay plain.",
-    "", [["sendspace", "The Space and Echo knobs on each strip of the Mixer."],
-         ["space", "This app has no sends yet. The Studio knobs add space and echo to everything at once."]]);
+    "", [["sendspace", "The small Space and Echo knobs on each strip of the Mixer. Show sends, under the mixer, brings them out."]]);
   palWord("automation", "Automation", "", "automate, automated, moves by itself",
     "Recording the movement of a knob so that it turns by itself while the song plays. A sound can get brighter or louder over time with nobody touching it.",
-    "", [["auto", "The automation lane in Mix."],
-         ["perfrec", "This app has no automation yet. Holding a live effect while you record a live take is the nearest thing."]]);
+    "", [["auto", "The automation lane in Mix."]]);
   palWord("stutter", "Stutter", "beat repeat", "roll, beat repeat, glitch",
     "Repeating one tiny slice of the music very fast, like a record that is stuck.",
     "", [["fxroll", "The Stutter pad in Live effects repeats the half-beat you pressed it on."]]);
@@ -9358,15 +9524,16 @@
     "A recorded sound used as a building block in music. It can be a drum hit, a word, a clap, anything.",
     "", [["record", "Anything you record or import is a sample."]]);
   palWord("sampler", "Sampler", "", "samplers, play a recording",
-    "An instrument that plays a recording at different pitches. Played faster the recording sounds higher, and played slower it sounds lower.",
-    "", [["sampler", "Play it as an instrument, in Record & import, turns a recording into one."]]);
+    "An instrument made of recorded sounds. It plays one each time you hit a pad or key, or plays one recording at different pitches: faster sounds higher, slower sounds lower.",
+    "", [["sampler", "Two places. The Pads in Make hold one sound each. Play it as an instrument, in Record & import, plays one recording as notes."]]);
   palWord("countin", "Count-in", "", "count in, countin, clicks, 1 2 3 4",
     "A few clicks before recording starts, so you know the speed and when to begin.",
     "", [["record", "Record clicks once on each beat of one bar before it starts."]]);
   palWord("quantise", "Quantise", "snap to the grid", "quantize, quantised, quantized, snap, in time, tidy timing",
     "Moving notes that were played a little early or late onto the nearest step, so they sit exactly in time.",
     "Dance music is usually fully quantised. Some players leave the timing loose on purpose, because small differences sound human.",
-    [["notes", "A square can only sit on a step, so everything on the grids is already quantised."]]);
+    [["padintime", "A square can only sit on a step, so everything on the grids is already quantised. Play in time, on the Pads, does the same for a pad you hit by hand."],
+     ["notes", "A square can only sit on a step, so everything on the grids is already quantised."]]);
   palWord("floor", "Four on the floor", "", "four to the floor, 4 on the floor, kick every beat",
     "A kick drum on every beat: 1, 2, 3, 4.",
     "House, disco and techno use it, because a steady thump on every beat is easy to dance to.",
@@ -9406,6 +9573,36 @@
   PAL_TERMS.forEach(function(t){ PAL_BY_ID[t.id] = t; });
 
   // ----- finding the control on the page -----
+  palWord("pad", "Pad", "a button that holds one sound", "pads, drum pad, trigger",
+    "A button that plays one sound each time you hit it. A row of pads is a way to play drums or short recordings with your fingers.",
+    "", [["pads", "The eight Pads in Make. The keys Q W E R and A S D F play them too."]]);
+  palWord("taptempo", "Tap tempo", "tap along", "tap, tap along, tap the speed",
+    "Finding how fast a piece of music is by tapping along with it. The time between your taps gives the speed in BPM.",
+    "", [["taptempo", "Tap along, inside Line it up on a track that has a recording."]]);
+  palWord("waveform", "Waveform", "the picture of a sound", "wave, picture of sound, shape",
+    "A picture of a recording. Left to right is time, and taller means louder.",
+    "", [["waveform", "Every recording in Record & import shows its waveform."]]);
+  // Features add to the shared CMDS and GLOSSARY lists as they start up. Bring
+  // those into the Find box and the Words panel, leaving out anything that is
+  // already here under the same name.
+  (function(){
+    var PTR = { style:["styles", "What are you going for? in Make."],
+                trim:["cliptrim", "Trim, inside Line it up on a track that has a recording."],
+                nudge:["clipnudge", "Nudge, inside Line it up on a track that has a recording."],
+                slicer:["padchop", "Chop it onto the pads, in the Pads panel in Make."] };
+    GLOSSARY.forEach(function(g, i){
+      if(!g || !g.term || !g.text) return;
+      var low = g.term.toLowerCase();
+      if(PAL_TERMS.some(function(t){ return t.t.toLowerCase() === low; })) return;
+      palWord("g" + i, g.term, "", low === "style" ? "genre, styles" : "", g.text, "", PTR[low] ? [PTR[low]] : []);
+    });
+    CMDS.forEach(function(c, i){
+      if(!c || !c.name || typeof c.run !== "function") return;
+      var low = c.name.toLowerCase();
+      if(PAL_ACTIONS.some(function(a){ return a.t.toLowerCase() === low; })) return;
+      palAdd("cmd-" + i, c.name, c.help || "", String(c.keys || "").split(/\s+/).join(", "), c.a || "top", [], { run:c.run, dyn:true });
+    });
+  })();
   function palHidden(el){
     while(el && el !== document.body){ if(el.hidden) return true; el = el.parentNode; }
     return false;
@@ -9467,6 +9664,7 @@
       e.run();
       if(!e.then) return;
     }
+    if(e.pre) e.pre();
     var el = palTarget(e.then || e.s);
     // some areas rebuild their controls when they open, so change area first and look again
     var home = el && el.closest("[data-tab]");
@@ -9597,9 +9795,12 @@
     var asksWord = /^(what|whats|meaning|define|explain)\b/.test(q) || /\bmean(s|ing)?$/.test(q);
     var asksPlace = /^(where|how|go|open|take)\b/.test(q);
     var out = [];
+    // a word typed with a hyphen or a space in it ("lo-fi", "hi hat") is also tried joined up
+    var qsAll = q2 === q ? [q] : [q, q2];
+    if(toks.length === 2 && q2.length <= 12) qsAll.push(toks.join(""));
     pool = pool || palPool();
     pool.forEach(function(e){
-      var s = palScore(e, q2 === q ? [q] : [q, q2], toks);
+      var s = palScore(e, qsAll, toks);
       if(!s) return;
       if(asksWord && e.kind === "word") s += 12;
       if(asksPlace && e.kind !== "word") s += 6;
@@ -9938,6 +10139,7 @@
       return;
     }
     var k = e.key;
+    if(shortcutsOff()) return;
     if((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && (k === "k" || k === "K")){
       e.preventDefault(); e.stopPropagation(); palOpen(); return;
     }
@@ -10298,7 +10500,7 @@
 
   document.addEventListener("keydown", function(e){
     if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
-    if(e.code === "Space" && !e.target.closest(".pad")){
+    if(e.code === "Space" && !e.target.closest(".pad, .cliptap")){
       e.preventDefault(); playing ? stop() : start();
       return;
     }
@@ -10362,7 +10564,7 @@
     if(e.target.closest("#greet, .dock, #themebtn, #gearbtn")) return;
     touched = true;
     try { if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(err){}
-    document.removeEventListener("pointerdown", onFirst);
+    document.removeEventListener("pointerdown", onFirst, true);
     evaluate();
   }, true);
   document.getElementById("greetskip").addEventListener("click", function(){

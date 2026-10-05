@@ -779,6 +779,25 @@
 
   /* . */
   /* . */
+
+  /* ===== feature: styles (css) ===== */
+  /* ----- end styles ----- */
+
+  /* ===== feature: clips (css) ===== */
+  /* ----- end clips ----- */
+
+  /* ===== feature: pads (css) ===== */
+  /* ----- end pads ----- */
+
+  /* ===== feature: shelf (css) ===== */
+  /* ----- end shelf ----- */
+
+  /* ===== feature: mixplus (css) ===== */
+  /* ----- end mixplus ----- */
+
+  /* ===== feature: palette (css) ===== */
+  /* ----- end palette ----- */
+
 </style>
 </head>
 <body>
@@ -1016,10 +1035,22 @@
     <p class="libnote" id="libnote"></p>
   </section>
 
+  <!-- ===== feature: styles (html, Make area) ===== -->
+  <!-- end styles -->
+
+  <!-- ===== feature: pads (html, Make area) ===== -->
+  <!-- end pads -->
+
   <div class="starts" id="sec-starts" hidden data-tab="make">
     <span class="lbl">Swap in a ready-made idea</span>
     <div class="startgrid" id="startgrid"></div>
   </div>
+
+  <!-- ===== feature: mixplus (html, Mix area) ===== -->
+  <!-- end mixplus -->
+
+  <!-- ===== feature: clips (html, Mix area) ===== -->
+  <!-- end clips -->
 
   <div class="mods" data-tab="mix">
     <div class="mod wide" id="sec-mixer" hidden>
@@ -1202,6 +1233,9 @@
     <div class="status" id="wavstatus" role="status"></div>
   </div>
 
+  <!-- ===== feature: shelf (html, My songs area) ===== -->
+  <!-- end shelf -->
+
   <div class="share" id="sec-backup" hidden data-tab="songs">
     <span class="lbl">Keep everything safe
       <button class="help" type="button" data-help="backup" aria-expanded="false" aria-label="Why back up?">?</button>
@@ -1226,6 +1260,9 @@
       <button class="ghost" id="loadcode">Load a pasted one</button>
     </div>
   </div>
+
+  <!-- ===== feature: palette (html, Learn area) ===== -->
+  <!-- end palette -->
 
   <div class="tail" id="sec-tail" hidden data-tab="learn">
     <p>Want the guided walk through the basics again? It takes a couple of minutes.</p>
@@ -5957,6 +5994,24 @@
   //
   //
   //
+  // ===== feature: styles (js) =====
+  // ----- end styles -----
+
+  // ===== feature: clips (js) =====
+  // ----- end clips -----
+
+  // ===== feature: pads (js) =====
+  // ----- end pads -----
+
+  // ===== feature: shelf (js) =====
+  // ----- end shelf -----
+
+  // ===== feature: mixplus (js) =====
+  // ----- end mixplus -----
+
+  // ===== feature: palette (js) =====
+  // ----- end palette -----
+
   // ---------- interaction ----------
   drumGrid.addEventListener("click", function(e){
     var b = e.target.closest(".cell"); if(!b) return;

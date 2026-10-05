@@ -922,6 +922,36 @@
   /* ----- end shelf ----- */
 
   /* ===== feature: mixplus (css) ===== */
+  .strip .knob.send .dial{width:38px;height:38px;}
+  .strip .knob.send .ind{transform-origin:50% 14px;height:11px;}
+  .strip .knob.send .kn{font-size:9.5px;}
+  .knob[data-auto="true"]{position:relative;}
+  .knob[data-auto="true"] .dial{opacity:.5;}
+  .knob[data-auto="true"]::after{content:"auto";position:absolute;top:-7px;left:50%;transform:translateX(4px);
+    font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;line-height:1;
+    background:var(--ink);color:var(--bg);border-radius:6px;padding:3px 5px;pointer-events:none;}
+  .mxrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .mxrow select{appearance:auto;font:inherit;font-size:13px;font-weight:600;color:var(--ink);
+    background:var(--surface-2);border:1px solid var(--line-2);border-radius:9px;padding:7px 9px;
+    min-height:34px;max-width:100%;}
+  .mxread{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;min-height:1.3em;flex:1 1 150px;}
+  .mxscroll{overflow-x:auto;overflow-y:hidden;max-width:100%;padding-bottom:6px;}
+  .mxlane{display:grid;gap:4px 3px;align-items:end;}
+  .mxlane .mxsec{grid-row:1;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ink-2);border-bottom:2px solid var(--line-2);padding:0 2px 3px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .mxlane .mxnum{grid-row:2;font-size:10.5px;font-weight:700;color:var(--ink-2);text-align:center;
+    font-variant-numeric:tabular-nums;}
+  .mxlane .mxbar{grid-row:3;height:112px;border-radius:7px;background:var(--surface-2);
+    border:1px solid var(--line);position:relative;overflow:hidden;cursor:ns-resize;touch-action:none;
+    -webkit-user-select:none;user-select:none;}
+  .mxlane .mxbar:focus-visible{outline:2px solid var(--melody);outline-offset:1px;}
+  .mxlane .mxfill{position:absolute;left:0;right:0;bottom:0;background:var(--mxt,var(--tick));
+    border-top:2px solid var(--ink);opacity:.8;pointer-events:none;}
+  .mxlane .mxbar[data-now="true"]{border-color:var(--ink);}
+  .mxlane .mxbar[data-now="true"] .mxfill{opacity:1;}
+  .mxlane[data-off="true"] .mxbar{cursor:default;}
+  .mxlane[data-off="true"] .mxfill{background:var(--line-2);border-top-color:var(--line-2);opacity:.6;}
   /* ----- end mixplus ----- */
 
   /* ===== feature: palette (css) ===== */
@@ -1223,6 +1253,20 @@
   </div>
 
   <!-- ===== feature: mixplus (html, Mix area) ===== -->
+  <div class="mods" data-tab="mix" id="mixplus-home">
+    <div class="mod wide" id="sec-auto">
+      <h2>The song turns a knob <button class="help" type="button" data-help="auto" aria-expanded="false" aria-label="What is automation?">?</button></h2>
+      <p class="sub">Pick one setting, then draw how high it is in each bar. Drag across the bars.</p>
+      <p class="explain" id="help-auto" hidden style="margin:0;">This is called automation: the song turning its own knobs. At the start of every bar the setting glides to the height you drew for that bar. The classic use is closing Brightness during a verse and opening it for the chorus, so the chorus feels like a door opening. While a setting is drawn here its knob shows a small &ldquo;auto&rdquo; tag and the song is in charge of it. Pick Off and the knob is in charge again. Flat puts every bar back at the knob&rsquo;s own value.</p>
+      <div class="mxrow">
+        <label class="lbl" for="mxtarget">Setting</label>
+        <select id="mxtarget" aria-label="Which setting the song turns"></select>
+        <button class="tinybtn" id="mxflat" type="button">Flat</button>
+        <span class="mxread" id="mxread" role="status"></span>
+      </div>
+      <div class="mxscroll" id="mxscroll"><div class="mxlane" id="mxlane"></div></div>
+    </div>
+  </div>
   <!-- end mixplus -->
 
   <!-- ===== feature: clips (html, Mix area) ===== -->
@@ -1648,6 +1692,7 @@
       toneHP[k] = ac.createBiquadFilter(); toneHP[k].type = "highpass"; toneHP[k].frequency.value = 20;
       bus[k].connect(toneLP[k]); toneLP[k].connect(toneHP[k]); toneHP[k].connect(fxIn);
     });
+    if(typeof mixplusGraph === "function") mixplusGraph();
   }
   function applyTone(){
     if(!ac) return;
@@ -1736,14 +1781,14 @@
     // offline context untouched, then put them back exactly as they were.
     var keep = { ac:ac, master:master, bus:bus, fxIn:fxIn, fxFilter:fxFilter,
                  dryG:dryG, revG:revG, delG:delG, delay:delay, fb:fb, noiseBuf:noiseBuf,
-                 fxHP:fxHP, toneLP:toneLP, toneHP:toneHP };
+                 fxHP:fxHP, toneLP:toneLP, toneHP:toneHP, mxG:mxG };
     var off = new OC(2, Math.ceil(secs * rate), rate);
 
     function restore(){
       ac = keep.ac; master = keep.master; bus = keep.bus; fxIn = keep.fxIn;
       fxFilter = keep.fxFilter; dryG = keep.dryG; revG = keep.revG; delG = keep.delG;
       delay = keep.delay; fb = keep.fb; noiseBuf = keep.noiseBuf;
-      fxHP = keep.fxHP; toneLP = keep.toneLP; toneHP = keep.toneHP;
+      fxHP = keep.fxHP; toneLP = keep.toneLP; toneHP = keep.toneHP; mxG = keep.mxG;
       renderOnly = null;
     }
     if(opts._shelf) opts._restore = restore;   // lets "Play my songs" hand the live graph back at once
@@ -1761,6 +1806,7 @@
         for(var i = 0; i < total; i++){
           var bar = Math.floor(i / STEPS), step = i % STEPS;
           var nudge = (step % 2 === 1) ? (swing/100) * stepDur() * 0.66 : 0;
+          if(step === 0 && typeof mixplusBar === "function") mixplusBar(bar, pass * one + i * stepDur());
           fireStep(ORDER[bar], step, pass * one + i * stepDur() + nudge);
         }
       }
@@ -1843,12 +1889,14 @@
     if(fb){ fb.gain.cancelScheduledValues(t); fb.gain.setTargetAtTime(0.33, t, 0.05); }
     if(fxHP){ fxHP.frequency.cancelScheduledValues(t); fxHP.frequency.setTargetAtTime(20, t, 0.04); }
     if(delay) delay.delayTime.setTargetAtTime(stepDur() * 3, t, 0.05);
+    if(typeof mixplusAssert === "function") mixplusAssert();
   }
   function applyLevels(){
     if(!ac) return;
     Object.keys(bus).forEach(function(k){
       bus[k].gain.setTargetAtTime(laneGain(k), ac.currentTime, 0.02);
     });
+    if(typeof mixplusAssert === "function") mixplusAssert();
   }
   function out(k){ return bus[k] || master; }
 
@@ -2228,6 +2276,7 @@
         }
       }
       var bar = Math.floor(songStep / STEPS), step = songStep % STEPS;
+      if(step === 0 && typeof mixplusBar === "function") mixplusBar(bar, nextTime);
       // swing pushes every second square later, the way a person would play it
       var nudge = (step % 2 === 1) ? (swing/100) * stepDur() * 0.66 : 0;
       if(live.roll && rollAt){
@@ -2268,6 +2317,7 @@
     playBtn.setAttribute("aria-label","Play");
     playIcon.innerHTML = '<path d="M7 4.5v15l13-7.5z"></path>';
     paintNow();
+    if(typeof mixplusStop === "function") mixplusStop();
   }
   function follow(){
     if(!playing) return;
@@ -4371,6 +4421,7 @@
           LOG.mixerTouched = true; LOG.toneTouched = true; saveLog(); markDirty();
         }
       }));
+      if(typeof mixplusStrip === "function") mixplusStrip(tr, kn);
       strip.appendChild(kn);
       host.appendChild(strip);
     });
@@ -8217,6 +8268,455 @@
   // ----- end shelf -----
 
   // ===== feature: mixplus (js) =====
+  // Part A: sends. Space is one shared room and Echo is one shared echo; each
+  // track has its own amount that it sends into each of them.
+  // Part B: one automation lane, a value per bar for one setting.
+  var mxSendS = {}, mxSendE = {};            // per track, 0..1, 1 when missing
+  var mxAuto = { target:"none", values:[], drawn:"none" };
+  var mxG = null;                            // the extra audio nodes for the current graph
+  var mxLast = null, mxPrev = null;          // the last bars handed to the lane
+  var mxSig = "", mxDrag = null;
+
+  function mxSend(which, k){
+    var o = which === "s" ? mxSendS : mxSendE;
+    return typeof o[k] === "number" ? Math.max(0, Math.min(1, o[k])) : 1;
+  }
+  // Whatever is scheduled on one setting is scheduled on its copies too, so the
+  // room and the echo hear the same Brightness, Muffle and Build-up as the dry sound.
+  function mxMirror(p, list){
+    ["setValueAtTime","setTargetAtTime","linearRampToValueAtTime","exponentialRampToValueAtTime",
+     "cancelScheduledValues","cancelAndHoldAtTime","setValueCurveAtTime"].forEach(function(m){
+      if(typeof p[m] !== "function") return;
+      var orig = p[m];
+      p[m] = function(){
+        for(var i = 0; i < list.length; i++){ try { list[i][m].apply(list[i], arguments); } catch(e){} }
+        return orig.apply(p, arguments);
+      };
+    });
+    try {
+      var d = Object.getOwnPropertyDescriptor(window.AudioParam.prototype, "value");
+      if(d && d.get && d.set){
+        Object.defineProperty(p, "value", { configurable:true,
+          get:function(){ return d.get.call(p); },
+          set:function(x){ list.forEach(function(l){ l.value = x; }); d.set.call(p, x); } });
+      }
+    } catch(e){}
+  }
+  // Called at the end of buildGraph, for the live context and for every offline render.
+  function mixplusGraph(){
+    var g = { sS:{}, sE:{} };
+    function pair(dest){
+      var inp = ac.createGain();
+      var hp = ac.createBiquadFilter(); hp.type = "highpass";
+      hp.frequency.value = fxHP.frequency.value; hp.Q.value = fxHP.Q.value;
+      var lp = ac.createBiquadFilter(); lp.type = "lowpass";
+      lp.frequency.value = fxFilter.frequency.value; lp.Q.value = fxFilter.Q.value;
+      inp.connect(hp); hp.connect(lp); lp.connect(dest);
+      return { inp:inp, hp:hp, lp:lp };
+    }
+    // the room and the echo are no longer fed from the shared filter...
+    try { fxFilter.disconnect(revG); fxFilter.disconnect(delG); }
+    catch(e){ fxFilter.disconnect(); fxFilter.connect(dryG); }
+    // ...each gets its own input, fed by one send per track
+    g.rev = pair(revG); g.del = pair(delG);
+    Object.keys(bus).forEach(function(k){
+      g.sS[k] = ac.createGain(); g.sS[k].gain.value = mxSend("s", k);
+      g.sE[k] = ac.createGain(); g.sE[k].gain.value = mxSend("e", k);
+      toneHP[k].connect(g.sS[k]); g.sS[k].connect(g.rev.inp);
+      toneHP[k].connect(g.sE[k]); g.sE[k].connect(g.del.inp);
+    });
+    g.params = [fxFilter.frequency, fxHP.frequency];   // held so the patched objects stay alive
+    mxMirror(fxFilter.frequency, [g.rev.lp.frequency, g.del.lp.frequency]);
+    mxMirror(fxHP.frequency, [g.rev.hp.frequency, g.del.hp.frequency]);
+    mxG = g;
+  }
+  function mxApplySends(){
+    if(!ac || !mxG) return;
+    Object.keys(mxG.sS).forEach(function(k){
+      mxG.sS[k].gain.setTargetAtTime(mxSend("s", k), ac.currentTime, 0.03);
+      mxG.sE[k].gain.setTargetAtTime(mxSend("e", k), ac.currentTime, 0.03);
+    });
+  }
+  // Called from buildFaders for every strip: the two send knobs.
+  function mixplusStrip(tr, kn){
+    [["s","Space"],["e","Echo"]].forEach(function(d){
+      var k = makeKnob({
+        label:d[1], tint:tr.tint, min:0, max:1, value:mxSend(d[0], tr.id),
+        onChange:function(v){
+          (d[0] === "s" ? mxSendS : mxSendE)[tr.id] = v; mxApplySends();
+          LOG.mixerTouched = true; LOG.sendTouched = true; saveLog(); markDirty(); recheck();
+        }
+      });
+      k.className += " send";
+      var dial = k.querySelector(".dial");
+      if(dial) dial.setAttribute("aria-label", tr.name + ", how much goes to " + d[1]);
+      kn.appendChild(k);
+    });
+  }
+
+  // ----- the lane -----
+  function mxLevelId(tg){ return tg.indexOf("level:") === 0 ? tg.slice(6) : null; }
+  function mxLevelMax(id){ return isAudioLane(id) ? 1.4 : 1.6; }
+  function mxTrackName(id){
+    var n = id;
+    TRACKS.forEach(function(tr){ if(tr.id === id) n = (tr.audio && clipOn(id) && clipOn(id).name) || tr.name; });
+    return n;
+  }
+  function mxLabel(tg){
+    if(tg === "bright") return "Brightness";
+    if(tg === "space") return "Space";
+    if(tg === "echo") return "Echo";
+    var id = mxLevelId(tg);
+    return id ? mxTrackName(id) + " level" : "Off";
+  }
+  // what the knob itself is set to, as 0..1
+  function mxBase(tg){
+    var id = mxLevelId(tg), v = 1;
+    if(tg === "bright") v = fx.bright;
+    else if(tg === "space") v = fx.space;
+    else if(tg === "echo") v = fx.echo;
+    else if(id) v = (typeof levels[id] === "number" ? levels[id] : 1) / mxLevelMax(id);
+    return Math.max(0, Math.min(1, v));
+  }
+  // always one value per bar: bars get added, removed and moved by other code
+  function mxVals(){
+    var v = mxAuto.values, n = ORDER.length;
+    if(!v.length) v.push(mxBase(mxAuto.target));
+    while(v.length < n) v.push(v[v.length - 1]);
+    if(v.length > n) v.length = n;
+    return v;
+  }
+  function mxHz(v){ return 340 * Math.pow(20000/340, v); }
+  function mxLaneMuted(id){
+    if(renderOnly) return id !== renderOnly;
+    return !!muted[id] || (anySolo() && !soloed[id]);
+  }
+  function mxDrive(v, t, tc){
+    if(!ac) return;
+    var tg = mxAuto.target, id = mxLevelId(tg), p = null, val = 0;
+    if(tg === "bright"){ if(live.muffle) return; p = fxFilter.frequency; val = mxHz(v); }
+    else if(tg === "space"){ p = revG.gain; val = v * 0.85; }
+    else if(tg === "echo"){ if(live.echo || endingNow) return; p = delG.gain; val = v * 0.5; }
+    else if(id && bus[id]){ p = bus[id].gain; val = mxLaneMuted(id) ? 0 : v * mxLevelMax(id); }
+    if(!p) return;
+    if(t <= 0.0005) p.setValueAtTime(val, 0);
+    else p.setTargetAtTime(val, t, tc);
+  }
+  // Called at the top of every bar, by the scheduler and by the offline render.
+  function mixplusBar(bar, t){
+    if(mxAuto.target === "none") return;
+    var v = mxVals()[bar];
+    if(typeof v !== "number") return;
+    mxPrev = mxLast; mxLast = { bar:bar, time:t };
+    mxDrive(v, t, 0.06);
+  }
+  // applyFX and applyLevels put the knob's own value back; while the song is
+  // playing a drawn setting, hand it straight back to the lane.
+  function mixplusAssert(){
+    if(!playing || !ac || mxAuto.target === "none" || !mxLast) return;
+    var now = ac.currentTime, vals = mxVals();
+    if(mxLast.time > now + 0.005){
+      if(mxPrev && typeof vals[mxPrev.bar] === "number") mxDrive(vals[mxPrev.bar], now + 0.001, 0.03);
+      if(typeof vals[mxLast.bar] === "number") mxDrive(vals[mxLast.bar], mxLast.time, 0.06);
+    } else if(typeof vals[mxLast.bar] === "number") mxDrive(vals[mxLast.bar], now + 0.001, 0.03);
+  }
+  // give one setting back to its knob
+  function mxRelease(tg){
+    if(!ac || tg === "none") return;
+    var t = ac.currentTime;
+    if(tg === "bright"){
+      if(live.muffle) return;
+      fxFilter.frequency.cancelScheduledValues(t);
+      fxFilter.frequency.setTargetAtTime(mxHz(fx.bright), t, 0.03);
+    } else if(tg === "space"){
+      revG.gain.cancelScheduledValues(t);
+      revG.gain.setTargetAtTime(fx.space * 0.85, t, 0.05);
+    } else if(tg === "echo"){
+      if(live.echo || endingNow) return;
+      delG.gain.cancelScheduledValues(t);
+      delG.gain.setTargetAtTime(fx.echo * 0.5, t, 0.05);
+    } else {
+      var id = mxLevelId(tg);
+      if(id && bus[id]){
+        bus[id].gain.cancelScheduledValues(t);
+        bus[id].gain.setTargetAtTime(laneGain(id), t, 0.02);
+      }
+    }
+  }
+  // Called at the end of stop(): the knob is in charge again until the next play.
+  function mixplusStop(){
+    mxLast = null; mxPrev = null;
+    mxRelease(mxAuto.target);
+  }
+  function mxSetTarget(tg){
+    var old = mxAuto.target;
+    if(tg === old) return;
+    mxRelease(old);
+    mxAuto.target = tg;
+    if(tg !== "none" && mxAuto.drawn !== tg){
+      // a new setting starts flat at wherever its knob is
+      var b = mxBase(tg);
+      mxAuto.values = ORDER.map(function(){ return b; });
+      mxAuto.drawn = tg;
+    }
+    if(playing && ac && tg !== "none" && currentBar >= 0){
+      mxLast = { bar:currentBar, time:ac.currentTime }; mxPrev = null;
+      mixplusAssert();
+    }
+    mxBuildLane(); mxTags();
+    markDirty();
+    say(tg === "none" ? "Automation is off. The knobs are in charge again."
+      : "The song now turns " + mxLabel(tg) + ". Draw a height for each bar.");
+    LOG.autoUsed = (LOG.autoUsed || 0) + 1; saveLog();
+  }
+  function mxTint(tg){
+    if(tg === "bright") return "var(--tick)";
+    if(tg === "space") return "var(--chord)";
+    if(tg === "echo") return "var(--melody)";
+    var id = mxLevelId(tg), c = "var(--line-2)";
+    TRACKS.forEach(function(tr){ if(tr.id === id) c = tr.tint; });
+    return c;
+  }
+  function mxPct(v){ return Math.round(v * 100) + "%"; }
+  function mxSecName(bar){
+    var n = 0;
+    for(var k = 0; k < SECS.length; k++){ n += SECS[k].len; if(bar < n) return SECS[k].name; }
+    return "";
+  }
+  function mxRead(bar){
+    var el = document.getElementById("mxread");
+    if(!el) return;
+    if(mxAuto.target === "none"){ el.textContent = "Off. Pick a setting to start drawing."; return; }
+    if(bar === undefined || bar < 0){ el.textContent = mxLabel(mxAuto.target) + ", one height per bar."; return; }
+    var sn = mxSecName(bar);
+    el.textContent = "Bar " + (bar + 1) + (sn ? " (" + sn + ")" : "") + ": " +
+      mxLabel(mxAuto.target) + " " + mxPct(mxVals()[bar]);
+  }
+  function mxPaintBar(bar){
+    var lane = document.getElementById("mxlane");
+    var el = lane && lane.querySelector('.mxbar[data-bar="' + bar + '"]');
+    if(!el) return;
+    var off = mxAuto.target === "none";
+    var v = off ? 0.5 : mxVals()[bar];
+    el.firstChild.style.height = Math.round(v * 100) + "%";
+    el.setAttribute("aria-valuenow", String(Math.round(v * 100)));
+    el.setAttribute("aria-valuetext", off ? "Off" : mxPct(v));
+  }
+  function mxSet(bar, v){
+    if(mxAuto.target === "none") return;
+    var vals = mxVals();
+    if(bar < 0 || bar >= vals.length) return;
+    vals[bar] = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
+    mxPaintBar(bar);
+    if(playing && mxLast && mxLast.bar === bar) mixplusAssert();
+  }
+  function mxSigNow(){
+    var t = TRACKS.filter(function(tr){ return !tr.audio || clipOn(tr.id); })
+      .map(function(tr){ return tr.id + mxTrackName(tr.id); }).join(",");
+    return ORDER.length + "|" + SECS.map(function(s){ return s.name + ":" + s.len; }).join("|") + "|" + t;
+  }
+  function mxBuildLane(){
+    var lane = document.getElementById("mxlane"), sel = document.getElementById("mxtarget");
+    if(!lane || !sel) return;
+    mxSig = mxSigNow();
+    // the list of settings
+    var opts = [["none","Off"],["bright","Brightness"],["space","Space"],["echo","Echo"]];
+    TRACKS.forEach(function(tr){
+      if(tr.audio && !clipOn(tr.id) && mxAuto.target !== "level:" + tr.id) return;
+      opts.push(["level:" + tr.id, mxTrackName(tr.id) + " level"]);
+    });
+    sel.innerHTML = "";
+    opts.forEach(function(o){
+      var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1];
+      sel.appendChild(op);
+    });
+    sel.value = mxAuto.target;
+    var off = mxAuto.target === "none", n = ORDER.length;
+    document.getElementById("mxflat").disabled = off;
+    lane.dataset.off = off ? "true" : "false";
+    lane.style.setProperty("--mxt", mxTint(mxAuto.target));
+    lane.style.gridTemplateColumns = "repeat(" + n + ",minmax(30px,1fr))";
+    lane.style.minWidth = (n * 33 - 3) + "px";
+    lane.innerHTML = "";
+    var at = 0;
+    SECS.forEach(function(sc){
+      var s = document.createElement("div"); s.className = "mxsec"; s.textContent = sc.name;
+      s.style.gridColumn = (at + 1) + " / span " + sc.len;
+      lane.appendChild(s); at += sc.len;
+    });
+    var b;
+    for(b = 0; b < n; b++){
+      var num = document.createElement("div"); num.className = "mxnum"; num.textContent = String(b + 1);
+      num.style.gridColumn = String(b + 1);
+      lane.appendChild(num);
+    }
+    for(b = 0; b < n; b++){
+      var bar = document.createElement("div"); bar.className = "mxbar"; bar.dataset.bar = b;
+      bar.style.gridColumn = String(b + 1);
+      bar.tabIndex = 0;
+      bar.setAttribute("role", "slider");
+      bar.setAttribute("aria-label", "Bar " + (b + 1));
+      bar.setAttribute("aria-valuemin", "0"); bar.setAttribute("aria-valuemax", "100");
+      bar.setAttribute("aria-orientation", "vertical");
+      if(off) bar.setAttribute("aria-disabled", "true");
+      var fill = document.createElement("div"); fill.className = "mxfill";
+      bar.appendChild(fill);
+      lane.appendChild(bar);
+      mxPaintBar(b);
+    }
+    mxRead();
+  }
+  // which knob is being driven
+  function mxTags(){
+    var tg = mxAuto.target, names = ["bright","space","echo"];
+    var ks = document.querySelectorAll("#fxknobs .knob");
+    for(var i = 0; i < ks.length; i++) ks[i].dataset.auto = (names[i] === tg) ? "true" : "false";
+    var id = mxLevelId(tg);
+    document.querySelectorAll("#faders .strip").forEach(function(st){
+      var k = st.querySelector(".knob");
+      if(k) k.dataset.auto = (id && st.dataset.lane === id) ? "true" : "false";
+    });
+  }
+  function mxPoint(e){
+    var lane = document.getElementById("mxlane");
+    var bars = lane.querySelectorAll(".mxbar");
+    if(!bars.length) return null;
+    var r0 = bars[0].getBoundingClientRect(), r1 = bars[bars.length - 1].getBoundingClientRect();
+    var pitch = bars.length > 1 ? (r1.left - r0.left) / (bars.length - 1) : r0.width;
+    var bar = Math.floor((e.clientX - r0.left) / (pitch || 1));
+    bar = Math.max(0, Math.min(bars.length - 1, bar));
+    var v = 1 - (e.clientY - r0.top) / (r0.height || 1);
+    return { bar:bar, v:Math.max(0, Math.min(1, v)) };
+  }
+  function mxPaintTo(pt){
+    if(!pt) return;
+    var from = mxDrag && mxDrag.bar !== undefined ? mxDrag : pt;
+    var a = from.bar, b = pt.bar, step = a <= b ? 1 : -1;
+    // fill in any bars a fast finger skipped over
+    for(var i = a; i !== b + step; i += step){
+      var f = a === b ? 1 : (i - a) / (b - a);
+      mxSet(i, from.v + (pt.v - from.v) * f);
+    }
+    mxDrag = { bar:pt.bar, v:pt.v };
+    mxRead(pt.bar);
+  }
+  (function(){
+    var home = document.getElementById("mixplus-home"), mod = document.getElementById("sec-auto");
+    var lane = document.getElementById("mxlane"), sel = document.getElementById("mxtarget");
+    if(!mod || !lane || !sel) return;
+    // sit with the other Mix modules, after Live effects (which stays beside Studio knobs)
+    var fxm = document.getElementById("sec-live");
+    if(fxm && fxm.parentNode){
+      fxm.parentNode.insertBefore(mod, fxm.nextSibling);
+      if(home && home.parentNode) home.parentNode.removeChild(home);
+    }
+    // the mixer's own words gain the two new knobs
+    var sub = document.querySelector("#sec-mixer .sub");
+    if(sub) sub.appendChild(document.createTextNode(" Space and Echo are sends: how much of this track goes into the room, and into the echo."));
+    var hm = document.getElementById("help-mixer");
+    if(hm) hm.appendChild(document.createTextNode(" Space is one room, and every track shares it. Each track decides how much of itself to send into that room with its own small Space knob; the big Space knob in Studio knobs sets how big the room sounds overall. The small Echo knob works the same way for the echo. Producers call these sends. A bass with no Space and a melody with lots is the classic move, because low sounds turn to mud in a room."));
+
+    sel.addEventListener("change", function(){ mxSetTarget(sel.value); });
+    document.getElementById("mxflat").addEventListener("click", function(){
+      if(mxAuto.target === "none") return;
+      var b = mxBase(mxAuto.target);
+      mxAuto.values = ORDER.map(function(){ return b; });
+      mxBuildLane(); mixplusAssert(); markDirty();
+      say("Every bar is back at the knob's value, " + mxPct(b) + ".");
+    });
+    lane.addEventListener("pointerdown", function(e){
+      var t = e.target;
+      if(!t || !t.closest || !t.closest(".mxbar")) return;
+      if(mxAuto.target === "none"){ mxRead(); return; }
+      e.preventDefault();
+      try { lane.setPointerCapture(e.pointerId); } catch(err){}
+      mxDrag = {};
+      mxPaintTo(mxPoint(e));
+    });
+    lane.addEventListener("pointermove", function(e){
+      if(mxDrag){ e.preventDefault(); mxPaintTo(mxPoint(e)); return; }
+      var t = e.target && e.target.closest ? e.target.closest(".mxbar") : null;
+      if(t && mxAuto.target !== "none") mxRead(+t.dataset.bar);
+    });
+    function endDrag(e){
+      if(!mxDrag) return;
+      mxDrag = null;
+      try { lane.releasePointerCapture(e.pointerId); } catch(err){}
+      markDirty();
+    }
+    lane.addEventListener("pointerup", endDrag);
+    lane.addEventListener("pointercancel", endDrag);
+    lane.addEventListener("focusin", function(e){
+      var t = e.target && e.target.closest ? e.target.closest(".mxbar") : null;
+      if(t && mxAuto.target !== "none") mxRead(+t.dataset.bar);
+    });
+    lane.addEventListener("keydown", function(e){
+      var t = e.target && e.target.closest ? e.target.closest(".mxbar") : null;
+      if(!t) return;
+      var bar = +t.dataset.bar, next = null;
+      if(e.key === "ArrowLeft") next = lane.querySelector('.mxbar[data-bar="' + (bar - 1) + '"]');
+      else if(e.key === "ArrowRight") next = lane.querySelector('.mxbar[data-bar="' + (bar + 1) + '"]');
+      if(next){ e.preventDefault(); next.focus(); return; }
+      if(mxAuto.target === "none") return;
+      var d = e.key === "ArrowUp" ? 0.05 : e.key === "ArrowDown" ? -0.05 : 0;
+      if(!d) return;
+      e.preventDefault();
+      mxSet(bar, mxVals()[bar] + d); mxRead(bar); markDirty();
+    });
+
+    EXTRA_HOOKS.push({
+      save:function(x){
+        x.mixplus = { sendS:copyOf(mxSendS), sendE:copyOf(mxSendE),
+                      auto:{ target:mxAuto.target, values:mxAuto.target === "none" ? mxAuto.values.slice() : mxVals().slice(),
+                             drawn:mxAuto.drawn } };
+      },
+      load:function(x){
+        var m = (x && x.mixplus) || {}, a = m.auto || {};
+        mxSendS = {}; mxSendE = {};
+        Object.keys(levels).forEach(function(k){
+          mxSendS[k] = (m.sendS && typeof m.sendS[k] === "number") ? Math.max(0, Math.min(1, m.sendS[k])) : 1;
+          mxSendE[k] = (m.sendE && typeof m.sendE[k] === "number") ? Math.max(0, Math.min(1, m.sendE[k])) : 1;
+        });
+        var old = mxAuto.target;
+        var tg = typeof a.target === "string" ? a.target : "none";
+        if(["none","bright","space","echo"].indexOf(tg) < 0 && !(mxLevelId(tg) && levels[mxLevelId(tg)] !== undefined)) tg = "none";
+        var vals = [];
+        if(a.values && a.values.length){
+          for(var i = 0; i < a.values.length; i++){
+            var n = +a.values[i];
+            vals.push(isFinite(n) ? Math.max(0, Math.min(1, n)) : 1);
+          }
+        }
+        mxAuto = { target:tg, values:vals, drawn:typeof a.drawn === "string" ? a.drawn : tg };
+        if(!vals.length) mxAuto.drawn = "none";
+        if(old !== tg) mxRelease(old);
+        mxApplySends();
+        mxBuildLane();
+      }
+    });
+    GLOSSARY.push({ term:"Send", text:"How much of one track goes into a shared effect, like the room (Space) or the echo. Every track has its own send, so the bass can stay dry while the melody sounds far away." });
+    GLOSSARY.push({ term:"Automation", text:"The song turning its own knobs. You draw how a setting should change over the bars and it happens by itself every time the song plays." });
+
+    // the mixer and the studio knobs are rebuilt by other code; keep the tag on
+    try {
+      var mo = new MutationObserver(function(){ mxTags(); });
+      ["fxknobs","faders"].forEach(function(id){
+        var el = document.getElementById(id); if(el) mo.observe(el, { childList:true });
+      });
+    } catch(e){}
+    // bars and sections are changed by other code too; follow them, and show the bar that is playing
+    var shown = -2;
+    setInterval(function(){
+      if(mxSigNow() !== mxSig){ mxBuildLane(); shown = -2; }
+      var now = playing ? currentBar : -1;
+      if(now !== shown){
+        var o = lane.querySelector('.mxbar[data-now="true"]'); if(o) o.dataset.now = "false";
+        var c = now >= 0 ? lane.querySelector('.mxbar[data-bar="' + now + '"]') : null; if(c) c.dataset.now = "true";
+        shown = now;
+      }
+    }, 120);
+    mxBuildLane(); mxTags();
+  })();
   // ----- end mixplus -----
 
   // ===== feature: palette (js) =====

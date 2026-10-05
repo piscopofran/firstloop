@@ -1023,7 +1023,7 @@
   <div class="dock-in">
     <span class="brand">
       <span class="wordmark">First&nbsp;Loop</span>
-      <span class="build">v24</span>
+      <span class="build">v25</span>
       <button class="lvl" id="lvlchip" type="button" hidden title="Jump to your unlocked controls"></button>
       <button class="lvl themebtn" id="themebtn" type="button" title="Switch between dark and light">Light</button>
       <button class="lvl" id="gearbtn" type="button" title="What are you making, and what have you got?">Setup</button>
@@ -3417,7 +3417,7 @@
   // Nothing here identifies anybody. It records what happened in the app, nothing about the person,
   // and it is never transmitted: it sits in this browser until someone presses a send button.
   var LOG = {
-    build: "v24",
+    build: "v25",
     started: Date.now(),
     tour: { reached: 0, finished: false, skipped: false, stepMs: {} },
     asked: 0, applied: 0, whyOpened: 0,
@@ -8911,10 +8911,10 @@
   // Guesses. The first selector in each list, [data-find="..."], is a hook:
   // putting that attribute on the real element is enough to switch the entry on.
   palAdd("styles", "Pick what you are going for", "Style profiles", "style, styles, genre, what are you going for, vibe, hip hop, house, pop, lofi, rock, sound like", "make", ['[data-find="styles"]', "#sec-styles", "#sec-style", "#styles"], { lazy:true });
-  palAdd("cliptrim", "Cut the start or end off a recording", "Trim", "trim, cut, crop, shorten, chop the start, cut the end", "mix", ['[data-find="cliptrim"]', "#cliptrim", '#sec-clips [data-clip="trim"]', "#sec-clips"], { lazy:true });
-  palAdd("clipnudge", "Slide a recording earlier or later", "Nudge", "nudge, slide, shift, late, early, out of time, move recording", "mix", ['[data-find="clipnudge"]', "#clipnudge", '#sec-clips [data-clip="nudge"]', "#sec-clips"], { lazy:true });
-  palAdd("clipfit", "Make a recording fit the bars", "Fit to bars", "fit, fit to bars, stretch, match the speed, in time, line up", "mix", ['[data-find="clipfit"]', "#clipfit", '#sec-clips [data-clip="fit"]', "#sec-clips"], { lazy:true });
-  palAdd("taptempo", "Tap the speed with your finger", "Tap tempo", "tap, tap tempo, tap the speed, find the speed, bpm", "mix", ['[data-find="taptempo"]', "#taptempo", "#cliptap", '#sec-clips [data-clip="tap"]', "#sec-clips"], { lazy:true });
+  palAdd("cliptrim", "Cut the start or end off a recording", "Trim", "trim, cut, crop, shorten, chop the start, cut the end", "mix", ['[data-find="cliptrim"]', "#cliptrim", '#sec-voice [data-clip="trim"]', "#sec-voice"], { lazy:true });
+  palAdd("clipnudge", "Slide a recording earlier or later", "Nudge", "nudge, slide, shift, late, early, out of time, move recording", "mix", ['[data-find="clipnudge"]', "#clipnudge", '#sec-voice [data-clip="nudge"]', "#sec-voice"], { lazy:true });
+  palAdd("clipfit", "Make a recording fit the bars", "Fit to bars", "fit, fit to bars, stretch, match the speed, in time, line up", "mix", ['[data-find="clipfit"]', "#clipfit", '#sec-voice [data-clip="fit"]', "#sec-voice"], { lazy:true });
+  palAdd("taptempo", "Tap the speed with your finger", "Tap tempo", "tap, tap tempo, tap the speed, find the speed, bpm", "mix", ['[data-find="taptempo"]', "#taptempo", "#cliptap", '#sec-voice [data-clip="tap"]', "#sec-voice"], { lazy:true });
   palAdd("pads", "Play sounds on eight pads", "Pads", "pads, pad, drum pads, finger drumming, buttons, launchpad, mpc", "make", ['[data-find="pads"]', "#sec-pads", "#padgrid"], { lazy:true });
   palAdd("padcapture", "Put this bar on a pad", "Capture this bar", "capture, capture this bar, grab, save bar to pad", "make", ['[data-find="padcapture"]', "#padcapture", "#sec-pads"], { lazy:true });
   palAdd("padchop", "Chop a recording onto the pads", "Chop", "chop, slice, cut up, pieces, sample chops", "make", ['[data-find="padchop"]', "#padchop", "#sec-pads"], { lazy:true });
@@ -10119,4 +10119,4 @@
 </script>
 </body>
 </html>
-<!-- First Loop v24, deployed from GitHub main -->
+<!-- First Loop, deployed from GitHub main -->

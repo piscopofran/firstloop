@@ -900,6 +900,25 @@
   /* ----- end pads ----- */
 
   /* ===== feature: shelf (css) ===== */
+  .shelflist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .shelfcard{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0;
+    border:1px solid var(--line);border-top:3px solid var(--st,var(--chord));border-radius:12px;
+    padding:11px 12px 12px;background:var(--surface-2);}
+  .shelfcard .shelftitle{font-family:Sora,sans-serif;font-size:14.5px;color:var(--ink);}
+  .shelfcard .smeta{white-space:normal;}
+  .shelfcard p{flex:1 1 auto;}
+  .shelfcard details{font-size:12.5px;color:var(--ink-2);width:100%;}
+  .shelfcard summary{cursor:pointer;font-weight:700;color:var(--ink);padding:3px 0;}
+  .shelfcard ol,.shelfnote ol{margin:4px 0 0;padding-left:20px;line-height:1.5;}
+  .shelfcard li,.shelfnote li{margin:0 0 3px;}
+  .shelfnote{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--st,var(--melody));
+    border-radius:14px;padding:9px 12px 10px 14px;font-size:12.5px;color:var(--ink-2);}
+  .shelfnotehead{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .shelfnotehead b{color:var(--ink);font-size:13px;}
+  .shelfremind{border-top:1px solid var(--line);padding-top:9px;}
+  #sec-shelfplay[data-on="true"] #shelfnow{color:var(--ink);}
+  /* the demo songs use all eight parts; eight part buttons did not fit a 390px screen */
+  .partbtns{flex-wrap:wrap;}
   /* ----- end shelf ----- */
 
   /* ===== feature: mixplus (css) ===== */
@@ -1391,6 +1410,34 @@
   </div>
 
   <!-- ===== feature: shelf (html, My songs area) ===== -->
+  <div class="share" id="sec-shelf" hidden data-tab="songs">
+    <span class="lbl">Songs to pull apart
+      <button class="help" type="button" data-help="shelf" aria-expanded="false" aria-label="What are these songs for?">?</button>
+    </span>
+    <p>Five finished little songs made in this app. Open a copy and take it to bits. A copy is a new song of your own, so your other songs stay exactly as they are.</p>
+    <p class="explain" id="help-shelf" hidden style="margin:0;">A quick way to learn how a song works is to open one that is finished and change things: switch a track off, loop one section, move a note. Each of these shows one or two ideas, and comes with a short list of things to try. You can open the same one as many times as you like; each time is a fresh copy.</p>
+    <div class="shelflist" id="shelflist"></div>
+  </div>
+
+  <div class="share" id="sec-shelfplay" hidden data-tab="songs" data-on="false">
+    <span class="lbl">Listen to your songs
+      <button class="help" type="button" data-help="shelfplay" aria-expanded="false" aria-label="What does Play my songs do?">?</button>
+    </span>
+    <p>Plays your songs one after another, like a record. Sit back and listen.</p>
+    <p class="explain" id="help-shelfplay" hidden style="margin:0;">Each song plays once through from the first bar to the last (a short one of 8 bars or fewer goes round twice), then the next one starts. Listening does not change any song. Pressing the big play button stops it and plays the song you are working on instead. Recordings may be missing from songs other than the open one.</p>
+    <div class="saverow">
+      <span class="seg" id="shelfwhich" hidden>
+        <button type="button" data-w="all" aria-pressed="true">All</button>
+        <button type="button" data-w="fav" aria-pressed="false">Favourites</button>
+        <button type="button" data-w="Finished" aria-pressed="false">Finished</button>
+      </span>
+      <button class="sendbtn" id="shelfplay" type="button">Play my songs</button>
+      <button class="ghost" id="shelfnext" type="button" hidden>Next</button>
+      <button class="ghost" id="shelfstop" type="button" hidden>Stop</button>
+    </div>
+    <div class="status" id="shelfnow" role="status"></div>
+    <p class="shelfremind" id="shelfremind" hidden></p>
+  </div>
   <!-- end shelf -->
 
   <div class="share" id="sec-backup" hidden data-tab="songs">
@@ -1699,6 +1746,7 @@
       fxHP = keep.fxHP; toneLP = keep.toneLP; toneHP = keep.toneHP;
       renderOnly = null;
     }
+    if(opts._shelf) opts._restore = restore;   // lets "Play my songs" hand the live graph back at once
 
     try {
       ac = off;
@@ -2193,6 +2241,7 @@
     }
   }
   function start(){
+    if(typeof shelfOnStart === "function") shelfOnStart();
     if(!audio()) return;
     applyLevels();
     playing = true; queue.length = 0; pendingJump = null;
@@ -5989,6 +6038,7 @@
         backupSay(how === "declined" ? "No problem \u2014 nothing was saved."
           : "Saved " + name + ". Keep it somewhere safe.");
         if(how !== "declined") noteExport(only ? "song file" : "backup");
+        if(how !== "declined" && !only && typeof shelfBackupDone === "function") shelfBackupDone();
       });
     }).catch(function(){ backupSay("That did not work on this device."); });
   }
@@ -7753,6 +7803,417 @@
   // ----- end pads -----
 
   // ===== feature: shelf (js) =====
+  // Two things in the My songs area:
+  //  1. "Songs to pull apart": five finished little songs in this app's own
+  //     format. Opening one always makes a NEW song, never touches yours.
+  //  2. "Play my songs": plays the library back to back. Each song is rendered
+  //     offline to a buffer and the buffers are played, so the song being
+  //     edited is never what is sounding and is never changed.
+  var SHELF_DEMOS = [
+    { id:"house", title:"Four on the floor", tint:"var(--thump)",
+      desc:"House music. A kick on every beat, and a Break where the drums drop out before they come back.",
+      code:"FL5~124~sad~0~AABBCCCDEFEGHHHH~electro.synbass.organ.pluck~0~Intro:4|Groove:4|Break:4|Drop:4~8~3dd,0,dhg,0~----------------,----------------,----------------~3dd,0,dhg,368~----------------,---3--3---3-----,----------------~3dd,0,dhg,368~0---0-0-0---0-2-,---3--3---3-----,----5---4-3-----~3dd,0,dhg,368~0---0-0-3---2-1-,---2--2---3-----,----3---4---5---~0,0,0,0~----------------,3-------1-------,5--4--3---4-----~0,0,0,0~----------------,2-------3-------,3--4--5-------5-~0,1cep,0,0~----------------,2-------3-------,3--4--5---------~3dd,368,15xw,368~0-0-0-0-0-3-0-2-,---3--3---3--3--,7---5---4-3-5---",
+      tries:[
+        "Tap a bar marked A and count the kicks. One on every beat is called four-on-the-floor.",
+        "Tap the Break section, then press Loop it. What went missing?",
+        "Tap the bar marked G, the last bar of the Break. The snare gets busier towards the end. That is a build-up.",
+        "While the Drop plays, press M on the Drums row and hear what is left."
+      ] },
+    { id:"lofi", title:"Rainy window", tint:"var(--chord)",
+      desc:"A slow lo-fi beat. The swing makes it lean back, and the melody is only a few notes.",
+      code:"FL5~78~dreamy~40~ABABCDCDEFEFGH~lofi.sub.epiano.musicbox~0~Intro:4|Beat:4|Tune:4|Outro:2~8~0,0,368,0~----------------,0-------3-------,----------------~0,0,368,0~----------------,2-------1-------,----------------~w1,368,ifx,0~2------2--3-----,0-------3-------,----------------~77l,368,ifx,0~1------1--3--3--,2-------1-------,----------------~w1,368,ifx,0~2------2--3-----,0-------3-------,------4---5-----~77l,368,ifx,0~1------1--3--3--,2-------1-------,--6---4-------5-~0,0,368,0~----------------,0-------3-------,------4---5-----~0,0,0,0~2---------------,0---------------,----5-----------",
+      tries:[
+        "Drag Swing down to 0 and play. Then put it back to 40. That lean is the swing.",
+        "Tap a bar marked E and count the melody notes. There are two. The gaps are part of the tune.",
+        "Tap a bar marked C. The bass sits on the same squares as the kick.",
+        "Loop the Beat section, then the Tune section. The drums are the same. What was added?"
+      ] },
+    { id:"pop", title:"Big chorus", tint:"var(--melody)",
+      desc:"A pop song shape: Intro, Verse, Chorus, Verse, Chorus. The chorus is the biggest part on purpose.",
+      code:"FL5~112~happy~0~AABCBDEFGHBCBDEFGH~studio.ebass.piano.lead~0~Intro:2|Verse:4|Chorus:4|Verse 2:4|Chorus 2:4~8~0,0,3dd,0~----------------,3-------0-------,----------------~zl,368,gut,0~0-------0-0-----,3---------------,--2-3-2-0-------~zl,368,gut,0~4-------4-4-----,0---------------,--2-3-2-4-------~zl,153k,gut,0~3-------3-3-3-3-,1-------1-------,--3-4-3-5-------~11d,368,17tp,368~0-0-0-0-0-0-0-0-,3---3---3---3---,7-7-6-5---5-6---~11d,368,17tp,368~4-4-4-4-4-4-4-4-,0---0---0---0---,7-7-6-4---4-5---~11d,368,17tp,368~3-3-3-3-3-3-3-3-,1---1---1---1---,6-6-5-3---3-5---~3ep,153k,ijh,368~0-0-0-0-0---0---,3---3---3-------,6-5-6-7---5-----",
+      tries:[
+        "While the Chorus plays, press M on the Drums row and hear what is left.",
+        "Tap a bar marked B (Verse), then one marked E (Chorus). Count the hi-hats in each.",
+        "The Verse melody stays on the low rows and the Chorus melody on the high ones. Move one Verse note up and listen.",
+        "Loop the Verse, then the Chorus. What gets busier?"
+      ] },
+    { id:"tiptoe", title:"Tiptoe", tint:"var(--clap)",
+      desc:"Sneaking music. Half of most bars is empty, and the Hide section is nearly silent.",
+      code:"FL5~84~spooky~0~ABACDEDFGGGH~toybox.pluck.strings.musicbox~0~Creep:4|Hide:4|Run:4~8~75,0,0,0~0---1---0-------,----------------,----------------~75,0,0,0~0---1---2-------,----------------,----------5-6-5-~75,0,0,35s~0---1---0-------,----------------,----------6-5---~0,0,0,0~----------------,----------------,5---------------~0,0,74,0~----------------,----------------,----------------~0,0,0,0~1---------------,4---------------,----------------~3dd,0,dhg,0~0-0-1-1-0-0-3-3-,----------------,5---6---5---4---~101,sg,1w,0~0-0-1-1-0-0-----,----------------,5---6---5-------",
+      tries:[
+        "Tap a bar marked A. Everything is in the first half. Play it and listen to the gap.",
+        "Loop the Hide section. How many sounds are there in four bars?",
+        "Put one note into the empty half of part A. Does it still sound like sneaking?",
+        "Change the mood from Spooky to Happy and play. Same squares, different notes."
+      ] },
+    { id:"build", title:"One at a time", tint:"var(--bass)",
+      desc:"A slow build. Each section adds one more layer: tick, drums, bass, chords, tune.",
+      code:"FL5~96~sad~0~AAAABBBBCCCCDEDEFGFH~eight.sub.pad.bells~0~Tick:4|Drums:4|Bass:4|Chords:4|Tune:4~8~0,0,gut,0~----------------,----------------,----------------~u9,368,gut,0~----------------,----------------,----------------~u9,368,gut,0~0-----0---0-----,----------------,----------------~u9,368,gut,0~0-----0---0-----,3---------------,----------------~u9,368,gut,0~2-----2---2-----,2---------------,----------------~u9,368,gut,0~0-----0---0-----,3---------------,----5---4-3-----~u9,368,gut,0~2-----2---2-----,2---------------,----4---3-4-----~u9,ftc,gut,0~2-----2---0-----,2---------3-----,----4---3---0---",
+      tries:[
+        "Play from the start and say what joins in each time the section changes.",
+        "Tap a bar marked C. Every bass note sits on a kick square.",
+        "Tap the Tune section and move it to the front with the arrow. Does starting with everything work as well?",
+        "Add a new section at the end where one layer drops out again."
+      ] }
+  ];
+  function shelfDemoById(id){
+    return SHELF_DEMOS.filter(function(d){ return d.id === id; })[0] || null;
+  }
+
+  // Which demo the open song was copied from, kept with the song.
+  var shelfDemo = null, shelfSwapping = false;
+  EXTRA_HOOKS.push({
+    save:function(x){ if(shelfDemo) x.demo = { id:shelfDemo.id, off:!!shelfDemo.off }; },
+    load:function(x){
+      shelfDemo = (x && x.demo && x.demo.id) ? { id:String(x.demo.id), off:!!x.demo.off } : null;
+      if(!shelfSwapping) shelfPaintNote();
+    }
+  });
+
+  // The small note at the top of the Make area.
+  var shelfNoteEl = (function(){
+    var el = document.createElement("div");
+    el.className = "shelfnote"; el.id = "shelfnote"; el.hidden = true;
+    el.setAttribute("data-tab", "make");
+    var anchor = document.getElementById("sec-parts");
+    if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(el, anchor);
+    return el;
+  })();
+  function shelfPaintNote(){
+    var el = shelfNoteEl;
+    if(!el) return;
+    var dm = shelfDemo && !shelfDemo.off ? shelfDemoById(shelfDemo.id) : null;
+    var gate = document.getElementById("sec-backup");
+    if(!dm || (gate && gate.hidden)){ el.hidden = true; return; }
+    el.innerHTML = "";
+    el.style.setProperty("--st", dm.tint);
+    var head = document.createElement("div"); head.className = "shelfnotehead";
+    var t = document.createElement("b");
+    t.textContent = "Your copy of “" + dm.title + "” — things to try";
+    var hide = document.createElement("button");
+    hide.type = "button"; hide.className = "tinybtn"; hide.textContent = "Hide";
+    hide.setAttribute("aria-label", "Hide the things to try");
+    hide.addEventListener("click", function(){
+      if(shelfDemo) shelfDemo.off = true;
+      shelfPaintNote(); markDirty();
+    });
+    head.appendChild(t); head.appendChild(hide);
+    var ol = document.createElement("ol");
+    dm.tries.forEach(function(s){ var li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
+    el.appendChild(head); el.appendChild(ol);
+    el.hidden = false;
+  }
+
+  function shelfOpen(dm){
+    var p = decode(dm.code);
+    if(!p){ say("That one could not be read."); return; }
+    shelfStop();
+    // arrives as a new song, so it never lands on top of yours
+    if(!newSong(true)) return;
+    // somebody else's finished song should not tick off skills or challenges
+    // the moment it opens; they are looked at again on the first change made
+    var wasTouched = touched; touched = false;
+    try { applyDecoded(p); } finally { touched = wasTouched; }
+    cur.name = uniqueName(dm.title);
+    shelfDemo = { id:dm.id, off:false };
+    syncSongPanel(); saveNow();
+    shelfPaintNote();
+    setView("make");
+    LOG.shelf = LOG.shelf || {}; LOG.shelf.opened = LOG.shelf.opened || {};
+    LOG.shelf.opened[dm.id] = (LOG.shelf.opened[dm.id] || 0) + 1; saveLog();
+    say("This is your own copy, called “" + cur.name + "”. Press play, then try the list at the top.");
+  }
+  function shelfBuildDemos(){
+    var host = document.getElementById("shelflist");
+    if(!host) return;
+    host.innerHTML = "";
+    SHELF_DEMOS.forEach(function(dm){
+      var p = decode(dm.code);
+      var card = document.createElement("div"); card.className = "shelfcard";
+      card.style.setProperty("--st", dm.tint);
+      var h = document.createElement("b"); h.className = "shelftitle"; h.textContent = dm.title;
+      var meta = document.createElement("span"); meta.className = "smeta";
+      if(p){
+        var m = MOODS.filter(function(x){ return x.id === p.mood; })[0];
+        meta.textContent = p.order.length + " bars · " + p.tempo + " BPM" + (m ? " · " + m.name : "") +
+          " · " + p.secs.map(function(s){ return s.name; }).join(", ");
+      }
+      var d = document.createElement("p"); d.textContent = dm.desc;
+      var det = document.createElement("details");
+      var sum = document.createElement("summary"); sum.textContent = "Things to try";
+      var ol = document.createElement("ol");
+      dm.tries.forEach(function(s){ var li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
+      det.appendChild(sum); det.appendChild(ol);
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "ghost"; b.textContent = "Open a copy";
+      b.setAttribute("aria-label", "Open a copy of " + dm.title + " as a new song");
+      b.addEventListener("click", function(){ shelfOpen(dm); });
+      card.appendChild(h); card.appendChild(meta); card.appendChild(d); card.appendChild(det); card.appendChild(b);
+      host.appendChild(card);
+    });
+  }
+
+  // ---- playing the library back to back ----
+  var shelfRun = null, shelfBusy = null, shelfWhich = "all", shelfPtr = 0;
+  var SHELF_GAP = 0.5;      // seconds of air between two songs; the tail of the first rings over it
+  window.addEventListener("pointerdown", function(){ shelfPtr++; }, true);
+  window.addEventListener("pointerup", function(){ shelfPtr = 0; }, true);
+  window.addEventListener("pointercancel", function(){ shelfPtr = 0; }, true);
+
+  function shelfOffline(){
+    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return !!(ac && OC && ac instanceof OC);
+  }
+
+  // Render one library song to a buffer. The song being edited is swapped out
+  // and put straight back inside this one function call, before anything else
+  // on the page can run, with autosave held off (booting) for the duration.
+  function shelfRender(sg){
+    var p = decode(sg.code);
+    if(!p) return Promise.reject(new Error("unreadable"));
+    if(shelfOffline()) return Promise.reject(new Error("busy"));
+    var keepCode = encode(), back = decode(keepCode);
+    if(!back) return Promise.reject(new Error("current song unreadable"));
+    var keep = {
+      x: extras(), muted: copyOf(muted), soloed: copyOf(soloed), selSec: selSec, loopSec: loopSec,
+      editPart: editPart, booting: booting, touched: touched, quiet: quiet, demo: shelfDemo ? copyOf(shelfDemo) : null,
+      codeVal: codeEl ? codeEl.value : null, inst: copyOf(inst), instRaw: null, realAc: ac
+    };
+    try { keep.instRaw = window.localStorage.getItem("firstloop.inst"); } catch(e){}
+    var reps = p.order.length <= 8 ? 2 : 1;
+    var content = p.order.length * STEPS * ((60 / p.tempo) / 4) * reps;
+    var prom, failed = null, ropts = { raw:true, repeats:reps, _shelf:true };
+    booting = true; touched = false; quiet = true; shelfSwapping = true;
+    try {
+      // With no audio context in sight the loaders only move data and redraw,
+      // exactly as they do when the page starts; the live sound graph is not touched.
+      ac = null;
+      applyDecoded(p);
+      applyExtras(sg.x);
+      ac = keep.realAc;
+      // Everything is scheduled into the offline context inside this call...
+      prom = renderSong(ropts);
+    } catch(e){ prom = Promise.reject(e); }
+    // ...so the live sound graph can be handed back at once instead of when the
+    // render lands. Nothing else on the page ever sees the offline one.
+    try { if(ropts._restore) ropts._restore(); } catch(e0){ failed = e0; }
+    try {
+      ac = null;
+      applyDecoded(back);
+      applyExtras(keep.x);
+      Object.keys(keep.inst).forEach(function(k){ inst[k] = keep.inst[k]; });
+      Object.keys(keep.muted).forEach(function(k){ muted[k] = keep.muted[k]; soloed[k] = keep.soloed[k]; });
+      selSec = keep.selSec; loopSec = keep.loopSec; normSecs();
+      if(PARTS.indexOf(keep.editPart) >= 0) setPart(keep.editPart);
+      buildLibrary(); buildFaders(); buildTrack();
+      if(typeof paintSecTools === "function") paintSecTools();
+      if(codeEl && keep.codeVal !== null) codeEl.value = keep.codeVal;
+    } catch(e2){ failed = e2; }
+    try {
+      if(keep.instRaw === null) window.localStorage.removeItem("firstloop.inst");
+      else window.localStorage.setItem("firstloop.inst", keep.instRaw);
+    } catch(e3){}
+    shelfDemo = keep.demo;
+    ac = keep.realAc;
+    shelfSwapping = false; quiet = keep.quiet; touched = keep.touched; booting = keep.booting;
+    shelfPaintNote();
+    if(failed || encode() !== keepCode){
+      // should never happen; if it does, stop for good rather than carry on
+      prom.then(null, function(){});
+      return Promise.reject(new Error("restore"));
+    }
+    return prom.then(function(buf){ return { buf:buf, content:content }; });
+  }
+
+  function shelfPool(which){
+    return songs.filter(function(sg){
+      if(which === "fav") return sg.fav;
+      if(which === "Finished") return sg.tags.indexOf("Finished") >= 0;
+      return true;
+    });
+  }
+  function shelfPaint(){
+    var gate = document.getElementById("sec-backup");
+    var off = !!(gate && gate.hidden);
+    var a = document.getElementById("sec-shelf"), b = document.getElementById("sec-shelfplay");
+    if(a) a.hidden = off;
+    if(b) b.hidden = off;
+    if(!b) return;
+    var seg = document.getElementById("shelfwhich");
+    var nf = shelfPool("fav").length, nd = shelfPool("Finished").length;
+    if(shelfWhich === "fav" && !nf) shelfWhich = "all";
+    if(shelfWhich === "Finished" && !nd) shelfWhich = "all";
+    seg.hidden = !(nf || nd);
+    seg.querySelectorAll("button").forEach(function(x){
+      var w = x.dataset.w;
+      x.hidden = (w === "fav" && !nf) || (w === "Finished" && !nd);
+      x.setAttribute("aria-pressed", w === shelfWhich ? "true" : "false");
+      x.disabled = !!shelfRun;
+    });
+    var on = !!shelfRun;
+    document.getElementById("shelfplay").disabled = on;
+    document.getElementById("shelfnext").hidden = !on;
+    document.getElementById("shelfstop").hidden = !on;
+    b.dataset.on = on ? "true" : "false";
+
+    // one gentle line about backups, and nothing more than that
+    var rem = document.getElementById("shelfremind"), at = 0;
+    try { at = parseInt(window.localStorage.getItem("firstloop.backupAt"), 10) || 0; } catch(e){}
+    var stale = !at || (Date.now() - at) > 14 * 86400000;
+    if(songs.length >= 3 && stale){
+      rem.textContent = "You have " + songs.length + " songs here and " +
+        (at ? "no backup from the last two weeks" : "no backup yet") + ". One click below keeps them safe.";
+      rem.hidden = false;
+    } else rem.hidden = true;
+  }
+  function shelfBackupDone(){
+    try { window.localStorage.setItem("firstloop.backupAt", String(Date.now())); } catch(e){}
+    shelfPaint();
+  }
+  function shelfNow(txt){
+    var el = document.getElementById("shelfnow");
+    if(el) el.textContent = txt || "";
+  }
+
+  function shelfBegin(){
+    if(shelfRun) return;
+    if(shelfOffline()){ say("A file is being made right now. Try again in a moment."); return; }
+    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var ctx = OC ? audio() : null;
+    if(!ctx){ say("This device cannot play songs back to back."); return; }
+    if(playing) stop();
+    if(!booting && cur) saveNow();
+    var list = shelfPool(shelfWhich);
+    if(!list.length){ say("There are no songs to play yet."); return; }
+    shelfRun = { ctx:ctx, list:list, now:null, armed:null, ready:null, curEnd:0, noMore:false, timers:[], played:0 };
+    LOG.shelf = LOG.shelf || {}; LOG.shelf.listens = (LOG.shelf.listens || 0) + 1; saveLog();
+    shelfPaint();
+    shelfNow("Getting the first song ready…");
+    shelfPrepare(shelfRun, 0);
+  }
+  function shelfLater(r, fn, ms){
+    var id = setTimeout(function(){ if(shelfRun === r) fn(); }, Math.max(0, ms));
+    r.timers.push(id);
+    return id;
+  }
+  function shelfPrepare(r, from){
+    if(shelfRun !== r) return;
+    var j = from;
+    while(j < r.list.length && (songs.indexOf(r.list[j]) < 0 || !decode(r.list[j].code))) j++;
+    if(j >= r.list.length){
+      r.noMore = true;
+      if(!r.now){ shelfStop(r.played ? "That was all of them." : "None of those songs could be played."); return; }
+      shelfLater(r, function(){ shelfStop("That was all of them."); },
+                 (r.now.full - r.ctx.currentTime) * 1000 + 150);
+      return;
+    }
+    (function attempt(){
+      if(shelfRun !== r) return;
+      // never swap the song while a finger is down on something, or while a file is being made
+      if(shelfPtr > 0 || shelfOffline() || shelfBusy){ shelfLater(r, attempt, 250); return; }
+      var pr = shelfRender(r.list[j]);
+      shelfBusy = pr.then(function(){ shelfBusy = null; }, function(){ shelfBusy = null; });
+      pr.then(function(got){
+        if(shelfRun !== r) return;
+        r.ready = { idx:j, sg:r.list[j], buf:got.buf, content:got.content };
+        shelfArm(r);
+      }, function(err){
+        if(shelfRun !== r) return;
+        if(err && err.message === "restore"){ shelfStop("Stopped. Your songs are untouched."); return; }
+        if(err && err.message === "busy"){ shelfLater(r, attempt, 300); return; }
+        shelfPrepare(r, j + 1);          // that one would not render: move on
+      });
+    })();
+  }
+  function shelfArm(r){
+    if(shelfRun !== r || !r.ready || r.armed) return;
+    var ctx = r.ctx, rd = r.ready, peak = 0, c, i, data;
+    for(c = 0; c < rd.buf.numberOfChannels; c++){
+      data = rd.buf.getChannelData(c);
+      for(i = 0; i < data.length; i += 2){ var v = data[i] < 0 ? -data[i] : data[i]; if(v > peak) peak = v; }
+    }
+    var when = Math.max(ctx.currentTime + 0.08, r.curEnd + SHELF_GAP);
+    var src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = rd.buf;
+    g.gain.value = peak > 0.9 ? 0.9 / peak : 1;
+    src.connect(g); g.connect(ctx.destination);
+    src.start(when);
+    r.armed = { idx:rd.idx, sg:rd.sg, src:src, g:g, when:when, end:when + rd.content, full:when + rd.buf.duration };
+    r.armed.timer = shelfLater(r, function(){
+      var a = r.armed;
+      r.armed = null; r.ready = null;
+      r.now = a; r.curEnd = a.end; r.played++;
+      shelfNow("Now playing: " + a.sg.name + "  ·  " + (a.idx + 1) + " of " + r.list.length);
+      shelfPrepare(r, a.idx + 1);
+    }, (when - ctx.currentTime) * 1000);
+  }
+  function shelfFade(v, ctx){
+    if(!v) return;
+    var t = ctx.currentTime;
+    try {
+      v.g.gain.cancelScheduledValues(t);
+      v.g.gain.setValueAtTime(v.g.gain.value, t);
+      v.g.gain.linearRampToValueAtTime(0, t + 0.25);
+      v.src.stop(t + 0.3);
+    } catch(e){}
+  }
+  function shelfNext(){
+    var r = shelfRun;
+    if(!r) return;
+    if(r.noMore && !r.armed && !r.ready){ shelfStop("That was all of them."); return; }
+    shelfFade(r.now, r.ctx);
+    r.curEnd = r.ctx.currentTime - SHELF_GAP + 0.2;
+    if(r.armed){
+      clearTimeout(r.armed.timer);
+      try { r.armed.src.stop(); } catch(e){}
+      r.armed = null;
+    }
+    if(r.ready) shelfArm(r);
+    else shelfNow("Getting the next song ready…");
+  }
+  function shelfStop(msg){
+    var r = shelfRun;
+    if(!r) return;
+    shelfRun = null;
+    r.timers.forEach(function(id){ clearTimeout(id); });
+    shelfFade(r.now, r.ctx);
+    if(r.armed){ try { r.armed.src.stop(); } catch(e){} }
+    r.now = r.armed = r.ready = null;
+    shelfNow(typeof msg === "string" ? msg : "");
+    shelfPaint();
+  }
+  // start() calls this first: pressing the main play button ends the listening mode.
+  function shelfOnStart(){
+    if(shelfRun) shelfStop("Stopped, because you pressed play on your song.");
+  }
+
+  (function shelfInit(){
+    shelfBuildDemos();
+    var seg = document.getElementById("shelfwhich");
+    if(!seg) return;
+    seg.querySelectorAll("button").forEach(function(b){
+      b.addEventListener("click", function(){ shelfWhich = b.dataset.w; shelfPaint(); });
+    });
+    document.getElementById("shelfplay").addEventListener("click", shelfBegin);
+    document.getElementById("shelfnext").addEventListener("click", shelfNext);
+    document.getElementById("shelfstop").addEventListener("click", function(){ shelfStop("Stopped."); });
+    // keep the panels in step with the song list and with the rest of the page
+    // being revealed, without editing either of those
+    if(window.MutationObserver){
+      var mo = new MutationObserver(function(){ shelfPaint(); shelfPaintNote(); });
+      var gate = document.getElementById("sec-backup"), lst = document.getElementById("songs");
+      if(gate) mo.observe(gate, { attributes:true, attributeFilter:["hidden"] });
+      if(lst) mo.observe(lst, { childList:true });
+      mo.observe(document.body, { attributes:true, attributeFilter:["data-view"] });
+    }
+    shelfPaint();
+    CMDS.push({ name:"Play my songs back to back", keys:"listen play all songs album",
+                help:"Plays the songs in My songs one after another.",
+                run:function(){ setView("songs"); shelfBegin(); } });
+    CMDS.push({ name:"Songs to pull apart", keys:"demo example songs learn pull apart",
+                help:"Five finished songs to open and take to bits.",
+                run:function(){ reveal(document.getElementById("sec-shelf")); } });
+  })();
   // ----- end shelf -----
 
   // ===== feature: mixplus (js) =====

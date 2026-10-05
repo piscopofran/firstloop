@@ -737,6 +737,48 @@
   #sec-sounds{padding-bottom:16px;}
   #sec-sounds .libtabs,#sec-sounds .libgrid,#sec-sounds .libnote{margin-left:17px;margin-right:17px;}
   .start{color:var(--ink);}
+
+  /* ===== @clips css: begin ===== */
+  /* ===== @clips css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @pads css: begin ===== */
+  /* ===== @pads css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @styles css: begin ===== */
+  /* ===== @styles css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @demos css: begin ===== */
+  /* ===== @demos css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @palette css: begin ===== */
+  /* ===== @palette css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @sends css: begin ===== */
+  /* ===== @sends css: end ===== */
+
+  /* . */
+  /* . */
+
+  /* ===== @meter css: begin ===== */
+  /* ===== @meter css: end ===== */
+
+  /* . */
+  /* . */
 </style>
 </head>
 <body>
@@ -1241,6 +1283,13 @@
   var SECS = [{ name:"Verse", len:4 }];
   var selSec = 0, loopSec = false, pendingJump = null;
   var keyShift = 0;                // semitones the whole song is moved by
+  // Shared registries, so separate features can plug in without editing each other:
+  //   EXTRA_HOOKS.push({ save:function(x){ x.mine = ...; }, load:function(x){ ... x.mine ... } })
+  //     per-song settings that are saved with the song but are not part of the song code
+  //   CMDS.push({ name:"Loop this section", keys:"loop repeat", help:"one line", run:function(){} })
+  //     things the command palette can do
+  //   GLOSSARY.push({ term:"Swing", text:"plain one or two sentence meaning" })
+  var EXTRA_HOOKS = [], CMDS = [], GLOSSARY = [];
   var NOTE12 = ["C","D\u266d","D","E\u266d","E","F","G\u266d","G","A\u266d","A","B\u266d","B"];
   // Plain word first, the real one beside it in grey. He learns by feel, but
   // the word a drummer would use is always in view, so nothing has to be
@@ -4600,8 +4649,10 @@
   }
 
   function extras(){
-    return { levels:copyOf(levels), tone:copyOf(toneAmt), fx:copyOf(fx),
+    var x = { levels:copyOf(levels), tone:copyOf(toneAmt), fx:copyOf(fx),
              audio:{ a1:atrack.a1 || null, a2:atrack.a2 || null, a3:atrack.a3 || null } };
+    EXTRA_HOOKS.forEach(function(h){ try { if(h.save) h.save(x); } catch(e){} });
+    return x;
   }
   function applyExtras(x){
     x = x || {};
@@ -4616,6 +4667,7 @@
     if(x.audio || !legacyAudio){
       AUDIO_TRACKS.forEach(function(k){ atrack[k] = (x.audio && x.audio[k]) || null; });
     }
+    EXTRA_HOOKS.forEach(function(h){ try { if(h.load) h.load(x); } catch(e){} });
     applyLevels(); applyTone(); applyFX();
     buildFaders(); buildFXKnobs(); buildAudioUI(); buildLibrary(); buildTrack();
     if(playing && ac) scheduleVoice(ac.currentTime + 0.05, playOffset());
@@ -5856,6 +5908,55 @@
     this.value = "";
   });
 
+
+  // ===== @clips js: begin =====
+  // ===== @clips js: end =====
+
+  //
+  //
+  //
+
+  // ===== @pads js: begin =====
+  // ===== @pads js: end =====
+
+  //
+  //
+  //
+
+  // ===== @styles js: begin =====
+  // ===== @styles js: end =====
+
+  //
+  //
+  //
+
+  // ===== @demos js: begin =====
+  // ===== @demos js: end =====
+
+  //
+  //
+  //
+
+  // ===== @palette js: begin =====
+  // ===== @palette js: end =====
+
+  //
+  //
+  //
+
+  // ===== @sends js: begin =====
+  // ===== @sends js: end =====
+
+  //
+  //
+  //
+
+  // ===== @meter js: begin =====
+  // ===== @meter js: end =====
+
+  //
+  //
+  //
   // ---------- interaction ----------
   drumGrid.addEventListener("click", function(e){
     var b = e.target.closest(".cell"); if(!b) return;

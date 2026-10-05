@@ -784,6 +784,30 @@
   /* ----- end styles ----- */
 
   /* ===== feature: clips (css) ===== */
+  .clipwave{position:relative;border-radius:9px;background:var(--surface);overflow:hidden;
+    border:1px solid var(--line);}
+  .clipwave canvas{display:block;width:100%;height:54px;}
+  .clipkey{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-3);}
+  .clipkey span{display:inline-flex;align-items:center;gap:5px;}
+  .clipkey i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .clipkey i[data-b="lo"]{background:var(--bass);}
+  .clipkey i[data-b="mid"]{background:var(--tick);}
+  .clipkey i[data-b="hi"]{background:var(--ink);}
+  .cliphead{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+  .cliptools{display:flex;flex-direction:column;gap:13px;border-top:1px solid var(--line);padding-top:11px;min-width:0;}
+  .cliptools .explain{margin:0;background:var(--surface);}
+  .cliprow{display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .cliprow .lbl{display:block;}
+  .clipline{display:flex;gap:9px;align-items:center;min-width:0;}
+  .clipline > span.cliplab{flex:none;width:38px;font-size:12px;font-weight:600;color:var(--ink-2);}
+  .clipline input[type=range]{flex:1 1 auto;min-width:0;}
+  .clipline.cwrap{flex-wrap:wrap;}
+  .clipsay{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.5;}
+  .clipsay.dim{color:var(--ink-3);}
+  .cliptap{appearance:none;cursor:pointer;font:inherit;font-family:Sora,sans-serif;font-weight:700;font-size:15px;
+    border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:12px;
+    padding:16px 14px;width:100%;touch-action:manipulation;user-select:none;-webkit-user-select:none;}
+  .cliptap:active{background:var(--ink);color:var(--bg);}
   /* ----- end clips ----- */
 
   /* ===== feature: pads (css) ===== */
@@ -1562,15 +1586,7 @@
       AUDIO_TRACKS.forEach(function(k){
         var c = clipOn(k);
         if(!c || !bus[k]) return;
-        for(var r = 0; r < REPEATS; r++){
-          var vs = off.createBufferSource();
-          vs.buffer = c.buf;
-          vs.loop = true;
-          vs.loopEnd = Math.min(c.buf.duration, one);
-          vs.connect(bus[k]);
-          vs.start(r * one);
-          vs.stop(r * one + one);
-        }
+        for(var r = 0; r < REPEATS; r++) clipVoice(off, k, bus[k], r * one, r * one, r * one + one);
       });
     } catch(e){
       restore();
@@ -3335,16 +3351,8 @@
     if(!ac) return;
     stopVoice(at);
     AUDIO_TRACKS.forEach(function(k){
-      var c = clipOn(k);
-      if(!c) return;
-      var v = ac.createBufferSource();
-      v.buffer = c.buf;
-      v.loop = true;
-      v.loopEnd = Math.min(c.buf.duration, songSeconds());
-      v.connect(bus[k] || master);
-      var off = v.loopEnd > 0 ? ((offset || 0) % v.loopEnd) : 0;
-      v.start(at, off);
-      voiceSrcs.push(v);
+      var v = clipVoice(ac, k, bus[k] || master, at, offset || 0);   // trim, nudge and fit: see clipPlayback
+      if(v) voiceSrcs.push(v);
     });
   }
   function setSlotFromFile(slot, file){
@@ -3510,6 +3518,7 @@
         });
       }
     }
+    if(typeof clipsDecorate === "function") clipsDecorate();
   }
 
   async function recordVoice(){
@@ -5998,6 +6007,478 @@
   // ----- end styles -----
 
   // ===== feature: clips (js) =====
+  // Clip tools: plain controls for lining a recording or an imported file up
+  // with the song. Nothing here changes the stored audio - a trim, a nudge
+  // and a fit are four numbers per track, saved with the song.
+  var clipSet = {};          // per track: { id, s, e, n, bars }
+  var clipOpen = {};         // which slots have their tools open
+  var clipBands = {};        // three-colour waveform data, by clip id
+  var clipPrev = null;       // the clip being listened to on its own, for tapping
+  var clipTapTimes = [];
+  var clipTimer = null;
+  var CLIP_COLS = 240, CLIP_FITS = [0, 1, 2, 4, 8], CLIP_NUDGE = 250;
+
+  function clipGet(k){
+    var id = atrack[k] || null, st = clipSet[k];
+    // a deleted or replaced clip has a different id, so it starts plain again
+    if(!st || st.id !== id) st = clipSet[k] = { id:id, s:0, e:1, n:0, bars:0 };
+    return st;
+  }
+  function clipPlain(st){ return st.s === 0 && st.e === 1 && st.n === 0 && st.bars === 0; }
+
+  // The one place that says how a clip is heard as a track: where in the
+  // buffer it starts and ends (seconds), how fast it runs, how far it is
+  // shifted against the grid (seconds, plus = later), and how long one
+  // loop of it lasts in song time.
+  function clipPlayback(k){
+    var c = clipOn(k);
+    if(!c || !c.buf) return null;
+    var st = clipGet(k), D = c.buf.duration;
+    var a = Math.max(0, Math.min(1, st.s)) * D, b = Math.max(0, Math.min(1, st.e)) * D;
+    if(b - a < 0.02){ b = Math.min(D, a + 0.02); a = Math.max(0, b - 0.02); }
+    var len = b - a, rate = 1, capped = false;
+    if(st.bars > 0){
+      rate = len / (st.bars * STEPS * stepDur());
+      if(rate > 4){ rate = 4; capped = true; }
+      if(rate < 0.25){ rate = 0.25; capped = true; }
+    }
+    var loopSecs = Math.min(len / rate, songSeconds());
+    return { buf:c.buf, start:a, end:a + loopSecs * rate, trimEnd:b, len:len, rate:rate, capped:capped,
+             nudge:(st.n || 0) / 1000, loopSecs:loopSecs, bars:st.bars };
+  }
+  // Make the looping source for a track and start it. `at` is the context
+  // time, `offset` how far into the song that moment is. Used by live
+  // playback and by the offline render, so both sound the same.
+  function clipVoice(ctx, k, dest, at, offset, stopAt){
+    var p = clipPlayback(k);
+    if(!p || !dest) return null;
+    var v = ctx.createBufferSource();
+    v.buffer = p.buf;
+    v.loop = true;
+    v.loopStart = p.start;
+    v.loopEnd = p.end;
+    v.playbackRate.value = p.rate;
+    v.connect(dest);
+    var T = p.loopSecs, pos = (offset || 0) - p.nudge;
+    if(pos < 0) v.start(at - pos, p.start);            // nudged later: wait a moment first
+    else {
+      var q = T > 0 ? pos % T : 0;
+      if(T - q < 0.0002) q = 0;
+      v.start(at, p.start + q * p.rate);
+    }
+    if(typeof stopAt === "number") v.stop(stopAt);
+    return v;
+  }
+  // Where the song will be at context time `at`, to the sample rather than
+  // to the nearest square, so a 5 ms nudge can be heard as a 5 ms nudge.
+  function clipSongPos(at){
+    if(!playing || !ac) return 0;
+    var total = STEPS * barsInPlay() * stepDur();
+    var pos = songStep * stepDur() - (nextTime - at);
+    if(total > 0){ pos = pos % total; if(pos < 0) pos += total; }
+    return Math.max(0, pos);
+  }
+  function clipResync(){
+    clearTimeout(clipTimer);
+    clipTimer = setTimeout(function(){
+      if(playing && ac){ var at = ac.currentTime + 0.06; scheduleVoice(at, clipSongPos(at)); }
+    }, 70);
+  }
+
+  // Low, middle and high energy for each slice of the clip. Two one-pole
+  // filters over every third sample or so: a minute of audio takes a few
+  // thousandths of a second, and it is only ever worked out once per clip.
+  function clipWave(c){
+    var got = clipBands[c.id];
+    if(got && got.buf === c.buf) return got;
+    var d = c.buf.getChannelData(0), n = d.length, sr = c.buf.sampleRate;
+    var hop = Math.max(1, Math.round(sr / 16000)), fs = sr / hop;
+    var kL = 1 - Math.exp(-2 * Math.PI * 220 / fs), kM = 1 - Math.exp(-2 * Math.PI * 2400 / fs);
+    var N = CLIP_COLS, lo = new Float32Array(N), mid = new Float32Array(N), hi = new Float32Array(N);
+    var yl = 0, ym = 0, per = n / N, top = 0;
+    for(var i = 0; i < n; i += hop){
+      var x = d[i];
+      yl += kL * (x - yl);
+      ym += kM * (x - ym);
+      var col = Math.min(N - 1, Math.floor(i / per));
+      var l = yl < 0 ? -yl : yl, m = ym - yl, h = x - ym;
+      if(m < 0) m = -m;
+      if(h < 0) h = -h;
+      if(l > lo[col]) lo[col] = l;
+      if(m > mid[col]) mid[col] = m;
+      if(h > hi[col]) hi[col] = h;
+    }
+    for(var j = 0; j < N; j++){ var s = lo[j] + mid[j] + hi[j]; if(s > top) top = s; }
+    got = clipBands[c.id] = { buf:c.buf, lo:lo, mid:mid, hi:hi, top:top || 1 };
+    Object.keys(clipBands).forEach(function(id){ if(!clips[id]) delete clipBands[id]; });
+    return got;
+  }
+  function clipColour(name, fallback){
+    var v = "";
+    try { v = window.getComputedStyle(document.documentElement).getPropertyValue(name); } catch(e){}
+    return (v && v.trim()) || fallback;
+  }
+  function clipDraw(k){
+    var row = document.querySelector('#slots .slot[data-slot="' + k + '"]');
+    var cv = row && row.querySelector(".clipwave canvas");
+    var c = clipOn(k);
+    if(!cv || !c || !c.buf) return;
+    var w = clipWave(c), st = clipGet(k), g = cv.getContext("2d");
+    var W = cv.width, H = cv.height, N = CLIP_COLS, cw = W / N, half = H / 2, scale = (half - 2) / w.top;
+    var cols = [clipColour("--bass", "#4D6BFF"), clipColour("--tick", "#FFB627"), clipColour("--ink", "#ffffff")];
+    g.clearRect(0, 0, W, H);
+    for(var i = 0; i < N; i++){
+      var x = Math.round(i * cw), bw = Math.max(1, Math.round(cw) - 1);
+      var a = w.lo[i] * scale, b = w.mid[i] * scale, d = w.hi[i] * scale;
+      if(a + b + d < 1) a = 1;
+      g.fillStyle = cols[2]; g.fillRect(x, half - (a + b + d), bw, 2 * (a + b + d));
+      g.fillStyle = cols[1]; g.fillRect(x, half - (a + b), bw, 2 * (a + b));
+      g.fillStyle = cols[0]; g.fillRect(x, half - a, bw, 2 * a);
+    }
+    // the parts that are trimmed off stay visible, but faded
+    var xs = Math.round(st.s * W), xe = Math.round(st.e * W);
+    g.globalAlpha = 0.74;
+    g.fillStyle = clipColour("--surface", "#141926");
+    if(xs > 0) g.fillRect(0, 0, xs, H);
+    if(xe < W) g.fillRect(xe, 0, W - xe, H);
+    g.globalAlpha = 1;
+    g.fillStyle = clipColour("--ink", "#ffffff");
+    if(xs > 0) g.fillRect(Math.min(W - 2, xs - 1), 0, 2, H);
+    if(xe < W) g.fillRect(Math.max(0, xe - 1), 0, 2, H);
+  }
+
+  function clipSecs(v){ return (Math.round(v * 100) / 100).toFixed(2) + " s"; }
+  function clipFitText(k){
+    var p = clipPlayback(k);
+    if(!p) return "";
+    var nb = Math.round(p.len / (STEPS * stepDur()) * 10) / 10;
+    if(!p.bars) return "Playing at the speed it was recorded. At the song’s speed it lasts about " + nb +
+      (nb === 1 ? " bar." : " bars.");
+    var pct = Math.round(Math.abs(p.rate - 1) * 100);
+    var t = pct === 0 ? "Almost no change: it already lasts " + p.bars + (p.bars === 1 ? " bar." : " bars.")
+      : p.rate > 1 ? "Playing " + pct + "% faster, so it also sounds higher."
+      : "Playing " + pct + "% slower, so it also sounds lower.";
+    if(p.capped) t += " That is as far as it can go, so it will not be exactly " + p.bars + (p.bars === 1 ? " bar." : " bars.");
+    else if(pct >= 25) t += " That is a big change. A different number of bars may sit closer.";
+    if(p.bars > ORDER.length) t += " The song is only " + ORDER.length + " bars long, so the clip starts again before it finishes.";
+    return t;
+  }
+  function clipPaint(k){
+    var row = document.querySelector('#slots .slot[data-slot="' + k + '"]');
+    var c = clipOn(k);
+    if(!row || !c || !c.buf) return;
+    var st = clipGet(k), D = c.buf.duration, q = function(s){ return row.querySelector(s); };
+    clipDraw(k);
+    var el = q(".cliptrimsay");
+    if(el) el.textContent = (st.s === 0 && st.e === 1)
+      ? "Nothing cut. The whole " + clipSecs(D) + " plays."
+      : "Starts at " + clipSecs(st.s * D) + ", ends at " + clipSecs(st.e * D) + ". " + clipSecs((st.e - st.s) * D) +
+        " is kept. The rest is still there if you change your mind.";
+    el = q(".clipnudgesay");
+    if(el) el.textContent = st.n === 0 ? "Not moved."
+      : Math.abs(st.n) + " ms " + (st.n > 0 ? "later." : "earlier.") + " (1000 ms is one second.)";
+    el = q(".clipfitsay");
+    if(el) el.textContent = clipFitText(k);
+    row.querySelectorAll(".clipfit button").forEach(function(b){
+      b.setAttribute("aria-pressed", (+b.dataset.bars === st.bars) ? "true" : "false");
+    });
+    var sS = q(".clipstart"), sE = q(".clipend"), sN = q(".clipnudge");
+    if(sS && +sS.value !== Math.round(st.s * 1000)) sS.value = Math.round(st.s * 1000);
+    if(sE && +sE.value !== Math.round(st.e * 1000)) sE.value = Math.round(st.e * 1000);
+    if(sN && +sN.value !== st.n) sN.value = st.n;
+    var rs = q(".clipreset");
+    if(rs) rs.disabled = clipPlain(st);
+  }
+  function clipChanged(k){
+    clipPaint(k);
+    markDirty();
+    clipResync();
+    LOG.clipTools = (LOG.clipTools || 0) + 1;
+  }
+
+  // ----- listening to a clip on its own, and tapping along -----
+  function clipStopPreview(){
+    if(clipPrev){ try { clipPrev.src.stop(); } catch(e){} }
+    clipPrev = null; clipTapTimes = [];
+    document.querySelectorAll("#slots .cliptapbox").forEach(function(b){ b.hidden = true; });
+    document.querySelectorAll("#slots .cliptapgo").forEach(function(b){ b.textContent = "Tap along"; });
+  }
+  function clipStartPreview(k){
+    if(!audio()) return false;
+    if(playing) stop();
+    clipStopPreview();
+    var p = clipPlayback(k);
+    if(!p) return false;
+    applyLevels();
+    var v = ac.createBufferSource();
+    v.buffer = p.buf; v.loop = true; v.loopStart = p.start; v.loopEnd = p.trimEnd;
+    v.connect(bus[k] || master);
+    v.start(ac.currentTime + 0.03, p.start);
+    clipPrev = { src:v, k:k };
+    return true;
+  }
+  function clipTap(k, stamp){
+    var row = document.querySelector('#slots .slot[data-slot="' + k + '"]');
+    if(!row) return;
+    var out = row.querySelector(".cliptapsay"), set = row.querySelector(".cliptapset");
+    var last = clipTapTimes[clipTapTimes.length - 1];
+    if(last && stamp - last > 2500) clipTapTimes = [];
+    clipTapTimes.push(stamp);
+    if(clipTapTimes.length > 12) clipTapTimes.shift();
+    var n = clipTapTimes.length;
+    if(n < 4){
+      out.textContent = "Keep going. " + n + " of 4 taps.";
+      set.hidden = true;
+      return;
+    }
+    var gaps = [];
+    for(var i = 1; i < n; i++) gaps.push(clipTapTimes[i] - clipTapTimes[i - 1]);
+    gaps.sort(function(a, b){ return a - b; });
+    var med = gaps.length % 2 ? gaps[(gaps.length - 1) / 2] : (gaps[gaps.length / 2 - 1] + gaps[gaps.length / 2]) / 2;
+    if(!(med > 0)) return;
+    var raw = 60000 / med, fit = raw, how = "";
+    while(fit > 140.5){ fit /= 2; how = "half"; }
+    while(fit < 69.5){ fit *= 2; how = "double"; }
+    var shown = Math.round(raw), bpm = Math.max(70, Math.min(140, Math.round(fit)));
+    out.textContent = how
+      ? "You tapped about " + shown + " BPM (beats per minute). Songs in here go from 70 to 140, so " +
+        (how === "half" ? "half of that" : "double that") + ", " + bpm + ", is the nearest speed that fits."
+      : "You tapped about " + shown + " BPM (beats per minute).";
+    set.hidden = false;
+    set.dataset.bpm = bpm;
+    set.textContent = "Set the song to " + bpm + " BPM";
+  }
+  function clipSetTempo(bpm){
+    bpm = Math.max(70, Math.min(140, Math.round(bpm)));
+    tempoEl.value = bpm;
+    tempoEl.dispatchEvent(new Event("input", { bubbles:true }));   // the normal speed slider path
+    markDirty();
+    return bpm;
+  }
+
+  // ----- the controls, added to each slot that has a clip -----
+  function clipEl(tag, cls, text){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text) e.textContent = text;
+    return e;
+  }
+  function clipRange(cls, min, max, step, val, label){
+    var r = document.createElement("input");
+    r.type = "range"; r.className = cls; r.min = min; r.max = max; r.step = step; r.value = val;
+    r.setAttribute("aria-label", label);
+    return r;
+  }
+  function clipsDecorate(){
+    var host = document.getElementById("slots");
+    if(!host) return;
+    if(clipPrev) clipStopPreview();
+    AUDIO_TRACKS.forEach(function(k){
+      var row = host.querySelector('.slot[data-slot="' + k + '"]');
+      var c = clipOn(k);
+      if(!row || !c || !c.buf || row.querySelector(".clipwave")) return;
+      var st = clipGet(k);
+
+      // the three-colour picture takes the place of the plain bars
+      var plain = row.querySelector(".voicewave");
+      var wave = clipEl("div", "clipwave");
+      var cv = document.createElement("canvas");
+      cv.width = CLIP_COLS * 3; cv.height = 108;
+      cv.setAttribute("role", "img");
+      cv.setAttribute("aria-label", "Picture of " + c.name + ": low sounds in blue, middle in yellow, high in white");
+      wave.appendChild(cv);
+      if(plain){ plain.hidden = true; row.insertBefore(wave, plain); } else row.appendChild(wave);
+
+      var acts = row.querySelector(".slotacts");
+      var open = clipEl("button", "ghost clipopen", "Line it up");
+      open.type = "button";
+      open.setAttribute("aria-expanded", clipOpen[k] ? "true" : "false");
+      if(acts) acts.insertBefore(open, acts.children[2] || null); else row.appendChild(open);
+
+      var tools = clipEl("div", "cliptools");
+      tools.hidden = !clipOpen[k];
+      open.addEventListener("click", function(){
+        clipOpen[k] = !clipOpen[k];
+        tools.hidden = !clipOpen[k];
+        open.setAttribute("aria-expanded", clipOpen[k] ? "true" : "false");
+        if(!clipOpen[k] && clipPrev && clipPrev.k === k) clipStopPreview();
+      });
+
+      var head = clipEl("div", "cliphead");
+      var key = clipEl("div", "clipkey");
+      key.innerHTML = '<span><i data-b="lo"></i>low sounds</span><span><i data-b="mid"></i>middle</span><span><i data-b="hi"></i>high</span>';
+      var hb = clipEl("button", "help", "?");
+      hb.type = "button"; hb.dataset.help = "clips-" + k;
+      hb.setAttribute("aria-expanded", "false");
+      hb.setAttribute("aria-label", "About lining a clip up");
+      var hp = clipEl("p", "explain");
+      hp.id = "help-clips-" + k; hp.hidden = true;
+      hp.innerHTML = "A recording hardly ever starts exactly on the beat. <strong>Trim</strong> cuts silence or a mistake off the edges. " +
+        "<strong>Nudge</strong> slides the clip a tiny bit earlier or later. <strong>Fit to bars</strong> plays it faster or slower " +
+        "so it lasts a whole number of bars — that is done by changing the playing speed, like a record player, so the sound " +
+        "also gets higher or lower. <strong>Tap along</strong> works out how fast a loop is, so the song can be set to match it. " +
+        "None of this changes your recording: it can always go back to how it was. In the picture, the faded parts are the bits that are cut.";
+      hb.addEventListener("click", function(){
+        var o = hp.hidden;
+        hp.hidden = !o;
+        hb.setAttribute("aria-expanded", o ? "true" : "false");
+      });
+      head.appendChild(key); head.appendChild(hb);
+      tools.appendChild(head); tools.appendChild(hp);
+
+      // 1. trim
+      var r1 = clipEl("div", "cliprow");
+      r1.appendChild(clipEl("span", "lbl", "Trim · cut the edges"));
+      var l1 = clipEl("label", "clipline"); l1.appendChild(clipEl("span", "cliplab", "Start"));
+      var sS = clipRange("clipstart", 0, 1000, 1, Math.round(st.s * 1000), "Where the clip starts");
+      l1.appendChild(sS);
+      var l2 = clipEl("label", "clipline"); l2.appendChild(clipEl("span", "cliplab", "End"));
+      var sE = clipRange("clipend", 0, 1000, 1, Math.round(st.e * 1000), "Where the clip ends");
+      l2.appendChild(sE);
+      r1.appendChild(l1); r1.appendChild(l2);
+      r1.appendChild(clipEl("p", "clipsay cliptrimsay"));
+      tools.appendChild(r1);
+      var gap = Math.min(0.5, Math.max(0.002, 0.05 / c.buf.duration));   // keep at least 50 ms
+      sS.addEventListener("input", function(){
+        var s2 = clipGet(k);
+        s2.s = Math.max(0, Math.min(+sS.value / 1000, s2.e - gap));
+        clipChanged(k);
+      });
+      sE.addEventListener("input", function(){
+        var s2 = clipGet(k);
+        s2.e = Math.min(1, Math.max(+sE.value / 1000, s2.s + gap));
+        clipChanged(k);
+      });
+
+      // 2. nudge
+      var r2 = clipEl("div", "cliprow");
+      r2.appendChild(clipEl("span", "lbl", "Nudge · earlier or later"));
+      var l3 = clipEl("div", "clipline");
+      var bE = clipEl("button", "tinybtn clipearlier", "Earlier"); bE.type = "button";
+      var sN = clipRange("clipnudge", -CLIP_NUDGE, CLIP_NUDGE, 5, st.n, "Nudge earlier or later, in thousandths of a second");
+      var bL = clipEl("button", "tinybtn cliplater", "Later"); bL.type = "button";
+      l3.appendChild(bE); l3.appendChild(sN); l3.appendChild(bL);
+      r2.appendChild(l3);
+      r2.appendChild(clipEl("p", "clipsay clipnudgesay"));
+      r2.appendChild(clipEl("p", "clipsay dim", "Press play, then listen for whether your first sound lands with the kick."));
+      tools.appendChild(r2);
+      function nudgeTo(v){
+        clipGet(k).n = Math.max(-CLIP_NUDGE, Math.min(CLIP_NUDGE, Math.round(v / 5) * 5));
+        clipChanged(k);
+      }
+      sN.addEventListener("input", function(){ nudgeTo(+sN.value); });
+      bE.addEventListener("click", function(){ nudgeTo(clipGet(k).n - 5); });
+      bL.addEventListener("click", function(){ nudgeTo(clipGet(k).n + 5); });
+
+      // 3. fit to bars
+      var r3 = clipEl("div", "cliprow");
+      r3.appendChild(clipEl("span", "lbl", "Fit to bars · this clip is"));
+      var l4 = clipEl("div", "clipline cwrap");
+      var seg = clipEl("div", "seg clipfit");
+      seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "How many bars long this clip is");
+      CLIP_FITS.forEach(function(n){
+        var b = clipEl("button", "", n ? String(n) : "As recorded");
+        b.type = "button"; b.dataset.bars = n;
+        if(n) b.setAttribute("aria-label", n + (n === 1 ? " bar long" : " bars long"));
+        b.addEventListener("click", function(){ clipGet(k).bars = n; clipChanged(k); });
+        seg.appendChild(b);
+      });
+      l4.appendChild(seg);
+      l4.appendChild(clipEl("span", "clipsay", "bars long"));
+      r3.appendChild(l4);
+      r3.appendChild(clipEl("p", "clipsay clipfitsay"));
+      tools.appendChild(r3);
+
+      // 4. tap along
+      var r4 = clipEl("div", "cliprow");
+      r4.appendChild(clipEl("span", "lbl", "Tap along · find the clip’s speed"));
+      var l5 = clipEl("div", "clipline cwrap");
+      var go = clipEl("button", "ghost cliptapgo", "Tap along"); go.type = "button";
+      l5.appendChild(go);
+      r4.appendChild(l5);
+      var box = clipEl("div", "cliprow cliptapbox"); box.hidden = true;
+      var pad = clipEl("button", "cliptap", "Tap here on every beat"); pad.type = "button";
+      var tsay = clipEl("p", "clipsay cliptapsay");
+      tsay.setAttribute("role", "status");
+      var tset = clipEl("button", "ghost cliptapset"); tset.type = "button"; tset.hidden = true;
+      var l6 = clipEl("div", "clipline cwrap"); l6.appendChild(tset);
+      box.appendChild(pad); box.appendChild(tsay); box.appendChild(l6);
+      r4.appendChild(box);
+      tools.appendChild(r4);
+      go.addEventListener("click", function(){
+        if(clipPrev && clipPrev.k === k){ clipStopPreview(); return; }
+        if(!clipStartPreview(k)) return;
+        box.hidden = false; tset.hidden = true;
+        go.textContent = "Stop listening";
+        tsay.textContent = "The clip is playing on its own, at the speed it was recorded. Tap the big button on every beat, at least 4 times.";
+      });
+      pad.addEventListener("pointerdown", function(e){ clipTap(k, e.timeStamp); });
+      pad.addEventListener("keydown", function(e){
+        if((e.key === " " || e.key === "Enter") && !e.repeat){ e.preventDefault(); clipTap(k, e.timeStamp); }
+      });
+      tset.addEventListener("click", function(){
+        var bpm = clipSetTempo(+tset.dataset.bpm);
+        clipStopPreview();
+        AUDIO_TRACKS.forEach(clipPaint);
+        say("The song is now " + bpm + " BPM. Press play to hear them together.");
+      });
+
+      // back to plain
+      var l7 = clipEl("div", "clipline cwrap");
+      var rs = clipEl("button", "ghost clipreset", "Back to how it was recorded"); rs.type = "button";
+      rs.addEventListener("click", function(){
+        clipSet[k] = null;
+        clipChanged(k);
+        say(c.name + " plays whole, unmoved and at its own speed again.");
+      });
+      l7.appendChild(rs);
+      tools.appendChild(l7);
+
+      row.appendChild(tools);
+      clipPaint(k);
+    });
+  }
+
+  EXTRA_HOOKS.push({
+    save:function(x){
+      var o = {};
+      AUDIO_TRACKS.forEach(function(k){
+        if(!atrack[k]) return;
+        var st = clipGet(k);
+        if(!clipPlain(st)) o[k] = { id:st.id, s:st.s, e:st.e, n:st.n, bars:st.bars };
+      });
+      x.clipset = o;
+    },
+    load:function(x){
+      clipSet = {};
+      var o = (x && x.clipset) || {};
+      AUDIO_TRACKS.forEach(function(k){
+        var r = o[k];
+        if(!r || typeof r !== "object" || !r.id) return;
+        var s = +r.s, e = +r.e, n = +r.n, b = +r.bars;
+        if(!(s >= 0 && s < 1)) s = 0;
+        if(!(e > s && e <= 1)) e = 1;
+        if(!(n >= -CLIP_NUDGE && n <= CLIP_NUDGE)) n = 0;
+        if(CLIP_FITS.indexOf(b) < 0) b = 0;
+        clipSet[k] = { id:String(r.id), s:s, e:e, n:n, bars:b };
+      });
+    }
+  });
+  GLOSSARY.push({ term:"Trim", text:"Cutting the silence or a mistake off the start or end of a recording. The cut part is hidden, not thrown away." });
+  GLOSSARY.push({ term:"Nudge", text:"Sliding a recording a tiny bit earlier or later so its first sound lands on the beat." });
+
+  // the speed of the song changes how fast a fitted clip has to play
+  tempoEl.addEventListener("input", function(){
+    if(!AUDIO_TRACKS.some(function(k){ return !!clipOn(k); })) return;
+    // this runs before the slider's own handler has stored the new speed
+    setTimeout(function(){ AUDIO_TRACKS.forEach(clipPaint); }, 0);
+    clipResync();
+  });
+  playBtn.addEventListener("click", function(){ if(clipPrev) clipStopPreview(); });
+  (function(){
+    var tb = document.getElementById("themebtn");
+    if(tb) tb.addEventListener("click", function(){ setTimeout(function(){ AUDIO_TRACKS.forEach(clipDraw); }, 30); });
+  })();
   // ----- end clips -----
 
   // ===== feature: pads (js) =====

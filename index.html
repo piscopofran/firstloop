@@ -775,6 +775,18 @@
   /* . */
 
   /* ===== @meter css: begin ===== */
+  .meterrow{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:11px;}
+  .meterrow .lbl{display:inline-flex;align-items:center;gap:7px;}
+  .meterseg{display:flex;width:100%;}
+  .meterseg button{flex:1 1 0;min-width:0;white-space:normal;line-height:1.3;padding:8px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:1px;}
+  .meterseg button b{font-family:Sora,sans-serif;font-size:16px;line-height:1.1;}
+  .meterseg button span{font-size:11.5px;font-weight:600;}
+  .meterseg button + button{border-left:1px solid var(--line-2);}
+  /* six-eight: the lighter mark on the squares that split each big beat in two */
+  .cell[data-beat="half"]{background:color-mix(in srgb,var(--cell-4) 45%,var(--cell));}
+  .cell[data-beat="half"][aria-pressed="true"]{background:var(--tint);}
+  .tick[data-beat="half"]{color:var(--ink-2);}
   /* ===== @meter css: end ===== */
 
   /* . */
@@ -1146,7 +1158,7 @@
       </div>
       <div class="headbtns"><button class="ghost" id="cleardrums" hidden>Clear</button></div>
     </div>
-    <p class="explain" id="help-drums" hidden>Each row is one drum sound. The sixteen squares across are sixteen moments, played in order from left to right, then it loops. Switch a square on and that sound happens at that moment.</p>
+    <p class="explain" id="help-drums" hidden>Each row is one drum sound. The squares across are moments, played in order from left to right, then it loops. Switch a square on and that sound happens at that moment.</p>
     <div class="scroller">
       <div class="col-head" id="drumticks"></div>
       <div class="grid" id="drumgrid"></div>
@@ -1373,7 +1385,7 @@
     <div class="mod wide" id="sec-voice" hidden>
       <h2>Record &amp; import <button class="help" type="button" data-help="voice" aria-expanded="false" aria-label="About recording?">?</button></h2>
       <p class="sub">Three tracks for your own sounds. Sing, beatbox, or bring a file in.</p>
-      <p class="explain" id="help-voice" hidden style="margin:0;">Recording gives you a four-beat count-in and then runs for exactly the length of your song, so it loops with everything else. Anything you record or import goes through the knobs too. Press <strong>Play it as an instrument</strong> and that sound becomes playable from the note grid &mdash; record yourself saying one word and you can write a whole tune out of it.</p>
+      <p class="explain" id="help-voice" hidden style="margin:0;">Recording gives you one bar of count-in clicks and then runs for exactly the length of your song, so it loops with everything else. Anything you record or import goes through the knobs too. Press <strong>Play it as an instrument</strong> and that sound becomes playable from the note grid &mdash; record yourself saying one word and you can write a whole tune out of it.</p>
       <div class="voicebox">
         <div class="slots" id="slots"></div>
         <input type="file" id="audiofile" accept="audio/*" hidden>
@@ -1633,6 +1645,14 @@
   "use strict";
 
   var STEPS = 16, ROWS = 8;
+  // @meter: STEPS is how long the stored rows are, always 16, so every song code ever
+  // made still loads. barSteps() is how many of those squares one bar shows and plays.
+  var meter = "4/4";
+  var METERS = {
+    "4/4":{ steps:16, beats:[0,4,8,12], half:[],    back:[4,12], off:[2,6,10,14], nn:4, dd:2, cc:24 },
+    "3/4":{ steps:12, beats:[0,4,8],    half:[],    back:[4,8],  off:[2,6,10],    nn:3, dd:2, cc:24 },
+    "6/8":{ steps:12, beats:[0,6],      half:[3,9], back:[6],    off:[3,9],       nn:6, dd:3, cc:36 }
+  };
   var PARTS = ["A","B","C","D","E","F","G","H"];
   var ORDER = ["A","A","B","B"];   // the arrangement, one letter per bar
   // Sections sit on top of the bars: "Verse is bars 1 to 4". They always add
@@ -1846,7 +1866,7 @@
     if(playing) stop();
     var REPEATS = opts.repeats || 2;
 
-    var one = ORDER.length * STEPS * stepDur();
+    var one = ORDER.length * barSteps() * stepDur();
     var tail = 2.6;                      // room for reverb and echo to ring out
     var secs = one * REPEATS + tail;
     var rate = 44100;
@@ -1875,11 +1895,11 @@
       buildGraph();
       applyFX(); applyTone();
 
-      var total = STEPS * ORDER.length;
+      var BS = barSteps(), total = BS * ORDER.length;
       for(var pass = 0; pass < REPEATS; pass++){
         for(var i = 0; i < total; i++){
-          var bar = Math.floor(i / STEPS), step = i % STEPS;
-          var nudge = (step % 2 === 1) ? (swing/100) * stepDur() * 0.66 : 0;
+          var bar = Math.floor(i / BS), step = i % BS;
+          var nudge = swingNudge(step);
           if(step === 0 && typeof mixplusBar === "function") mixplusBar(bar, pass * one + i * stepDur());
           fireStep(ORDER[bar], step, pass * one + i * stepDur() + nudge);
         }
@@ -2330,13 +2350,13 @@
   var rollAt = null, rollN = 0;
 
   function scheduler(){
-    var total = STEPS * barsInPlay();
+    var BS = barSteps(), total = BS * barsInPlay();
     while(nextTime < ac.currentTime + LOOKAHEAD){
       if(songStep >= total) songStep = 0;
-      if(songStep % STEPS === 0 && tourDone){
+      if(songStep % BS === 0 && tourDone){
         // the top of a bar is the only place the song is allowed to jump,
         // so a jump always lands in time
-        var bar0 = songStep / STEPS, jumped = false;
+        var bar0 = songStep / BS, jumped = false;
         if(pendingJump !== null){
           bar0 = Math.max(0, Math.min(pendingJump, ORDER.length - 1));
           pendingJump = null; jumped = true;
@@ -2345,14 +2365,14 @@
           if(bar0 < la || bar0 >= lb){ bar0 = la; jumped = true; }
         }
         if(jumped){
-          songStep = bar0 * STEPS;
-          scheduleVoice(nextTime, bar0 * STEPS * stepDur());
+          songStep = bar0 * BS;
+          scheduleVoice(nextTime, bar0 * BS * stepDur());
         }
       }
-      var bar = Math.floor(songStep / STEPS), step = songStep % STEPS;
+      var bar = Math.floor(songStep / BS), step = songStep % BS;
       if(step === 0 && typeof mixplusBar === "function") mixplusBar(bar, nextTime);
       // swing pushes every second square later, the way a person would play it
-      var nudge = (step % 2 === 1) ? (swing/100) * stepDur() * 0.66 : 0;
+      var nudge = swingNudge(step);
       if(live.roll && rollAt){
         // stutter: the same half-beat again and again while the button is held;
         // the song keeps its place underneath
@@ -2369,9 +2389,9 @@
     applyLevels();
     playing = true; queue.length = 0; pendingJump = null;
     var from = (loopSec && tourDone && SECS[selSec]) ? secStart(selSec) : 0;
-    songStep = from * STEPS;
+    songStep = from * barSteps();
     nextTime = ac.currentTime + 0.06;
-    scheduleVoice(nextTime, from * STEPS * stepDur());
+    scheduleVoice(nextTime, from * barSteps() * stepDur());
     timer = setInterval(scheduler, 25);
     scheduler();
     playBtn.dataset.playing = "true";
@@ -2417,9 +2437,9 @@
     var el = document.getElementById("phead"), lanes = document.getElementById("lanes");
     if(!el || !lanes) return;
     if(!playing || currentBar < 0 || !ac){ el.dataset.on = "false"; return; }
-    var idx = currentBar * STEPS + currentStep;
+    var idx = currentBar * barSteps() + currentStep;
     var frac = Math.max(0, Math.min(1, (ac.currentTime - lastStepAt) / stepDur()));
-    var pos = (idx + frac) / (STEPS * ORDER.length);
+    var pos = (idx + frac) / (barSteps() * ORDER.length);
     el.dataset.on = "true";
     var px = pos * lanes.offsetWidth;
     el.style.transform = "translateX(" + px + "px)";
@@ -2464,24 +2484,17 @@
     sayTimer = setTimeout(function(){ bar.dataset.on = "false"; },
       Math.min(9500, 2600 + String(m).length * 55));
   }
-  function count(a){ return a.filter(function(v){ return v === true; }).length; }
+  // @meter: every one of these looks only at the squares the bar really has
+  function count(a){ var bs = barSteps(); return a.filter(function(v,i){ return v === true && i < bs; }).length; }
   function laneCount(part,lane){
-    return song[part].notes[lane].filter(function(v){ return v !== null; }).length;
+    return vis(song[part].notes[lane]).filter(function(v){ return v !== null; }).length;
   }
   function drumTotal(part){
     return DRUMS.reduce(function(n,d){ return n + count(song[part].drums[d.id]); }, 0);
   }
-  function hits(part,id){ return song[part].drums[id]; }
-  function anyDrumAt(part,s){ return DRUMS.some(function(d){ return song[part].drums[d.id][s]; }); }
-  function samePart(){
-    var same = DRUMS.every(function(d){
-      return song.A.drums[d.id].every(function(v,i){ return v === song.B.drums[d.id][i]; });
-    });
-    if(!same) return false;
-    return LANES.every(function(l){
-      return song.A.notes[l].every(function(v,i){ return v === song.B.notes[l][i]; });
-    });
-  }
+  function hits(part,id){ return vis(song[part].drums[id]); }
+  function anyDrumAt(part,s){ return s < barSteps() && DRUMS.some(function(d){ return song[part].drums[d.id][s]; }); }
+  function samePart(){ return drumsSame("A","B") && notesSame("A","B"); }
 
   var toastTimer = null;
   // While quiet is on, progress is still recorded but nothing celebrates it.
@@ -2514,7 +2527,7 @@
     { id:"lock", name:"Locked the bass to the drums",
       hint:"Put a bass note on the same square as a kick. It makes the bottom end feel solid.",
       test:function(){
-        var k = hits("A","kick"), b = song.A.notes.bass;
+        var k = hits("A","kick"), b = vis(song.A.notes.bass);
         return b.some(function(v,i){ return v !== null && k[i]; });
       } },
     { id:"layers", name:"Stacked three layers",
@@ -2795,7 +2808,7 @@
     return n;
   }
   function lastNote(k, lane){
-    var a = song[k].notes[lane];
+    var a = vis(song[k].notes[lane]);
     for(var i = a.length - 1; i >= 0; i--) if(a[i] !== null) return a[i];
     return null;
   }
@@ -2806,25 +2819,29 @@
   }
   function drumsSame(x, y){
     return DRUMS.every(function(d){
-      return song[x].drums[d.id].every(function(v, i){ return v === song[y].drums[d.id][i]; });
+      return vis(song[x].drums[d.id]).every(function(v, i){ return v === song[y].drums[d.id][i]; });
     });
   }
   function notesSame(x, y){
     return LANES.every(function(l){
-      return song[x].notes[l].every(function(v, i){ return v === song[y].notes[l][i]; });
+      return vis(song[x].notes[l]).every(function(v, i){ return v === song[y].notes[l][i]; });
     });
   }
 
   var CHALLENGES = [
-    { id:"floor", stage:"groove", title:"Four on the floor",
-      brief:"Put a kick on square 1, 5, 9 and 13 \u2014 the four big beats of the bar.",
-      why:"A kick on every beat is the steadiest pulse there is. Almost all dance music is built on it, because the ear never has to wonder where the beat is.",
-      test:function(){ var k = hits("A","kick"); return [0,4,8,12].every(function(i){ return k[i]; }); } },
+    // @meter: title, brief and why are read fresh each time, so they name the
+    // squares the bar really has (meterQuest lives with the rest of the meter code)
+    { id:"floor", stage:"groove",
+      get title(){ return meterQuest("floor", "title"); },
+      get brief(){ return meterQuest("floor", "brief"); },
+      get why(){ return meterQuest("floor", "why"); },
+      test:function(){ var k = hits("A","kick"); return beatSteps().every(function(i){ return k[i]; }); } },
 
-    { id:"backbeat", stage:"groove", title:"Add the backbeat",
-      brief:"Put a snare on square 5 and square 13, so it answers the kick.",
-      why:"Kick on 1 and 3, snare on 2 and 4. That push and pull is the backbone of nearly every pop, rock and hip hop song ever made.",
-      test:function(){ var sn = hits("A","snare"); return sn[4] && sn[12]; } },
+    { id:"backbeat", stage:"groove",
+      get title(){ return meterQuest("backbeat", "title"); },
+      get brief(){ return meterQuest("backbeat", "brief"); },
+      get why(){ return meterQuest("backbeat", "why"); },
+      test:function(){ var sn = hits("A","snare"); return backSteps().every(function(i){ return sn[i]; }); } },
 
     { id:"offbeat", stage:"groove", title:"Fill the gaps with hi-hats",
       brief:"Put four or more hi-hats on the squares in between the beats \u2014 the even-numbered ones.",
@@ -2839,7 +2856,7 @@
       why:"Silence is an instrument. A gap makes whatever comes next hit far harder, and a bar with no space in it just sounds busy.",
       test:function(){
         var run = 0;
-        for(var i = 0; i < STEPS; i++){
+        for(var i = 0; i < barSteps(); i++){
           if(!anyDrumAt("A", i)){ run++; if(run >= 4) return true; } else run = 0;
         }
         return false; } },
@@ -2903,7 +2920,7 @@
       brief:"Put at least three bass notes on squares that already have a kick.",
       why:"When the bass and the kick hit together the bottom end feels like one solid thing. When they miss each other it sounds loose and muddy.",
       test:function(){
-        var k = hits("A","kick"), b = song.A.notes.bass, n = 0;
+        var k = hits("A","kick"), b = vis(song.A.notes.bass), n = 0;
         b.forEach(function(v,i){ if(v !== null && k[i]) n++; });
         return n >= 3; } },
 
@@ -2911,7 +2928,7 @@
       brief:"Write a bass part and a melody that never sit on the same row at the same moment.",
       why:"Two instruments on the same note at the same time fight each other and both get quieter. Give them their own space and both come through.",
       test:function(){
-        var b = song.A.notes.bass, m = song.A.notes.melody;
+        var b = vis(song.A.notes.bass), m = vis(song.A.notes.melody);
         if(laneCount("A","bass") < 3 || laneCount("A","melody") < 3) return false;
         return !b.some(function(v,i){ return v !== null && m[i] !== null && v === m[i]; }); } }
   ];
@@ -3063,11 +3080,11 @@
     f.layers = (f.drumsA?1:0)+(f.bass?1:0)+(f.chords?1:0)+(f.melody?1:0);
     f.onTheOne = anyDrumAt("A",0);
     f.identical = samePart();
-    var k = hits("A","kick"), b = song.A.notes.bass;
+    var k = hits("A","kick"), b = vis(song.A.notes.bass);
     f.bassOnKick = b.filter(function(v,i){ return v !== null && k[i]; }).length;
     f.firstKick = k.indexOf(true);
     var rows = {};
-    song.A.notes.melody.forEach(function(v){ if(v !== null) rows[v] = true; });
+    vis(song.A.notes.melody).forEach(function(v){ if(v !== null) rows[v] = true; });
     f.melodyRows = Object.keys(rows).length;
     f.sections = SECS.length;
     f.bars = ORDER.length;
@@ -3090,7 +3107,7 @@
 
     { id:"sparse", when:function(f){ return f.total > 0 && f.total < 4; },
       obs:function(f){ return "You have " + f.total + (f.total===1?" square":" squares") + " switched on, so there is not much to hear yet."; },
-      sug:function(){ return "Fill the drum row out a bit — four or more kicks spread across the sixteen squares."; },
+      sug:function(){ return "Fill the drum row out a bit — four or more kicks spread across the row."; },
       why:"A rhythm needs repetition before the ear can find a pattern in it. One or two hits read as accidents." },
 
     { id:"drums-only", when:function(f){ return f.drumsA >= 4 && f.notes === 0; },
@@ -3116,7 +3133,7 @@
       sug:function(){ return "Change one thing in Part B. Taking the hi-hats out is the easiest — you will hear the song open up."; },
       why:"People notice change far more than they notice content. Two halves that differ slightly are heard as a song going somewhere. Four identical bars are heard as a loop, however good the bar is.",
       doLabel:"Take the hi-hats out of Part B",
-      apply:function(){ song.B.drums.hat.fill(false); } },
+      apply:function(){ clearVis(song.B.drums.hat, false); } },
 
     { id:"bass-loose", when:function(f){ return f.bass >= 2 && f.drumsA > 0 && f.bassOnKick === 0 && f.firstKick >= 0; },
       obs:function(f){ return "Your bass has " + f.bass + " notes, and not one lands on the same square as a kick."; },
@@ -3125,7 +3142,7 @@
       doLabel:"Land one on the kick",
       apply:function(){
         var k = hits("A","kick"), row = 0;
-        song.A.notes.bass.forEach(function(v){ if(v !== null) row = v; });
+        vis(song.A.notes.bass).forEach(function(v){ if(v !== null) row = v; });
         var i = k.indexOf(true);
         if(i >= 0) song.A.notes.bass[i] = row;
       } },
@@ -3136,13 +3153,13 @@
       why:"A tune is made of movement between pitches. Repeating one pitch is a fine effect on purpose, but it cannot rise or fall, and rising and falling is what makes a melody stick." },
 
     { id:"melody-crammed", when:function(f){ return f.melody > 8; },
-      obs:function(f){ return "There are " + f.melody + " melody notes across sixteen squares. It is nearly full."; },
+      obs:function(f){ return "There are " + f.melody + " melody notes across " + barSteps() + " squares. It is nearly full."; },
       sug:function(){ return "Take about half out, then listen back and see which ones you actually miss."; },
       why:"A melody is shaped as much by its gaps as its notes. When something plays constantly the ear stops following it and starts hearing it as texture.",
       doLabel:"Thin it out for me",
       apply:function(){
         var seen = 0;
-        song.A.notes.melody.forEach(function(v,i){
+        vis(song.A.notes.melody).forEach(function(v,i){
           if(v !== null){ seen++; if(seen % 2 === 0) song.A.notes.melody[i] = null; }
         });
       } },
@@ -3153,9 +3170,9 @@
       why:"Taking something away is the strongest contrast you have, and it costs nothing. When the layer comes back it sounds bigger than before without being any louder.",
       doLabel:"Drop the melody in Part B",
       apply:function(){
-        if(laneCount("B","melody") > 0) song.B.notes.melody.fill(null);
-        else if(laneCount("B","chords") > 0) song.B.notes.chords.fill(null);
-        else song.B.drums.hat.fill(false);
+        if(laneCount("B","melody") > 0) clearVis(song.B.notes.melody, null);
+        else if(laneCount("B","chords") > 0) clearVis(song.B.notes.chords, null);
+        else clearVis(song.B.drums.hat, false);
       } },
 
     { id:"one-section", when:function(f){ return f.sections === 1 && !f.identical && f.total >= 10; },
@@ -3277,8 +3294,8 @@
 
   // ---------- ask ----------
   var HOW_IT_WORKS =
-    "The app: a grid where each row is one sound and the sixteen squares across are sixteen " +
-    "moments in time, played left to right on a loop. Drum rows are Kick, Snare, Hi-hat and Clap. " +
+    "The app: a grid where each row is one sound and the squares across are " +
+    "moments in time, played left to right on a loop. A bar is sixteen squares when it has four beats, and twelve when the song is set to three beats (a waltz) or a rolling six. Drum rows are Kick, Snare, Hi-hat and Clap. " +
     "Three note lanes: Bass (low), Chords (middle, each pad plays three notes at once) and " +
     "Melody (on top). Note rows are locked to one set of notes so nothing can clash. A part is one " +
     "bar of drums and notes, lettered A to H. The track is a row of bars, each playing one part, " +
@@ -3292,7 +3309,7 @@
     var who = register === "kid" ? "a 9-year-old who is new to music" : "an adult who is new to music";
     return "You are the helper inside a music-making app for complete beginners, including " +
       "children around nine years old. Answer the question you are asked.\n\n" + HOW_IT_WORKS +
-      "\n\nWhat this person has made so far:\n" + factLines(analyse()) + "\n\nRules:\n" +
+      "\n\nWhat this person has made so far:\n" + factLines(analyse()) + "\n" + meterFact() + "\n\nRules:\n" +
       "- Write for " + who + ".\n" +
       "- Two to four sentences. No lists unless they asked for steps.\n" +
       "- Plain words. Explain any musical term the moment you use it.\n" +
@@ -3632,10 +3649,10 @@
   // never written to storage, and never included in a wish or a report.
   var voiceSrcs = [], recState = "idle", mediaStream = null, recorder = null, recSlot = "a1";
 
-  function songSeconds(){ return ORDER.length * STEPS * stepDur(); }
+  function songSeconds(){ return ORDER.length * barSteps() * stepDur(); }
   function playOffset(){
     if(!playing || currentBar < 0) return 0;
-    return (currentBar * STEPS + Math.max(0, currentStep)) * stepDur();
+    return (currentBar * barSteps() + Math.max(0, currentStep)) * stepDur();
   }
 
   function setRec(state, label){
@@ -3851,16 +3868,16 @@
 
     note.textContent = "Recording onto " + slotName(recSlot) + ".";
 
-    // four beats of count-in, so you know when to come in
+    // one bar of count-in, a click on each beat (four, three, or two big ones in 6/8)
     if(playing) stop();
     if(loopSec){ loopSec = false; buildTrack(); }
     setRec("armed", "Get ready\u2026");
-    var beat = stepDur() * 4;
-    for(var i=0;i<4;i++){
+    var clicks = beatSteps().length, beat = stepDur() * barSteps() / clicks;
+    for(var i=0;i<clicks;i++){
       (function(n){
         setTimeout(function(){
           if(ac) hat(ac.currentTime + 0.01);
-          setRec("armed", "Starting in " + (4 - n) + "\u2026");
+          setRec("armed", "Starting in " + (clicks - n) + "\u2026");
         }, beat * 1000 * n);
       })(i);
     }
@@ -3900,7 +3917,7 @@
       setTimeout(function(){
         try { recorder.stop(); } catch(e){}
       }, songSeconds() * 1000);
-    }, beat * 4 * 1000);
+    }, beat * clicks * 1000);
   }
 
   // ---------- plugged-in instruments ----------
@@ -3966,7 +3983,7 @@
   }
   function currentStepIndex(){
     if(!playing || !ac) return -1;
-    var idx = currentBar * STEPS + currentStep;
+    var idx = currentBar * barSteps() + currentStep;
     var frac = (ac.currentTime - lastStepAt) / stepDur();
     if(frac > 0.5) idx += 1;                 // late in the step counts as the next one
     return idx;
@@ -3986,7 +4003,7 @@
       DRUMFN[id](ac.currentTime + 0.005);
       var si = currentStepIndex();
       if(si >= 0){
-        var bar = Math.floor(si / STEPS) % ORDER.length, st = si % STEPS;
+        var bar = Math.floor(si / barSteps()) % ORDER.length, st = si % barSteps();
         song[ORDER[bar]].drums[id][st] = true;
         if(ORDER[bar] === editPart) buildDrums();
         buildTrack(); refreshCode(); recheck();
@@ -4000,7 +4017,7 @@
     midiLive[note] = r;
     var si2 = currentStepIndex();
     if(si2 >= 0){
-      var bar2 = Math.floor(si2 / STEPS) % ORDER.length, st2 = si2 % STEPS;
+      var bar2 = Math.floor(si2 / barSteps()) % ORDER.length, st2 = si2 % barSteps();
       song[ORDER[bar2]].notes[lane][st2] = r;
       if(ORDER[bar2] === editPart) buildNotes();
       buildTrack(); refreshCode(); recheck();
@@ -4124,7 +4141,7 @@
       well:"Hear that kick? That was the one switched-on square." },
     { id:"time", show:["drums-kick","transport"], spot:"#sec-drums",
       text:"Left to right is time.",
-      sub:"The row is sixteen moments in a row. A marker runs across them and plays whatever is switched on, then starts again. That is the whole idea.",
+      sub:"The row is a line of moments, one after another. A marker runs across them and plays whatever is switched on, then starts again. That is the whole idea.",
       cta:"Got it" },
     { id:"more-kick", show:["drums-kick","transport"], spot:"#sec-drums",
       text:"Now tap three more squares in that row.",
@@ -4315,6 +4332,7 @@
   ];
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   function randomise(p){
+    if(meter !== "4/4"){ meterRandomise(p); return; }
     var kicks = pick([[0,6,10],[0,4,8,12],[0,7],[0,3,8,11]]);
     kicks.forEach(function(i){ p.drums.kick[i]=true; });
     pick([[4,12],[8],[4,12,14]]).forEach(function(i){ p.drums.snare[i]=true; });
@@ -4333,7 +4351,7 @@
     return c;
   }
   function loadStart(i){
-    var s = STARTS[i], a = emptyPart();
+    var s = startFor(i), a = emptyPart();
     snapshot("Before \u201c" + s.name + "\u201d");
     s.build(a);
     song.A = a; song.B = clonePart(a);
@@ -4510,11 +4528,12 @@
   }
   function buildTicks(host){
     host.innerHTML = "";
-    for(var s=0;s<STEPS;s++){
+    for(var s=0;s<barSteps();s++){
       var t = document.createElement("div");
       t.className = "tick"; t.dataset.step = s;
-      if(s%4 === 0){ t.dataset.beat = "true"; t.textContent = (s/4)+1; }
-      else t.textContent = "·";
+      var bm = beatMark(s);
+      if(bm === "true"){ t.dataset.beat = "true"; t.textContent = beatSteps().indexOf(s) + 1; }
+      else { if(bm) t.dataset.beat = bm; t.textContent = "·"; }
       host.appendChild(t);
     }
   }
@@ -4537,11 +4556,11 @@
       lab.appendChild(lw);
       row.appendChild(lab);
       var steps = document.createElement("div"); steps.className = "steps";
-      for(var s=0;s<STEPS;s++){
+      for(var s=0;s<barSteps();s++){
         var b = document.createElement("button");
         b.className = "cell"; b.type = "button";
         b.dataset.step = s; b.dataset.drum = d.id;
-        if(s%4 === 0) b.dataset.beat = "true";
+        if(beatMark(s)) b.dataset.beat = beatMark(s);
         b.setAttribute("aria-pressed", p.drums[d.id][s] ? "true":"false");
         b.setAttribute("aria-label", d.label + ", moment " + (s+1));
         steps.appendChild(b);
@@ -4567,11 +4586,11 @@
       lab.className = "rowlab"; lab.textContent = rowLabel(r);
       row.appendChild(lab);
       var steps = document.createElement("div"); steps.className = "steps";
-      for(var s=0;s<STEPS;s++){
+      for(var s=0;s<barSteps();s++){
         var b = document.createElement("button");
         b.className = "cell"; b.type = "button";
         b.dataset.step = s; b.dataset.row = r;
-        if(s%4 === 0) b.dataset.beat = "true";
+        if(beatMark(s)) b.dataset.beat = beatMark(s);
         b.setAttribute("aria-pressed", p.notes[activeLane][s] === r ? "true":"false");
         b.setAttribute("aria-label", rowLabel(r) + ", moment " + (s+1));
         steps.appendChild(b);
@@ -4614,7 +4633,7 @@
   // Drums get taller with more hits at once; notes sit at their pitch.
   function regionHeights(part, lane){
     var pt = song[part], out = [];
-    for(var st = 0; st < STEPS; st++){
+    for(var st = 0; st < barSteps(); st++){
       if(lane === "drums"){
         var n = 0;
         DRUMS.forEach(function(d){ if(pt.drums[d.id][st]) n++; });
@@ -4754,7 +4773,7 @@
         var blob = document.createElement("div"); blob.className = "blob";
         var marks = document.createElement("div"); marks.className = "marks";
         if(tr.audio){
-          for(var w = 0; w < STEPS; w++){
+          for(var w = 0; w < barSteps(); w++){
             var m = document.createElement("div"); m.className = "mk";
             m.dataset.on = "true";
             m.style.height = (16 + Math.abs(Math.sin(w * 1.7 + i * 0.9)) * 62) + "%";
@@ -4878,7 +4897,7 @@
     });
     var out = ["FL5", tempo, mood, swing, ORDER.join(""),
                [inst.drums, inst.bass, inst.chords, inst.melody].join("."),
-               keyShift,
+               keyShift + (meter !== "4/4" ? ";" + meter : ""),   // @meter: only written when it is not 4/4
                SECS.map(function(x){ return (cleanName(x.name) || "Section") + ":" + x.len; }).join("|"),
                last + 1];
     for(var pi = 0; pi <= last; pi++){ out.push(d(song[PARTS[pi]])); out.push(n(song[PARTS[pi]])); }
@@ -4919,9 +4938,11 @@
         melody: okP(ids[3]) ? ids[3] : "lead"
       };
     }
-    var key = 0, secs = null;
+    var key = 0, secs = null, mt = "4/4";
     if(v5){
       key = Math.max(-5, Math.min(6, parseInt(bits[6], 10) || 0));
+      var mb = String(bits[6] || "").split(";")[1];   // @meter: "2;3/4"; older codes have no second half
+      if(mb && METERS[mb]) mt = mb;
       secs = String(bits[7] || "").split("|").map(function(x){
         var c = x.lastIndexOf(":");
         return { name: cleanName(c >= 0 ? x.slice(0, c) : x) || "Section",
@@ -4955,7 +4976,7 @@
       parts[PARTS[pi]] = got;
     }
     for(var qi = count; qi < PARTS.length; qi++) parts[PARTS[qi]] = emptyPart();
-    return { tempo:bpm, mood:md, swing:sw, order:ord, parts:parts, inst:pickedInst, key:key, secs:secs };
+    return { tempo:bpm, mood:md, swing:sw, order:ord, parts:parts, inst:pickedInst, key:key, secs:secs, meter:mt };
   }
   function refreshCode(){
     if(codeEl) codeEl.value = encode();
@@ -5098,6 +5119,7 @@
     document.getElementById("swing").value = swing;
     document.getElementById("swingval").textContent = swing;
     buildMoods(); buildKey();
+    if(typeof meterSync === "function") meterSync();
   }
   function applyDecoded(p){
     PARTS.forEach(function(k){ song[k] = p.parts[k] || emptyPart(); });
@@ -5106,6 +5128,7 @@
     selSec = 0; loopSec = false; pendingJump = null;
     normSecs();
     tempo = p.tempo; mood = p.mood; swing = p.swing; keyShift = p.key || 0;
+    meter = METERS[p.meter] ? p.meter : "4/4";
     if(p.inst){ Object.keys(p.inst).forEach(function(k){ inst[k] = p.inst[k]; }); saveInst(); }
     if(ORDER.indexOf(editPart) < 0) editPart = ORDER[0];
     syncControls();
@@ -5134,6 +5157,7 @@
   }
 
   function blankSong(){
+    meter = "4/4";
     PARTS.forEach(function(k){ song[k] = emptyPart(); });
     STARTS[0].build(song.A);
     song.B = clonePart(song.A);
@@ -5688,7 +5712,7 @@
     try {
       var n = ac.createBufferSource(); n.buffer = noise(); n.loop = true;
       var bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
-      var t = ac.currentTime, len = Math.max(1.5, stepDur() * 32);
+      var t = ac.currentTime, len = Math.max(1.5, stepDur() * barSteps() * 2);
       bp.frequency.setValueAtTime(500, t);
       bp.frequency.exponentialRampToValueAtTime(7000, t + len);
       var g = ac.createGain();
@@ -5938,16 +5962,16 @@
       return [0x4D,0x54,0x72,0x6B, (len>>>24)&255, (len>>>16)&255, (len>>>8)&255, len&255].concat(out);
     }
     function tick(bar, step){
-      return (bar * STEPS + step) * ST + ((step % 2 === 1) ? Math.round((swing / 100) * 0.66 * ST) : 0);
+      return (bar * barSteps() + step) * ST + ((meter !== "6/8" && step % 2 === 1) ? Math.round((swing / 100) * 0.66 * ST) : 0);
     }
     var us = Math.round(60000000 / tempo);
     var conductor = [
       { t:0, o:0, b:text(3, fileBase()) },
       { t:0, o:0, b:[0xFF,0x51,3,(us>>16)&255,(us>>8)&255,us&255] },
-      { t:0, o:0, b:[0xFF,0x58,4,4,2,24,8] }
+      { t:0, o:0, b:[0xFF,0x58,4,meterNow().nn,meterNow().dd,meterNow().cc,8] }
     ];
     SECS.forEach(function(sc, si){
-      conductor.push({ t:secStart(si) * STEPS * ST, o:1, b:text(6, sc.name) });
+      conductor.push({ t:secStart(si) * barSteps() * ST, o:1, b:text(6, sc.name) });
     });
     var tracks = [track(conductor)];
 
@@ -5955,7 +5979,7 @@
       var dv = [{ t:0, o:0, b:text(3, "Drums") }];
       ORDER.forEach(function(pt, bar){
         DRUMS.forEach(function(d){
-          song[pt].drums[d.id].forEach(function(on, st){
+          vis(song[pt].drums[d.id]).forEach(function(on, st){
             if(!on) return;
             var t = tick(bar, st), n = GM_OUT[d.id];
             dv.push({ t:t, o:2, b:[0x99, n, d.id === "hat" ? 78 : 104] });
@@ -5972,13 +5996,13 @@
       if(GM_PROG[P.id] !== undefined) ev.push({ t:0, o:0, b:[0xC0 | li, GM_PROG[P.id]] });
       var flat = [];
       ORDER.forEach(function(pt, bar){
-        song[pt].notes[lane].forEach(function(r, st){ if(r !== null) flat.push({ bar:bar, st:st, r:r }); });
+        vis(song[pt].notes[lane]).forEach(function(r, st){ if(r !== null) flat.push({ bar:bar, st:st, r:r }); });
       });
       var maxLen = lane === "chords" ? 4 : 2;
       flat.forEach(function(nt, i){
         var t = tick(nt.bar, nt.st);
         var nx = flat[i + 1];
-        var gap = nx ? ((nx.bar * STEPS + nx.st) - (nt.bar * STEPS + nt.st)) : maxLen;
+        var gap = nx ? ((nx.bar * barSteps() + nx.st) - (nt.bar * barSteps() + nt.st)) : maxLen;
         var dur = Math.max(1, Math.min(maxLen, gap)) * ST - 10;
         var rows = lane === "chords" ? [0,2,4].map(function(a){ return Math.min(ROWS - 1, nt.r + a); }) : [nt.r];
         rows.forEach(function(r, ri){
@@ -6052,9 +6076,9 @@
       files.push({ name:base + "/" + base + ".mid", data:midiBytes() });
       var manifest = {
         app:"First Loop", build:LOG.build, song:cur ? cur.name : base,
-        tempo_bpm:tempo, time_signature:"4/4", key_home_note:keyName(), mood:M().name,
+        tempo_bpm:tempo, time_signature:meter, key_home_note:keyName(), mood:M().name,
         swing_percent:swing, bars:ORDER.length,
-        seconds_per_bar: +(STEPS * stepDur()).toFixed(4),
+        seconds_per_bar: +(barSteps() * stepDur()).toFixed(4),
         sections:SECS.map(function(sc, si){ return { name:sc.name, start_bar:secStart(si) + 1, bars:sc.len }; }),
         tracks:made, midi:base + ".mid", full_mix:base + " - full mix.wav",
         note:"Every sound file starts at bar 1 and is the same length, so they line up when dropped at the start of a project. The last few seconds are the echo ringing out."
@@ -6063,7 +6087,7 @@
       var readme =
         "FIRST LOOP - " + (cur ? cur.name : base) + "\r\n\r\n" +
         "Speed: " + tempo + " BPM. Set your music program to this before you bring the files in.\r\n" +
-        "Length: " + ORDER.length + " bars of 4/4.\r\n\r\n" +
+        "Length: " + ORDER.length + " bars of " + meter + ".\r\n\r\n" +
         "tracks/   one sound file per instrument. Drag them all to the very start\r\n" +
         "          of a new project and they line up.\r\n" +
         base + ".mid   the actual notes, one track per instrument, so you can\r\n" +
@@ -6317,6 +6341,233 @@
   //
 
   // ===== @meter js: begin =====
+  // Time signatures. A song is in 4/4, 3/4 or 6/8. The stored rows stay sixteen
+  // squares long (STEPS) whatever the song is in; a bar of three or six simply
+  // shows and plays the first twelve, so nothing is ever thrown away and every
+  // old song code still loads. The meter travels in the song code after the key
+  // ("2;3/4"), and only when it is not 4/4, so four-beat codes are unchanged.
+  function meterNow(){ return METERS[meter] || METERS["4/4"]; }
+  function barSteps(){ return meterNow().steps; }          // squares in one bar
+  function beatSteps(){ return meterNow().beats.slice(); } // where the beats are
+  function backSteps(){ return meterNow().back.slice(); }  // where the answering snare usually goes
+  function offSteps(){ return meterNow().off.slice(); }    // halfway between the beats
+  function beatMark(s){
+    var m = meterNow();
+    return m.beats.indexOf(s) >= 0 ? "true" : (m.half.indexOf(s) >= 0 ? "half" : "");
+  }
+  // only the squares the bar really has
+  function vis(a){ return barSteps() >= a.length ? a : a.slice(0, barSteps()); }
+  function clearVis(a, v){ for(var i = 0; i < barSteps() && i < a.length; i++) a[i] = v; }
+  // Swing nudges every second square late. In six-eight the squares already
+  // come in rolling threes, so there is no "second square" to lean on: no nudge.
+  function swingNudge(step){
+    return (meter !== "6/8" && step % 2 === 1) ? (swing/100) * stepDur() * 0.66 : 0;
+  }
+  function sqList(a){
+    var n = a.map(function(i){ return i + 1; });
+    return n.length > 1 ? n.slice(0, -1).join(", ") + " and " + n[n.length - 1] : String(n[0]);
+  }
+  function sqWord(a){ return (a.length > 1 ? "squares " : "square ") + sqList(a); }
+
+  // The two challenges that name squares, worded for the bar the song has.
+  function meterQuest(id, field){
+    var nb = ["", "one", "two", "three", "four"][beatSteps().length];
+    var T = {
+      floor:{
+        title: meter === "4/4" ? "Four on the floor" : "A kick on every beat",
+        brief: "Put a kick on square " + sqList(beatSteps()) + " — the " + nb + " big beats of the bar.",
+        why: meter === "4/4"
+          ? "A kick on every beat is the steadiest pulse there is. Almost all dance music is built on it, because the ear never has to wonder where the beat is."
+          : "A kick on every beat is the steadiest pulse there is, however many beats the bar has. The ear never has to wonder where the beat is."
+      },
+      backbeat:{
+        title: meter === "3/4" ? "Add the tap, tap" : "Add the backbeat",
+        brief: meter === "4/4" ? "Put a snare on square 5 and square 13, so it answers the kick."
+             : meter === "3/4" ? "Put a snare on square 5 and square 9, so it answers a kick on square 1."
+             : "Put a snare on square 7, so it answers a kick on square 1.",
+        why: meter === "4/4" ? "Kick on 1 and 3, snare on 2 and 4. That push and pull is the backbone of nearly every pop, rock and hip hop song ever made."
+           : meter === "3/4" ? "A waltz goes boom, tap, tap: something low on beat one, something lighter on beats two and three. That lopsided sway is what makes people want to turn in circles."
+           : "A rolling six has two big beats in the bar. Kick on the first and snare on the second is the same push and pull as a pop backbeat, with the small squares rolling in between."
+      }
+    };
+    return T[id][field];
+  }
+  // one line for the helper, so its answers name the right squares
+  function meterFact(){
+    if(meter === "3/4") return "Beats in a bar: three (3/4, a waltz). A bar is twelve squares and the beats are squares 1, 5 and 9.";
+    if(meter === "6/8") return "Beats in a bar: six (6/8), felt as two big beats. A bar is twelve squares and the big beats are squares 1 and 7. Swing is switched off.";
+    return "Beats in a bar: four (4/4). A bar is sixteen squares and the beats are squares 1, 5, 9 and 13.";
+  }
+
+  // Ready-made ideas for three and for six, so "Swap in a ready-made idea"
+  // never writes onto a square the bar does not have.
+  var METER_STARTS = {
+    "3/4":[
+      { note:"Boom, tap, tap. The sway most three-beat songs are built on.",
+        build:function(p){
+          p.drums.kick[0]=true;
+          [4,8].forEach(function(i){ p.drums.snare[i]=true; });
+          [0,2,4,6,8,10].forEach(function(i){ p.drums.hat[i]=true; });
+          p.notes.bass[0]=0; p.notes.bass[8]=2;
+          p.notes.chords[0]=0; p.notes.chords[4]=2;
+        }},
+      { note:"A kick on every beat. Hard to sit still to.",
+        build:function(p){
+          [0,4,8].forEach(function(i){ p.drums.kick[i]=true; });
+          [4,8].forEach(function(i){ p.drums.clap[i]=true; });
+          [2,6,10].forEach(function(i){ p.drums.hat[i]=true; });
+          p.notes.bass[2]=0; p.notes.bass[6]=0; p.notes.bass[10]=3;
+          p.notes.melody[0]=5; p.notes.melody[8]=4;
+        }},
+      { note:"Lots of space. Every sound gets room to ring out.",
+        build:function(p){
+          p.drums.kick[0]=true; p.drums.snare[8]=true;
+          p.notes.bass[0]=0; p.notes.bass[8]=4;
+          p.notes.chords[0]=0;
+          p.notes.melody[4]=5; p.notes.melody[8]=3;
+        }}
+    ],
+    "6/8":[
+      { note:"Thump, then snap, with six ticks rolling over the top.",
+        build:function(p){
+          [0,10].forEach(function(i){ p.drums.kick[i]=true; });
+          p.drums.snare[6]=true;
+          [0,2,4,6,8,10].forEach(function(i){ p.drums.hat[i]=true; });
+          p.notes.bass[0]=0; p.notes.bass[6]=2; p.notes.bass[10]=1;
+          p.notes.chords[0]=0; p.notes.chords[6]=2;
+        }},
+      { note:"A kick on both big beats. Hard to sit still to.",
+        build:function(p){
+          [0,6].forEach(function(i){ p.drums.kick[i]=true; });
+          p.drums.clap[6]=true;
+          [2,4,8,10].forEach(function(i){ p.drums.hat[i]=true; });
+          p.notes.bass[4]=0; p.notes.bass[10]=3;
+          p.notes.melody[0]=5; p.notes.melody[6]=4;
+        }},
+      { note:"Lots of space. Every sound gets room to ring out.",
+        build:function(p){
+          p.drums.kick[0]=true; p.drums.snare[6]=true;
+          p.notes.bass[0]=0; p.notes.bass[10]=4;
+          p.notes.chords[0]=0; p.notes.chords[6]=1;
+          p.notes.melody[4]=5; p.notes.melody[8]=3;
+        }}
+    ]
+  };
+  function startFor(i){
+    var s = STARTS[i], alt = METER_STARTS[meter] && METER_STARTS[meter][i];
+    if(!alt) return s;
+    return { name:s.name, bpm:s.bpm, note:alt.note, build:alt.build };
+  }
+  function meterRandomise(p){
+    var six = meter === "6/8";
+    var kicks = six ? pick([[0],[0,6],[0,10],[0,4,6]]) : pick([[0],[0,4,8],[0,6],[0,10]]);
+    kicks.forEach(function(i){ p.drums.kick[i]=true; });
+    (six ? pick([[6],[6,10],[3,9]]) : pick([[4,8],[8],[4]])).forEach(function(i){ p.drums.snare[i]=true; });
+    (six ? pick([[0,2,4,6,8,10],[2,4,8,10],[0,6],[]]) : pick([[0,2,4,6,8,10],[2,6,10],[0,4,8],[]]))
+      .forEach(function(i){ p.drums.hat[i]=true; });
+    if(Math.random()<0.4) (six ? [6] : [4,8]).forEach(function(i){ p.drums.clap[i]=true; });
+    kicks.forEach(function(i){ p.notes.bass[i] = pick([0,0,0,2,3]); });
+    p.notes.chords[0] = 0;
+    if(Math.random()<0.6) p.notes.chords[six ? 6 : 8] = pick([1,2,3]);
+    [2,4,6,8,10].filter(function(){ return Math.random()<0.45; })
+      .forEach(function(i){ p.notes.melody[i] = pick([3,4,5,6,7]); });
+  }
+
+  var METER_CHOICES = [
+    { id:"4/4", n:"4", word:"most songs" },
+    { id:"3/4", n:"3", word:"a waltz" },
+    { id:"6/8", n:"6", word:"a rolling two" }
+  ];
+  (function buildMeterUI(){
+    var modEl = document.getElementById("sec-mood");
+    if(!modEl) return;
+    var row = document.createElement("div");
+    row.className = "meterrow"; row.id = "timesig"; row.dataset.find = "timesig";
+    var lbl = document.createElement("span"); lbl.className = "lbl";
+    lbl.appendChild(document.createTextNode("Beats in a bar "));
+    var hb = document.createElement("button");
+    hb.className = "help"; hb.type = "button"; hb.dataset.help = "meter";
+    hb.setAttribute("aria-expanded", "false"); hb.setAttribute("aria-label", "What are beats in a bar?");
+    hb.textContent = "?";
+    lbl.appendChild(hb);
+    var seg = document.createElement("div");
+    seg.className = "seg meterseg"; seg.id = "meterseg";
+    seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Beats in a bar");
+    METER_CHOICES.forEach(function(c){
+      var b = document.createElement("button");
+      b.type = "button"; b.dataset.meter = c.id;
+      b.setAttribute("aria-pressed", c.id === meter ? "true" : "false");
+      b.setAttribute("aria-label", c.n + " — " + c.word);
+      var big = document.createElement("b"); big.textContent = c.n;
+      var sm = document.createElement("span"); sm.textContent = c.word;
+      b.appendChild(big); b.appendChild(sm);
+      b.addEventListener("click", function(){ setMeter(c.id); });
+      seg.appendChild(b);
+    });
+    var ex = document.createElement("p");
+    ex.className = "explain"; ex.id = "help-meter"; ex.hidden = true; ex.style.margin = "0";
+    ex.textContent =
+      "This is how many beats you count before the pattern starts again. Musicians call it the time signature. " +
+      "Four is what most songs use: ONE two three four, and the row has sixteen squares. " +
+      "Three is a waltz, the swaying kind you could turn in circles to: ONE two three. " +
+      "Six rolls along in two big beats, like a sea shanty or a lullaby: ONE-two-three FOUR-five-six. " +
+      "With three or six the row has twelve squares. The last four are not deleted, only tucked away with whatever was on them, " +
+      "and they come back if you choose four again. " +
+      "The speed number means the same thing in all three: it sets how fast the small squares go by. " +
+      "So in six you feel two big beats in every bar, each one six squares long. " +
+      "Swing is switched off in six, because that rolling feel is already uneven on purpose.";
+    row.appendChild(lbl); row.appendChild(seg);
+    modEl.appendChild(row); modEl.appendChild(ex);
+
+    var sw = document.getElementById("sec-swing");
+    if(sw){
+      var note = document.createElement("p");
+      note.className = "sub"; note.id = "swingmeter"; note.hidden = true;
+      note.textContent = "This song rolls in six, so swing is switched off. That feel is already uneven on purpose. Swing works again with 4 or 3 beats in a bar.";
+      sw.appendChild(note);
+    }
+  })();
+  function paintMeter(){
+    document.querySelectorAll("#meterseg button").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.meter === meter ? "true" : "false");
+    });
+    var six = meter === "6/8", note = document.getElementById("swingmeter"), sl = document.getElementById("swing");
+    if(note) note.hidden = !six;
+    if(sl) sl.disabled = six;
+    document.querySelectorAll("#startgrid .start").forEach(function(b, i){
+      var sp = b.querySelector(":scope > span");
+      if(sp && STARTS[i]) sp.textContent = startFor(i).note;
+    });
+  }
+  // called whenever a song arrives (opened, pasted, new, undone): redraw the
+  // numbers above the grids for its bar and show which choice is on
+  function meterSync(){
+    if(drumTicks && noteTicks){ buildTicks(drumTicks); buildTicks(noteTicks); }
+    paintMeter();
+  }
+  function setMeter(m){
+    if(!METERS[m] || m === meter) return;
+    snapshot("Before changing the beats in a bar");
+    var was = playing;
+    if(playing) stop();
+    meter = m;
+    meterSync();
+    buildDrums(); buildNotes();
+    refreshCode();
+    if(tourDone) paintQuest();
+    AUDIO_TRACKS.forEach(function(k){ try { if(typeof clipPaint === "function") clipPaint(k); } catch(e){} });
+    LOG.meterSet = (LOG.meterSet || 0) + 1; saveLog();
+    if(was) start();
+    say(m === "4/4" ? "Four beats in a bar. All sixteen squares are showing again, with whatever was on them."
+      : (m === "3/4" ? "Three beats in a bar: ONE two three. " : "Six in a bar, felt as two big beats: ONE-two-three FOUR-five-six. ") +
+        "The row has twelve squares now. The last four are tucked away, not deleted.");
+  }
+  CMDS.push({ name:"Four beats in a bar", keys:"time signature 4/4 four beats meter metre", help:"What most songs use.",
+    run:function(){ setView("make"); setMeter("4/4"); } });
+  CMDS.push({ name:"Three beats in a bar (a waltz)", keys:"time signature 3/4 three beats waltz meter metre", help:"ONE two three.",
+    run:function(){ setView("make"); setMeter("3/4"); } });
+  CMDS.push({ name:"Six in a bar (a rolling two)", keys:"time signature 6/8 six beats rolling meter metre", help:"ONE-two-three FOUR-five-six.",
+    run:function(){ setView("make"); setMeter("6/8"); } });
   // ===== @meter js: end =====
 
   //
@@ -6333,11 +6584,11 @@
   function styHas(id, idx){ var h = hits("A", id); return idx.every(function(i){ return h[i]; }); }
   function styBackbeat(){
     var s = hits("A","snare"), c = hits("A","clap");
-    return !!((s[4] || c[4]) && (s[12] || c[12]));
+    return backSteps().every(function(i){ return s[i] || c[i]; });
   }
   function styGap(){
     var run = 0;
-    for(var i = 0; i < STEPS; i++){
+    for(var i = 0; i < barSteps(); i++){
       if(!anyDrumAt("A", i)){ run++; if(run >= 4) return true; } else run = 0;
     }
     return false;
@@ -6361,12 +6612,14 @@
   function stySetMood(id){ mood = id; }
   function styInstFact(lane){ return "Your " + lane + (lane === "chords" ? " are" : " is") + " playing " + pitchOf(lane).name; }
   var STY_BACKBEAT = {
-    conv:"usually has a snare or clap on squares 5 and 13",
-    why:"that crack halfway between the kicks is the spot people clap along to",
-    fact:function(){ return styBackbeat() ? "Part A has a snare or clap on squares 5 and 13"
-                                          : "Part A does not have a snare or clap on both squares 5 and 13"; },
-    test:styBackbeat, tryLabel:"Try it", tut:"Put a snare on squares 5 and 13 and listen",
-    fix:function(){ song.A.drums.snare[4] = true; song.A.drums.snare[12] = true; } };
+    get conv(){ return "usually has a snare or clap on " + sqWord(backSteps()); },
+    get why(){ return meter === "3/4" ? "in three, the lighter taps after the kick are what make it sway"
+                                      : "that crack halfway between the kicks is the spot people clap along to"; },
+    fact:function(){ var n = backSteps().length, w = sqWord(backSteps());
+      return styBackbeat() ? "Part A has a snare or clap on " + w
+                           : "Part A does not have a snare or clap on " + (n > 1 ? "both " : "") + w; },
+    test:styBackbeat, tryLabel:"Try it", get tut(){ return "Put a snare on " + sqWord(backSteps()) + " and listen"; },
+    fix:function(){ backSteps().forEach(function(i){ song.A.drums.snare[i] = true; }); } };
 
   var STYLES = [
     { id:"lofi", name:"Lo-fi", word:"lo-fi",
@@ -6396,22 +6649,22 @@
       busy:[16,30,"the drums keep going the whole time so the dancing never has to stop"],
       mood:"happy", sounds:{ bass:"synbass", chords:"organ", melody:"lead" },
       tricks:[
-        { conv:"usually has a kick on every beat, which is squares 1, 5, 9 and 13",
+        { get conv(){ return "usually has a kick on every beat, which is " + sqWord(beatSteps()); },
           why:"that steady thump is the thing people dance to",
           fact:function(){
-            var k = hits("A","kick"), n = [0,4,8,12].filter(function(i){ return k[i]; }).length;
-            return "Part A has a kick on " + n + " of the 4 beats"; },
-          test:function(){ return styHas("kick",[0,4,8,12]); },
-          tryLabel:"Try it", tut:"Put a kick on squares 1, 5, 9 and 13 and listen",
-          fix:function(){ [0,4,8,12].forEach(function(i){ song.A.drums.kick[i] = true; }); } },
-        { conv:"usually has a hi-hat halfway between the kicks, on squares 3, 7, 11 and 15",
+            var k = hits("A","kick"), n = beatSteps().filter(function(i){ return k[i]; }).length;
+            return "Part A has a kick on " + n + " of the " + beatSteps().length + " beats"; },
+          test:function(){ return styHas("kick",beatSteps()); },
+          tryLabel:"Try it", get tut(){ return "Put a kick on " + sqWord(beatSteps()) + " and listen"; },
+          fix:function(){ beatSteps().forEach(function(i){ song.A.drums.kick[i] = true; }); } },
+        { get conv(){ return "usually has a hi-hat halfway between the kicks, on " + sqWord(offSteps()); },
           why:"the tick answering the thump is what gives it bounce",
           fact:function(){
-            var h = hits("A","hat"), n = [2,6,10,14].filter(function(i){ return h[i]; }).length;
-            return "Part A has a hi-hat on " + n + " of those 4 in-between squares"; },
-          test:function(){ return styHas("hat",[2,6,10,14]); },
-          tryLabel:"Try it", tut:"Put a hi-hat on squares 3, 7, 11 and 15 and listen",
-          fix:function(){ [2,6,10,14].forEach(function(i){ song.A.drums.hat[i] = true; }); } }
+            var h = hits("A","hat"), n = offSteps().filter(function(i){ return h[i]; }).length;
+            return "Part A has a hi-hat on " + n + " of those " + offSteps().length + " in-between squares"; },
+          test:function(){ return styHas("hat",offSteps()); },
+          tryLabel:"Try it", get tut(){ return "Put a hi-hat on " + sqWord(offSteps()) + " and listen"; },
+          fix:function(){ offSteps().forEach(function(i){ song.A.drums.hat[i] = true; }); } }
       ] },
 
     { id:"hiphop", name:"Hip hop", word:"hip hop",
@@ -6553,6 +6806,7 @@
     lo = s.swing[0]; hi = s.swing[1];
     var sIn = swing >= lo && swing <= hi, straight = swing < lo;
     to = straight ? lo : hi;
+    if(meter !== "6/8")   // @meter: swing is switched off in a rolling six, so there is nothing to compare
     L.push({ fact:"Swing is " + swing + "%",
       conv:W + (lo === 0 ? " usually keeps swing at " + hi + "% or less" : " usually has " + lo + " to " + hi + "% swing"),
       why:s.swing[2], ok:sIn, clear:!sIn && (straight ? lo - swing : swing - hi) >= 10,
@@ -6570,7 +6824,7 @@
       tryLabel:"Try " + kn, tut:"Try the " + kn + " kit and listen",
       run:(function(id){ return function(){ stySetInst("drums", id); }; })(s.kits[0]) });
 
-    lo = s.busy[0]; hi = s.busy[1];
+    lo = Math.round(s.busy[0] * barSteps() / STEPS); hi = Math.round(s.busy[1] * barSteps() / STEPS);   // @meter: a twelve-square bar has three quarters of the room
     var n = styPerBar(), bIn = n >= lo && n <= hi, thin = n < lo;
     L.push({ fact:"About " + n + (n === 1 ? " sound plays" : " sounds play") + " in each bar",
       conv:W + " usually has " + lo + " to " + hi, why:s.busy[2], ok:bIn, clear:false,
@@ -6820,7 +7074,7 @@
     if(b - a < 0.02){ b = Math.min(D, a + 0.02); a = Math.max(0, b - 0.02); }
     var len = b - a, rate = 1, capped = false;
     if(st.bars > 0){
-      rate = len / (st.bars * STEPS * stepDur());
+      rate = len / (st.bars * barSteps() * stepDur());
       if(rate > 4){ rate = 4; capped = true; }
       if(rate < 0.25){ rate = 0.25; capped = true; }
     }
@@ -6855,7 +7109,7 @@
   // to the nearest square, so a 5 ms nudge can be heard as a 5 ms nudge.
   function clipSongPos(at){
     if(!playing || !ac) return 0;
-    var total = STEPS * barsInPlay() * stepDur();
+    var total = barSteps() * barsInPlay() * stepDur();
     var pos = songStep * stepDur() - (nextTime - at);
     if(total > 0){ pos = pos % total; if(pos < 0) pos += total; }
     return Math.max(0, pos);
@@ -6933,7 +7187,7 @@
   function clipFitText(k){
     var p = clipPlayback(k);
     if(!p) return "";
-    var nb = Math.round(p.len / (STEPS * stepDur()) * 10) / 10;
+    var nb = Math.round(p.len / (barSteps() * stepDur()) * 10) / 10;
     if(!p.bars) return "Playing at the speed it was recorded. At the song’s speed it lasts about " + nb +
       (nb === 1 ? " bar." : " bars.");
     var pct = Math.round(Math.abs(p.rate - 1) * 100);
@@ -7018,11 +7272,13 @@
     gaps.sort(function(a, b){ return a - b; });
     var med = gaps.length % 2 ? gaps[(gaps.length - 1) / 2] : (gaps[gaps.length / 2 - 1] + gaps[gaps.length / 2]) / 2;
     if(!(med > 0)) return;
-    var raw = 60000 / med, fit = raw, how = "";
+    var raw = 60000 / med, six = meter === "6/8", fit = six ? raw * 1.5 : raw, how = "";   // @meter: a big beat in six is six squares, and the speed number counts four
     while(fit > 140.5){ fit /= 2; how = "half"; }
     while(fit < 69.5){ fit *= 2; how = "double"; }
     var shown = Math.round(raw), bpm = Math.max(70, Math.min(140, Math.round(fit)));
-    out.textContent = how
+    out.textContent = six
+      ? "You tapped about " + shown + " big beats a minute. In a rolling six a big beat is six squares long, so the nearest speed number that fits is " + bpm + "."
+      : how
       ? "You tapped about " + shown + " BPM (beats per minute). Songs in here go from 70 to 140, so " +
         (how === "half" ? "half of that" : "double that") + ", " + bpm + ", is the nearest speed that fits."
       : "You tapped about " + shown + " BPM (beats per minute).";
@@ -7429,10 +7685,10 @@
     var btn = document.getElementById("spadcap"), b = padWhichBar();
     btn.disabled = true;
     ensureClips().then(function(){
-      var sd = stepDur(), barDur = STEPS * sd, loopLen = songSeconds();
+      var sd = stepDur(), barDur = barSteps() * sd, loopLen = songSeconds();
       return padOffline(barDur + 0.45, function(off){
-        for(var s = 0; s < STEPS; s++){
-          var nudge = (s % 2 === 1) ? (swing/100) * sd * 0.66 : 0;
+        for(var s = 0; s < barSteps(); s++){
+          var nudge = swingNudge(s);
           fireStep(ORDER[b], s, 0.005 + s * sd + nudge);
         }
         AUDIO_TRACKS.forEach(function(k){
@@ -8107,7 +8363,7 @@
     };
     try { keep.instRaw = window.localStorage.getItem("firstloop.inst"); } catch(e){}
     var reps = p.order.length <= 8 ? 2 : 1;
-    var content = p.order.length * STEPS * ((60 / p.tempo) / 4) * reps;
+    var content = p.order.length * METERS[p.meter || "4/4"].steps * ((60 / p.tempo) / 4) * reps;
     var prom, failed = null, ropts = { raw:true, repeats:reps, _shelf:true };
     booting = true; touched = false; quiet = true; shelfSwapping = true;
     try {
@@ -8935,13 +9191,13 @@
   }
   palWord("beat", "Beat", "the pulse", "pulse, count, tap your foot",
     "The steady pulse you tap your foot to. Count 1, 2, 3, 4 along with a song and each number is one beat. People also say “a beat” when they mean a whole drum pattern.",
-    "", [["drums", "The squares with a number above them, 1 to 4, are the beats."]]);
+    "", [["drums", "The squares with a number above them are the beats."]]);
   palWord("bar", "Bar", "also called a measure", "measure, bars",
     "A small group of beats, counted 1, 2, 3, 4 and then starting again at 1. Songs are built by lining bars up one after another.",
     "Most pop, rock, hip hop and dance music has four beats in a bar, because that is easy to walk, clap and dance to.",
-    [["track", "One full row of sixteen squares is one bar. Each block in Your track is one bar."]]);
+    [["track", "One full row of squares is one bar: sixteen squares when there are four beats, twelve for a waltz or a rolling six. Each block in Your track is one bar."]]);
   palWord("step", "Step", "a square (a sixteenth note)", "square, squares, sixteenth, 16th, semiquaver, cell",
-    "The smallest slice of time on the grid. Each beat is cut into four steps, so a bar of four beats has sixteen steps.",
+    "The smallest slice of time on the grid. In a bar of four beats each beat is cut into four steps, which makes sixteen.",
     "", [["drums", "Every square in the grids is one step. A square that is switched on plays at that moment."]]);
   palWord("rhythm", "Rhythm", "", "pattern, timing",
     "The pattern of when sounds happen and when they do not. Clap along to a song and you are clapping a rhythm.",
@@ -9106,7 +9362,7 @@
     "", [["sampler", "Play it as an instrument, in Record & import, turns a recording into one."]]);
   palWord("countin", "Count-in", "", "count in, countin, clicks, 1 2 3 4",
     "A few clicks before recording starts, so you know the speed and when to begin.",
-    "", [["record", "Record gives you four beats of count-in."]]);
+    "", [["record", "Record clicks once on each beat of one bar before it starts."]]);
   palWord("quantise", "Quantise", "snap to the grid", "quantize, quantised, quantized, snap, in time, tidy timing",
     "Moving notes that were played a little early or late onto the nearest step, so they sit exactly in time.",
     "Dance music is usually fully quantised. Some players leave the timing loose on purpose, because small differences sound human.",
@@ -9114,18 +9370,18 @@
   palWord("floor", "Four on the floor", "", "four to the floor, 4 on the floor, kick every beat",
     "A kick drum on every beat: 1, 2, 3, 4.",
     "House, disco and techno use it, because a steady thump on every beat is easy to dance to.",
-    [["drums", "Put a kick under each of the numbers 1, 2, 3 and 4."]]);
+    [["drums", "Put a kick under each number above the grid."]]);
   palWord("backbeat", "Backbeat", "", "back beat, two and four, 2 and 4",
     "A snare or a clap on beats 2 and 4.",
     "Nearly all pop, rock and hip hop has a backbeat. It answers the kick, so the rhythm rocks back and forth.",
-    [["drums", "Put a snare under the numbers 2 and 4."]]);
+    [["drums", "In a bar of four beats, put a snare under the numbers 2 and 4."]]);
   palWord("offbeat", "Offbeat", "the “and”", "off beat, off-beat, and, upbeat, in between",
     "The moments halfway between the beats. Count “1 and 2 and 3 and 4 and” and each “and” is an offbeat.",
     "Hi-hats or chords on the offbeats make music skip along. House and reggae lean on this.",
-    [["drums", "The third square in each group of four."]]);
+    [["drums", "In a bar of four beats, the third square in each group of four."]]);
   palWord("timesig", "Time signature", "beats in a bar", "3/4, 6/8, 4/4, waltz, meter, metre",
     "How many beats there are in each bar. 4/4 means four. 3/4 means three, which gives the swaying feel of a waltz. 6/8 has six quick beats that are felt as two groups of three.",
-    "", [["timesig", "You can choose it for your song."], ["track", "Every bar in this app has four beats."]]);
+    "", [["timesig", "You can choose it for your song."], ["track", "Every bar of one song has the same number. Most songs here have four."]]);
   palWord("stem", "Stem", "", "stems, separate tracks",
     "One instrument’s sound saved as a file of its own. With the stems of a song, each instrument can be changed separately in another program.",
     "", [["savestems", "Pack for a music program saves one stem for each track."]]);
@@ -9762,11 +10018,11 @@
 
   document.getElementById("cleardrums").addEventListener("click", function(){
     var p = song[editPart];
-    DRUMS.forEach(function(d){ p.drums[d.id].fill(false); });
+    DRUMS.forEach(function(d){ clearVis(p.drums[d.id], false); });
     buildDrums(); refreshCode();
   });
   clearLaneBtn.addEventListener("click", function(){
-    song[editPart].notes[activeLane].fill(null);
+    clearVis(song[editPart].notes[activeLane], null);
     buildNotes(); refreshCode();
   });
 
@@ -9940,6 +10196,7 @@
   function wipeAll(){
     takeSnapshot();
     snapshot("Before start over");
+    meter = "4/4"; meterSync();
     PARTS.forEach(function(k){ song[k] = emptyPart(); });
     ORDER.length = 0; ["A","A","B","B"].forEach(function(x){ ORDER.push(x); });
     SECS = [{ name:"Verse", len:4 }]; selSec = 0; loopSec = false; pendingJump = null;
@@ -10031,7 +10288,7 @@
   document.getElementById("skip").addEventListener("click", function(){
     LOG.tour.skipped = true; noteStep(tourIndex); saveLog();
     if(count(song.A.drums.kick) <= 1){
-      STARTS[0].build(song.A);
+      startFor(0).build(song.A);
       song.B = clonePart(song.A);
       buildDrums(); buildNotes();
     }

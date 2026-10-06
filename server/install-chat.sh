@@ -4,6 +4,12 @@
 # Run as root, from your home folder:
 #   cd ~ && curl -fsSL https://raw.githubusercontent.com/piscopofran/firstloop/main/server/install-chat.sh -o install-chat.sh && sudo bash install-chat.sh
 #
+# Running the same line again later updates the service to the newest version
+# and keeps the key, the settings, the invite codes and the owner link.
+#
+# To get a new owner link (the old one stops working):
+#   cd ~ && sudo bash install-chat.sh --new-admin-link
+#
 # To take everything it added away again:
 #   cd ~ && sudo bash install-chat.sh --remove
 #
@@ -25,6 +31,8 @@ LOG_DIR=/var/log/firstloop-chat
 LOG_FILE=$LOG_DIR/chat.log
 OLD_LOG_FILE=/var/log/firstloop-chat.log
 STATE_DIR=/var/lib/firstloop-chat
+ADMIN_HASH=$STATE_DIR/admin.hash        # sha256 of the owner token; the token itself is never stored
+SELFTEST_FILE=$STATE_DIR/selftest.hash  # exists only while the test at the end runs
 SVC_USER=firstloop-chat
 BACKUP_DIR=/var/backups/firstloop-chat
 MARK_BEGIN="# firstloop-chat: begin (added by install-chat.sh)"
@@ -60,6 +68,7 @@ trap 'on_err $LINENO' ERR
 # nginx_py FILE has            prints yes | no | unreadable: why
 # nginx_py FILE add    OUT     writes the new text to OUT; prints "changed" or "same"
 # nginx_py FILE remove OUT     the same, for taking the block out
+# nginx_py FILE host           prints https://name (or http://name) of the site that has /api/wish, or nothing
 # It never writes to FILE. When it is not completely sure, it refuses: it
 # prints the reason on the error output and exits 3.
 nginx_py() {
@@ -300,6 +309,46 @@ def add(cleaned):
     return new
 
 
+HOSTNAME = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
+
+
+def site_address(text):
+    """The address of the site whose server block holds /api/wish, from that
+    block's own server_name and listen lines. Reads only; '' when unsure."""
+    cleaned = strip_blocks(text)[0]
+    blocks, toks, plain = parse(cleaned), tokens(cleaned), ""
+    for b in blocks:
+        if not location_for(b, "/api/wish"):
+            continue
+        scope = server_of(b)
+        if scope is None:
+            continue
+        depth, stmt, names, tls = 0, [], [], False
+        for kind, start, end, val in toks:
+            if start <= scope["open"] or end >= scope["close"]:
+                continue
+            if kind == "{":
+                depth, stmt = depth + 1, []
+            elif kind == "}":
+                depth, stmt = depth - 1, []
+            elif kind == ";":
+                if depth == 0 and stmt:
+                    if stmt[0] == "server_name":
+                        names += stmt[1:]
+                    elif stmt[0] == "listen" and any(x == "ssl" or x == "443" or x.endswith(":443") for x in stmt[1:]):
+                        tls = True
+                stmt = []
+            elif depth == 0:
+                stmt.append(val)
+        for name in names:
+            if HOSTNAME.match(name) and "." in name:
+                if tls:
+                    return "https://" + name.lower()
+                plain = plain or "http://" + name.lower()
+                break
+    return plain
+
+
 def main():
     try:
         with open(path, "rb") as f:
@@ -317,6 +366,12 @@ def main():
             print("yes" if any(location_for(b, "/api/wish") for b in parse(strip_blocks(text)[0])) else "no")
         except Refuse as e:
             print("unreadable: " + str(e))
+        return
+    if mode == "host":
+        try:
+            print(site_address(text))
+        except Refuse:
+            print("")
         return
     cleaned, had = strip_blocks(text)
     if mode == "add":
@@ -502,6 +557,84 @@ check_downloaded() {
 
 short_sum() { sha256sum -- "$1" | cut -c1-12; }
 
+# The address of the site, worked out from the nginx files that have
+# /api/wish (https preferred). Prints nothing when it cannot tell.
+site_address() {
+  local f out first=""
+  for f in "$@"; do
+    out="$(nginx_py "$f" host 2>/dev/null)" || out=""
+    [[ "$out" =~ ^https?://[A-Za-z0-9.-]+$ ]] || continue
+    case "$out" in
+      https://*) printf '%s' "$out"; return 0 ;;
+      *) [ -n "$first" ] || first="$out" ;;
+    esac
+  done
+  printf '%s' "$first"
+}
+
+# write_secret FILE: makes a new random secret, stores only its sha256 in FILE
+# (owner root, readable by the service's user and nobody else), and prints the
+# secret itself on standard output. The secret is never written to disk.
+write_secret() {
+  local dest="$1" tmpf secret
+  id "$SVC_USER" >/dev/null 2>&1 || return 1
+  install -d -m 750 -o "$SVC_USER" -g "$SVC_USER" "$STATE_DIR" || return 1
+  tmpf="$(mktemp "$STATE_DIR/.secret.XXXXXXXX")" || return 1
+  secret="$(python3 - "$tmpf" <<'PY'
+import hashlib, secrets, sys
+secret = secrets.token_urlsafe(32)
+with open(sys.argv[1], "w") as f:
+    f.write(hashlib.sha256(secret.encode("ascii")).hexdigest() + "\n")
+print(secret)
+PY
+)" || { rm -f -- "$tmpf"; return 1; }
+  if [[ "$secret" =~ ^[A-Za-z0-9_-]{40,50}$ ]] && grep -qE '^[0-9a-f]{64}$' "$tmpf" \
+     && chown "root:$SVC_USER" "$tmpf" && chmod 640 "$tmpf" && mv -f -- "$tmpf" "$dest"; then
+    printf '%s' "$secret"
+    return 0
+  fi
+  rm -f -- "$tmpf"
+  return 1
+}
+
+admin_hash_ok() { [ -f "$ADMIN_HASH" ] && grep -qE '^[0-9a-f]{64}$' "$ADMIN_HASH" 2>/dev/null; }
+
+# Makes a new owner token and prints the owner link. $@ = the nginx files of the site.
+print_new_admin_link() {
+  local token base
+  token="$(write_secret "$ADMIN_HASH")" || die "Could not create the owner link (writing $ADMIN_HASH failed). $WHERE"
+  base="$(site_address "$@")" || base=""
+  printf '\n    Your owner link:\n\n'
+  if [ -n "$base" ]; then
+    printf '      %s/api/chat?admin#%s\n\n' "$base" "$token"
+  else
+    printf '      https://<your site>/api/chat?admin#%s\n\n' "$token"
+    note "Replace <your site> with the address you type to open First Loop (the part before the first /)."
+  fi
+  note "BOOKMARK THIS NOW. It will not be shown again."
+  note "Open it in your browser and save it as a bookmark. Anyone who has this link can see"
+  note "the usage and change the invite codes, so do not share it. Only a scrambled form of"
+  note "it is kept on this server, so nobody can read it back from here, not even you."
+  note "If it is ever lost or seen by someone else:  cd ~ && sudo bash install-chat.sh --new-admin-link"
+}
+
+# ---------------------------------------------------------------------------
+# --new-admin-link
+# ---------------------------------------------------------------------------
+new_admin_link() {
+  local -a SITE_FILES=()
+  local f
+  WHERE="Nothing has been changed; the owner link you had still works."
+  [ -f "$APP_DIR/firstloop-chat.py" ] && id "$SVC_USER" >/dev/null 2>&1 \
+    || die "The chat service is not installed on this server yet. Run the installer without options first. Nothing has been changed."
+  grep -q 'ADMIN_HASH_PATH' "$APP_DIR/firstloop-chat.py" 2>/dev/null \
+    || die "The chat service installed here is an older version without the owner page. Run the installer without options first to update it. Nothing has been changed."
+  say "Making a new owner link"
+  while IFS= read -r f; do SITE_FILES+=("$f"); done < <(nginx_files 2>/dev/null)
+  print_new_admin_link ${SITE_FILES[@]+"${SITE_FILES[@]}"}
+  note "The link from before no longer works. Nothing else was changed, and the service was not restarted."
+}
+
 # ---------------------------------------------------------------------------
 # --remove
 # ---------------------------------------------------------------------------
@@ -509,6 +642,8 @@ remove_all() {
   local -a marked=()
   local f
   say "Removing the First Loop chat service"
+  note "This also deletes the invite codes, the usage counts and the owner link ($STATE_DIR)."
+  note "No backup of them is made."
   WHERE="Nothing has been removed yet."
   while IFS= read -r f; do
     if grep -qF "$MARK_BEGIN" -- "$f" 2>/dev/null; then marked+=("$f"); fi
@@ -531,6 +666,7 @@ remove_all() {
   if id "$SVC_USER" >/dev/null 2>&1; then userdel "$SVC_USER" >/dev/null 2>&1 || note "The user $SVC_USER could not be deleted; it has no login and no rights, so it is harmless."; fi
   say "Removed."
   note "The API key file ($ENV_FILE) was deleted. Copies of the nginx files from before are still in $BACKUP_DIR."
+  note "The invite codes, the usage counts and the owner link were deleted with it; they cannot be brought back."
   note "If you no longer need the key at all, also delete it in the Anthropic Console."
 }
 
@@ -539,7 +675,7 @@ remove_all() {
 # ---------------------------------------------------------------------------
 install_all() {
   local -a SITE_FILES=()
-  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog
+  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog ST_SECRET test_ok=1 free
 
   say "Step 1 of 6: finding the First Loop site in nginx"
   tlog="$(mktemp)" || die "Could not create a temporary file. Nothing has been changed."
@@ -556,7 +692,7 @@ install_all() {
   say "Step 2 of 6: downloading the service"
   TMP="$(mktemp -d)" || die "Could not create a temporary folder. Nothing has been changed."
   # shellcheck disable=SC2064
-  trap "rm -rf '$TMP'" EXIT
+  trap "rm -rf '$TMP'; rm -f '$SELFTEST_FILE'" EXIT
   fetch firstloop-chat.py "$TMP/firstloop-chat.py"
   fetch firstloop-chat.service "$TMP/firstloop-chat.service"
   check_downloaded "$TMP"
@@ -582,8 +718,10 @@ install_all() {
   install -m 644 -o root -g root "$TMP/firstloop-chat.py" "$APP_DIR/firstloop-chat.py" || die "Could not write the program into $APP_DIR. $WHERE"
   install -m 644 -o root -g root "$TMP/firstloop-chat.service" "$UNIT" || die "Could not write $UNIT. $WHERE"
   rm -f "$OLD_LOG_FILE" || true
+  install -d -m 750 -o "$SVC_USER" -g "$SVC_USER" "$STATE_DIR" || die "Could not create $STATE_DIR. $WHERE"
   note "Program: $APP_DIR/firstloop-chat.py"
   note "Log:     $LOG_FILE (times and counts only, never what anyone typed)"
+  note "Invite codes and counts: $STATE_DIR/state.db (kept when you update; never what anyone typed)"
 
   say "Step 4 of 6: the API key"
   if [ -f "$ENV_FILE" ]; then
@@ -657,13 +795,22 @@ install_all() {
     *'no_key'*) die "The service is running but found no API key in $ENV_FILE. Delete that file (sudo rm $ENV_FILE) and run this installer again to enter the key." ;;
     *) die "The service did not answer on this server. Look at: journalctl -u firstloop-chat -n 30" ;;
   esac
-  REPLY="$(curl -s --max-time 60 -X POST http://127.0.0.1:8788/api/chat \
-    -H 'Content-Type: application/json' \
-    --data '{"song":{"tempo":92},"messages":[{"role":"user","content":"Reply with the single word: ready"}]}' || true)"
+  case "$PROBE" in
+    *'"open"'*) ;;
+    *) die "The service that answers is still the older version, so the update did not take. Look at: journalctl -u firstloop-chat -n 30" ;;
+  esac
+  # The test message goes straight to the service on this machine, with a
+  # one-time secret only root and the service can read. It works whether or
+  # not people need an invite code, and cannot be sent through the website.
+  ST_SECRET="$(write_secret "$SELFTEST_FILE")" || die "Could not prepare the test message (writing $SELFTEST_FILE failed)."
+  REPLY="$(printf '{"op":"selftest","secret":"%s"}' "$ST_SECRET" | curl -s --max-time 60 -X POST http://127.0.0.1:8788/api/chat \
+    -H 'Content-Type: application/json' --data-binary @- || true)"
+  rm -f -- "$SELFTEST_FILE"
+  unset ST_SECRET
   case "$REPLY" in
     *'"delta"'*'"done"'*|*'"text"'*)
+      test_ok=0
       printf '\nThe assistant is connected.\n'
-      note "Open the site and type something to the Assistant to see it."
       note "IMPORTANT: set a monthly spend limit for this key in the Anthropic Console now, if you have not already."
       note "That limit is the only thing that truly caps the bill."
       ;;
@@ -671,7 +818,7 @@ install_all() {
       printf '\nNot connected yet: Anthropic did not accept the API key.\n' >&2
       note "Check the key in the Anthropic Console (it may have been deleted, or copied with a piece missing)."
       note "Then run:  sudo rm $ENV_FILE  and run this installer again to enter it afresh."
-      exit 1 ;;
+      ;;
     *'"config"'*)
       printf '\nNot connected yet: Anthropic refused the request itself, not the key.\n' >&2
       note "The usual reasons: the model name is wrong or that model has been retired, or the account has no credit."
@@ -680,25 +827,49 @@ install_all() {
       note "    sudo systemctl restart firstloop-chat"
       note "To check credit: the Billing page of the Anthropic Console."
       note "The last line of the log names the reason Anthropic gave (no message text is ever logged): tail -n 3 $LOG_FILE"
-      exit 1 ;;
+      ;;
     *'daily_cap'*|*'rate_limited'*)
-      printf '\nThe service is installed and working, but it has already reached its own message limit, so the test message was not sent.\n' >&2
-      note "That limit clears by itself (the daily one at midnight UTC). The site will work again then."
-      exit 1 ;;
+      printf '\nThe service is installed and working, but it has already reached its own message limit for today, so the test message was not sent.\n' >&2
+      note "That limit clears by itself at midnight UTC. The site will work again then."
+      ;;
     *'no_key'*)
       printf '\nNot connected yet: the service found no API key.\n' >&2
       note "Run:  sudo rm $ENV_FILE  and run this installer again to enter the key."
-      exit 1 ;;
+      ;;
     *'upstream'*)
       printf '\nNot connected yet: the service is running, but the AI service did not answer properly.\n' >&2
       note "This is usually temporary (Anthropic busy or unreachable from this server). Try the site in a few minutes."
       note "Details (no message text is ever logged): tail -n 3 $LOG_FILE"
-      exit 1 ;;
+      ;;
     *)
       printf '\nNot connected yet: the test message got no usable answer.\n' >&2
       note "Look at: journalctl -u firstloop-chat -n 30   and   tail -n 3 $LOG_FILE"
-      exit 1 ;;
+      ;;
   esac
+
+  # -------------------------------------------------------------------------
+  # the owner page and invite codes (shown whether or not the test passed)
+  # -------------------------------------------------------------------------
+  say "Your owner page"
+  WHERE="Everything is installed. Only the owner link could not be made; run:  cd ~ && sudo bash install-chat.sh --new-admin-link"
+  note "The owner page is where you make invite codes, set limits and see how the Assistant is used."
+  if admin_hash_ok; then
+    note "Your owner link is the same as before; it was not changed and is not shown again."
+    note "If you have lost it:  cd ~ && sudo bash install-chat.sh --new-admin-link"
+  else
+    print_new_admin_link "${SITE_FILES[@]}"
+  fi
+  free="$(printf '%s' "$PROBE" | sed -n 's/.*"open": *\([0-9][0-9]*\).*/\1/p')"
+  printf '\n'
+  if [ "${free:-0}" = "0" ]; then
+    note "People now need an invite code to use the AI. Open your owner link and create one for yourself first."
+  else
+    note "People without an invite code get $free free messages a day. You can change that on the owner page."
+  fi
+  if [ "$test_ok" -ne 0 ]; then
+    printf '\nThe AI is NOT connected yet (see "Not connected yet" above). The owner page works all the same.\n' >&2
+    exit 1
+  fi
 }
 
 main() {
@@ -712,7 +883,14 @@ main() {
     remove_all
     return 0
   fi
-  [ $# -eq 0 ] || die "Unknown option '$1'. Run it with no options to install, or with --remove. Nothing has been changed."
+  python3 -c 'import sqlite3, secrets, hashlib' >/dev/null 2>&1 \
+    || die "The Python on this server is missing its sqlite3 part, which the service needs (on Ubuntu: sudo apt install python3 libsqlite3-0). Nothing has been changed."
+  if [ "${1:-}" = "--new-admin-link" ]; then
+    [ $# -eq 1 ] || die "Unknown extra option '$2'. Nothing has been changed."
+    new_admin_link
+    return 0
+  fi
+  [ $# -eq 0 ] || die "Unknown option '$1'. Run it with no options to install or update, with --new-admin-link, or with --remove. Nothing has been changed."
   install_all
 }
 

@@ -13,8 +13,11 @@ Restart=on-failure
 RestartSec=3
 
 # The only places it may write: /var/log/firstloop-chat (its log) and
-# /var/lib/firstloop-chat (today's counter). systemd creates both, owned by
-# the service's user, and everything else on the disk is read-only to it.
+# /var/lib/firstloop-chat (today's counter, and the database of invite codes
+# and usage counts). systemd creates both, owned by the service's user, and
+# everything else on the disk is read-only to it. The installer puts the
+# scrambled owner token in the second one, as a file the service can read
+# but not change.
 LogsDirectory=firstloop-chat
 LogsDirectoryMode=0750
 StateDirectory=firstloop-chat

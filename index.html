@@ -12297,7 +12297,7 @@
     asstCodeForm.appendChild(crow); asstCodeForm.appendChild(asstCodeNote);
     asstCodeForm.addEventListener("submit", function(e){
       e.preventDefault();
-      asstSetCode(asstCodeIn.value, "save");
+      asstSetCode(asstCodeIn.value.replace(/\s+/g, ""), "save");     // typed with spaces: read as the server reads it
     });
 
     asstLog = el("div", "asst-log"); asstLog.id = "asstlog";

@@ -1,0 +1,37 @@
+[Unit]
+Description=First Loop chat service (relay to the Anthropic API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=firstloop-chat
+Group=firstloop-chat
+EnvironmentFile=/etc/firstloop-chat.env
+ExecStart=/usr/bin/python3 /opt/firstloop-chat/firstloop-chat.py
+Restart=on-failure
+RestartSec=3
+
+# It only needs its own log file and its small counter file.
+StateDirectory=firstloop-chat
+ReadWritePaths=/var/log/firstloop-chat.log
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+MemoryMax=200M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

@@ -1499,6 +1499,15 @@
     .dj-phonenode{display:block !important;}
   }
   .dj-phonenode{display:none;}
+  /* between a phone and a laptop: the decks side by side, the mixer under them, and the page scrolls */
+  .dj[data-narrow="true"]{height:auto;min-height:0;overflow:visible;padding-bottom:40px;}
+  .dj[data-narrow="true"] .dj-heads{grid-template-columns:minmax(0,1fr);}
+  .dj[data-narrow="true"] .dj-console{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  .dj[data-narrow="true"] .dj-deck[data-deck="1"]{grid-column:1;grid-row:1;}
+  .dj[data-narrow="true"] .dj-deck[data-deck="2"]{grid-column:2;grid-row:1;}
+  .dj[data-narrow="true"] .dj-mixer{grid-column:1 / -1;grid-row:2;justify-content:center;}
+  .dj[data-narrow="true"] .dj-rows{height:52vh;}
+  .dj[data-narrow="true"] .dj-bar .stat{display:none;}
   @media (min-width:700px) and (max-width:1099.98px){ .dj-info{width:200px;} }
   @media (prefers-reduced-motion:reduce){ .dj-read.time[data-warn="true"] .big{animation:none;} }
   /* ===== /DJ area (css) ===== */
@@ -12737,9 +12746,11 @@
   //
   //   DJ.init()                 -> Promise<DJ>   build the area without showing it
   //   DJ.open()                 -> Promise<DJ>   show the area
+  //   DJ.ready()                -> boolean       the library has been read and the area is built
   //   DJ.on(event, fn)          -> function      call the result to stop listening
   //   DJ.snapshot()             -> object        compact JSON-safe summary (for the Assistant)
   //   DJ.setController({active, name})           shown in snapshot().controller
+  //   DJ.audioInfo()            -> {started, engine, state, sampleRate, baseLatency, outputLatency, maxChannels, routing, sinkId, canChooseOutput}
   //   DJ.deckCount()            -> 2
   //   DJ.shortcuts()            -> [{keys, does}]
   //
@@ -12773,14 +12784,15 @@
   //     m.crossfader(v)  m.crossfaderCurve("smooth"|"cut")  m.assign(ch, "A"|"T"|"B")
   //     m.master(v)  m.hpMix(v)  m.hpLevel(v)          hpMix: 0 = cue only, 1 = master only
   //     m.fx.type("echo"|"reverb"|"filter"|"flanger")  m.fx.target(1|2|"master")  m.fx.beats(0.25..4)
-  //     m.fx.depth(v)  m.fx.on(bool)  m.fx.state()
+  //     m.fx.depth(v)  m.fx.on(bool)  m.fx.state()  m.fx.types (the four names)  m.fx.beatChoices ([0.25, 0.5, 1, 2, 4])
   //     m.routing("speakers"|"split"|"four") -> the mode in use;  m.maxChannels();  m.outputs() -> Promise<[{id,label}]>
   //     m.setOutput(deviceId) -> Promise<boolean>;  m.record(true|false) -> Promise
+  //     m.testTone("master"|"phones", seconds)     a beep on that output only (440 Hz master, 880 Hz headphones)
   //     m.levels() -> {ch:[{peak, rms, clip}], master:{peak, rms, clip}}     m.state()
   //
   //   l = DJ.library
   //     l.search(q)  l.filter({bpmLo, bpmHi, key})  l.sort(column, dir)  l.node(id)  l.nodes()
-  //     l.list(limit) -> rows on screen;  l.tracks() -> every track;  l.track(id) -> the full record
+  //     l.list(limit) -> rows on screen;  l.tracks() -> every track;  l.track(id) -> the full record;  l.count()
   //     l.select(id)  l.selectMove(delta)  l.selected()  l.loadSelected(deck, {force})
   //     l.update(id, {title, artist, album, genre, year, comment, rating, key, bpm, firstBeat})
   //     l.addFiles(FileList)  l.addFolder()  l.addFolderHandle(handle)  l.remove(id)
@@ -13459,7 +13471,7 @@
     // ---------- settings (small, per browser) ----------
     var SET = { routing:"speakers", sinkId:"", xfCurve:"smooth", zoom:6, autoAnalyse:true, info:false,
                 range:[0.1, 0.1, 0.1, 0.1], quant:[true, true, true, true], vinyl:[true, true, true, true],
-                sort:"added", sortDir:-1, treeW:168 };
+                sort:"added", sortDir:-1, treeW:168, hideEmpty:false };
     (function(){
       try {
         var raw = JSON.parse(window.localStorage.getItem("firstloop.dj") || "null");
@@ -15178,7 +15190,7 @@
           st.push(d.buf ? { pos:posOf(d), v:d.playing ? d.rate * (1 + d.bend) : 0, playing:d.playing, rate:d.rate, loopOn:d.loopOn,
             loopIn:d.loopIn, loopOut:d.loopOut, slipping:false, spos:0, ended:d.ended, seq:d.seq, len:d.buf.length } : { len:0, seq:d.seq });
         });
-        onEngineState({ t:"s", d:st });
+        onEngineState({ t:"s", d:st, ct:ctx.currentTime });
       }
       var timer = setInterval(tick, 25);
       return { run:function(m){ run(m); }, stop:function(){ clearInterval(timer); fd.forEach(stopSrc); } };
@@ -16054,6 +16066,7 @@
       var dpr = Math.min(2, window.devicePixelRatio || 1);
       UI.dpr = dpr;
       root.dataset.compact = root.clientWidth < 1010 ? "true" : "false";
+      root.dataset.narrow = root.clientWidth < 900 && root.clientWidth >= 700 ? "true" : "false";
       UI.deck.forEach(function(u){
         [u.wave, u.ov, u.pov].forEach(function(cv){
           if(!cv) return;
@@ -16180,6 +16193,9 @@
           f.textContent = c ? "Sample rate " + c.sampleRate + " Hz\nOutput channels offered " + max + "\nLatency: base " + Math.round((c.baseLatency || 0) * 1000) + " ms, output " +
             Math.round((c.outputLatency || 0) * 1000) + " ms\nPlayer: " + (ENG.mode === "worklet" ? "full (audio thread)" : "reduced") : (ENG.failed || "");
           p.appendChild(f);
+          var tr = el("div", "rowx"), t1 = btn("", "Test tone: speakers", "A one-second beep on the master output"), t2 = btn("", "Test tone: headphones", "A one-second, higher beep on the headphone output (heard only with Split cue or 4 channels)");
+          t1.addEventListener("click", function(){ API.mixer.testTone("master", 1); }); t2.addEventListener("click", function(){ API.mixer.testTone("phones", 1); });
+          tr.appendChild(t1); tr.appendChild(t2); p.appendChild(tr);
         });
       });
     }
@@ -16215,7 +16231,8 @@
       ["Library", null],
       ["↑ ↓", "Move through the track list"],
       ["Shift+← / Shift+→", "Load the selected track on deck 1 / deck 2"],
-      ["/", "Search. Then: typing filters, Enter or 1 loads on deck 1, 2 on deck 2, Esc goes back to the decks"],
+      ["/", "Search: typing filters the list, Enter loads the selected track, Esc clears and then goes back to the decks"],
+      ["In the track list", "Enter loads on a free deck, 1 on deck 1, 2 on deck 2; typing searches; Esc goes back to the decks"],
       ["?", "Show this list"]
     ];
     function openShortcuts(anchor){
@@ -16370,7 +16387,7 @@
         if(D.playing){ note("Deck " + D.n + " is playing. Pause it before unloading."); return; }
         D.unload();
       });
-      u.memo = el("span", "dj-l dj-memo", "");
+      u.memo = el("span", "dj-l dj-memo", ""); u.ejectB = ej;
       row.appendChild(gr); row.appendChild(ej); row.appendChild(u.memo);
       mid.appendChild(row);
       d.appendChild(mid);
@@ -16562,8 +16579,8 @@
       u.rangeB.textContent = D.range >= 1 ? "Wide" : "±" + Math.round(D.range * 100) + "%";
       u.tempo.set((D.tempoN + 1) / 2);
       u.tempo.el.dataset.locked = D.sync && masterIdx !== D.i && masterIdx >= 0 ? "true" : "false";
-      u.memo.textContent = t ? (D.analysing ? "Analysing" : (D.mem ? fmtBytes(D.mem) : "")) : "";
-      u.memo.title = t && D.mem ? "Memory this deck is holding for the track" : "";
+      u.memo.textContent = t && D.analysing ? "Analysing" : "";
+      u.ejectB.title = "Take the track off the deck and free its memory" + (t && D.mem ? " (" + fmtBytes(D.mem) + ")" : "");
       paintReadout(D, true);
       UI.listDirty = true;
     }
@@ -16762,6 +16779,7 @@
       if(view !== "dj" || document.hidden) return;
       UI.raf = window.requestAnimationFrame(frame);
       var now = nowMs(), n = ++UI.frameN, i, D, u;
+      var dt = Math.min(0.1, Math.max(0, (now - (UI.lastT || now)) / 1000)); UI.lastT = now;
       var phone = root.clientWidth < 700;
       for(i = 0; i < decks.length; i++){
         D = decks[i]; u = UI.deck[i];
@@ -16776,7 +16794,7 @@
           D.redraw = false;
         }
         if(D.playing){
-          D.played += 1 / 60;
+          D.played += dt;
           if(!D.counted && D.played > 20 && D.track){ D.counted = true; notePlayed(D.track); }
         }
       }
@@ -17051,17 +17069,19 @@
     }
     function paintEmpty(){
       var mine = T.list.some(function(t){ return !isFL(t); }), e = UI.empty;
-      if(mine){ if(!e.hidden){ e.hidden = true; } return; }
+      if(mine || SET.hideEmpty){ if(!e.hidden){ e.hidden = true; } return; }
       if(!e.hidden && e.firstChild) return;
       e.hidden = false; e.textContent = "";
-      var p = el("p"); p.appendChild(el("strong", "", "There is no music of yours here yet. "));
-      p.appendChild(document.createTextNode("Three ways to fill the decks: "));
+      var x = btn("quiet", "×", "Hide this note"); x.setAttribute("aria-label", "Hide this note"); x.style.cssText = "float:right;margin:-2px -4px 0 8px;";
+      x.addEventListener("click", function(){ SET.hideEmpty = true; saveSet(); paintEmpty(); sizeAll(); });
+      e.appendChild(x);
+      var p = el("p"); p.appendChild(el("strong", "", "No music of yours here yet. "));
       p.appendChild(el("strong", "", "Add folder"));
-      p.appendChild(document.createTextNode(window.showDirectoryPicker ? " points at a music folder and reads the files where they are; " : " is not available in this browser (Chrome and Edge on a computer have it); "));
+      p.appendChild(document.createTextNode(window.showDirectoryPicker ? " reads a music folder where it is; " : " is not available in this browser (Chrome and Edge on a computer have it); "));
       p.appendChild(el("strong", "", "Add files"));
-      p.appendChild(document.createTextNode(" (or dragging files onto this list) copies them into this browser; and the songs you make in First Loop are already listed below, ready to load, together with five demo songs."));
+      p.appendChild(document.createTextNode(" (or dropping files on this list) copies them into this browser; and the songs you make in First Loop are already below, with five demo songs."));
       e.appendChild(p);
-      e.appendChild(el("p", "", "Your files stay on this device. Nothing is uploaded. Streaming services such as Spotify, Apple Music or SoundCloud cannot be connected: their licences allow mixing only inside the few DJ programs they have signed agreements with."));
+      e.appendChild(el("p", "", "Your files stay on this device. Nothing is uploaded. Streaming services such as Spotify or Apple Music cannot be connected: their licences allow mixing only inside the DJ programs they have agreements with."));
     }
     function nodeCount(node){ return nodeTracks(node).length; }
     function paintTree(){
@@ -17625,6 +17645,18 @@
         maxChannels:function(){ return ENG && ENG.M ? ENG.M.maxCh() : null; },
         outputs:listOutputs, setOutput:setOutput,
         record:function(on2){ return on2 ? recStart() : recStop(); },
+        // a short beep straight to the master output or to the headphone output, to find out what comes out where
+        testTone:function(where, seconds){
+          mix(function(M){
+            var c = M.ctx, o = c.createOscillator(), g = c.createGain(), t = c.currentTime, len = clamp(+seconds || 1, 0.2, 5);
+            resumeCtx();
+            o.frequency.value = where === "phones" ? 880 : 440;
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.02); g.gain.setValueAtTime(0.25, t + len - 0.05); g.gain.linearRampToValueAtTime(0, t + len);
+            o.connect(g); g.connect(where === "phones" ? M.hpOut : M.masterOut);
+            o.start(t); o.stop(t + len + 0.05);
+            o.onended = function(){ try { g.disconnect(); } catch(e){} };
+          });
+        },
         state:function(){
           var v = ENG && ENG.M ? ENG.M.v : null;
           if(!v) return { ready:false, routing:SET.routing };
@@ -17680,6 +17712,13 @@
         importXML:function(text){ var r = importXML(text); refreshList(); return r; },
         exportXML:exportXML,
         related:function(id){ return relatedTo(id ? T.by[id] : activeTrack()).map(rowOut); }
+      },
+      audioInfo:function(){
+        var c = ENG && ENG.ctx;
+        return { started:!!c, engine:ENG ? (ENG.failed ? "none" : ENG.mode) : "not started", state:c ? c.state : null, sampleRate:c ? c.sampleRate : null,
+                 baseLatency:c ? c.baseLatency || 0 : null, outputLatency:c ? c.outputLatency || 0 : null,
+                 maxChannels:ENG && ENG.M ? ENG.M.maxCh() : null, routing:ENG && ENG.M ? ENG.M.mode : SET.routing, sinkId:ENG ? ENG.sinkId || "" : SET.sinkId,
+                 canChooseOutput:canPickOutput() };
       },
       setController:function(c){ controller = { active:!!(c && c.active), name:String(c && c.name || "") }; emit("controller", controller); return controller; },
       // A short, JSON-safe account of what is going on, for the Assistant.

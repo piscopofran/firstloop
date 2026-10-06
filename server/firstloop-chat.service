@@ -16,8 +16,8 @@ RestartSec=3
 # /var/lib/firstloop-chat (today's counter, and the database of invite codes
 # and usage counts). systemd creates both, owned by the service's user, and
 # everything else on the disk is read-only to it. The installer puts the
-# scrambled owner token in the second one, as a file the service can read
-# but not change.
+# scrambled owner token in the second one, as a root-owned file the service
+# can only read.
 LogsDirectory=firstloop-chat
 LogsDirectoryMode=0750
 StateDirectory=firstloop-chat

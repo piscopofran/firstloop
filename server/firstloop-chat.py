@@ -1083,7 +1083,10 @@ SONG_SHAPE = D(
     facts=M(U(N, B, S(PROSE)), 60),
     tutor_note=D(observation=S(PROSE), suggestion=S(PROSE), why=S(PROSE)),
     playing=B, area=S(),
-    setup=D(gear=L(S(), 4), midi=S(), goal=S()),
+    setup=D(gear=L(S(), 4), midi=S(), goal=S(), microphone=S()),
+    midi=D(web_midi=S(100), devices=L(S(), 4), unmapped_keys_play_notes=B,
+           mappings=L(D(target=S(), control=S(), kind=S()), 24), more_mappings=N,
+           learning_now=S(), last_received=S(120)),
     available=D(moods=L(S(), 16), kits=M(S(), 40), instruments=M(S(), 80), styles=M(S(), 40)),
 )
 _DROP = object()
@@ -1399,6 +1402,8 @@ ADMIN_PAGE = r"""<!doctype html>
   label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:var(--ink-2);min-width:0;}
 
   main{max-width:1120px;margin:0 auto;padding:12px 12px 64px;display:grid;gap:10px;}
+  .view{display:grid;gap:10px;min-width:0;}
+  .tab .short{display:none;}
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;}
   .panel > header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
     padding:8px 12px;border-bottom:1px solid var(--line);}
@@ -1436,6 +1441,7 @@ ADMIN_PAGE = r"""<!doctype html>
   .set b{font-weight:600;}
   .set p{color:var(--ink-2);font-size:12px;max-width:70ch;}
   .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  #settings-row{margin-top:12px;}
   .formrow{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
   .formrow .grow{flex:1 1 180px;}
   .formrow .grow input{width:100%;}
@@ -1494,7 +1500,14 @@ ADMIN_PAGE = r"""<!doctype html>
     table.codes tr.code[data-open="true"]{background:var(--surface-2);}
     table.codes tr.detail,table.codes tr.detail > td{display:block;}
     .meter{width:100%;}
-    .tools .btn span{display:none;}
+    .bar{gap:0;}
+    .brand{order:1;min-height:40px;}
+    .tools{order:2;}
+    .tabs{order:3;flex:1 0 100%;margin:0 -12px;border-top:1px solid var(--line);}
+    .tab{flex:1 1 0;padding:0 6px;min-height:40px;}
+    .tab .long{display:none;}
+    .tab .short{display:inline;}
+    table.plain td{padding:7px 12px;}
   }
 </style>
 </head>
@@ -1514,9 +1527,9 @@ ADMIN_PAGE = r"""<!doctype html>
     <div class="brand">First Loop <small>owner</small></div>
     <div class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
-      <button class="tab" role="tab" data-view="codes" aria-selected="false">Invite codes</button>
-      <button class="tab" role="tab" data-view="people" aria-selected="false">What people do</button>
-      <button class="tab" role="tab" data-view="recorded" aria-selected="false">What is recorded</button>
+      <button class="tab" role="tab" data-view="codes" aria-selected="false" aria-label="Invite codes"><span class="long">Invite codes</span><span class="short">Codes</span></button>
+      <button class="tab" role="tab" data-view="people" aria-selected="false" aria-label="What people do"><span class="long">What people do</span><span class="short">Activity</span></button>
+      <button class="tab" role="tab" data-view="recorded" aria-selected="false" aria-label="What is recorded"><span class="long">What is recorded</span><span class="short">Recorded</span></button>
     </div>
     <div class="tools">
       <button class="btn quiet" id="refresh" title="Load the latest numbers">Refresh</button>
@@ -1571,7 +1584,7 @@ ADMIN_PAGE = r"""<!doctype html>
 
     <div id="v-people" class="view" hidden>
       <section class="panel">
-        <header><h2>Asked for but not possible</h2><span class="hint">Things people wanted from the Assistant that First Loop cannot do yet. Newest first.</span></header>
+        <header><h2>Asked for but not possible</h2><span class="hint">Things people wanted from the Assistant that First Loop cannot do yet. Most recently asked first.</span></header>
         <div id="missing"></div>
       </section>
       <section class="panel">
@@ -1756,7 +1769,7 @@ ADMIN_PAGE = r"""<!doctype html>
     view_assistant:"Opened the Assistant", find_opens:"Opened Find", find_picks:"Picked something in Find", recordings:"Recordings made",
     clip_tools:"Clip tools used", automation:"Automation edits", meter_set:"Changed beats in a bar", demo_opened:"Opened a demo song",
     demo_listens:"Listened to a demo song", cleared:"Pressed start over", challenges_done:"Challenges done", songs_made:"Songs made" };
-  function nice(name){ return String(name).replace(/_/g, " "); }
+  function nice(name){ name = String(name).replace(/_/g, " "); return name.charAt(0).toUpperCase() + name.slice(1); }
   function bars(items, labels, emptyText, monoNames){
     if(!items || !items.length) return el("div", { cls:"empty", text:emptyText });
     var max = items[0].n || 1, ul = el("ul", { cls:"list" });
@@ -1938,16 +1951,16 @@ ADMIN_PAGE = r"""<!doctype html>
         ])]), body
       ]));
     }
-    var rows = other.filter(function(r){ return r.messages || (r.features && r.features.length); });
+    var rows = other.filter(function(r){ return r.messages > 0; });
     $("other-panel").hidden = !rows.length;
     var oh = clear($("other"));
     if(rows.length){
       var ob = el("tbody");
       rows.forEach(function(r){
         var what = r.code === "(none)" ? "People without a code" : (r.code === "(deleted)" ? "Codes you have deleted" : "Test messages sent by the installer");
-        ob.appendChild(el("tr", null, [el("td", { text:what }), el("td", { text:"last " + when(r.last_seen) }), el("td", { cls:"num", text:num(r.messages) + (r.messages === 1 ? " message" : " messages") }), el("td", { cls:"num", text:"est. " + money(r.cost) })]));
+        ob.appendChild(el("tr", null, [el("td", { text:what }), el("td", { cls:"num", text:num(r.messages) + (r.messages === 1 ? " message" : " messages") }), el("td", { cls:"num", text:"est. " + money(r.cost) })]));
       });
-      oh.appendChild(el("table", null, [ob]));
+      oh.appendChild(el("table", { cls:"plain" }, [ob]));
     }
   }
   function createCode(ev){
@@ -1967,9 +1980,19 @@ ADMIN_PAGE = r"""<!doctype html>
     var host = clear($("missing"));
     if(!o.missing.length) host.appendChild(el("div", { cls:"body empty", text:"Nothing yet. When someone asks the Assistant for something First Loop cannot do, a short label of it appears here." }));
     else {
+      // the same wish from several people is one line: how often, by whom, and when last
+      var groups = [], seen = {};
+      o.missing.forEach(function(m){
+        var g = seen["k " + m.label];
+        if(!g){ g = seen["k " + m.label] = { label:m.label, n:0, who:[], day:m.day }; groups.push(g); }
+        g.n++; if(g.who.indexOf(m.code) < 0) g.who.push(m.code);
+      });
       var body = el("tbody");
-      o.missing.forEach(function(m){ body.appendChild(el("tr", null, [el("td", { text:m.label }), el("td", { text:m.code }), el("td", { cls:"num", text:dayLabel(m.day) })])); });
-      host.appendChild(el("table", { cls:"missing" }, [el("thead", null, [el("tr", null, [el("th", { text:"What was wanted" }), el("th", { text:"Code" }), el("th", { cls:"num", text:"Date" })])]), body]));
+      groups.forEach(function(g){
+        body.appendChild(el("tr", null, [el("td", { text:g.label }), el("td", { cls:"num", text:g.n === 1 ? "once" : num(g.n) + " times" }),
+          el("td", { text:g.who.slice(0, 4).join(", ") + (g.who.length > 4 ? " and " + (g.who.length - 4) + " more" : "") }), el("td", { cls:"num", text:dayLabel(g.day) })]));
+      });
+      host.appendChild(el("table", { cls:"missing" }, [el("thead", null, [el("tr", null, [el("th", { text:"What was wanted" }), el("th", { cls:"num", text:"Asked" }), el("th", { text:"By (code label)" }), el("th", { cls:"num", text:"Last asked" })])]), body]));
     }
     clear($("p-topics")).appendChild(bars(o.topics, TOPIC, "Nothing yet."));
     clear($("p-actions")).appendChild(bars(o.actions, null, "Nothing yet.", true));

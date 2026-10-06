@@ -1392,6 +1392,7 @@
   .dj-tools .dj-i.q{flex:1 1 120px;min-width:70px;max-width:260px;}
   .dj-tools .dj-i.n{width:42px;text-align:right;}
   .dj-tools .gap{flex:1 1 0;}
+  .dj-tools .bpmf{display:inline-flex;align-items:center;gap:3px;flex:none;}
   .dj-job{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:11px;white-space:nowrap;min-width:0;overflow:hidden;}
   .dj-job span{overflow:hidden;text-overflow:ellipsis;}
   .dj-empty{padding:9px 12px;background:var(--surface);border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;color:var(--ink-2);user-select:text;-webkit-user-select:text;}
@@ -1486,7 +1487,7 @@
     .dj-tools{flex-wrap:wrap;}
     .dj-tools .dj-i.q{flex:1 1 100%;max-width:none;order:-1;height:32px;font-size:16px;}
     .dj-tools .dj-b,.dj-tools .dj-s{height:30px;}
-    .dj-tools .bpmf,.dj-tools .gap{display:none;}
+    .dj-tools .bpmf,.dj-tools .gap,.dj-tools #djinfobtn{display:none;}
     .dj-rows{height:62vh;}
     .dj{--rh:34px;}
     .dj-phonenode{display:block !important;}
@@ -12979,12 +12980,11 @@
         var SC = 1 / 32768;
         var gk = 1 / (0.002 * sampleRate), fastK = 1 / (0.004 * sampleRate), slowK = 1 / (0.03 * sampleRate);
         var sA = 1 / (0.012 * sampleRate), nA = 1 / (0.08 * sampleRate);
+        // first every deck that follows the master takes its tempo and, when asked,
+        // its place in the beat, all from the same instant; only then is sound made
         for(k = 0; k < this.n; k++){
           d = this.d[k];
-          var out = outputs[k];
-          if(!out || !out[0] || !d.len) continue;
-          var oL = out[0], oR = out[1] || out[0];
-          // tempo follows the master deck while sync is on
+          if(!d.len) continue;
           if(d.sync && mD && mD !== d && mD.len && mD.beatLen > 0 && d.beatLen > 0){
             d.rate = mD.rate * d.beatLen / mD.beatLen;
             if(d.align){
@@ -12996,13 +12996,21 @@
                 if(df > 0.5) df -= 1; else if(df < -0.5) df += 1;
                 d.cur = d.rate * (1 + d.bend);
                 if(Math.abs(df * d.beatLen) > 0.5){
-                  if(d.loopOn){ d.loopIn += df * d.beatLen; d.loopOut += df * d.beatLen; }
-                  d.jump(d.pos + df * d.beatLen);
-                  if(d.slipping) d.spos += df * d.beatLen;
+                  var mv = df * d.beatLen;
+                  while(d.pos + mv < 0) mv += d.beatLen;
+                  if(d.loopOn){ d.loopIn += mv; d.loopOut += mv; }
+                  d.jump(d.pos + mv);
+                  if(d.slipping) d.spos += mv;
                 }
               }
             }
           } else d.align = false;
+        }
+        for(k = 0; k < this.n; k++){
+          d = this.d[k];
+          var out = outputs[k];
+          if(!out || !out[0] || !d.len) continue;
+          var oL = out[0], oR = out[1] || out[0];
           // slip: the track carries on underneath a loop, a scratch or a held cue
           var scrOn = d.held || d.scr;
           var wantSlip = d.slip && (scrOn || d.loopOn || d.slipHold);
@@ -13967,6 +13975,7 @@
     // The File (or Blob) behind a track. Rejects with a plain sentence.
     function trackFile(t, ask){
       var s = t.src || {};
+      if(t.gone && s.kind !== "folder") return Promise.reject(new Error("The audio for this track is not on this device. Add the file again."));
       if(s.kind === "folder"){
         var f = folderById(s.folder);
         if(!f || !f.handle) return Promise.reject(new Error("The folder this track came from is not connected. Add the folder again."));
@@ -13994,17 +14003,18 @@
     // ---------- adding music ----------
     function trackIdFor(name, size, mtime){ return "t" + hashStr(name + "|" + size + "|" + mtime); }
     function adoptMissing(t){
-      // a file that a rekordbox import was waiting for
+      // a file that a rekordbox import or a restored backup was waiting for
       var name = String(t.file).toLowerCase(), i, m;
       for(i = 0; i < T.list.length; i++){
         m = T.list[i];
-        if(m.src && m.src.kind === "missing" && String(m.file).toLowerCase() === name && (!m.size || m.size === t.size)){
+        if(m !== t && m.src && (m.src.kind === "missing" || m.gone) && !isFL(m) && String(m.file).toLowerCase() === name && (!m.size || m.size === t.size)){
           ["bpm","bpmSrc","grid","key","keySrc","cues","mem","loops","rating","comment","plays","last"].forEach(function(k){
             if(m[k] !== undefined && m[k] !== null && m[k] !== "" && m[k] !== 0) t[k] = m[k];
           });
           ["title","artist","album","genre","year"].forEach(function(k){ if(!t[k] && m[k]) t[k] = m[k]; });
           playlists.forEach(function(p){ p.tracks = p.tracks.map(function(x){ return x === m.id ? t.id : x; }); });
-          savePlaylists();
+          history.forEach(function(h){ h.items.forEach(function(it){ if(it.id === m.id) it.id = t.id; }); });
+          savePlaylists(); saveHistory();
           removeTrack(m.id);
           return true;
         }
@@ -14267,7 +14277,7 @@
       if(loud === null || loud === undefined || !(loud > -80)) return 0;
       var g = clamp(-14 - loud, -12, 12);
       if(peak > 0){ var room = -20 * Math.log(peak) / Math.LN10; if(g > room) g = room; }            // never push a peak past full scale
-      return Math.round(g * 10) / 10;
+      return Math.floor(g * 10) / 10;
     }
     // Store what the worker found on the track and in the waveform store.
     function applyAnalysis(t, res){
@@ -14322,11 +14332,18 @@
       pumpAnalysis();
     }
     function cancelAnalysis(){
-      aq.list = []; aq.total = aq.done; aq.cancel = true;
+      aq.list = []; aq.total = aq.done; aq.cancel = true; aq.held = false;
       emit("analysis", { queue:0, cancelled:true });
     }
     function pumpAnalysis(){
       if(aq.cur || !aq.list.length){ if(!aq.cur && !aq.list.length){ aq.total = 0; aq.done = 0; } return; }
+      // decoding a whole track makes the page hitch for a moment; not while someone is mixing
+      if(decks.some(function(D){ return D.playing; })){
+        if(!aq.held){ aq.held = true; emit("analysis", { queue:aq.list.length, held:true }); }
+        clearTimeout(aq.timer); aq.timer = setTimeout(pumpAnalysis, 1200);
+        return;
+      }
+      aq.held = false;
       var id = aq.list.shift(), t = T.by[id];
       if(!t){ aq.done++; return pumpAnalysis(); }
       aq.cur = id; aq.cancel = false;
@@ -14651,6 +14668,7 @@
             for(k in inc) if(inc.hasOwnProperty(k) && k.charAt(0) !== "_") t[k] = inc[k];
             if(!Array.isArray(t.cues)) t.cues = [null,null,null,null,null,null,null,null];
             if(isFL(t)){ t.analysed = 0; t.ver = 0; }
+            else if(!t.src || t.src.kind !== "missing") t.gone = true;      // the audio is not in a backup: it connects again when the file or folder is added
             addTrackMem(t); puts.push(cleanTrack(t)); added++;
           } else {
             // already here: only fill in what this copy does not have
@@ -14674,7 +14692,6 @@
         });
         history.sort(function(a, b){ return (a.at || 0) - (b.at || 0); });
         savePlaylists(); saveHistory();
-        syncSongs();
         return (puts.length ? dbPutMany("tracks", puts) : Promise.resolve()).then(function(){
           emit("library", { count:T.list.length });
           return added;
@@ -14684,6 +14701,7 @@
 
     // ---------- the mixer: plain Web Audio nodes, works live and offline ----------
     var BW = -3.0103;                        // Butterworth, in the dB form low/high-pass filters use
+    var QA = -5.3329, QB = 2.3226;           // the two sections of a 4th-order Butterworth (Q 0.5412 and 1.3066), in dB
     var RANGES = [0.06, 0.1, 0.16, 1];
     var FX_TYPES = ["echo", "reverb", "filter", "flanger"], FX_BEATS = [0.25, 0.5, 1, 2, 4];
     function eqLaw(v){ v = clamp(v, 0, 1); return v < 0.5 ? (2 * v) * (2 * v) : 1 + (v - 0.5) * 2; }
@@ -14743,14 +14761,20 @@
       M.masterSum = G(); M.cueSum = G();
       for(var i = 0; i < n; i++){
         var c = { input:G() };
-        var lp1a = BQ("lowpass", 250, BW), lp1b = BQ("lowpass", 250, BW), ap = BQ("allpass", 2500, 0.70710678);
-        var hp1a = BQ("highpass", 250, BW), hp1b = BQ("highpass", 250, BW);
-        var lp2a = BQ("lowpass", 2500, BW), lp2b = BQ("lowpass", 2500, BW), hp2a = BQ("highpass", 2500, BW), hp2b = BQ("highpass", 2500, BW);
+        // three-band isolator: 48 dB/octave Linkwitz-Riley crossovers at 250 Hz and 2.5 kHz.
+        // Each slope is four sections; the low band also passes two all-pass sections
+        // at the upper crossover so that the three bands add up flat.
+        var slope = function(type, f, from){
+          var s1 = BQ(type, f, QA), s2 = BQ(type, f, QB), s3 = BQ(type, f, QA), s4 = BQ(type, f, QB);
+          from.connect(s1); s1.connect(s2); s2.connect(s3); s3.connect(s4);
+          return s4;
+        };
         c.gLow = G(); c.gMid = G(); c.gHigh = G(); c.eqOut = G();
-        c.input.connect(lp1a); lp1a.connect(lp1b); lp1b.connect(ap); ap.connect(c.gLow); c.gLow.connect(c.eqOut);
-        c.input.connect(hp1a); hp1a.connect(hp1b);
-        hp1b.connect(lp2a); lp2a.connect(lp2b); lp2b.connect(c.gMid); c.gMid.connect(c.eqOut);
-        hp1b.connect(hp2a); hp2a.connect(hp2b); hp2b.connect(c.gHigh); c.gHigh.connect(c.eqOut);
+        var low = slope("lowpass", 250, c.input), ap1 = BQ("allpass", 2500, 0.5412), ap2 = BQ("allpass", 2500, 1.30656);
+        low.connect(ap1); ap1.connect(ap2); ap2.connect(c.gLow); c.gLow.connect(c.eqOut);
+        var rest = slope("highpass", 250, c.input);
+        slope("lowpass", 2500, rest).connect(c.gMid); c.gMid.connect(c.eqOut);
+        slope("highpass", 2500, rest).connect(c.gHigh); c.gHigh.connect(c.eqOut);
         c.fDry = G(1); c.fWet = G(0); c.f1 = BQ("lowpass", 20000, BW); c.f2 = BQ("lowpass", 20000, 3); c.pre = G();
         c.eqOut.connect(c.fDry); c.fDry.connect(c.pre);
         c.eqOut.connect(c.f1); c.f1.connect(c.f2); c.f2.connect(c.fWet); c.fWet.connect(c.pre);
@@ -16621,7 +16645,11 @@
         UI.pTitle.textContent = D.loading ? D.loading + "…" : (D.track ? D.track.title : "Nothing playing");
         UI.pArtist.textContent = D.err ? D.err : (D.track ? (D.track.artist || "") : "Tap a track, then press play");
         UI.pTime.textContent = fmtTime(D.pos());
-        play.dataset.on = D.playing ? "true" : "false";
+        if(play.dataset.on !== (D.playing ? "true" : "false")){
+          play.dataset.on = D.playing ? "true" : "false";
+          play.innerHTML = D.playing ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16"/><rect x="14" y="4" width="5" height="16"/></svg>'
+                                     : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16l14-8z"/></svg>';
+        }
       }, 250);
       return p;
     }
@@ -16700,7 +16728,7 @@
       q.autocomplete = "off"; q.spellcheck = false;
       q.addEventListener("input", function(){ LV.q = q.value; refreshList(); UI.rows.scrollTop = 0; });
       UI.q = q; tools.appendChild(q);
-      var bw = el("span", "bpmf"); bw.style.cssText = "display:inline-flex;align-items:center;gap:3px;";
+      var bw = el("span", "bpmf");
       bw.appendChild(el("span", "dj-l", "BPM"));
       var lo = el("input", "dj-i n"), hi = el("input", "dj-i n");
       lo.inputMode = hi.inputMode = "numeric"; lo.placeholder = "from"; hi.placeholder = "to"; lo.setAttribute("aria-label", "Lowest BPM"); hi.setAttribute("aria-label", "Highest BPM");
@@ -16833,7 +16861,8 @@
       else if(busy.copy){ txt = "Copying " + busy.copy.done + " of " + busy.copy.total; cancel = function(){ busy.copy.cancel = true; }; }
       else if(aq.cur || aq.list.length){
         var t = T.by[aq.cur];
-        txt = "Analysing " + Math.min(aq.total, aq.done + 1) + " of " + Math.max(aq.total, aq.done + 1) + (t ? ": " + t.title : "");
+        txt = aq.held && !aq.cur ? "Analysis of " + aq.list.length + (aq.list.length === 1 ? " track" : " tracks") + " waits while a deck is playing"
+          : "Analysing " + Math.min(aq.total, aq.done + 1) + " of " + Math.max(aq.total, aq.done + 1) + (t ? ": " + t.title : "");
         cancel = cancelAnalysis;
       }
       if(j._txt === txt) return;
@@ -17534,7 +17563,11 @@
             return loadWorklet(oc).then(function(){
               var node = new AudioWorkletNode(oc, "fl-decks", { numberOfInputs:0, numberOfOutputs:4, outputChannelCount:[2, 2, 2, 2],
                 processorOptions:{ decks:4, script:o.script || [] } });
-              if(o.direct !== undefined) node.connect(oc.destination, o.direct, 0);
+              if(o.pair){
+                // deck 1 alone on the first channel, deck 2 alone on the second
+                var mg = oc.createChannelMerger(2);
+                node.connect(mg, 0, 0); node.connect(mg, 1, 1); mg.connect(oc.destination);
+              } else if(o.direct !== undefined) node.connect(oc.destination, o.direct, 0);
               else { node.connect(M.ch[0].input, 0, 0); node.connect(M.ch[1].input, 1, 0); }
               return oc.startRendering();
             }).then(function(buf){

@@ -612,9 +612,10 @@ print_new_admin_link() {
     note "Replace <your site> with the address you type to open First Loop (the part before the first /)."
   fi
   note "BOOKMARK THIS NOW. It will not be shown again."
-  note "Open it in your browser and save it as a bookmark. Anyone who has this link can see"
-  note "the usage and change the invite codes, so do not share it. Only a scrambled form of"
-  note "it is kept on this server, so nobody can read it back from here, not even you."
+  note "Copy the whole line, from https to the very end, open it in your browser and save it"
+  note "as a bookmark. Anyone who has this link can see the usage and change the invite codes,"
+  note "so do not share it. Only a scrambled form of it is kept on this server, so nobody can"
+  note "read it back from here, not even you."
   note "If it is ever lost or seen by someone else:  cd ~ && sudo bash install-chat.sh --new-admin-link"
 }
 
@@ -668,6 +669,15 @@ remove_all() {
   note "The API key file ($ENV_FILE) was deleted. Copies of the nginx files from before are still in $BACKUP_DIR."
   note "The invite codes, the usage counts and the owner link were deleted with it; they cannot be brought back."
   note "If you no longer need the key at all, also delete it in the Anthropic Console."
+}
+
+# Puts the program and unit from before back and restarts the service with them.
+put_back_previous() {
+  cp -p -- "$BACKUP_DIR/previous-firstloop-chat.py" "$APP_DIR/firstloop-chat.py" || true
+  cp -p -- "$BACKUP_DIR/previous-firstloop-chat.service" "$UNIT" || true
+  systemctl daemon-reload || true
+  systemctl restart firstloop-chat.service || true
+  sleep 2
 }
 
 # ---------------------------------------------------------------------------
@@ -766,11 +776,7 @@ install_all() {
     note "Last lines from the service:"
     journalctl -u firstloop-chat.service -n 15 --no-pager 2>/dev/null | sed 's/^/      /' >&2 || true
     if [ "$had_old" -eq 1 ]; then
-      cp -p -- "$BACKUP_DIR/previous-firstloop-chat.py" "$APP_DIR/firstloop-chat.py" || true
-      cp -p -- "$BACKUP_DIR/previous-firstloop-chat.service" "$UNIT" || true
-      systemctl daemon-reload || true
-      systemctl restart firstloop-chat.service || true
-      sleep 2
+      put_back_previous
       if systemctl is-active --quiet firstloop-chat.service; then
         die "The new version did not start, so the version from before was put back and is running again. nginx has not been touched and the website is unaffected."
       fi
@@ -789,11 +795,25 @@ install_all() {
   # -------------------------------------------------------------------------
   say "Testing"
   WHERE="Everything is installed and nginx is connected to it; only this last test did not pass. Running the installer again is safe."
-  PROBE="$(curl -s --max-time 10 http://127.0.0.1:8788/api/chat || true)"
+  for attempt in 1 2 3 4 5; do
+    PROBE="$(curl -s --max-time 10 http://127.0.0.1:8788/api/chat || true)"
+    case "$PROBE" in *'"ok"'*) break ;; esac
+    sleep 1
+  done
   case "$PROBE" in
     *'"ok": true'*|*'"ok":true'*) note "The service answers." ;;
     *'no_key'*) die "The service is running but found no API key in $ENV_FILE. Delete that file (sudo rm $ENV_FILE) and run this installer again to enter the key." ;;
-    *) die "The service did not answer on this server. Look at: journalctl -u firstloop-chat -n 30" ;;
+    *)
+      if [ "$had_old" -eq 1 ]; then
+        note "The new version is running but does not answer. Putting the version from before back."
+        put_back_previous
+        if curl -s --max-time 10 http://127.0.0.1:8788/api/chat | grep -q '"ok"'; then
+          WHERE="The version from before was put back and answers again. nginx has not been touched and the website is as it was."
+        else
+          WHERE="The version from before was put back, but it does not answer either. nginx has not been touched; the website works, and its Assistant shows as not connected."
+        fi
+      fi
+      die "The service did not answer on this server. Look at: journalctl -u firstloop-chat -n 30" ;;
   esac
   case "$PROBE" in
     *'"open"'*) ;;
@@ -862,7 +882,9 @@ install_all() {
   free="$(printf '%s' "$PROBE" | sed -n 's/.*"open": *\([0-9][0-9]*\).*/\1/p')"
   printf '\n'
   if [ "${free:-0}" = "0" ]; then
-    note "People now need an invite code to use the AI. Open your owner link and create one for yourself first."
+    note "People now need an invite code to use the AI, and so do you."
+    note "Next: open your owner link, press 'Create your first invite code', and type that"
+    note "code into the Assistant on your site (Invite code, at the top of the Assistant)."
   else
     note "People without an invite code get $free free messages a day. You can change that on the owner page."
   fi

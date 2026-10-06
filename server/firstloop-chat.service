@@ -12,9 +12,13 @@ ExecStart=/usr/bin/python3 /opt/firstloop-chat/firstloop-chat.py
 Restart=on-failure
 RestartSec=3
 
-# It only needs its own log file and its small counter file.
+# The only places it may write: /var/log/firstloop-chat (its log) and
+# /var/lib/firstloop-chat (today's counter). systemd creates both, owned by
+# the service's user, and everything else on the disk is read-only to it.
+LogsDirectory=firstloop-chat
+LogsDirectoryMode=0750
 StateDirectory=firstloop-chat
-ReadWritePaths=/var/log/firstloop-chat.log
+StateDirectoryMode=0750
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
@@ -35,3 +39,5 @@ TasksMax=64
 
 [Install]
 WantedBy=multi-user.target
+
+# firstloop-chat: end of file

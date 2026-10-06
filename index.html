@@ -1222,10 +1222,12 @@
   .dj-b.quiet:hover{color:var(--ink);background:var(--surface-2);}
   .dj-l{font-size:10.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;}
   .dj-num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
-  .dj select.dj-s,.dj input.dj-i{appearance:auto;height:22px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);
+  .dj select.dj-s,.dj input.dj-i,.dj-pop select.dj-s,.dj-pop input.dj-i{appearance:auto;height:22px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);
     border-radius:var(--r);font:inherit;font-size:11.5px;padding:0 4px;min-width:0;}
-  .dj input.dj-i{appearance:none;padding:0 6px;}
+  .dj input.dj-i,.dj-pop input.dj-i{appearance:none;padding:0 6px;}
   .dj input.dj-i::placeholder{color:var(--ink-3);}
+  .dj-pop button,.dj-menu button{font:inherit;}
+  .dj-pop :focus-visible,.dj-menu :focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
 
   /* ---- top strip: effects, recording, output ---- */
   .dj-bar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;flex-wrap:nowrap;overflow:hidden;}
@@ -1252,6 +1254,9 @@
     color:var(--dc);border:1px solid var(--dc);background:transparent;flex:none;}
   .dj-head[data-playing="true"] .dj-badge{background:var(--dc);color:var(--on-accent);}
   .dj-tt{min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .dj-tw{min-width:0;display:flex;align-items:center;gap:8px;}
+  .dj-cover{width:34px;height:34px;border-radius:2px;object-fit:cover;flex:none;border:1px solid var(--line);}
+  .dj-infotop{display:flex;gap:8px;align-items:center;min-width:0;}
   .dj-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dj-artist{font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dj-head[data-loaded="false"] .dj-title{color:var(--ink-3);font-weight:500;}
@@ -1358,7 +1363,7 @@
   .dj-mid2{display:flex;flex-direction:column;align-items:center;gap:3px;}
   .dj-mid2 .mm{display:flex;gap:2px;flex:1 1 auto;min-height:60px;}
   .dj-xf{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;}
-  .dj-hf{position:relative;height:24px;cursor:ew-resize;touch-action:none;min-width:80px;}
+  .dj-hf{position:relative;height:26px;cursor:ew-resize;touch-action:none;min-width:80px;}
   .dj-hf::before{content:"";position:absolute;top:50%;left:0;right:0;height:3px;margin-top:-1.5px;background:var(--raised);}
   .dj-hf::after{content:"";position:absolute;left:50%;top:4px;bottom:4px;width:1px;background:var(--ink-3);}
   .dj-hf i{position:absolute;top:1px;bottom:1px;left:0;width:13px;margin-left:-6.5px;background:var(--ink);border-radius:2px;display:block;will-change:transform;z-index:1;}
@@ -1448,7 +1453,7 @@
   .dj-rate{display:inline-flex;gap:2px;}
   .dj-rate button{appearance:none;border:0;background:transparent;cursor:pointer;color:var(--ink-3);font-size:14px;line-height:1;padding:0 1px;}
   .dj-rate button[data-on="true"]{color:var(--accent);}
-  .dj-art{width:64px;height:64px;border:1px solid var(--line);border-radius:var(--r);object-fit:cover;background:var(--bg);display:block;}
+  .dj-art{flex:none;width:48px;height:48px;border:1px solid var(--line);border-radius:var(--r);object-fit:cover;background:var(--bg);display:block;}
 
   /* ---- small panels that open over the page ---- */
   .dj-pop{position:fixed;z-index:70;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-2);padding:10px 12px;
@@ -1457,6 +1462,7 @@
   .dj-pop h3{font-size:12.5px;font-weight:600;margin:0 0 6px;}
   .dj-pop h4{font-size:11px;font-weight:600;color:var(--ink-2);margin:10px 0 4px;}
   .dj-pop p{margin:0 0 6px;color:var(--ink-2);}
+  .dj-pop li{margin:0 0 3px;}
   .dj-pop dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;}
   .dj-pop dt{font-family:var(--mono);font-size:11px;color:var(--ink);white-space:nowrap;}
   .dj-pop dd{margin:0;color:var(--ink-2);}
@@ -12754,12 +12760,13 @@
   //     d.seek(seconds)  d.seekBy(beats)      seekBy is a beat jump (negative goes back)
   //     d.jumpSize(beats)              size used by the on-screen jump buttons and keys
   //     d.loopIn()  d.loopOut()  d.autoLoop(beats)  d.loopHalve()  d.loopDouble()  d.reloop()  d.loopMove(beats)
+  //     d.memory("set"|"next"|"prev"|"delete")   memory cues (and, while a loop is on, saved loops); next/prev go there and wait
   //     d.sync(on)  d.setMaster()      sync(undefined) toggles; returns the new state
   //     d.setQuantise(on)  d.setSlip(on)  d.setVinyl(on)     undefined toggles
   //     d.state() -> {deck, loaded, loading, trackId, title, artist, bpm, bpmNow, key, camelot, playing,
   //                   position, duration, remaining (s), bar, beatInBar, tempo (-1..1), tempoPercent,
   //                   tempoRange, sync, master, quantise, slip, vinyl, cue, hotcues[8], loop{active,start,end,beats},
-  //                   autoLoopBeats, endWarning, analysed}
+  //                   memoryCues[], savedLoops[[start,end]], autoLoopBeats, endWarning, analysed}
   //
   //   m = DJ.mixer
   //     m.trim(ch, v)  m.eq(ch, "low"|"mid"|"high"|0|1|2, v)  m.filter(ch, v)  m.fader(ch, v)  m.cue(ch, on)
@@ -12784,7 +12791,7 @@
   //   Events (DJ.on): "ready", "engine" {mode}, "loading" / "load" / "unload" / "loaderror" {deck, id, ...},
   //     "confirm" {deck, id} (a load onto a playing deck is waiting for an answer), "play" {deck, playing},
   //     "cue" {deck, pos, action}, "hotcue" {deck, index, set|jump}, "loop" {deck, active, start, end},
-  //     "sync" {deck, on}, "master" {deck}, "tempo" {deck, tempo, percent, bpm, range}, "mode" {deck, ...},
+  //     "memory" {deck, action}, "sync" {deck, on}, "master" {deck}, "tempo" {deck, tempo, percent, bpm, range}, "mode" {deck, ...},
   //     "beat" {deck, beat, bar, beatInBar} (while the area is on screen), "end" {deck}, "warning" {deck, endOfTrack},
   //     "levels" {ch, master} (about 20 a second, while on screen), "mixer" {control, ch, value}, "fx", "routing",
   //     "record", "library" {count}, "select" {id}, "analysis", "job", "controller". "*" hears everything.
@@ -12869,7 +12876,7 @@
         switch(m.t){
         case "load":
           d.L = m.L; d.R = m.R || m.L; d.len = m.L ? m.L.length : 0;
-          d.pos = 0; d.playing = false; d.gate = 0; d.cur = d.rate; d.bend = 0;
+          d.pos = m.pos > 0 && m.pos < d.len ? m.pos : 0; d.playing = false; d.gate = 0; d.cur = d.rate; d.bend = 0;
           d.held = false; d.pend = 0; d.npend = 0; d.scr = false;
           d.loopOn = false; d.loopIn = 0; d.loopOut = 0; d.fleft = 0;
           d.beatLen = m.beatLen || 0; d.first = m.first || 0;
@@ -13588,6 +13595,7 @@
       dbDel("tracks", id); dbDel("wave", id); dbDel("art", id);
       if(t.src && t.src.kind === "idb") dbDel("blobs", id);
       if(t.src && t.src.kind === "opfs") opfsDir().then(function(d){ if(d) d.removeEntry(t.src.name).catch(function(){}); });
+      if(isFL(t)) dbDel("blobs", "render:" + id);
       playlists.forEach(function(p){ p.tracks = p.tracks.filter(function(x){ return x !== id; }); });
       savePlaylists();
     }
@@ -13617,7 +13625,7 @@
       if(!p) return null;
       var steps = (METERS[p.meter || "4/4"] || METERS["4/4"]).steps;
       var one = p.order.length * steps * ((60 / p.tempo) / 4);
-      var reps = clamp(Math.ceil(90 / one), 2, 16);
+      var reps = clamp(Math.ceil(60 / one), 2, 8);            // about a minute: rendering runs near real time on a slow machine
       return { bpm:p.tempo, bpb:steps / 4, one:one, reps:reps, dur:one * reps + 2.6 };
     }
     function syncSongs(){
@@ -13626,7 +13634,7 @@
         seen[id] = true;
         var sh = flShape(code); if(!sh) return;
         var t = T.by[id], fresh = !t;
-        if(fresh){ t = blankTrack(id); t.added = ver || Date.now(); }
+        if(fresh){ t = blankTrack(id); t.added = Date.now(); }
         var stale = fresh || t.ver !== ver || t.title !== title;
         if(!stale) return;
         t.src = src; t.title = title; t.artist = artist; t.album = "First Loop"; t.file = title;
@@ -13636,8 +13644,9 @@
         addTrackMem(t); saveTrack(t, true); changed = true;
       }
       try {
-        songs.forEach(function(sg){ take("fl:" + sg.id, { kind:"fl", song:sg.id }, sg.name || "Song", "First Loop", sg.code, sg.updated || 1); });
-        SHELF_DEMOS.forEach(function(dm){ take("demo:" + dm.id, { kind:"demo", demo:dm.id }, dm.title, "First Loop demo", dm.code, 1); });
+        // the version is what the song sounds like (its code and settings), not when it was last saved
+        songs.forEach(function(sg){ take("fl:" + sg.id, { kind:"fl", song:sg.id }, sg.name || "Song", "First Loop", sg.code, hashStr(sg.code + "|" + JSON.stringify(sg.x || {}))); });
+        SHELF_DEMOS.forEach(function(dm){ take("demo:" + dm.id, { kind:"demo", demo:dm.id }, dm.title, "First Loop demo", dm.code, hashStr(dm.code)); });
       } catch(e){}
       T.list.slice().forEach(function(t){
         if(t.src && (t.src.kind === "fl" || t.src.kind === "demo") && !seen[t.id]){ removeTrack(t.id); changed = true; }
@@ -13950,6 +13959,32 @@
       });
     }
 
+    // ---------- cover art: a small picture, made once and kept ----------
+    var artUrl = {};
+    function thumb(blob){
+      return window.createImageBitmap(blob).then(function(bmp){
+        var c = document.createElement("canvas"), s = Math.min(bmp.width, bmp.height);
+        c.width = c.height = 128;
+        c.getContext("2d").drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, 128, 128);
+        return new Promise(function(res){ c.toBlob(res, "image/jpeg", 0.82); });
+      }).catch(function(){ return null; });
+    }
+    // Resolves to an address for an <img>, or null when the track has no picture.
+    function artFor(t){
+      if(!t || isFL(t) || !t.src || t.src.kind === "missing" || t.gone || !window.createImageBitmap) return Promise.resolve(null);
+      if(artUrl[t.id] !== undefined) return Promise.resolve(artUrl[t.id]);
+      return dbGet("art", t.id).then(function(r){
+        if(r) return r.blob || null;
+        return trackFile(t, false).then(function(f){ return readTags(f, true); }).then(function(tags){
+          if(!tags.art || !tags.art.data){ dbPut("art", { id:t.id, blob:null }); return null; }
+          return thumb(new Blob([tags.art.data], { type:tags.art.mime || "image/jpeg" })).then(function(b){ dbPut("art", { id:t.id, blob:b }); return b; });
+        });
+      }).then(function(blob){
+        artUrl[t.id] = blob ? URL.createObjectURL(blob) : null;
+        return artUrl[t.id];
+      }, function(){ return null; });
+    }
+
     // ---------- where the audio lives ----------
     var opfsP = null;
     function opfsDir(){
@@ -14249,9 +14284,11 @@
       var c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
       var mono = new Float32Array(Math.floor(n / decim));
       var L = wantInt16 ? new Int16Array(n) : null, R = wantInt16 && c1 ? new Int16Array(n) : null;
-      var SL = 262144 - (262144 % decim), pos = 0;
+      var SL = 262144 - (262144 % decim), pos = 0, pk = 0;
       function slice(){
         var end = Math.min(n, pos + SL), i, j, x, m = pos / decim;
+        for(i = pos; i < end; i++){ x = c0[i]; if(x < 0) x = -x; if(x > pk) pk = x; }
+        if(c1) for(i = pos; i < end; i++){ x = c1[i]; if(x < 0) x = -x; if(x > pk) pk = x; }
         if(L){
           for(i = pos; i < end; i++){ x = c0[i]; x = x > 1 ? 1 : (x < -1 ? -1 : x); L[i] = x < 0 ? x * 32768 : x * 32767; }
           if(R) for(i = pos; i < end; i++){ x = c1[i]; x = x > 1 ? 1 : (x < -1 ? -1 : x); R[i] = x < 0 ? x * 32768 : x * 32767; }
@@ -14269,7 +14306,7 @@
           var t0 = nowMs();
           while(pos < n && nowMs() - t0 < 6) slice();
           if(pos < n) setTimeout(go, 0);
-          else res({ mono:mono, fs:sr / decim, L:L, R:R });
+          else res({ mono:mono, fs:sr / decim, L:L, R:R, peak:pk });
         })();
       });
     }
@@ -14280,7 +14317,8 @@
       return Math.floor(g * 10) / 10;
     }
     // Store what the worker found on the track and in the waveform store.
-    function applyAnalysis(t, res){
+    function applyAnalysis(t, res, truePeak){
+      if(truePeak > res.peak) res.peak = truePeak;          // the analysis works on a thinned copy, which reads peaks a little low
       if(!(t.dur > 0) || Math.abs(t.dur - res.dur) > 0.05) t.dur = res.dur;
       t.loud = Math.round(res.loud * 10) / 10; t.peak = Math.round(res.peak * 1000) / 1000;
       t.gain = autoGainDb(res.loud, res.peak);
@@ -14347,7 +14385,7 @@
       var id = aq.list.shift(), t = T.by[id];
       if(!t){ aq.done++; return pumpAnalysis(); }
       aq.cur = id; aq.cancel = false;
-      var t0 = nowMs(), tDec = 0;
+      var t0 = nowMs(), tDec = 0, tPeak = 0;
       emit("analysis", { id:id, p:0.01, queue:aq.list.length });
       trackFile(t, false).then(function(f){ return f.arrayBuffer(); }).then(function(ab){
         return decodeForAnalysis(ab).catch(function(){ throw decodeFail(t); });
@@ -14356,10 +14394,11 @@
         if(buf.duration > MAX_TRACK_SECS) throw new Error("“" + t.title + "” is longer than 20 minutes and was left out.");
         return prepare(buf, false);
       }).then(function(pr){
+        tPeak = pr.peak;
         return runWorker(pr.mono, pr.fs, (t.bpmSrc === "user" || t.bpmSrc === "rekordbox") && t.grid ? { bpm:t.grid.bpm, firstBeat:t.grid.firstBeat } : null,
           function(p){ emit("analysis", { id:id, p:p }); });
       }).then(function(res){
-        applyAnalysis(t, res);
+        applyAnalysis(t, res, tPeak);
         aq.last = { id:id, total:Math.round(nowMs() - t0), decode:Math.round(tDec), worker:res.ms, dur:res.dur };
       }).catch(function(err){
         t.anErr = String(err && err.message || err); t.analysed = -1; saveTrack(t, true);
@@ -14643,7 +14682,16 @@
     }
 
     // ---------- the app's own backup file ----------
+    function dbExists(){
+      // a backup must not create the DJ database for someone who never opened the DJ area
+      if(db || dbP) return Promise.resolve(true);
+      try { if(window.indexedDB.databases) return window.indexedDB.databases().then(function(l){ return l.some(function(d){ return d.name === "firstloop-dj"; }); }, function(){ return true; }); } catch(e){}
+      return Promise.resolve(true);
+    }
     function backupOut(){
+      return dbExists().then(function(ex){ if(!ex) return null; return backupOut2(); });
+    }
+    function backupOut2(){
       return openDB().then(function(){
         return (inited ? Promise.resolve() : loadLibrary()).then(function(){
           var tr = T.list.filter(function(t){
@@ -15048,7 +15096,7 @@
         if(!d) return;
         bl = d.beatLen;
         switch(m.t){
-        case "load": stopSrc(d); d.buf = m.buf; d.p0 = 0; d.playing = false; d.loopOn = false; d.loopIn = 0; d.loopOut = 0; d.bend = 0;
+        case "load": stopSrc(d); d.buf = m.buf; d.p0 = m.pos || 0; d.playing = false; d.loopOn = false; d.loopIn = 0; d.loopOut = 0; d.bend = 0;
           d.beatLen = m.beatLen || 0; d.first = m.first || 0; d.ended = false; d.seq++; break;
         case "unload": stopSrc(d); d.buf = null; d.playing = false; d.p0 = 0; d.loopOn = false; d.seq++; break;
         case "grid": d.beatLen = m.beatLen || 0; d.first = m.first || 0; break;
@@ -15203,15 +15251,48 @@
         throw new Error(err && err.message === "busy" ? "A file is being made right now. Try again in a moment." : "That song could not be rendered.");
       });
     }
+    // A rendered First Loop song is kept (as 16-bit sound, in the DJ database) until
+    // the song changes, so only the first load of each version has to wait.
+    var MAX_RENDERS = 12;
+    function pcmWav(buf){
+      var n = buf.length, nc = Math.min(2, buf.numberOfChannels), ab = new ArrayBuffer(44 + n * nc * 2), v = new DataView(ab), i, c, o = 44;
+      function str(at, s){ for(var k = 0; k < s.length; k++) v.setUint8(at + k, s.charCodeAt(k)); }
+      str(0, "RIFF"); v.setUint32(4, 36 + n * nc * 2, true); str(8, "WAVE"); str(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+      v.setUint16(22, nc, true); v.setUint32(24, buf.sampleRate, true); v.setUint32(28, buf.sampleRate * nc * 2, true); v.setUint16(32, nc * 2, true);
+      v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * nc * 2, true);
+      var ch = []; for(c = 0; c < nc; c++) ch.push(buf.getChannelData(c));
+      var out = new Int16Array(ab, 44);
+      for(i = 0, o = 0; i < n; i++) for(c = 0; c < nc; c++){ var x = ch[c][i]; x = x > 1 ? 1 : (x < -1 ? -1 : x); out[o++] = x < 0 ? x * 32768 : x * 32767; }
+      return new Blob([ab], { type:"audio/wav" });
+    }
+    function keepRender(t, buf){
+      try {
+        var blob = pcmWav(buf);
+        dbPut("blobs", { id:"render:" + t.id, blob:blob, ver:t.ver, at:Date.now() });
+        dbGet("meta", "renders").then(function(list){
+          list = (Array.isArray(list) ? list : []).filter(function(r){ return r.id !== t.id; });
+          list.push({ id:t.id, at:Date.now(), bytes:blob.size });
+          while(list.length > MAX_RENDERS){ var old = list.shift(); dbDel("blobs", "render:" + old.id); }
+          dbPut("meta", list, "renders");
+        });
+      } catch(e){}
+    }
+    function decodeWith(ctx, ab, t){
+      return new Promise(function(res, rej){
+        try { var p = ctx.decodeAudioData(ab, res, function(){ rej(decodeFail(t)); }); if(p && p.catch) p.catch(function(){}); }
+        catch(e){ rej(decodeFail(t)); }
+      });
+    }
     function loadAudio(t){
       var ctx = ENG.ctx;
-      if(isFL(t)) return renderFL(t, ctx.sampleRate);
-      return trackFile(t, true).then(function(f){ return f.arrayBuffer(); }).then(function(ab){
-        return new Promise(function(res, rej){
-          try { var p = ctx.decodeAudioData(ab, res, function(){ rej(decodeFail(t)); }); if(p && p.catch) p.catch(function(){}); }
-          catch(e){ rej(decodeFail(t)); }
-        });
+      if(isFL(t)) return dbGet("blobs", "render:" + t.id).then(function(r){
+        if(r && r.blob && r.ver === t.ver) return r.blob.arrayBuffer().then(function(ab){ return decodeWith(ctx, ab, t); }).catch(function(){ return null; });
+        return null;
+      }).then(function(buf){
+        if(buf) return buf;
+        return renderFL(t, 44100).then(function(b2){ keepRender(t, b2); return resample(b2, ctx.sampleRate); });
       });
+      return trackFile(t, true).then(function(f){ return f.arrayBuffer(); }).then(function(ab){ return decodeWith(ctx, ab, t); });
     }
 
     function makeDeck(i){
@@ -15260,10 +15341,10 @@
           return Promise.resolve(false);
         }
         var tok = ++D.token;
-        D.pending = null; D.err = ""; D.loading = isFL(t) ? "Rendering “" + t.title + "”" : "Loading “" + t.title + "”"; D.dirty = true;
+        D.pending = null; D.err = ""; D.loading = isFL(t) ? "Getting “" + t.title + "” ready (a song is rendered the first time, and that takes a while)" : "Loading “" + t.title + "”"; D.dirty = true;
         emit("loading", { deck:D.n, id:id });
         return ensureEngine().then(function(){
-          if(ENG.failed) throw new Error(ENG.failed);
+          if(ENG.failed){ emit("engine", { mode:null, failed:ENG.failed }); throw new Error(ENG.failed); }
           resumeCtx();
           D.unload(true);
           return loadAudio(t);
@@ -15284,12 +15365,11 @@
               var tr = [pr.L.buffer]; if(pr.R) tr.push(pr.R.buffer);
               D.mem = pr.L.byteLength + (pr.R ? pr.R.byteLength : 0);
               D.bufs = tr.slice();
-              send({ t:"load", k:i, L:pr.L, R:pr.R, beatLen:D.beatLen, first:D.first }, tr);
+              send({ t:"load", k:i, L:pr.L, R:pr.R, beatLen:D.beatLen, first:D.first, pos:D.cue }, tr);
             } else {
               D.mem = buf.length * buf.numberOfChannels * 4; D.bufs = null;
-              send({ t:"load", k:i, buf:buf, beatLen:D.beatLen, first:D.first });
+              send({ t:"load", k:i, buf:buf, beatLen:D.beatLen, first:D.first, pos:D.cue });
             }
-            send({ t:"seek", k:i, pos:D.cue });
             D.pushSettings();
             ENG.M.setAuto(i, t.gain || 0);
             lastLoaded = i; D.loading = ""; D.wave = null; D.dirty = true;
@@ -15305,7 +15385,7 @@
               emit("analysis", { id:t.id, p:0.05 });
               return runWorker(pr.mono, pr.fs, known, function(p){ emit("analysis", { id:t.id, p:p }); }).then(function(res){
                 var bpb = t.grid && t.grid.bpb;
-                var wave = applyAnalysis(t, res);
+                var wave = applyAnalysis(t, res, pr.peak);
                 if(bpb && t.grid) t.grid.bpb = bpb;
                 D.analysing = false;
                 if(tok !== D.token) return true;
@@ -15462,7 +15542,7 @@
       };
       D.setTempo = function(norm){
         norm = clamp(+norm || 0, -1, 1);
-        if(D.sync && masterIdx !== i && masterIdx >= 0 && decks[masterIdx] && decks[masterIdx].track){ D.fader = norm; return; }
+        if(D.sync && masterIdx !== i && masterIdx >= 0 && decks[masterIdx] && decks[masterIdx].track){ D.fader = norm; D.dirty = true; return; }
         D.tempoN = norm; D.applyRate();
       };
       D.tempoRange = function(r){
@@ -15484,7 +15564,8 @@
       };
       D.jogTouch = function(on){
         D.touched = !!on;
-        if(D.vinyl || !D.playing) send({ t:"held", k:i, on:!!on });
+        if(!on) send({ t:"held", k:i, on:false });                 // letting go always lets go, whatever was switched meanwhile
+        else if(D.vinyl || !D.playing) send({ t:"held", k:i, on:true });
         D.dirty = true;
       };
       // delta is seconds of audio (one turn of a platter at 33 1/3 rpm is 1.8 s)
@@ -15549,6 +15630,51 @@
         pickMaster();
         decks.forEach(function(o){ o.dirty = true; });
       };
+      // Memory cues and saved loops live with the track. "set" stores the place the
+      // deck is at (or the loop that is on); "next" and "prev" go to them and wait there.
+      D.memory = function(action){
+        var t = D.track; if(!t) return null;
+        var here = sec(D.posFrames()), k, best = -1, pts;
+        t.mem = t.mem || []; t.loops = t.loops || [];
+        if(action === "set"){
+          if(D.loopOn && D.loopOut > D.loopIn){
+            var a = sec(D.loopIn), b = sec(D.loopOut);
+            t.loops = t.loops.filter(function(l){ return Math.abs(l.a - a) > 0.02; });
+            t.loops.push({ a:Math.round(a * 100000) / 100000, b:Math.round(b * 100000) / 100000, name:"" });
+            t.loops.sort(function(x, y){ return x.a - y.a; });
+          } else {
+            var pos = sec(D.snap(D.posFrames()));
+            t.mem = t.mem.filter(function(m){ return Math.abs(m.pos - pos) > 0.02; });
+            t.mem.push({ pos:Math.round(pos * 100000) / 100000, name:"" });
+            t.mem.sort(function(x, y){ return x.pos - y.pos; });
+          }
+          saveTrack(t); D.dirty = true;
+          emit("memory", { deck:D.n, action:"set", cues:t.mem.length, loops:t.loops.length });
+          return true;
+        }
+        pts = t.mem.map(function(m){ return { pos:m.pos, m:m }; }).concat(t.loops.map(function(l){ return { pos:l.a, loop:l }; }));
+        pts.sort(function(x, y){ return x.pos - y.pos; });
+        if(action === "delete"){
+          for(k = 0; k < pts.length; k++) if(Math.abs(pts[k].pos - here) < 0.3 && (best < 0 || Math.abs(pts[k].pos - here) < Math.abs(pts[best].pos - here))) best = k;
+          if(best < 0){ note("Go to a memory cue first (the arrows beside Set), then delete it."); return false; }
+          if(pts[best].loop) t.loops.splice(t.loops.indexOf(pts[best].loop), 1); else t.mem.splice(t.mem.indexOf(pts[best].m), 1);
+          saveTrack(t); D.dirty = true;
+          emit("memory", { deck:D.n, action:"delete", cues:t.mem.length, loops:t.loops.length });
+          return true;
+        }
+        if(action === "next"){ for(k = 0; k < pts.length; k++) if(pts[k].pos > here + 0.05){ best = k; break; } }
+        else if(action === "prev"){ for(k = pts.length - 1; k >= 0; k--) if(pts[k].pos < here - 0.05){ best = k; break; } }
+        if(best < 0) return false;
+        var pt = pts[best];
+        D.cue = fr(pt.pos); D.cueHeld = false; D.hotHeld = -1;
+        send({ t:"seek", k:i, pos:D.cue, stop:true });
+        if(pt.loop) send({ t:"loop", k:i, a:fr(pt.loop.a), b:fr(pt.loop.b), on:false });
+        D.st = { pos:D.cue, v:0, playing:false, rate:D.rate, loopOn:false, loopIn:pt.loop ? fr(pt.loop.a) : D.loopIn, loopOut:pt.loop ? fr(pt.loop.b) : D.loopOut, len:D.len }; D.stAt = nowMs();
+        D.setPlaying(false); D.dirty = true;
+        emit("memory", { deck:D.n, action:action, pos:pt.pos, loop:!!pt.loop });
+        emit("cue", { deck:D.n, pos:pt.pos, action:"call" });
+        return true;
+      };
       D.setQuantise = function(on){ D.quant = on === undefined ? !D.quant : !!on; SET.quant[i] = D.quant; saveSet(); send({ t:"quant", k:i, on:D.quant }); D.dirty = true; emit("mode", { deck:D.n, quantise:D.quant }); };
       D.setSlip = function(on){ D.slip = on === undefined ? !D.slip : !!on; send({ t:"slip", k:i, on:D.slip }); D.dirty = true; emit("mode", { deck:D.n, slip:D.slip }); };
       D.setVinyl = function(on){ D.vinyl = on === undefined ? !D.vinyl : !!on; SET.vinyl[i] = D.vinyl; saveSet(); D.dirty = true; emit("mode", { deck:D.n, vinyl:D.vinyl }); };
@@ -15568,6 +15694,7 @@
           hotcues:t ? t.cues.map(function(c){ return c ? Math.round(c.pos * 1000) / 1000 : null; }) : [],
           loop:{ active:D.loopOn, start:Math.round(sec(D.loopIn) * 1000) / 1000, end:Math.round(sec(D.loopOut) * 1000) / 1000,
                  beats:D.beatLen > 0 && D.loopOut > D.loopIn ? Math.round((D.loopOut - D.loopIn) / D.beatLen * 1000) / 1000 : null },
+          memoryCues:t ? (t.mem || []).map(function(m){ return m.pos; }) : [], savedLoops:t ? (t.loops || []).map(function(l){ return [l.a, l.b]; }) : [],
           autoLoopBeats:D.autoBeats, endWarning:D.warn, analysed:!!D.wave
         };
       };
@@ -15579,7 +15706,7 @@
         D = decks[i]; s = m.d[i];
         if(!s || !D.track || !s.len) continue;
         if(s.len !== D.len) continue;                        // a state from before this track was loaded
-        D.st = s; D.stAt = at;
+        D.st = s; D.stAt = at; D.stCt = m.ct;
         if(D.playing && !s.playing && s.ended && at - (D.cmdAt || 0) > 200){
           // ran off the end of the track
           D.cueHeld = false; D.hotHeld = -1; D.setPlaying(false); emit("end", { deck:D.n });
@@ -15985,8 +16112,10 @@
       out.addEventListener("click", function(){ openOutput(out); });
       var sc = btn("", "Shortcuts", "Keyboard shortcuts for the DJ area (?)"); sc.id = "djkeys"; sc.setAttribute("aria-haspopup", "dialog");
       sc.addEventListener("click", function(){ openShortcuts(sc); });
+      var hp = el("button", "help", "?"); hp.type = "button"; hp.id = "djhelp"; hp.setAttribute("aria-label", "How the DJ area works"); hp.setAttribute("aria-haspopup", "dialog");
+      hp.addEventListener("click", function(){ openHelp(hp); });
       UI.outBtn = out; UI.keysBtn = sc;
-      g.appendChild(out); g.appendChild(sc); bar.appendChild(g);
+      g.appendChild(out); g.appendChild(sc); g.appendChild(hp); bar.appendChild(g);
       return bar;
     }
     function routingName(m){ return m === "split" ? "Split cue" : (m === "four" ? "4 channels" : "Speakers"); }
@@ -16054,6 +16183,22 @@
         });
       });
     }
+    function openHelp(anchor){
+      openPop(anchor, "dj-pop", function(p){
+        p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "How the DJ area works");
+        p.appendChild(el("h3", "", "The DJ area"));
+        p.appendChild(el("p", "", "Two decks play two tracks at once and the mixer between them blends one into the other. The library underneath holds the tracks."));
+        var ol = el("ol"); ol.style.cssText = "margin:0 0 8px;padding-left:18px;color:var(--ink-2);";
+        ["Add music with Add folder or Add files, or use a song made in First Loop. The files stay on this device.",
+         "Select a track and load it on a deck: the 1 and 2 buttons in its row, or drag it onto a deck.",
+         "Press play on that deck. Load a second track on the other deck and press Sync there: it takes the tempo and the beat of the first.",
+         "Bring the second track in with its channel fader or the crossfader. Turning one Low knob down while the other comes up swaps the bass lines.",
+         "CUE sets a starting point; the pads A to H keep eight more places per track."].forEach(function(t){ ol.appendChild(el("li", "", t)); });
+        p.appendChild(ol);
+        p.appendChild(el("p", "", "To hear a track before it goes out, choose Split cue or 4 channels under Output, then press the headphone button of that deck."));
+        p.appendChild(el("p", "", "Tempo, beat grid and key are worked out by analysis. They are usually right and sometimes not: the Grid button on a deck opens the tools to correct them, and the key is labelled as a suggestion."));
+      });
+    }
     var KEYMAP = [
       ["Decks", null],
       ["W / O", "Play or pause deck 1 / deck 2"],
@@ -16091,8 +16236,10 @@
       var u = UI.deck[D.i], h = el("div", "dj-head"); h.dataset.deck = D.n; h.dataset.loaded = "false";
       u.head = h;
       u.badge = el("span", "dj-badge", String(D.n)); h.appendChild(u.badge);
+      u.cover = el("img", "dj-cover"); u.cover.alt = ""; u.cover.hidden = true;
       var tt = el("div", "dj-tt"); u.title = el("div", "dj-title", "Deck " + D.n + " is empty"); u.artist = el("div", "dj-artist", "Drag a track here, or select one and press Shift+" + (D.i ? "→" : "←"));
-      tt.appendChild(u.title); tt.appendChild(u.artist); h.appendChild(tt);
+      tt.appendChild(u.title); tt.appendChild(u.artist);
+      var tw = el("div", "dj-tw"); tw.appendChild(u.cover); tw.appendChild(tt); h.appendChild(tw);
       var k = el("div", "dj-read key"); u.keyBig = el("span", "big", "–"); u.keySm = el("span", "sm", "key"); k.appendChild(u.keyBig); k.appendChild(u.keySm); h.appendChild(k);
       var b = el("div", "dj-read bpm"); u.bpmBig = el("span", "big", "–"); u.bpmSm = el("span", "sm", ""); b.appendChild(u.bpmBig); b.appendChild(u.bpmSm); h.appendChild(b);
       var t = el("div", "dj-read time"); u.timeBig = el("span", "big", "00:00.0"); u.timeSm = el("span", "sm", ""); t.appendChild(u.timeBig); t.appendChild(u.timeSm); h.appendChild(t);
@@ -16207,6 +16354,15 @@
       u.syncB = sy; u.masterB = ms; u.quantB = qz; u.slipB = sl; u.vinylB = vn;
       row.appendChild(qz); row.appendChild(sl); row.appendChild(vn);
       mid.appendChild(row);
+      row = el("div", "dj-row"); row.appendChild(el("span", "dj-l", "Mem"));
+      var mset = btn("", "Set", "Memory cue: keep this place with the track. While a loop is on, keeps the loop instead.");
+      var mp = btn("", "◀", "Go to the memory cue before this place, and wait there"), mn = btn("", "▶", "Go to the next memory cue, and wait there");
+      var mdel = btn("", "Delete", "Delete the memory cue or saved loop the deck is standing on");
+      mset.setAttribute("aria-label", "Deck " + D.n + " set memory cue"); mp.setAttribute("aria-label", "Deck " + D.n + " previous memory cue"); mn.setAttribute("aria-label", "Deck " + D.n + " next memory cue"); mdel.setAttribute("aria-label", "Deck " + D.n + " delete memory cue");
+      mset.addEventListener("click", function(){ D.memory("set"); }); mp.addEventListener("click", function(){ D.memory("prev"); });
+      mn.addEventListener("click", function(){ D.memory("next"); }); mdel.addEventListener("click", function(){ D.memory("delete"); });
+      row.appendChild(mset); row.appendChild(mp); row.appendChild(mn); row.appendChild(mdel);
+      mid.appendChild(row);
       row = el("div", "dj-row"); row.appendChild(el("span", "dj-l", "Track"));
       var gr = btn("", "Grid", "Beat grid: tempo, first beat, tap"), ej = btn("", "Unload", "Take the track off the deck and free its memory");
       gr.addEventListener("click", function(){ if(D.track){ selectId(D.track.id, true); SET.info = true; saveSet(); paintInfoShell(); } });
@@ -16307,9 +16463,10 @@
         return s;
       }
       UI.mx.xf = makeFader({ horizontal:true, aria:"Crossfader", value:0.5, def:0.5, detent:0.5, onInput:function(v){ API.mixer.crossfader(v); } });
-      xr.appendChild(assign(0)); xr.appendChild(UI.mx.xf.el); xr.appendChild(assign(1));
+      xr.style.gridTemplateColumns = "minmax(0,1fr)";
+      xr.appendChild(UI.mx.xf.el);
       m.appendChild(xr);
-      var cr = el("div", "dj-xf"); cr.style.gridTemplateColumns = "1fr auto 1fr";
+      var cr = el("div", "dj-xf"); cr.style.gridTemplateColumns = "auto 1fr auto"; cr.style.justifyItems = "center";
       var cs = el("span", "dj-seg"); cs.setAttribute("role", "group"); cs.setAttribute("aria-label", "Crossfader curve");
       cs.title = "Smooth blends the two sides; Cut opens each side fully almost at once, for scratching.";
       UI.mx.curve = [];
@@ -16318,7 +16475,7 @@
         b.addEventListener("click", function(){ API.mixer.crossfaderCurve(o[0]); });
         UI.mx.curve.push([o[0], b]); cs.appendChild(b);
       });
-      cr.appendChild(el("span")); cr.appendChild(cs); cr.appendChild(el("span"));
+      cr.appendChild(assign(0)); cr.appendChild(cs); cr.appendChild(assign(1));
       m.appendChild(cr);
       return m;
     }
@@ -16351,6 +16508,10 @@
       u.head.dataset.loaded = t ? "true" : "false";
       u.head.dataset.playing = D.playing ? "true" : "false";
       u.title.textContent = t ? t.title : "Deck " + D.n + " is empty";
+      if(u._art !== (t ? t.id : "")){
+        u._art = t ? t.id : ""; u.cover.hidden = true;
+        if(t) (function(id){ artFor(t).then(function(url){ if(url && D.track && D.track.id === id){ u.cover.src = url; u.cover.hidden = false; } }); })(t.id);
+      }
       u.artist.textContent = t ? (t.artist || "") : "Drag a track here, or select one and press Shift+" + (D.i ? "→" : "←");
       var cam = t ? camelot(t.key) : "";
       u.keyBig.textContent = cam || "–";
@@ -16505,6 +16666,7 @@
       var cx = xOf(D.cue / sr);
       if(cx > -8 && cx < W + 8){ g.fillStyle = COL.accent; g.beginPath(); g.moveTo(cx - 5 * dpr, H); g.lineTo(cx + 5 * dpr, H); g.lineTo(cx, H - 8 * dpr); g.fill(); }
       (t.mem || []).forEach(function(m){ var mx2 = xOf(m.pos); if(mx2 > -8 && mx2 < W + 8){ g.fillStyle = COL.danger; g.beginPath(); g.moveTo(mx2 - 4 * dpr, 0); g.lineTo(mx2 + 4 * dpr, 0); g.lineTo(mx2, 7 * dpr); g.fill(); } });
+      (t.loops || []).forEach(function(l){ var a = xOf(l.a), b2 = xOf(l.b); if(b2 > 0 && a < W){ g.fillStyle = COL.good; g.globalAlpha = 0.8; g.fillRect(a, 0, b2 - a, 2 * dpr); g.fillRect(a, 0, dpr, 7 * dpr); g.globalAlpha = 1; } });
       g.font = "bold " + (9 * dpr) + "px system-ui,sans-serif"; g.textBaseline = "top";
       for(i = 0; i < 8; i++){
         var c = t.cues[i]; if(!c) continue;
@@ -16558,7 +16720,7 @@
       return [pk, Math.sqrt(sq / n)];
     }
     function meterPos(v){ return v > 1e-5 ? clamp((20 * Math.log(v) / Math.LN10 + 48) / 54, 0, 1) : 0; }
-    var meterBuf = null, lastLevels = 0, LEVELS = { ch:[], master:{ peak:0, rms:0, clip:false } };
+    var meterBuf = null, lastLevels = 0, LEVELS = { ch:[], master:{ peak:0, rms:0, clip:false } }, levAcc = { ch:[], master:{ peak:0, rms:0, clip:false } };
     function paintMeters(now){
       if(!ENG || !ENG.M || !UI.mx) return;
       if(!meterBuf) meterBuf = new Float32Array(1024);
@@ -16577,11 +16739,23 @@
         if(m.el.dataset.clip !== (clip ? "true" : "false")) m.el.dataset.clip = clip ? "true" : "false";
         return { peak:pk, rms:rms, clip:clip };
       }
-      var out = [];
-      for(var k = 0; k < M.ch.length; k++) out.push(one(M.ch[k].an, UI.mx.ch[k].meter, 0.999));
-      var ms = one(M.an, UI.mx.meter, 0.79);           // about where the limiter starts to hold the level down
-      LEVELS = { ch:out, master:ms };
-      if(now - lastLevels > 50){ lastLevels = now; emit("levels", LEVELS); }
+      // what is reported is the highest peak since the last report, so a short hit is not missed
+      var k, l;
+      for(k = 0; k < M.ch.length; k++){
+        l = one(M.ch[k].an, UI.mx.ch[k].meter, 0.999);
+        if(!levAcc.ch[k]) levAcc.ch[k] = { peak:0, rms:0, clip:false };
+        if(l.peak > levAcc.ch[k].peak) levAcc.ch[k].peak = l.peak;
+        if(l.rms > levAcc.ch[k].rms) levAcc.ch[k].rms = l.rms;
+        levAcc.ch[k].clip = l.clip;
+      }
+      l = one(M.an, UI.mx.meter, 0.79);                // about where the limiter starts to hold the level down
+      if(l.peak > levAcc.master.peak) levAcc.master.peak = l.peak;
+      if(l.rms > levAcc.master.rms) levAcc.master.rms = l.rms;
+      levAcc.master.clip = l.clip;
+      if(now - lastLevels > 50){
+        lastLevels = now; LEVELS = levAcc; levAcc = { ch:[], master:{ peak:0, rms:0, clip:false } };
+        emit("levels", LEVELS);
+      }
     }
     function frame(){
       UI.raf = 0;
@@ -16655,7 +16829,7 @@
     }
 
     // ---------- the library on screen ----------
-    var dragIds = null, RH = 24;
+    var dragIds = null, RH = 24, anP = {};
     var COLS = [
       { id:"s", label:"#", w:"36px", sort:null, title:"Analysed, and which deck it is on. In a playlist, click to go back to the playlist's own order." },
       { id:"t", label:"Title", w:"minmax(110px,2.3fr)", sort:"title" },
@@ -16824,7 +16998,10 @@
       lib.addEventListener("focusout", function(e){ if(!lib.contains(e.relatedTarget)) lib.dataset.keys = "false"; });
       LV.multi = {}; LV.manual = true;
       on("library", function(){ UI.listDirty = true; UI.treeDirty = true; });
-      on("analysis", function(d){ UI.listDirty = true; paintJob(); if(d && d.done) UI.infoDirty = true; });
+      on("analysis", function(d){
+        if(d && d.id){ if(d.done || d.error) delete anP[d.id]; else if(d.p !== undefined) anP[d.id] = d.p; }
+        UI.listDirty = true; paintJob(); if(d && d.done) UI.infoDirty = true;
+      });
       on("job", paintJob);
       on("load", function(){ if(LV.node === "related") UI.listDirty = true; UI.treeDirty = true; });
       on("master", function(){ if(LV.node === "related") UI.listDirty = true; });
@@ -17038,7 +17215,7 @@
         var st = "no", tip = "Not analysed yet";
         if(t.src && t.src.kind === "missing"){ st = "gone"; tip = "From a rekordbox file; the audio is not in the library"; }
         else if(t.gone){ st = "gone"; tip = "The file is no longer in its folder"; }
-        else if(aq.cur === t.id){ st = "run"; tip = "Being analysed"; }
+        else if(aq.cur === t.id || anP[t.id] !== undefined){ st = "run"; tip = "Being analysed"; r.dot.style.setProperty("--p", Math.round((anP[t.id] || 0.05) * 100) + "%"); }
         else if(t.analysed === ANALYSER_VERSION){ st = "ok"; tip = "Analysed: tempo, beat grid, waveform, loudness, key"; }
         else if(t.analysed === -1){ st = "err"; tip = t.anErr || "Could not be analysed"; }
         else if(isFL(t)){ st = "ok"; tip = "A First Loop song: tempo and grid are exact; it is rendered when loaded"; }
@@ -17117,7 +17294,10 @@
       p.textContent = ""; p._id = LV.selId;
       if(!t){ p.appendChild(el("div", "hint", "Select a track to see and edit its tags, rating, comment and beat grid.")); return; }
       var fl = isFL(t);
-      p.appendChild(el("h3", "", t.title)); p.appendChild(el("div", "sub", t.artist || (fl ? "First Loop" : "Unknown artist")));
+      var top = el("div", "dj-infotop"), tw = el("div", ""), im = el("img", "dj-art"); im.alt = ""; im.hidden = true;
+      tw.style.minWidth = "0"; tw.appendChild(el("h3", "", t.title)); tw.appendChild(el("div", "sub", t.artist || (fl ? "First Loop" : "Unknown artist")));
+      top.appendChild(im); top.appendChild(tw); p.appendChild(top);
+      artFor(t).then(function(url){ if(url && p._id === t.id){ im.src = url; im.hidden = false; } });
       var r = el("div", "rowx");
       decks.forEach(function(D){ var b = btn("", "Load on " + D.n); b.addEventListener("click", function(){ D.load(t.id); }); r.appendChild(b); });
       p.appendChild(r);
@@ -17406,6 +17586,7 @@
           setMaster:function(){ D.setMaster(); },
           setQuantise:function(on2){ D.setQuantise(on2); return D.quant; },
           setSlip:function(on2){ D.setSlip(on2); return D.slip; },
+          memory:function(action){ return D.memory(action || "set"); },
           setVinyl:function(on2){ D.setVinyl(on2); return D.vinyl; },
           jumpSize:function(b){ if(b > 0){ D.jumpBeats = b; D.dirty = true; } return D.jumpBeats; },
           state:function(){ return D.state(); }
@@ -17537,6 +17718,11 @@
         eng:function(){ return ENG; }, decks:function(){ return decks; }, ensureEngine:ensureEngine,
         forceFallback:function(on2){ forceFallback = !!on2; },
         workletURL:workletURL, prepare:prepare, runWorker:runWorker, aq:aq, busy:busy,
+        drawCost:function(n){
+          var t0 = nowMs(), k;
+          for(k = 0; k < n; k++) decks.forEach(function(D){ drawWave(D, UI.deck[D.i].wave); drawOverview(D, UI.deck[D.i].ov, UI.deck[D.i]); });
+          return (nowMs() - t0) / n;
+        },
         laws:{ eq:eqLaw, xf:xfLaw, trim:trimLaw, level:levelLaw, master:masterLaw },
         synth:function(n){
           // many made-up records, in memory only, to see how the list holds up

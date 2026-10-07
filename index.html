@@ -20948,7 +20948,7 @@
             var t = e.target;
             if(t === FMU.more){ if(e.isIntersecting && FM.on && FM.view === "browse" && !FM.err) fmLoad(false); return; }
             t._vis = e.isIntersecting;
-            if(e.isIntersecting && t.dataset.id && !FM.items[t.dataset.id]) setTimeout(function(){ if(t._vis && t.isConnected) fmNeed(t.dataset.id, t); }, 160);
+            if(e.isIntersecting && t.dataset.id && !FM.items[t.dataset.id]) setTimeout(function(){ if(t._vis && t.isConnected) fmNeed(t.dataset.id, t); }, 300);
           });
         }, { root:body, rootMargin:"160px 0px" });
       } catch(e){ FMU.io = null; }
@@ -21023,7 +21023,7 @@
           if(!FM.crate && !FM.genre && !FM.q && !T.list.some(function(t){ return !isFL(t); })){ FM.crate = "house"; FM.view = "crate"; }
         }
         fmFrame(); fmGo({});
-      } else { fmFrame(); if(FM.shown !== FM.view) fmRender(); }
+      } else { fmFrame(); if(FM.shown !== FM.view || FM.view === "credits") fmRender(); }
       fmFoot(); fmSto();
     }
     function fmPanel(kind, text, retry, label){
@@ -21187,9 +21187,9 @@
     // ---- the views ----
     function fmGo(o){
       o = o || {};
-      if(o.crate !== undefined){ FM.crate = fmCrateDef(o.crate) ? o.crate : ""; FM.view = FM.crate ? "crate" : "browse"; }
-      if(o.genre !== undefined){ FM.genre = fmGenre(o.genre) ? o.genre : ""; FM.view = "browse"; FM.crate = ""; }
       if(o.q !== undefined){ FM.q = String(o.q).slice(0, 80); FM.view = "browse"; FM.crate = ""; }
+      if(o.genre !== undefined){ FM.genre = fmGenre(o.genre) ? o.genre : ""; FM.view = "browse"; FM.crate = ""; }
+      if(o.crate !== undefined){ FM.crate = fmCrateDef(o.crate) ? o.crate : ""; FM.view = FM.crate ? "crate" : "browse"; }
       if(o.view === "credits" || o.view === "browse") FM.view = o.view;
       if(FMU.q && FMU.q.value !== FM.q && document.activeElement !== FMU.q) FMU.q.value = FM.q;
       fmFrame();
@@ -21463,7 +21463,7 @@
       },
       add:function(ref, o){
         var r = fmRefParse(ref);
-        return fmAdd(r.id, r.file).then(function(res){
+        return init().then(function(){ return fmAdd(r.id, r.file); }).then(function(res){
           if(!res.ok) throw new Error(res.why || "The download was stopped.");
           if(o && o.deck) return deckOf(o.deck).load(res.id).then(function(){ return res.id; });
           return res.id;
@@ -21481,12 +21481,13 @@
           FM.started = true;
           setNode(o.view === "credits" ? "credits" : "free");
           if(o.view === "credits") return fmAPI.state();
-          return Promise.resolve(fmGo({ genre:o.genre, q:o.q, crate:o.crate })).then(function(){ return fmAPI.state(); });
+          // a style or a crate named without a search starts from an empty search box
+          return Promise.resolve(fmGo({ genre:o.genre, q:o.q === undefined && (o.genre !== undefined || o.crate !== undefined) ? "" : o.q, crate:o.crate })).then(function(){ return fmAPI.state(); });
         });
       },
       state:function(){
-        return { open:FM.on, view:FM.view, genre:FM.genre, search:FM.q, crate:FM.crate, sort:FMS.sort, loading:FM.loading || !!(FM.cl && FM.cl.loading), showing:FM.view === "crate" ? ((FM.cl && FM.cl.rows) || []).length : FM.rows.length,
-                 found:FM.found, error:FM.err ? fmErrWords(FM.err) : (FM.cl && FM.cl.err ? fmErrWords(FM.cl.err) : ""), downloading:fmBusyJobs().length, inLibrary:fmFreeTracks().length, plain:FM.plain, requests:fmNet.sent };
+        return { open:FM.on, view:FM.view, genre:FM.genre, search:FM.q, crate:FM.crate, sort:FMS.sort, loading:FM.view === "browse" ? FM.loading : (FM.view === "crate" && !!(FM.cl && FM.cl.loading)), showing:FM.view === "crate" ? ((FM.cl && FM.cl.rows) || []).length : FM.rows.length,
+                 found:FM.found, error:FM.view === "browse" ? (FM.err ? fmErrWords(FM.err) : "") : (FM.view === "crate" && FM.cl && FM.cl.err ? fmErrWords(FM.cl.err) : ""), downloading:fmBusyJobs().length, inLibrary:fmFreeTracks().length, plain:FM.plain, requests:fmNet.sent };
       },
       cancel:fmCancelAll,
       credits:function(){ return fmLibCredits().map(function(c){ return { id:c.lib, title:c.title, artist:c.artist, licence:fmLicence(c.lic).name, source:fmItemURL(c.id), line:fmCreditLine(c) }; }); },

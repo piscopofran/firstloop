@@ -12578,7 +12578,7 @@
       nd = Math.min(4, snap.decks.length);
       o.deck_count = nd;
       if(snap.focus) o.sides = { left:snap.focus.left | 0, right:snap.focus.right | 0 };
-      if(snap.layout === "two of four") o.screen = "two of four";
+      if(snap.layout === "two of four" && !o.screen) o.screen = "two of four";
     }
     o.decks = snap.decks.slice(0, nd).map(function(d){
       var e = { deck:d.deck }, s = {};
@@ -18830,6 +18830,7 @@
          "CUE sets a starting point; the pads A to H keep eight more places per track."].forEach(function(t){ ol.appendChild(el("li", "", t)); });
         p.appendChild(ol);
         p.appendChild(el("p", "", "To hear a track before it goes out, choose Split cue or 4 channels under Output, then press the headphone button of that deck."));
+        p.appendChild(el("p", "", "Decks 2 | 4 in the top row switches between two decks and four. Two are enough to learn on. With four, decks 1 and 3 are on the left and decks 2 and 4 on the right, every waveform is stacked at the top, and the mixer has a channel for each in the order 3 1 2 4, as on a four-channel controller. Each deck shows its main controls; clicking a deck puts the rest of its controls (loop In and Out, jump, modes, memory cues, tempo) in the strip under the decks."));
         p.appendChild(el("p", "", "Tempo, beat grid and key are worked out by analysis. They are usually right and sometimes not: the Grid button on a deck opens the tools to correct them, and the key is labelled as a suggestion."));
       });
     }
@@ -20667,8 +20668,8 @@
         // above the jog wheel: slip and quantize on the left, deck select on the right
         b.C("slip", "b", ox + 13, y + 116, 17, 10, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop; with SHIFT, vinyl mode on or off", { fs:3.4 });
         b.C("quantize", "b", ox + 32, y + 116, 17, 10, "QUANT", "Quantize", "makes cues and loops snap to the nearest beat", { fs:3 });
-        b.C("deck_a", "b", ox + 208, y + 116, 21, 12, "DECK " + d, "DECK " + d + " button", "switches this side to deck " + d + ": every control on this side then works deck " + d, { fs:3.4, dg:"DECK 1 or 2 button" });
-        b.C("deck_b", "b", ox + 231, y + 116, 21, 12, "DECK " + other, "DECK " + other + " button", "switches this side to deck " + other + ": the same jog wheel, pads, tempo slider and buttons then work deck " + other + " (First Loop with four decks)", { fs:3.4, dg:"DECK 3 or 4 button" });
+        b.C("deck_a", "b", ox + 208, y + 116, 21, 12, "DECK " + d, "DECK " + d + " button", "switches this side to deck " + d + ": every control on this side then works deck " + d, { fs:3.4, dg:"DECK 1 or 2" });
+        b.C("deck_b", "b", ox + 231, y + 116, 21, 12, "DECK " + other, "DECK " + other + " button", "switches this side to deck " + other + ": the same jog wheel, pads, tempo slider and buttons then work deck " + other + " (First Loop with four decks)", { fs:3.4, dg:"DECK 3 or 4" });
         b.C("jog", "j", ox + 130, y + 216, 94, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the outer edge to push it a little faster or slower");
         // bottom left: shift, cue, play
         b.C("shift", "r", ox + 15, y + 262, 6, 0, "S", "Shift", "held down, gives the other buttons their second job", { fs:4 });
@@ -20745,8 +20746,8 @@
           var tail = " (deck " + d + ")";
           b.at("Deck " + d, "deck" + d, tail, "d" + d + ".");
           if(chans === 4){
-            b.C("deck_a", "b", ox + 92, 8, 30, 11, "DECK " + d, "DECK " + d + " button", "switches this side to deck " + d + ": every control on this side then works deck " + d, { fs:3.6, dg:"DECK 1 or 2 button" });
-            b.C("deck_b", "b", ox + 124, 8, 30, 11, "DECK " + (d + 2), "DECK " + (d + 2) + " button", "switches this side to deck " + (d + 2) + ": the same jog wheel, pads and buttons then work deck " + (d + 2), { fs:3.6, dg:"DECK 3 or 4 button" });
+            b.C("deck_a", "b", ox + 92, 8, 30, 11, "DECK " + d, "DECK " + d + " button", "switches this side to deck " + d + ": every control on this side then works deck " + d, { fs:3.6, dg:"DECK 1 or 2" });
+            b.C("deck_b", "b", ox + 124, 8, 30, 11, "DECK " + (d + 2), "DECK " + (d + 2) + " button", "switches this side to deck " + (d + 2) + ": the same jog wheel, pads and buttons then work deck " + (d + 2), { fs:3.6, dg:"DECK 3 or 4" });
           } else b.T(ox + 130, 16, "DECK " + d, 7, "middle");
           b.C("jog", "j", ox + 92, 96, 62, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the edge to push it a little faster or slower");
           b.C("tempo", "fv", ox + 172, 40, 13, 96, "TEMPO", "Tempo slider", "makes the track faster or slower");
@@ -20959,7 +20960,8 @@
         g.seen[suf] = true;
         g.sufs.push({ s:suf, l:c.o.dg || c.o.run || c.s, run:!!c.o.run });
       });
-      var out = [m.title + (m.exact ? "" : " (typical layout)") + ". Control ids, X = the word before each name:"];
+      // a unit with DECK buttons: its left side works deck 1 or 3 and its right side deck 2 or 4, with the same controls
+      var out = [m.title + (m.exact ? "" : " (typical layout)") + ". Control ids, X = the word before each name" + (m.by["d1.deck_b"] ? " (left side works deck 1 or 3, right side 2 or 4)" : "") + ":"];
       groups.forEach(function(g){
         var parts = [], done = {};
         g.sufs.forEach(function(a){
@@ -20973,8 +20975,7 @@
           if(whole) parts.push(base + nums[0] + ".." + base + nums[nums.length - 1] + " " + a.l);
           else nums.forEach(function(n){ parts.push(base + n + " " + a.l); });
         });
-        var four = !!m.by["d1.deck_b"];
-        var head = g.k === "dN." ? (four ? "DECK d1.X (left: deck 1 or 3) d2.X (right: deck 2 or 4)" : "DECK d1.X (left) d2.X (right)") : (g.k === "mix.chN." ? "CHANNEL mix.chN.X, N=" + g.pres.map(function(p){ return p.replace(/\D/g, ""); }).sort().join(",") : g.sec.toUpperCase() + " " + g.k + "X");
+        var head = g.k === "dN." ? "DECK d1.X (left) d2.X (right)" : (g.k === "mix.chN." ? "CHANNEL mix.chN.X, N=" + g.pres.map(function(p){ return p.replace(/\D/g, ""); }).sort().join(",") : g.sec.toUpperCase() + " " + g.k + "X");
         out.push(head + ": " + parts.join("; "));
       });
       return out.join("\n");
@@ -21437,7 +21438,7 @@
     var TURN_SECONDS = 1.8;       // one turn of a record at 33 1/3
     var SX_FLX4 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x04, 0x05, 0x00, 0x50, 0x02, 0xF7];   // DDJ-FLX4: asked again every 200 ms
     var SX_400 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x02, 0x06, 0x00, 0x03, 0x01, 0xF7];    // DDJ-400: asked once
-    var set = { jog:1, flip:false, leds:true, builtin:true, sysex:false, pickup:true };
+    var set = { jog:1, flip:false, leds:true, builtin:true, sysex:false, pickup:true, conv:false };      // conv: the controller has been seen sending on channels 3 or 4
     var maps = {};
     function saveSet(){ try { window.localStorage.setItem(SET_KEY, JSON.stringify(set)); } catch(e){} }
     function saveMaps(){ try { window.localStorage.setItem(MAP_KEY, JSON.stringify(maps)); } catch(e){} }
@@ -21505,6 +21506,11 @@
     var vinyl = {}, shift = {}, loopHold = {}, hinted = false, hintEl = null;
     // which deck each side of the controller last worked (index 0 left, 1 right), and decks whose tempo slider has to be picked up
     var sideNow = [0, 0], tempoNeed = {}, warned2 = false;
+    // If a controller does NOT move a side to channel 3 or 4 by itself, a learned DECK button does it here instead:
+    // layer[side] is the deck that side's channel 1 or 2 messages are for. It only applies until a message has ever
+    // arrived on channel 3 or 4 (or their pad channels) from this controller: from then on the channel alone decides.
+    var layer = [0, 0];
+    function layered(n){ return n <= 2 && !set.conv && layer[n - 1] === n + 2 ? n + 2 : n; }
     function deckFor(n){
       if(n <= DJ.deckCount()) return DJ.deck(n);
       if(!warned2){
@@ -21553,7 +21559,7 @@
     }
     function pickReset(){
       Object.keys(pk).forEach(function(t){ if(pk[t].mark) pickMark(t, null); });
-      pk = {}; tempoNeed = {}; sideNow = [0, 0];
+      pk = {}; tempoNeed = {}; sideNow = [0, 0]; layer = [0, 0];
     }
     var CH_DEF = { trim:0.5, eq_hi:0.5, eq_mid:0.5, eq_low:0.5, filter:0.5, fader:1 };
     function chValue(n, a){
@@ -21582,8 +21588,9 @@
       var m = /^d([1-4])\.([a-z_]+?)(\d?)$/.exec(t), d, n, a, k, spt;
       if(typeof DJ === "undefined" || !DJ) return;
       if(m){
-        n = +m[1]; a = m[2]; k = m[3] ? +m[3] - 1 : -1; d = deckFor(n);
+        n = layered(+m[1]); a = m[2]; k = m[3] ? +m[3] - 1 : -1; d = deckFor(n);
         if(!d) return;
+        t = "d" + n + "." + m[2] + m[3];
         if(ph !== "up") sideSeen(n, ph);
         if(a !== "shift") hint();
         if(k >= 0){
@@ -21658,7 +21665,9 @@
         case "browse.load2": if(ph === "down"){ hint(); DJ.init(); DJ.library.loadSelected(2); } break;
         case "browse.load3": case "browse.load4": if(ph === "down"){ hint(); DJ.init(); if(deckFor(+t.slice(-1))) DJ.library.loadSelected(+t.slice(-1)); } break;
         case "fx.t3": case "fx.t4": if(ph === "down" && +t.slice(-1) <= DJ.deckCount()) mx.fx.target(+t.slice(-1)); break;
-        case "deck.l1": case "deck.l3": case "deck.r2": case "deck.r4": if(ph === "down"){ hint(); DJ.init(); if(deckFor(+t.slice(-1))) sideSeen(+t.slice(-1)); } break;
+        case "deck.l1": case "deck.l3": case "deck.r2": case "deck.r4":
+          if(ph === "down"){ hint(); DJ.init(); n = +t.slice(-1); if(deckFor(n)){ layer[(n - 1) % 2] = n; sideSeen(n); } }
+          break;
         case "fx.on": if(ph === "down") mx.fx.on(); break;
         case "fx.depth": mx.fx.depth(v); break;
         case "fx.t1": if(ph === "down") mx.fx.target(1); break;
@@ -21998,6 +22007,8 @@
       }
       var key = (cc ? "c" : "n") + ch + "." + num;
       if(cmd === 0x80) st = 0x90 | ch;                       // a note-off is the same button as its note-on
+      // a message on channel 3 or 4, or on their pad channels: this controller moves its sides between decks by itself
+      if(!set.conv && (ch === 2 || ch === 3 || (note && ch >= 11 && ch <= 14)) && profileFor(dv.name, dv.maker)){ set.conv = true; saveSet(); }
       // 1. a walk-through or a single "learn" that is waiting
       if(walk && walk.live && walkOn()){
         walkMsg(dv, key, st, num, val, cc, on);
@@ -22065,7 +22076,7 @@
         queue(t, "abs", v.fine ? ((v.m << 7) | v.l) / 16383 : v.m / 127);
       }
       else if(k === "jog"){
-        var n = +t.charAt(1), want = e.vin;
+        var n = layered(+t.charAt(1)), want = e.vin;
         if(n > 2 && !fourDecks()){ doNow(t, "rel", 0); return; }
         queue(t, "rel", val - 64, want === undefined ? null : function(){
           if(vinyl[n] === undefined){ try { vinyl[n] = !!DJ.deck(n).state().vinyl; } catch(err){} }
@@ -22421,6 +22432,7 @@
     function walkGo(delta){
       if(!walk) return;
       walk.keep = -1;
+      walk.spill = null;                 // going back to a control: it is listened to at once
       if(walk.mode === "check" && delta > 0){
         var sp = {}, stp = walk.list[walk.i], pr = profileFor(walk.dev, walk.maker);
         if(walk.cap) walk.cap.rows.forEach(function(r){ sp[rowKey(r.st, r.num)] = 1; });
@@ -22429,7 +22441,10 @@
       }
       if(walk.cap && walk.cap.timer) clearTimeout(walk.cap.timer);
       walk.cap = null;
+      var wasId = walk.list[walk.i] ? walk.list[walk.i].id : "";
       walk.i = Math.max(0, Math.min(walk.list.length, walk.i + delta));
+      // the next step is about the same control (the jog wheel three times over): everything it sends is wanted
+      if(walk.list[walk.i] && walk.list[walk.i].id === wasId) walk.spill = null;
       walk.done = walk.i >= walk.list.length;
       walk.live = !walk.done;
       walkSave();
@@ -22828,7 +22843,8 @@
       }
       u.stop.textContent = "Stop for now";
       u.skip.textContent = check ? "Nothing happens: next" : "Skip this one";
-      u.step.textContent = (check ? "Controller check" + (walk.scope === "unknown" ? " (still unknown)" : "") : "Teaching " + walk.dev) + " · " + step.sec + " " + pos + " of " + tot + " · " + (walk.i + 1) + " of " + n + " in all";
+      u.step.textContent = check ? "Controller check" + (walk.scope === "unknown" ? " (still unknown)" : "") + " · " + step.sec + " " + pos + " of " + tot + " · " + (walk.i + 1) + " of " + n + " in all"
+        : "Teaching " + walk.dev + " · " + step.sec + " · " + (walk.i + 1) + " of " + n;
       var m = GEARMAP._map(walk.gk), c = m && m.by[step.id], ti = check ? null : tinfo(step.t), prev = walk.res[walk.i];
       if(check) u.ask.textContent = step.say;
       else u.ask.textContent = ti.kind === "abs" ? "Move the knob or fader you want for: " + ti.name + "."
@@ -22949,7 +22965,7 @@
         var s0 = JSON.parse(window.localStorage.getItem(SET_KEY) || "null");
         if(s0 && typeof s0 === "object"){
           if(s0.jog > 0) set.jog = Math.max(0.25, Math.min(4, +s0.jog));
-          set.flip = !!s0.flip; set.leds = s0.leds !== false; set.builtin = s0.builtin !== false; set.sysex = !!s0.sysex; set.pickup = s0.pickup !== false;
+          set.flip = !!s0.flip; set.leds = s0.leds !== false; set.builtin = s0.builtin !== false; set.sysex = !!s0.sysex; set.pickup = s0.pickup !== false; set.conv = !!s0.conv;
         }
         var m0 = JSON.parse(window.localStorage.getItem(MAP_KEY) || "null");
         if(m0 && typeof m0 === "object") Object.keys(m0).forEach(function(k){ var c = cleanMap(m0[k]); if(c) maps[k] = c; });

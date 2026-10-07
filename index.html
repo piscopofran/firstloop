@@ -12701,8 +12701,8 @@
     bigB.addEventListener("click", function(){ asstGmEnlarge(g, ids, bigB); });
     head.appendChild(bigB);
     box.appendChild(head);
-    var fig = document.createElement("div"); fig.className = "asst-gm-fig"; fig.setAttribute("role", "img");
-    fig.setAttribute("aria-label", "Diagram of " + inf.title + " with " + ids.length + (ids.length === 1 ? " control" : " controls") + " marked");
+    // the drawing brings its own names for a screen reader; the legend below says the same in words
+    var fig = document.createElement("div"); fig.className = "asst-gm-fig";
     fig.appendChild(svg); box.appendChild(fig);
     box.appendChild(asstGmLegend(g, ids, by));
     asstTouchWatch();
@@ -12714,7 +12714,8 @@
       var c = by["=" + id], li = document.createElement("li"); li.dataset.id = id;
       var n = document.createElement("b"); n.className = "asst-gm-n"; n.textContent = String(i + 1);
       var tx = document.createElement("span"); tx.className = "asst-gm-tx";
-      var nm = document.createElement("strong"); nm.textContent = c.label + (c.section ? " (" + c.section + ")" : "");
+      // a label that already says where it is ("Play / pause (deck 1)") is not given its section again
+      var nm = document.createElement("strong"); nm.textContent = c.label + (c.section && c.label.indexOf("(") < 0 ? " (" + c.section + ")" : "");
       var cp = document.createElement("span"); cp.className = "asst-gm-cap";
       cp.textContent = (g.cap && typeof g.cap[id] === "string") ? g.cap[id] : c.does;
       var hit = document.createElement("i"); hit.className = "asst-gm-hit"; hit.textContent = "touched"; hit.hidden = true;
@@ -14337,7 +14338,7 @@
     var same = hits.filter(function(c){ return c.label.toLowerCase() === hits[0].label.toLowerCase(); }).slice(0, 4), c0 = same[0], inf = asstGearInfo(key);
     var secs = same.map(function(c){ return c.section; }).filter(function(s2, i, a){ return s2 && a.indexOf(s2) === i; });
     return { t:(inf.exact ? "On the " + inf.title : "On a typical controller of this kind") + ", " + c0.label +
-        (secs.length ? " (" + secs.join(", ") + ")" : "") + (c0.does ? ": " + c0.does : " is the control marked on the diagram.") +
+        (secs.length && c0.label.indexOf("(") < 0 ? " (" + secs.join(", ") + ")" : "") + (c0.does ? ": " + c0.does : " is the control marked on the diagram.") +
         (same.length < hits.length ? "\n\nOther controls match those words too; name the section for a closer answer." : ""),
       acts:[{ type:"show_controls", controls:same.map(function(c){ return c.id; }) }] };
   }

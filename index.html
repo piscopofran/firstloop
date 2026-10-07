@@ -1748,7 +1748,7 @@
   <div class="dock-in">
     <span class="brand">
       <span class="wordmark">First&nbsp;Loop</span>
-      <span class="build">v30</span>
+      <span class="build">v31</span>
       <button class="lvl" id="lvlchip" type="button" hidden title="Go to the controls opened most recently"></button>
     </span>
     <div class="transport">
@@ -3911,7 +3911,7 @@
   // Nothing here identifies anybody. It records what happened in the app, nothing about the person,
   // and it is never transmitted: it sits in this browser until someone presses a send button.
   var LOG = {
-    build: "v30",
+    build: "v31",
     started: Date.now(),
     tour: { reached: 0, finished: false, skipped: false, stepMs: {} },
     asked: 0, applied: 0, whyOpened: 0,
@@ -21119,6 +21119,7 @@
           case "reloop": if(ph === "down") d.reloop(); break;
           case "loop_auto": if(ph === "down") d.autoLoop(4); break;
           case "loop_halve": if(ph === "down") d.loopHalve(); break;
+          case "slip": if(ph === "down") d.setSlip(); break;
           case "loop_double": if(ph === "down") d.loopDouble(); break;
         }
         return;
@@ -21217,6 +21218,12 @@
         A(N, 0x50, "reloop", "reloop", "btn", { sh:1, led:1 });
         A(N, 0x58, "sync", "sync", "btn", { led:1 });
         A(N, 0x5C, "sync", "master", "btn", { long:1 });
+        if(grv6){                    // from the owner's controller check, 7 Oct 2026
+          A(N, 0x40, "slip", "slip", "btn");
+          A(N, 0x1B, "mode_hotcue", "", "ign", { why:"the pad mode is kept inside the controller; the pads already send hot cue messages" });
+          A(N, 0x1A, "master_tempo", "", "ign", { why:"Master Tempo (key lock) is not in First Loop yet" });
+          A(N, 0x65, "key_sync", "", "ign", { why:"Key Sync is not in First Loop yet" });
+        }
         // the mixer strip of this channel
         if(live){
           add(N, 0x54, "mix.ch" + (n + 1) + ".cue", "mix.ch" + (n + 1) + ".cue", "btn", { led:1 });
@@ -21242,6 +21249,11 @@
       // the middle: crossfader, headphones, browse
       pair(0xB6, 0x1F, "mix.xfader", "mix.xfader");
       pair(0xB6, 0x0C, "mix.hp_mix", "mix.hp_mix");
+      if(grv6){                      // from the owner's controller check, 7 Oct 2026
+        pair(0xB6, 0x08, "mix.master", "mix.master");
+        add(0xB6, 0x09, "mix.booth", "", "ign", { why:"the booth output is not in First Loop" });
+        add(0xB6, 0x29, "mix.booth", "", "ign", { why:"the booth output is not in First Loop" });
+      }
       if(grv6) add(0xB6, 0x0D, "mix.hp_level", "mix.hp_level", "abs");
       pair(0xB6, 0x17, "mix.ch1.filter", "mix.ch1.filter", { fam:1 });
       pair(0xB6, 0x18, "mix.ch2.filter", "mix.ch2.filter", { fam:1 });
@@ -21667,7 +21679,7 @@
       ["Mixer", "mix.ch1.trim"], [0, "mix.ch1.eq_hi"], [0, "mix.ch1.eq_mid"], [0, "mix.ch1.eq_low"], [0, "mix.ch1.filter"], [0, "mix.ch1.cue"], [0, "mix.ch1.fader"], [0, "mix.xfader"],
       [0, "mix.master"], [0, "mix.booth"], [0, "mix.hp_mix"], [0, "mix.hp_level"],
       ["Browse", "browse.knob", "Turn the big browse knob three clicks to the right, then three clicks to the left.", "knob"], [0, "browse.knob", "Press the big browse knob down once.", "press"], [0, "browse.load1"], [0, "browse.load2"],
-      ["Beat FX", "fx.on"], [0, "fx.depth"], [0, "fx.select", "Turn FX SELECT one position at a time through all its positions."],
+      ["Beat FX", "fx.on"], [0, "fx.depth"], [0, "fx.select", "Turn FX SELECT one position at a time through all its positions. Take your time: it moves on about three seconds after you stop.", "", 0, 1],
       ["Deck 2 (right side)", "d2.play"], [0, "d2.cue"], [0, "d2.jog", "Turn the top of the right jog wheel a little.", "jog$|jog_bend|jog_touch"], [0, "d2.tempo"], [0, "d2.pad1"], [0, "mix.ch2.fader"],
       ["Groove Circuit", "d1.gc_swap1"], [0, "d1.gc_release"]
     ];
@@ -21753,8 +21765,27 @@
       if(equipPanel) equipPanel.removeAttribute("data-walk");
       paint();
     }
+    function rowKey(st, num){ return ((st & 0xF0) === 0xB0 ? "c" : "n") + hx(st).toLowerCase() + "." + num; }
+    // the name of a different control that the built-in table says these messages belong to, or ""
+    function walkOther(step, rows){
+      var p = profileFor(walk.dev, walk.maker), m = GEARMAP._map(walk.gk), i, e, mine = false, other = "";
+      if(!p || !m || !rows) return "";
+      for(i = 0; i < rows.length; i++){
+        e = p.by[rowKey(rows[i].st, rows[i].num)];
+        if(!e || !e.id) continue;
+        if(e.id === step.id || (step.sh && /\.shift$/.test(e.id))) mine = true;
+        else if(!other && m.by[e.id]) other = m.by[e.id].label;
+      }
+      return mine ? "" : other;
+    }
     function walkGo(delta){
       if(!walk) return;
+      if(walk.mode === "check" && delta > 0){
+        var sp = {}, stp = walk.list[walk.i], pr = profileFor(walk.dev, walk.maker);
+        if(walk.cap) walk.cap.rows.forEach(function(r){ sp[rowKey(r.st, r.num)] = 1; });
+        if(pr && stp) pr.list.forEach(function(e){ if(e.id === stp.id) sp[e.key] = 1; });
+        walk.spill = sp; walk.spillUntil = Date.now() + 2500;
+      }
       if(walk.cap && walk.cap.timer) clearTimeout(walk.cap.timer);
       walk.cap = null;
       walk.i = Math.max(0, Math.min(walk.list.length, walk.i + delta));
@@ -21772,7 +21803,7 @@
     function capRow(cap, st, num){
       var k = hx(st) + " " + hx(num), i;
       for(i = 0; i < cap.rows.length; i++) if(cap.rows[i].k === k) return cap.rows[i];
-      var r = { k:k, lo:127, hi:0, n:0, sum:0, sum2:0, rep:0, last:-1 };
+      var r = { k:k, st:st, num:num, lo:127, hi:0, n:0, sum:0, sum2:0, rep:0, last:-1 };
       cap.rows.push(r);
       return r;
     }
@@ -21787,6 +21818,7 @@
       var step = walk.list[walk.i];
       if(!step || walk.done) return;
       if(walk.dev && dv.name !== walk.dev && walk.mode !== "one") return;
+      if(walk.mode === "check" && walk.spill && Date.now() < walk.spillUntil && walk.spill[key]) return;   // the control of the step before, still moving
       var cap = walk.cap || (walk.cap = { rows:[], keys:[], vals:[], t0:Date.now(), timer:null, first:key, firstCC:cc });
       if(walk.mode === "check"){
         var r = capRow(cap, st, num);
@@ -21806,8 +21838,16 @@
           if(walk !== mine || walk.cap !== cap) return;
           walk.res[walk.i] = { state:"got", got:cap.rows };
           walkPaintGot(true);
+          // a control the table knows as something else: say so and wait, rather than moving on
+          var other = walkOther(step, cap.rows);
+          if(other && !cap.again){
+            if(UI.got){ UI.got.textContent = "That was " + other + ", not the control this step asks for. Look at the ringed control in the drawing and try again, or press Nothing happens: next to leave this one."; UI.got.dataset.ok = "0"; }
+            walk.cap = null; walk.retry = (walk.retry || 0) + 1;
+            walkSave();
+            return;
+          }
           cap.timer = setTimeout(function(){ if(walk === mine && walk.cap === cap) walkGo(1); }, 500);
-        }, step.slow ? 1600 : 650);
+        }, step.slow ? 3000 : 650);
         walkPaintGot(false);
         return;
       }

@@ -1740,6 +1740,176 @@
   @media (min-width:700px) and (max-width:1099.98px){ .dj-info{width:200px;} }
   @media (prefers-reduced-motion:reduce){ .dj-read.time[data-warn="true"] .big{animation:none;} }
   /* ===== /DJ area (css) ===== */
+  /* ===== DJ free music (css) ===== */
+  /* The Free music catalogue and the Credits view. They sit over the track
+     table, in the same place, and use the same row height, type and colours.
+     Only the shared colour variables. */
+  .dj-lib[data-fm="true"] > .dj-tree{grid-column:1;grid-row:1;}
+  .dj-lib[data-fm="true"] > .dj-main{grid-column:2;grid-row:1;visibility:hidden;}
+  .dj-lib[data-fm="true"] > .dj-info{grid-column:3;grid-row:1;visibility:hidden;}
+  .dj[data-fmbig="true"] .dj-waves,.dj[data-fmbig="true"] .dj-console{display:none;}
+  .dj[data-fmbig="true"] > .dj-lib{grid-row-end:-1;}
+  .dj-free{grid-column:2 / -1;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);
+    container-type:inline-size;container-name:fm;
+    --fmr:20px minmax(130px,2.4fr) minmax(90px,1.5fr) 46px 76px 64px 56px 104px;
+    --fmt:20px 24px minmax(120px,2.4fr) minmax(80px,1.5fr) 50px 62px 190px;}
+  .dj-free-tools{display:flex;align-items:center;gap:5px;padding:4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;overflow:hidden;}
+  .dj-free-tools h2{font-size:12px;font-weight:700;margin:0 4px 0 2px;white-space:nowrap;}
+  .dj-free-tools .dj-i.q{flex:1 1 150px;min-width:80px;max-width:300px;}
+  .dj-free-tools .gap{flex:1 1 0;}
+  .dj-free-tools .help{flex:none;}
+  .dj-free-back{display:none;}
+  .dj-free > *{flex:none;}
+  .dj-free-chips{position:relative;display:flex;align-items:center;gap:4px;padding:4px 30px 4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;
+    overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);}
+  .dj-free-chips::-webkit-scrollbar{display:none;}
+  .dj-free-chips .dj-l{flex:none;}
+  .dj-free-chips .dj-l{margin:0 2px 0 2px;}
+  .dj-free-chips .sep{width:1px;height:16px;background:var(--line-2);margin:0 5px;flex:none;}
+  .dj-chip{appearance:none;cursor:pointer;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);border-radius:10px;height:20px;padding:0 8px;
+    font-size:11px;font-weight:500;white-space:nowrap;flex:none;}
+  .dj-chip:hover{color:var(--ink);border-color:var(--ink-3);background:var(--surface-2);}
+  .dj-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;}
+  .dj-chip.crate{border-radius:var(--r);border-style:dashed;color:var(--ink);}
+  .dj-chip.crate[aria-pressed="true"]{border-style:solid;}
+  .dj-free-head{display:grid;grid-template-columns:var(--fmr);background:var(--surface);border-bottom:1px solid var(--line-2);height:22px;align-items:center;padding-right:var(--sbw,0px);}
+  .dj-free-head span{padding:0 6px;font-size:10.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line);height:22px;line-height:22px;}
+  .dj-free-head span:last-child{border-right:0;}
+  .dj-free-head .r,.fm-r .r,.fm-t .r{text-align:right;}
+  .dj-free > .dj-free-body{flex:1 1 0;overflow-y:scroll;overflow-x:hidden;min-height:0;outline:none;position:relative;}
+  .dj-lic{display:inline-block;flex:none;font-size:9px;font-weight:700;letter-spacing:.04em;line-height:13px;padding:0 3px;border-radius:2px;white-space:nowrap;
+    border:1px solid var(--ink-3);color:var(--ink-2);text-decoration:none;vertical-align:1px;}
+  .dj-lic[data-code="by-sa"]{border-color:var(--accent);color:var(--accent);}
+  .dj-lic[data-code="cc0"],.dj-lic[data-code="pdm"]{border-color:var(--good);color:var(--good);}
+  a.dj-lic:hover{background:var(--surface-2);color:var(--ink);}
+  .dj-row2 .c-t[data-lic]::after{content:attr(data-lic);display:inline-block;font-size:9px;font-weight:700;letter-spacing:.04em;line-height:13px;padding:0 3px;margin-left:7px;
+    border:1px solid var(--ink-3);border-radius:2px;color:var(--ink-2);vertical-align:1px;}
+  /* a release, and the tracks under it */
+  .fm-rel{border-bottom:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto var(--rh);}
+  .fm-r{display:grid;grid-template-columns:var(--fmr);align-items:center;height:var(--rh);cursor:pointer;}
+  .fm-r:hover{background:var(--surface);}
+  .fm-rel[data-open="true"] > .fm-r{background:var(--raised);box-shadow:inset 2px 0 0 var(--accent);}
+  .fm-rel[data-off="true"] > .fm-r > span{color:var(--ink-3);}
+  .fm-r > span,.fm-t > span{padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .fm-r .tw{appearance:none;border:0;background:transparent;color:var(--ink-2);cursor:pointer;width:20px;height:var(--rh);padding:0;font-size:9px;}
+  .fm-rel[data-open="true"] .tw{color:var(--ink);transform:rotate(90deg);}
+  .fm-r .c-t{font-weight:500;}
+  .fm-r .c-a,.fm-t .c-a{color:var(--ink-2);}
+  .fm-r .c-y,.fm-r .c-n,.fm-r .c-d,.fm-t .c-l,.fm-t .c-z,.fm-t .c-n{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);}
+  .fm-r .c-n i{font-style:normal;color:var(--ink-3);}
+  .fm-r .c-x,.fm-t .c-x{display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:0 4px;overflow:visible;}
+  .fm-r .c-x .dj-b,.fm-t .c-x .dj-b{height:18px;padding:0 6px;font-size:10.5px;}
+  .fm-r .c-x .dj-b{visibility:hidden;}
+  .fm-r:hover .c-x .dj-b,.fm-rel[data-open="true"] .fm-r .c-x .dj-b,.fm-r .c-x .dj-b:focus-visible{visibility:visible;}
+  .fm-tracks{background:var(--surface);border-top:1px solid var(--line);padding:0 0 2px;}
+  .fm-t{display:grid;grid-template-columns:var(--fmt);align-items:center;height:var(--rh);border-bottom:1px solid var(--line);}
+  .fm-tracks .fm-t:last-of-type{border-bottom:0;}
+  .fm-t:hover{background:var(--surface-2);}
+  .fm-t .c-n{text-align:right;padding:0 2px 0 0;color:var(--ink-3);font-size:10.5px;}
+  .fm-t .c-p{padding:0 2px;overflow:visible;}
+  .fm-pv{appearance:none;cursor:pointer;width:20px;height:18px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--surface-2);color:var(--ink);padding:0;position:relative;display:block;}
+  .fm-pv::before{content:"";position:absolute;left:7px;top:4px;border-style:solid;border-width:4px 0 4px 6.5px;border-color:transparent transparent transparent currentColor;}
+  .fm-pv[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on-accent);}
+  .fm-pv[aria-pressed="true"]::before{left:6px;top:5px;border:0;width:6px;height:6px;background:currentColor;}
+  .fm-pv:hover{border-color:var(--ink-3);}
+  .fm-t .c-t{font-weight:500;}
+  .fm-t .c-t small{font-weight:400;font-size:11px;color:var(--ink-3);margin-left:8px;}
+  .fm-t .c-x .ld{width:18px;padding:0;font-weight:700;font-size:10px;}
+  .fm-t .c-x .in{color:var(--good);font-weight:600;font-size:11px;margin-right:2px;}
+  .fm-t .c-x .why{color:var(--ink-3);font-size:11px;overflow:hidden;text-overflow:ellipsis;}
+  .fm-t .c-x .why.err{color:var(--danger);}
+  .fm-t .c-x .bar{flex:1 1 auto;height:4px;background:var(--raised);border-radius:2px;overflow:hidden;min-width:36px;}
+  .fm-t .c-x .bar i{display:block;height:100%;width:0;background:var(--accent);}
+  .fm-t .c-x .pc{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);min-width:30px;text-align:right;}
+  .fm-note{padding:5px 8px 6px 46px;color:var(--ink-3);font-size:11px;line-height:1.45;user-select:text;-webkit-user-select:text;}
+  .fm-note a,.dj-free-panel a,.dj-free-cred a,.dj-free-pop a,.dj-free-info a{color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:2px;}
+  .fm-note a:hover,.dj-free-panel a:hover,.dj-free-cred a:hover,.dj-free-pop a:hover,.dj-free-info a:hover{color:var(--ink);text-decoration-color:var(--accent);}
+  .fm-more{display:flex;align-items:center;justify-content:center;gap:10px;min-height:34px;padding:6px 10px;color:var(--ink-3);font-size:11.5px;}
+  .dj-free-panel{margin:10px 12px;padding:10px 12px;border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:var(--r);background:var(--surface);
+    color:var(--ink-2);font-size:12px;line-height:1.5;max-width:84ch;user-select:text;-webkit-user-select:text;}
+  .dj-free-panel[data-kind="err"]{border-left-color:var(--danger);}
+  .dj-free-panel p{margin:0 0 6px;}
+  .dj-free-panel strong{color:var(--ink);}
+  .dj-free-panel .rowx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+  .dj-free-cratehead{display:flex;align-items:center;gap:10px;padding:6px 8px;background:var(--surface);border-bottom:1px solid var(--line);}
+  .dj-free-cratehead .tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .dj-free-cratehead b{font-size:12.5px;color:var(--ink);}
+  .dj-free-cratehead span{font-size:11.5px;color:var(--ink-2);line-height:1.4;}
+  .dj-free-cratehead .dj-b{flex:none;height:24px;}
+  .dj-free-go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;}
+  .dj-free-go:hover{background:var(--accent);border-color:var(--ink);}
+  .dj-free-go:disabled{background:var(--surface-2);border-color:var(--line-2);color:var(--ink-2);opacity:1;}
+  .dj-free-foot{display:flex;align-items:center;gap:10px;padding:3px 8px;background:var(--surface);border-top:1px solid var(--line-2);font-size:11px;color:var(--ink-2);min-width:0;height:22px;}
+  .dj-free-foot span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .dj-free-foot .st{flex:1 1 auto;}
+  .dj-free-foot .dl{color:var(--ink);flex:0 1 auto;}
+  .dj-free-foot .sto{color:var(--ink-3);flex:0 1 auto;}
+  .dj-free-foot .dj-b{height:18px;font-size:10.5px;flex:none;}
+  /* credits */
+  .dj-free-cred{padding:10px 12px 18px;max-width:980px;font-size:12px;user-select:text;-webkit-user-select:text;}
+  .dj-free-cred h3{font-size:13px;font-weight:700;margin:14px 0 2px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line-2);padding-bottom:4px;}
+  .dj-free-cred h3:first-child{margin-top:0;}
+  .dj-free-cred h3 span{flex:1 1 auto;}
+  .dj-free-cred h3 .dj-b{font-weight:500;}
+  .dj-free-cred p{margin:4px 0 6px;color:var(--ink-2);line-height:1.5;max-width:92ch;}
+  .dj-free-cred .mix{border-bottom:1px solid var(--line);padding:5px 0;}
+  .dj-free-cred .mix .hd{display:flex;align-items:center;gap:10px;}
+  .dj-free-cred .mix .hd b{font-weight:600;}
+  .dj-free-cred .mix .hd span{flex:1 1 auto;color:var(--ink-3);font-size:11px;}
+  .dj-free-cred pre,.dj-free-pop pre{margin:4px 0 0;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
+    background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:5px 7px;max-height:180px;overflow:auto;}
+  .dj-free-cred .cr{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.4fr) auto auto;gap:0 10px;align-items:center;min-height:var(--rh);border-bottom:1px solid var(--line);}
+  .dj-free-cred .cr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .dj-free-cred .cr .a{color:var(--ink-2);}
+  .dj-free-cred .cr a:not(.dj-lic){font-size:11px;}
+  .dj-free-cred .sa,.dj-free-pop .sa{color:var(--ink);border-left:3px solid var(--accent);padding-left:8px;}
+  .dj-free-pop{width:min(540px,calc(100vw - 24px));}
+  .dj-free-pop .fine{color:var(--ink-3);font-size:11px;}
+  /* in the rest of the library */
+  .dj-empty .dj-free-start{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px;max-width:none;}
+  .dj-empty .dj-free-start .dj-b{height:24px;padding:0 10px;}
+  .dj-free-info{display:flex;flex-direction:column;gap:3px;padding:5px 6px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);font-size:11px;color:var(--ink-2);line-height:1.4;}
+  .dj-free-info .l1{display:flex;align-items:center;gap:6px;min-width:0;}
+  .dj-free-info .dj-b{align-self:flex-start;height:20px;}
+  @container fm (max-width:820px){
+    .dj-free > *{--fmr:20px minmax(120px,2.2fr) minmax(80px,1.3fr) 76px 64px 104px;--fmt:20px 24px minmax(110px,2.2fr) minmax(70px,1.2fr) 50px 190px;}
+    .dj-free-head .c-y,.fm-r .c-y,.dj-free-head .c-d,.fm-r .c-d,.dj-free-head .c-z,.fm-t .c-z{display:none;}
+    .dj-free-tools h2{display:none;}
+  }
+  @container fm (max-width:600px){
+    .dj-free > *{--fmr:20px minmax(100px,1fr) 70px 58px 84px;--fmt:16px 24px minmax(90px,1fr) 46px 150px;}
+    .dj-free-head .c-a,.fm-r .c-a,.fm-t .c-a{display:none;}
+    .fm-t .c-x .ld{display:none;}
+    .dj-free-cred .cr{grid-template-columns:minmax(0,1fr) auto;}
+    .dj-free-cred .cr .a,.dj-free-cred .cr a:not(.dj-lic){display:none;}
+  }
+  @media (max-width:699.98px){
+    .dj-free{grid-column:1;}
+    .dj-free > *{--fmr:22px minmax(100px,1fr) 78px 52px;--fmt:16px 36px minmax(80px,1fr) 54px 100px;}
+    .fm-t .c-l{padding:0 2px;}
+    .dj-lib[data-fm="true"] > .dj-main{grid-column:1;}
+    .dj-free-back{display:inline-flex;}
+    .dj-free-tools{flex-wrap:wrap;}
+    .dj-free-tools .dj-i.q{order:5;flex:1 1 100%;max-width:none;height:32px;font-size:16px;}
+    .dj-free-tools .dj-b,.dj-free-tools .dj-s{height:30px;}
+    .dj-free-decks{display:none;}
+    .dj-chip{height:28px;padding:0 11px;font-size:12px;border-radius:14px;}
+    .dj-free > .dj-free-body{flex:none;height:66vh;}
+    .dj-free-head .c-x,.fm-r .c-x{display:none;}
+    .fm-pv{width:30px;height:26px;}
+    .fm-pv::before{left:11px;top:7px;border-width:5.5px 0 5.5px 9px;}
+    .fm-pv[aria-pressed="true"]::before{left:10px;top:8px;width:9px;height:9px;}
+    .fm-t .c-x .dj-b{height:26px;padding:0 9px;font-size:11.5px;}
+    .fm-t .c-x .bar{display:none;}
+    .fm-note{padding-left:10px;}
+    .dj-free-cratehead{flex-wrap:wrap;}
+    .dj-free-cratehead .tx{flex-basis:100%;}
+    .dj-free-cratehead .dj-b{height:30px;}
+    .dj-free-foot{height:auto;min-height:26px;flex-wrap:wrap;}
+    .dj-free-foot .sto{display:none;}
+  }
+  .dj[data-narrow="true"] .dj-free > .dj-free-body{flex:none;height:52vh;}
+  /* ===== /DJ free music (css) ===== */
   /* ===== controllers + diagrams (css) ===== */
   /* Drawings of equipment (GEARMAP) and the controller parts of the Equipment
      panel. Only the shared colour variables. Lines stay one pixel at any size. */
@@ -15266,6 +15436,10 @@
   //     l.analyse(ids)  l.cancelAnalysis()  l.analysisState()
   //     l.playlists.list/create/rename/remove/move/add/removeTrack/moveTrack
   //     l.history()  l.related(id)  l.importXML(text)  l.exportXML() -> string
+  //     l.free                    the Free music catalogue, read from archive.org; described at "// ===== DJ free music ====="
+  //       l.free.search(q, {genre, sort, page, rows})  l.free.release(identifier)  l.free.add("identifier/file", {deck})
+  //       l.free.crates()  l.free.crate(id, {refresh})  l.free.open({genre, q, crate, view})  l.free.state()  l.free.creditsText(ids)
+  //     rows from l.list() and l.tracks() carry free (true for a track from Free music) and licence ("by", "by-sa", "cc0", "pdm" or "")
   //
   //   Events (DJ.on): "ready", "engine" {mode}, "loading" / "load" / "unload" / "loaderror" {deck, id, ...},
   //     "confirm" {deck, id} (a load onto a playing deck is waiting for an answer), "play" {deck, playing},
@@ -16962,6 +17136,7 @@
     function nodeTracks(node){
       var m;
       if(node === "all") return T.list.slice();
+      if(node === "free" || node === "credits") return [];
       if(node === "fl") return T.list.filter(isFL);
       if(node === "recent"){ var cut = Date.now() - 30 * 86400000; return T.list.filter(function(t){ return t.added >= cut && !isFL(t); }); }
       if(node === "related") return relatedTo(activeTrack());
@@ -17042,7 +17217,7 @@
         out.push('    <TRACK TrackID="' + id + '" Name="' + xmlEsc(t.title) + '" Artist="' + xmlEsc(t.artist) + '" Album="' + xmlEsc(t.album) +
           '" Genre="' + xmlEsc(t.genre) + '" Kind="' + xmlEsc(ext ? ext + " File" : "") + '" Size="' + (t.size || 0) + '" TotalTime="' + Math.round(t.dur || 0) +
           '" Year="' + xmlEsc(t.year || "") + '" AverageBpm="' + (t.bpm > 0 ? t.bpm.toFixed(2) : "0.00") + '" DateAdded="' + date +
-          '" Comments="' + xmlEsc(t.comment) + '" PlayCount="' + (t.plays || 0) + '" Rating="' + (t.rating || 0) * 51 +
+          '" Comments="' + xmlEsc(fmXmlComment(t)) + '" PlayCount="' + (t.plays || 0) + '" Rating="' + (t.rating || 0) * 51 +
           '" Location="' + xmlEsc(loc) + '" Tonality="' + xmlEsc(t.key || "") + '">');
         if(t.grid && t.grid.bpm > 0) out.push('      <TEMPO Inizio="' + (+t.grid.firstBeat).toFixed(3) + '" Bpm="' + (+t.grid.bpm).toFixed(2) + '" Metro="' + (t.grid.bpb || 4) + '/4" Battito="1"/>');
         (t.cues || []).forEach(function(c, i){
@@ -17185,7 +17360,7 @@
           if(!tr.length && !playlists.length) return null;
           return { v:1, tracks:tr, playlists:playlists, history:history.slice(-50),
                    folders:folders.map(function(f){ return { id:f.id, name:f.name }; }) };
-        });
+        }).then(fmBackupAdd);
       }).catch(function(){ return null; });
     }
     function backupIn(data){
@@ -17223,6 +17398,7 @@
           if(h && h.id && !history.some(function(x){ return x.id === h.id; })) history.push(h);
         });
         history.sort(function(a, b){ return (a.at || 0) - (b.at || 0); });
+        fmBackupIn(data.free);
         savePlaylists(); saveHistory();
         return (puts.length ? dbPutMany("tracks", puts) : Promise.resolve()).then(function(){
           emit("library", { count:T.list.length });
@@ -18873,7 +19049,7 @@
         p.appendChild(el("h3", "", "The DJ area"));
         p.appendChild(el("p", "", "Two decks play two tracks at once and the mixer between them blends one into the other. The library underneath holds the tracks."));
         var ol = el("ol"); ol.style.cssText = "margin:0 0 8px;padding-left:18px;color:var(--ink-2);";
-        ["Add music with Add folder or Add files, or use a song made in First Loop. The files stay on this device.",
+        ["Add music: Free music in the library has tracks you may mix and share, Add folder and Add files bring in your own, and the songs made in First Loop are there already. Your files stay on this device.",
          "Select a track and load it on a deck: the 1 and 2 buttons in its row, or drag it onto a deck.",
          "Press play on that deck. Load a second track on the other deck and press Sync there: it takes the tempo and the beat of the first.",
          "Bring the second track in with its channel fader or the crossfader. Turning one Low knob down while the other comes up swaps the bass lines.",
@@ -18882,6 +19058,7 @@
         p.appendChild(el("p", "", "To hear a track before it goes out, choose Split cue or 4 channels under Output, then press the headphone button of that deck."));
         p.appendChild(el("p", "", "Decks 2 | 4 in the top row switches between two decks and four. Two are enough to learn on. With four, decks 1 and 3 are on the left and decks 2 and 4 on the right, every waveform is stacked at the top, and the mixer has a channel for each in the order 3 1 2 4, as on a four-channel controller. Each deck shows its main controls; clicking a deck puts the rest of its controls (loop In and Out, jump, modes, memory cues, tempo) in the strip under the decks."));
         p.appendChild(el("p", "", "Tempo, beat grid and key are worked out by analysis. They are usually right and sometimes not: the Grid button on a deck opens the tools to correct them, and the key is labelled as a suggestion."));
+        p.appendChild(el("p", "", "Searching free music contacts archive.org directly from your browser. A track you add is downloaded from there to this device."));
       });
     }
     var KEYMAP = [
@@ -19729,6 +19906,7 @@
       });
       main.appendChild(rows);
       lib.appendChild(main);
+      lib.appendChild(fmBuild());
       var info = el("aside", "dj-info"); info.setAttribute("aria-label", "Track info"); UI.info = info; lib.appendChild(info);
       lib.addEventListener("focusin", function(){ lib.dataset.keys = "true"; });
       lib.addEventListener("focusout", function(e){ if(!lib.contains(e.relatedTarget)) lib.dataset.keys = "false"; });
@@ -19778,6 +19956,8 @@
           : "Analysing " + Math.min(aq.total, aq.done + 1) + " of " + Math.max(aq.total, aq.done + 1) + (t ? ": " + t.title : "");
         cancel = cancelAnalysis;
       }
+      var fj = txt ? null : fmJob();
+      if(fj){ txt = fj.txt; cancel = fj.cancel; }
       if(j._txt === txt) return;
       j._txt = txt; j.textContent = "";
       if(!txt) return;
@@ -19793,13 +19973,7 @@
       var x = btn("quiet", "×", "Hide this note"); x.setAttribute("aria-label", "Hide this note"); x.style.cssText = "float:right;margin:-2px -4px 0 8px;";
       x.addEventListener("click", function(){ SET.hideEmpty = true; saveSet(); paintEmpty(); sizeAll(); });
       e.appendChild(x);
-      var p = el("p"); p.appendChild(el("strong", "", "No music of yours here yet. "));
-      p.appendChild(el("strong", "", "Add folder"));
-      p.appendChild(document.createTextNode(window.showDirectoryPicker ? " reads a music folder where it is; " : " is not available in this browser (Chrome and Edge on a computer have it); "));
-      p.appendChild(el("strong", "", "Add files"));
-      p.appendChild(document.createTextNode(" (or dropping files on this list) copies them into this browser; and the songs you make in First Loop are already below, with five demo songs."));
-      e.appendChild(p);
-      e.appendChild(el("p", "", "Your files stay on this device. Nothing is uploaded. Streaming services such as Spotify or Apple Music cannot be connected: their licences allow mixing only inside the DJ programs they have agreements with."));
+      fmEmpty(e);
     }
     function nodeCount(node){ return nodeTracks(node).length; }
     function paintTree(){
@@ -19848,6 +20022,7 @@
       node("recent", "Recently added", nodeCount("recent"));
       var at = activeTrack();
       node("related", "Related", at ? nodeCount("related") : 0, { title:at ? "Within 6% of the tempo of “" + at.title + "” and in a key that mixes with it" : "Tracks that mix with whatever is on the active deck" });
+      fmTree(node);
       if(folders.length){
         head("Folders");
         folders.forEach(function(f){
@@ -19898,6 +20073,7 @@
     }
     function setNode(id){
       LV.node = id; LV.manual = true;
+      fmOnNode(id);
       if(UI.rows) UI.rows.scrollTop = 0;
       refreshList(); paintTree();
     }
@@ -19940,6 +20116,7 @@
         r.el.dataset.gone = (t.gone || (t.src && t.src.kind === "missing")) ? "true" : "false";
         r.el.setAttribute("aria-selected", idx === LV.sel ? "true" : "false");
         if(c.t.textContent !== t.title) c.t.textContent = t.title;
+        fmRowMark(c.t, t);
         if(c.a && c.a.textContent !== (t.artist || "")) c.a.textContent = t.artist || "";
         var bpm = t.bpm > 0 ? t.bpm.toFixed(1) : "";
         if(c.b.textContent !== bpm) c.b.textContent = bpm;
@@ -20035,6 +20212,7 @@
       var top = el("div", "dj-infotop"), tw = el("div", ""), im = el("img", "dj-art"); im.alt = ""; im.hidden = true;
       tw.style.minWidth = "0"; tw.appendChild(el("h3", "", t.title)); tw.appendChild(el("div", "sub", t.artist || (fl ? "First Loop" : "Unknown artist")));
       top.appendChild(im); top.appendChild(tw); p.appendChild(top);
+      fmInfo(p, t);
       artFor(t).then(function(url){ if(url && p._id === t.id){ im.src = url; im.hidden = false; } });
       var r = el("div", "rowx");
       decks.forEach(function(D){ var b = btn("", "Load on " + D.n); b.addEventListener("click", function(){ D.load(t.id); }); r.appendChild(b); });
@@ -20144,6 +20322,1619 @@
       if(t.gone) where = "The file is no longer in its folder. " + where;
       if(where) p.appendChild(el("div", "hint", where));
     }
+
+    // ===== DJ free music =====
+    // "Free music": a catalogue of music that may legally be played, mixed and
+    // the mix shared, read by the browser straight from the Internet Archive
+    // (archive.org). Nothing passes through this site's server, and no audio is
+    // hosted here. A track is only stored (on the user's own device) when they
+    // press Add.
+    //
+    //   WHAT IS LISTED. Items of the Archive's "netlabels" collection whose
+    //   licence address (licenseurl) is one of
+    //     CC BY (any version, any country port), CC BY-SA (the same),
+    //     CC0 1.0, Public Domain Mark 1.0.
+    //   Left out: anything with NC (non-commercial: this app is run as a
+    //   business), anything with ND (no derivatives: a DJ mix is an adaptation),
+    //   the Sampling licences, every other address, and items with no licence
+    //   address at all. The Archive is asked for the allowed licences only, and
+    //   every answer is checked again here by fmLicence(), which is the one
+    //   place the rule lives.
+    //
+    //   THE ARCHIVE'S INTERFACES (plain GET, no key, no cookies; all addresses
+    //   are in FM_CFG):
+    //     /advancedsearch.php?q=<lucene>&fl[]=..&sort[]=..&rows=N&page=P&output=json
+    //     /metadata/<identifier>          the files of one release and its licence
+    //     /download/<identifier>/<file>   the audio (redirects to a storage host)
+    //   Seen working from the live site on 7 October 2026: search and metadata
+    //   answers are readable cross-origin, and so are the audio bytes (a Range
+    //   request). Also seen that day: the search refuses any parameter it does
+    //   not know ("[UNSUPPORTED_VALUE]"), so the app cannot name itself in a
+    //   query parameter, and a custom header would force a preflight; the
+    //   Archive sees the site's address in Origin and Referer instead. A "/" in
+    //   a query must be escaped or the search answers with a backend error.
+    //
+    //   MANNERS. Typing waits 400 ms before a search goes out; a new search
+    //   cancels the one in flight; answers are kept in memory and in the "meta"
+    //   store (keys "fm:...", searches 6 hours, releases 7 days); at most 2
+    //   searches, 4 release look-ups and 2 downloads run at once; 429 and 5xx
+    //   are answered by waiting longer each time (or as long as Retry-After
+    //   says). No analytics.
+    //
+    //   A TRACK ADDED FROM HERE is an ordinary library track, stored the way
+    //   "Add files" stores one, with one more field:
+    //     free: { id (the Archive identifier), file, item (https://archive.org/details/<id>),
+    //             lic:{code, version, url, name}, title, artist, release, label, fetched (ms) }
+    //   It travels in the backup file with the track. Credits are made from it.
+    //
+    //   STARTER CRATES are saved searches, not fixed lists: the most downloaded
+    //   releases of a style under the allowed licences, tracks of 3 to 9
+    //   minutes, at most two per release, worked out in the browser and kept
+    //   for 7 days (Refresh asks again). If a file "crates.json" sits beside
+    //   index.html it is used instead: a pinned list that someone has checked.
+    //   tools/make-crates.js writes that file from a machine that can reach
+    //   archive.org; it runs the part of this block between "fm:pure begin"
+    //   and "fm:pure end" as it stands, so the rules cannot drift apart.
+    //     { "version":1, "made":"2026-10-07", "crates":{ "house":[
+    //         { "identifier":"..", "file":"..mp3", "title":"..", "artist":"..", "release":"..",
+    //           "label":"..", "licenseurl":"http://creativecommons.org/licenses/by/4.0/",
+    //           "seconds":312, "bytes":7340032 } ] } }
+    //   A missing or unreadable crates.json simply means the saved searches.
+    //
+    //   DJ.library.free (for the Assistant and the tests):
+    //     search(q, {genre, sort, page, rows}) -> Promise<[release rows]>
+    //     release(identifier)   -> Promise<{id, title, artist, label, year, licence, url, tracks:[{ref, title, artist, seconds, bytes, licence, inLibrary, libraryId}]}>
+    //     add(ref, {deck})      -> Promise<library id>     ref: "identifier/file", or {id, file}; rejects with a plain sentence
+    //     crates()              -> [{id, name, genre}]     crate(id, {refresh}) -> Promise<{id, name, pinned, tracks}>
+    //     genres()              -> [{id, name}]
+    //     open({genre, q, crate, view})   show the catalogue ("credits" is a view)
+    //     state()  licence(url)  credits()  creditsText(ids)  mixes()
+    // --- fm:pure begin --- (no page, no storage: tools/make-crates.js runs this part as it is)
+    var FM_CFG = {
+      origin:"https://archive.org",
+      paths:{ search:"/advancedsearch.php", meta:"/metadata/", file:"/download/", item:"/details/" },
+      pinned:"crates.json",
+      collection:"netlabels",
+      fields:["identifier", "title", "creator", "licenseurl", "downloads", "year", "date", "publisher", "subject"],
+      // the form of the request that was seen working from the live site; used if the fuller one is refused
+      fieldsPlain:["identifier", "title", "creator", "licenseurl", "downloads"],
+      licQuery:"licenseurl:(*licenses\\/by\\/* OR *licenses\\/by-sa\\/* OR *publicdomain\\/zero* OR *publicdomain\\/mark*)",
+      licQueryPlain:"licenseurl:*licenses\\/by\\/*",
+      rows:50,
+      sorts:{ downloads:["downloads desc", "Most downloaded"], newest:["publicdate desc", "Newest"], title:["titleSorter asc", "Title A to Z"] },
+      // files outside these are not listed
+      limits:{ maxBytes:40 * 1048576, minSecs:60, maxSecs:20 * 60 },
+      crate:{ size:10, minSecs:180, maxSecs:540, perRelease:2, look:40 },
+      t:{ debounce:400, gap:120, backoff:1500, timeout:20000, searchTTL:6 * 3600000, itemTTL:7 * 86400000, crateTTL:7 * 86400000, preview:45 },
+      lanes:{ search:2, meta:4, dl:2 },
+      // Styles, as the Archive's subject words. Each "subject" is put inside subject:( ... ).
+      // Counted on 7 October 2026 in the netlabels collection: every one of these has
+      // well over a hundred releases; techno, ambient and experimental have thousands.
+      genres:[
+        { id:"house", name:"House", subject:"house" },
+        { id:"deephouse", name:"Deep house", subject:"deephouse OR (deep AND house)" },
+        { id:"techhouse", name:"Tech house", subject:"techhouse OR (tech AND house)" },
+        { id:"techno", name:"Techno", subject:"techno" },
+        { id:"minimal", name:"Minimal", subject:"minimal" },
+        { id:"trance", name:"Trance", subject:"trance OR psytrance" },
+        { id:"dnb", name:"Drum and bass", subject:"dnb OR jungle OR (drum AND bass)" },
+        { id:"dubstep", name:"Dubstep", subject:"dubstep" },
+        { id:"breakbeat", name:"Breakbeat", subject:"breakbeat OR breakbeats OR breaks" },
+        { id:"electro", name:"Electro", subject:"electro" },
+        { id:"downtempo", name:"Downtempo", subject:"downtempo OR chillout OR triphop OR (trip AND hop)" },
+        { id:"ambient", name:"Ambient", subject:"ambient" },
+        { id:"hiphop", name:"Hip hop / instrumental", subject:"hiphop OR hip-hop OR (hip AND hop)" },
+        { id:"funk", name:"Funk / Disco", subject:"funk OR disco" },
+        { id:"dub", name:"Dub / Reggae", subject:"dub OR reggae" },
+        { id:"experimental", name:"Experimental", subject:"experimental" }
+      ],
+      crates:[
+        { id:"house", name:"House", genre:"house" },
+        { id:"techno", name:"Techno", genre:"techno" },
+        { id:"dnb", name:"Drum and bass", genre:"dnb" },
+        { id:"hiphop", name:"Hip hop", genre:"hiphop" }
+      ]
+    };
+
+    // ---------- free music: the licence check ----------
+    // One address in, a verdict out: {ok:true, code, version, name, short, url}
+    // or {ok:false, why} with why "none" (no address), "nc", "nd" or "unknown".
+    // Only creativecommons.org itself counts. code is "by", "by-sa", "cc0" or "pdm".
+    var FM_VERSIONS = { "1.0":1, "2.0":1, "2.1":1, "2.5":1, "3.0":1, "4.0":1 };
+    function fmLicence(raw){
+      var i, o;
+      if(Array.isArray(raw)){
+        // more than one address on an item: every one has to pass, and they have to agree
+        if(!raw.length) return { ok:false, why:"none" };
+        var first = fmLicence(raw[0]);
+        for(i = 1; i < raw.length && first.ok; i++){
+          o = fmLicence(raw[i]);
+          if(!o.ok) return o;
+          if(o.code !== first.code) return { ok:false, why:"unknown" };
+        }
+        return first;
+      }
+      if(typeof raw !== "string") return { ok:false, why:"none" };
+      var s = raw.replace(/^[\s\u0000- \u007f]+|[\s\u0000- \u007f]+$/g, "");
+      if(!s) return { ok:false, why:"none" };
+      if(s.length > 200 || /[\s<>"'`\\\u0000-\u001f\u007f]/.test(s)) return { ok:false, why:"unknown" };
+      var u;
+      try { u = new URL(s); } catch(e){ return { ok:false, why:"unknown" }; }
+      if((u.protocol !== "http:" && u.protocol !== "https:") || u.username || u.password || u.port || u.search || u.hash) return { ok:false, why:"unknown" };
+      var host = u.hostname.toLowerCase();
+      if(host !== "creativecommons.org" && host !== "www.creativecommons.org") return { ok:false, why:"unknown" };
+      var path = u.pathname;
+      try { path = decodeURIComponent(path); } catch(e2){ return { ok:false, why:"unknown" }; }
+      if(/[^A-Za-z0-9.+\/_-]/.test(path) || path.indexOf("..") >= 0 || path.indexOf("//") >= 0) return { ok:false, why:"unknown" };
+      var parts = path.toLowerCase().split("/").filter(Boolean);
+      var kind = parts[0], code = parts[1] || "", ver = parts[2] || "", rest = parts.slice(3), jur = "";
+      function tail(list){
+        // nothing more, a country port, and/or the name of the page (deed, legalcode, with a language)
+        var a = list.slice();
+        if(a.length && (/^[a-z]{2}$/.test(a[0]) || a[0] === "scotland" || a[0] === "igo")) jur = a.shift();
+        if(a.length && /^(deed|legalcode)(\.[a-z]{2,3}(-[a-z0-9]{2,8})?)?(\.(html|txt|rdf))?$/.test(a[0])) a.shift();
+        return a.length === 0;
+      }
+      if(kind === "publicdomain"){
+        if((code === "zero" || code === "mark") && ver === "1.0" && tail(rest) && !jur)
+          return code === "zero" ? { ok:true, code:"cc0", version:"1.0", name:"CC0 1.0", short:"CC0", url:"https://creativecommons.org/publicdomain/zero/1.0/" }
+                                 : { ok:true, code:"pdm", version:"1.0", name:"Public Domain Mark 1.0", short:"PD", url:"https://creativecommons.org/publicdomain/mark/1.0/" };
+        return { ok:false, why:"unknown" };
+      }
+      if(kind !== "licenses" || !code) return { ok:false, why:"unknown" };
+      var bits = code.split("-");
+      if(bits.indexOf("nc") >= 0) return { ok:false, why:"nc", code:code };
+      if(bits.indexOf("nd") >= 0) return { ok:false, why:"nd", code:code };
+      if(code !== "by" && code !== "by-sa") return { ok:false, why:"unknown", code:code };
+      if(!FM_VERSIONS.hasOwnProperty(ver) || !tail(rest) || (jur && ver === "4.0")) return { ok:false, why:"unknown", code:code };
+      return { ok:true, code:code, version:ver, jurisdiction:jur,
+               name:"CC " + code.toUpperCase() + " " + ver + (jur ? " " + jur.toUpperCase() : ""), short:"CC " + code.toUpperCase(),
+               url:"https://creativecommons.org/licenses/" + code + "/" + ver + "/" + (jur ? jur + "/" : "") };
+    }
+    function fmLicWords(l){
+      if(!l || !l.ok) return "";
+      if(l.code === "by") return "Free to play, mix and share, also commercially. The artist has to be credited.";
+      if(l.code === "by-sa") return "Free to play, mix and share, also commercially. The artist has to be credited, and a published mix that contains it has to be shared under the same licence.";
+      return "Free to use in any way. No credit is required.";
+    }
+
+    // ---------- free music: reading what the Archive sends ----------
+    // Everything from the Archive is text to be shown, never markup: it is
+    // trimmed, cut to a sane length and only ever placed with textContent.
+    function fmText(v, max){
+      if(Array.isArray(v)) v = v.length ? v[0] : "";
+      if(v === undefined || v === null || typeof v === "object") return "";
+      var s = String(v).replace(/[\u0000-\u001f\u007f\u2028\u2029\u200e\u200f\u202a-\u202e\u2066-\u2069]+/g, " ").replace(/\s+/g, " ").trim();
+      max = max || 160;
+      if(s.length > max){ s = s.slice(0, max - 1); var c = s.charCodeAt(s.length - 1); if(c >= 0xD800 && c <= 0xDBFF) s = s.slice(0, -1); s += "…"; }
+      return s;
+    }
+    function fmList(v, max){
+      var a = Array.isArray(v) ? v : (typeof v === "string" ? v.split(/\s*[;,]\s*/) : []);
+      return a.map(function(x){ return fmText(x, 60); }).filter(Boolean).slice(0, max || 8);
+    }
+    function fmIdOK(v){ return typeof v === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/.test(v); }
+    function fmFileOK(name){
+      if(typeof name !== "string" || !name || name.length > 300 || /[\u0000-\u001f\u007f\\]/.test(name)) return false;
+      return name.split("/").every(function(p){ return p && p !== "." && p !== ".."; });
+    }
+    // "269.6", 269.6, "4:29", "1:02:03" -> seconds; anything else -> 0
+    function fmSecs(v){
+      if(typeof v === "number") return isFinite(v) && v > 0 ? v : 0;
+      if(typeof v !== "string") return 0;
+      var s = v.trim(), m;
+      if(/^\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+      if((m = /^(?:(\d{1,3}):)?(\d{1,3}):(\d{1,2}(?:\.\d+)?)$/.exec(s))) return (+m[1] || 0) * 3600 + (+m[2]) * 60 + parseFloat(m[3]);
+      return 0;
+    }
+    function fmNum(v){ var n = typeof v === "number" ? v : (typeof v === "string" && /^\d+$/.test(v) ? +v : 0); return isFinite(n) && n > 0 ? n : 0; }
+    function fmYear(md){
+      function one(v){ return /^(19|20)\d\d/.exec(String(Array.isArray(v) ? v[0] : (v === undefined || v === null ? "" : v)).trim()); }
+      var m = one(md.year) || one(md.date) || one(md.publicdate);
+      return m ? m[0] : "";
+    }
+    function fmArtist(v){
+      return Array.isArray(v) ? v.map(function(x){ return fmText(x, 60); }).filter(Boolean).slice(0, 3).join(", ") : fmText(v, 120);
+    }
+    function fmItemURL(id){ return FM_CFG.origin + FM_CFG.paths.item + encodeURIComponent(id); }
+    function fmMetaURL(id){ return FM_CFG.origin + FM_CFG.paths.meta + encodeURIComponent(id); }
+    function fmFileURL(id, file){ return FM_CFG.origin + FM_CFG.paths.file + encodeURIComponent(id) + "/" + file.split("/").map(encodeURIComponent).join("/"); }
+    function fmCleanTitle(title, artist){
+      var s = fmText(title, 200), a = String(artist || "").toLowerCase();
+      s = s.replace(/\.(mp3|ogg|oga|flac|wav)$/i, "");
+      s = s.replace(/^\s*\d{1,3}\s*[.)_-]\s*(?=\S)/, "");
+      if(a && s.toLowerCase().indexOf(a + " - ") === 0 && s.length > a.length + 3) s = s.slice(a.length + 3);
+      return s.trim() || fmText(title, 200);
+    }
+
+    // ---------- free music: the question put to the Archive ----------
+    function fmGenre(id){ for(var i = 0; i < FM_CFG.genres.length; i++) if(FM_CFG.genres[i].id === id) return FM_CFG.genres[i]; return null; }
+    // only letters, digits and a few joining marks reach the query: no operators, no field names, no slashes
+    function fmWords(q){
+      return String(q || "").replace(/[^0-9A-Za-z\u00c0-\u024f\u0370-\u03ff\u0400-\u04ff\u3040-\u30ff\u4e00-\u9fff' .&-]+/g, " ")
+        .split(/\s+/).map(function(w){ return w.replace(/^[-'.&]+|[-'.&]+$/g, ""); })
+        .filter(function(w){ return w && !/^(AND|OR|NOT|TO)$/.test(w); }).slice(0, 8);
+    }
+    function fmQuery(genreId, q, plain){
+      var g = fmGenre(genreId), parts = ["collection:" + FM_CFG.collection];
+      if(g) parts.push("subject:(" + g.subject + ")");
+      parts.push(plain ? FM_CFG.licQueryPlain : FM_CFG.licQuery);
+      var words = fmWords(q);
+      if(words.length) parts.push("(" + words.map(function(w){ return /^[0-9A-Za-z\u00c0-\u024f]+$/.test(w) ? w : '"' + w + '"'; }).join(" AND ") + ")");
+      return parts.join(" AND ");
+    }
+    function fmSearchURL(genreId, q, sort, page, rows, plain){
+      var u = FM_CFG.origin + FM_CFG.paths.search + "?q=" + encodeURIComponent(fmQuery(genreId, q, plain)).replace(/%20/g, "+");
+      (plain ? FM_CFG.fieldsPlain : FM_CFG.fields).forEach(function(f){ u += "&fl[]=" + f; });
+      u += "&sort[]=" + (FM_CFG.sorts[sort] || FM_CFG.sorts.downloads)[0].replace(/ /g, "+") + "&rows=" + (rows || FM_CFG.rows) + "&page=" + (page || 1) + "&output=json";
+      return u;
+    }
+    // one search result -> a release row, or null when it may not be listed
+    function fmRow(d){
+      if(!d || typeof d !== "object") return null;
+      var lic = fmLicence(d.licenseurl);
+      if(!fmIdOK(d.identifier) || !lic.ok) return null;
+      return { id:d.identifier, title:fmText(d.title, 160) || d.identifier, artist:fmArtist(d.creator), year:fmYear(d), lic:lic,
+               downloads:fmNum(d.downloads), label:fmText(d.publisher, 80), subjects:fmList(d.subject, 8) };
+    }
+
+    // ---------- free music: one release ----------
+    // Which of the files of an item are tracks, and which copy of each to take:
+    // an MP3 the uploader made, else the Archive's VBR MP3, else another MP3 of
+    // 96 kbps or more, else Ogg, FLAC or WAV if small enough; a 64 kbps MP3 only
+    // when there is nothing else.
+    var FM_PLAYABLE = { mp3:1, ogg:1, oga:1, flac:1, wav:1 };
+    function fmFileScore(f, ext){
+      var fmt = String(f.format || "").toLowerCase(), kb = (/(\d+)\s*kbps/.exec(fmt) || [0, 0])[1] | 0;
+      if(!kb && /_64kb\.mp3$/i.test(f.name)) kb = 64;
+      if(ext === "mp3"){
+        if(kb && kb < 96) return 20;
+        if(f.source === "original") return 100;
+        if(/vbr/.test(fmt)) return 90;
+        return 80;
+      }
+      if(ext === "ogg" || ext === "oga") return 60;
+      return ext === "flac" ? 40 : 30;
+    }
+    // -> {id, title, artist, year, lic, label, subjects, tracks:[...], left:{short, long, big, lic, other}, t}
+    // or null when the answer is not an item at all.
+    function fmParseItem(id, j){
+      if(!j || typeof j !== "object" || Array.isArray(j) || !j.metadata || typeof j.metadata !== "object" || !Array.isArray(j.files)) return null;
+      var md = j.metadata, lic = fmLicence(md.licenseurl), L = FM_CFG.limits;
+      var colls = fmList(md.collection, 6).filter(function(c){ return c !== FM_CFG.collection && fmIdOK(c); });
+      var rel = { id:id, title:fmText(md.title, 160) || id, artist:fmArtist(md.creator), year:fmYear(md), lic:lic,
+                  label:fmText(md.publisher, 80) || fmText(md.label, 80) || colls[0] || "", subjects:fmList(md.subject, 8),
+                  tracks:[], left:{ short:0, long:0, big:0, lic:0, other:0 }, t:Date.now() };
+      if(!lic.ok) return rel;
+      var groups = {}, order = [];
+      j.files.slice(0, 3000).forEach(function(f){
+        if(!f || typeof f !== "object" || !fmFileOK(f.name) || f.private === "true" || f.private === true) return;
+        var ext = (/\.([A-Za-z0-9]{2,5})$/.exec(f.name) || ["", ""])[1].toLowerCase();
+        if(!FM_PLAYABLE[ext]){ if(/^(aif|aiff|m4a|mp4|wma|ape|shn)$/.test(ext) && f.source === "original") rel.left.other++; return; }
+        var base = (typeof f.original === "string" && f.source !== "original" && fmFileOK(f.original) ? f.original : f.name)
+          .replace(/\.[A-Za-z0-9]{2,5}$/, "").replace(/_(64kb|128kb|vbr|sample)$/i, "");
+        var g = groups[base];
+        if(!g){ g = groups[base] = { files:[] }; order.push(base); }
+        g.files.push({ f:f, ext:ext, score:fmFileScore(f, ext), size:fmNum(f.size) });
+      });
+      order.forEach(function(base){
+        var g = groups[base], best = null, meta = {}, secs = 0, anyFits = false;
+        g.files.sort(function(a, b){ return (b.f.source === "original") - (a.f.source === "original") || b.score - a.score; });      // what the uploader's own file says comes first
+        g.files.forEach(function(x){
+          ["title", "artist", "creator", "track", "licenseurl"].forEach(function(k){ if(meta[k] === undefined && x.f[k] !== undefined && x.f[k] !== "") meta[k] = x.f[k]; });
+          if(!secs) secs = fmSecs(x.f.length);
+          var fits = !(x.size > L.maxBytes);
+          if(fits) anyFits = true;
+          if(fits && (!best || x.score > best.score)) best = x;
+        });
+        if(!anyFits){ rel.left.big++; return; }
+        if(secs && secs < L.minSecs){ rel.left.short++; return; }
+        if(secs > L.maxSecs){ rel.left.long++; return; }
+        var tl = meta.licenseurl !== undefined ? fmLicence(meta.licenseurl) : lic;
+        if(!tl.ok){ rel.left.lic++; return; }
+        var own = fmText(meta.artist, 120) || fmText(meta.creator, 120), artist = own || rel.artist, f = best.f;
+        rel.tracks.push({ file:f.name, ext:best.ext, title:fmCleanTitle(fmText(meta.title, 200) || base.split("/").pop().replace(/_/g, " ").replace(/^\s*\d{1,3}[\s.)-]+(?=\S)/, ""), artist), artist:artist,
+                          secs:Math.round(secs * 10) / 10, size:best.size, fmt:fmText(f.format, 24), lic:tl, no:parseInt(meta.track, 10) || 0, n:0 });
+      });
+      rel.tracks = rel.tracks.slice(0, 200);
+      rel.tracks.forEach(function(tr, i){ tr.n = i + 1; });
+      return rel;
+    }
+    // The tracks of a crate from releases in the order the search gave them.
+    function fmCratePick(rels, opt){
+      var c = opt || FM_CFG.crate, out = [], seen = {};
+      (rels || []).forEach(function(rel){
+        if(!rel || !rel.lic || !rel.lic.ok || out.length >= c.size) return;
+        var n = 0;
+        rel.tracks.forEach(function(tr){
+          if(n >= c.perRelease || out.length >= c.size) return;
+          if(!(tr.secs >= c.minSecs && tr.secs <= c.maxSecs) || tr.ext !== "mp3" || !tr.size) return;
+          var key = (tr.artist + "|" + tr.title).toLowerCase();
+          if(seen[key]) return;
+          seen[key] = true; n++;
+          out.push({ id:rel.id, file:tr.file, title:tr.title, artist:tr.artist, release:rel.title, label:rel.label, lic:tr.lic.url, secs:tr.secs, size:tr.size });
+        });
+      });
+      return out;
+    }
+    // a row of crates.json (or of a kept crate) -> the same shape, or null
+    function fmCrateRow(r){
+      if(!r || typeof r !== "object") return null;
+      var id = r.identifier !== undefined ? r.identifier : r.id, lic = fmLicence(r.licenseurl !== undefined ? r.licenseurl : r.lic);
+      if(!fmIdOK(id) || !fmFileOK(r.file) || !lic.ok) return null;
+      return { id:id, file:r.file, title:fmText(r.title, 200) || r.file, artist:fmText(r.artist, 120), release:fmText(r.release, 160), label:fmText(r.label, 80),
+               lic:lic.url, secs:fmSecs(r.seconds !== undefined ? r.seconds : r.secs), size:fmNum(r.bytes !== undefined ? r.bytes : r.size) };
+    }
+    // ---------- free music: the credit line ----------
+    //   "Title" by Artist — CC BY 4.0 — archive.org/details/identifier
+    function fmCreditLine(c){
+      var lic = fmLicence(c && c.lic), title = fmText(c && c.title, 200) || "Untitled", artist = fmText(c && c.artist, 200) || "unknown artist";
+      if(!lic.ok || !fmIdOK(c.id)) return "";
+      return "\"" + title + "\" by " + artist + " — " + lic.name + " — archive.org/details/" + c.id;
+    }
+    // --- fm:pure end ---
+
+    // ---------- free music: settings and state ----------
+    var FMS = { sort:"downloads", seen:false };
+    (function(){
+      try {
+        var raw = JSON.parse(window.localStorage.getItem("firstloop.dj.fm") || "null");
+        if(raw && typeof raw === "object") Object.keys(FMS).forEach(function(k){ if(typeof raw[k] === typeof FMS[k]) FMS[k] = raw[k]; });
+      } catch(e){}
+      if(!FM_CFG.sorts[FMS.sort]) FMS.sort = "downloads";
+    })();
+    function fmSaveSet(){ try { window.localStorage.setItem("firstloop.dj.fm", JSON.stringify(FMS)); } catch(e){} }
+    var FM = { on:false, view:"browse", shown:"", genre:"", q:"", crate:"", page:0, found:0, rows:[], seen:{}, loading:false, done:false, err:null, ac:null, token:0, p:null,
+               plain:false, dropped:0, open:{}, items:{}, dl:{}, dlq:[], dlActive:0, mixes:[], pinned:undefined, cl:null, ctoken:0, started:false };
+    var FMU = { trk:{}, rel:{}, pv:{ a:null, key:"", timer:0, node:null, phones:false }, mix:null };
+    function fmLibId(id, file){ return "ia" + hashStr(id + "/" + file); }
+    function fmIs(t){ return !!(t && t.free && typeof t.free === "object" && fmIdOK(t.free.id)); }
+    // the licence kept on a track, checked again each time (a backup file can say anything)
+    function fmTrackLic(t){ return fmIs(t) && t.free.lic && typeof t.free.lic.url === "string" ? fmLicence(t.free.lic.url) : { ok:false, why:"none" }; }
+    function fmCode(t){ var l = fmTrackLic(t); return l.ok ? l.code : ""; }
+    function fmInLib(libId){ var t = T.by[libId]; return !!(t && !t.gone && t.src && t.src.kind !== "missing"); }
+    function fmFreeTracks(){ return T.list.filter(function(t){ return fmTrackLic(t).ok; }); }
+    function fmCrateDef(id){ for(var i = 0; i < FM_CFG.crates.length; i++) if(FM_CFG.crates[i].id === id) return FM_CFG.crates[i]; return null; }
+
+    // ---------- free music: talking to archive.org politely ----------
+    var fmNet = { cool:0, last:0, sent:0, lanes:{ search:{ max:FM_CFG.lanes.search, active:0, wait:[], timer:0 }, meta:{ max:FM_CFG.lanes.meta, active:0, wait:[], timer:0 } } };
+    function fmErr(kind, extra){ var e = new Error(kind); e.kind = kind; e.extra = extra; return e; }
+    function fmPump(lane){
+      while(lane.active < lane.max && lane.wait.length){
+        var now = Date.now(), at = Math.max(fmNet.cool, fmNet.last + FM_CFG.t.gap);
+        if(now < at){ clearTimeout(lane.timer); lane.timer = setTimeout(function(){ fmPump(lane); }, at - now + 4); return; }
+        var w = lane.wait.shift();
+        if(w.still && !w.still()){ w.rej(fmErr("skipped")); continue; }
+        lane.active++; fmNet.last = now; fmNet.sent++;
+        w.res();
+      }
+    }
+    function fmSlot(lane, still){ return new Promise(function(res, rej){ lane.wait.push({ res:res, rej:rej, still:still }); fmPump(lane); }); }
+    function fmFree(lane){ lane.active = Math.max(0, lane.active - 1); fmPump(lane); }
+    function fmBusyWait(tries, retryAfter){
+      var ms = retryAfter > 0 ? Math.min(retryAfter * 1000, 30000) : FM_CFG.t.backoff * Math.pow(2, tries) * (0.85 + Math.random() * 0.3);
+      fmNet.cool = Math.max(fmNet.cool, Date.now() + ms);
+      return later(ms);
+    }
+    function fmBusyStatus(s){ return s === 429 || s === 500 || s === 502 || s === 503 || s === 504; }
+    // One GET that answers with JSON. Rejects with .kind: "busy" (429 or 5xx
+    // after three more tries), "offline", "timeout", "http", "refused" (the
+    // Archive answered with an error message), "bad" (not JSON), "abort", "skipped".
+    function fmFetchJSON(url, signal, laneName, still){
+      var tries = 0, lane = fmNet.lanes[laneName || "meta"];
+      function once(){
+        return fmSlot(lane, still).then(function(){
+          if(signal && signal.aborted){ fmFree(lane); throw fmErr("abort"); }
+          var ac = new AbortController(), timed = false;
+          var timer = setTimeout(function(){ timed = true; ac.abort(); }, FM_CFG.t.timeout);
+          function stop(){ ac.abort(); }
+          if(signal) signal.addEventListener("abort", stop);
+          function done(){ clearTimeout(timer); if(signal) signal.removeEventListener("abort", stop); fmFree(lane); }
+          return window.fetch(url, { signal:ac.signal, credentials:"omit" }).then(function(r){
+            if(fmBusyStatus(r.status)) throw fmErr("busy", parseFloat(r.headers.get("Retry-After")) || 0);
+            if(!r.ok) throw fmErr("http", r.status);
+            return r.text();
+          }).then(function(txt){
+            done();
+            var j;
+            try { j = JSON.parse(txt); } catch(e){ throw fmErr("bad"); }
+            if(typeof j === "string" || (j && typeof j === "object" && !Array.isArray(j) && j.error !== undefined && j.response === undefined && j.metadata === undefined))
+              throw fmErr("refused", fmText(typeof j === "string" ? j : j.error, 120));
+            return j;
+          }, function(e){
+            done();
+            if(e && e.kind) throw e;
+            if(signal && signal.aborted) throw fmErr("abort");
+            throw fmErr(timed ? "timeout" : "offline");
+          });
+        });
+      }
+      function go(){
+        return once().catch(function(e){
+          if(e.kind === "busy" && tries < 3) return fmBusyWait(tries++, e.extra).then(go);
+          if((e.kind === "offline" || e.kind === "timeout") && tries < 1 && navigator.onLine !== false){ tries++; return later(FM_CFG.t.backoff * 0.6).then(go); }
+          throw e;
+        });
+      }
+      return go();
+    }
+    // answers kept: in memory for the session, and in the meta store until they are stale
+    var fmMem = {}, fmPruned = false;
+    function fmCached(url, ttl){
+      var key = "fm:" + hashStr(url), m = fmMem[key];
+      if(m && m.u === url && Date.now() - m.t < ttl) return Promise.resolve(m.v);
+      return dbGet("meta", key).then(function(r){
+        if(r && r.u === url && typeof r.t === "number" && Date.now() - r.t < ttl && Date.now() >= r.t){ fmMem[key] = r; return r.v; }
+        return undefined;
+      }, function(){ return undefined; });
+    }
+    function fmKeep(url, v){
+      var key = "fm:" + hashStr(url), rec = { u:url, t:Date.now(), v:v };
+      fmMem[key] = rec;
+      try { if(JSON.stringify(v).length < 600000) dbPut("meta", rec, key); } catch(e){}
+    }
+    function fmPrune(){
+      if(fmPruned) return;
+      fmPruned = true;
+      dbReq("meta", "readwrite", function(s){
+        var rq = s.openCursor(window.IDBKeyRange.bound("fm:", "fm:\uffff")), n = 0;
+        rq.onsuccess = function(){
+          var c = rq.result; if(!c) return;
+          var v = c.value;
+          if(v && typeof v === "object" && typeof v.u === "string" && (typeof v.t !== "number" || Date.now() - v.t > FM_CFG.t.itemTTL || ++n > 1500)) c.delete();
+          c.continue();
+        };
+        return null;
+      });
+    }
+    function fmGet(url, ttl, signal, lane, still, fresh){
+      return (fresh ? Promise.resolve(undefined) : fmCached(url, ttl)).then(function(v){
+        if(v !== undefined) return v;
+        return fmFetchJSON(url, signal, lane, still).then(function(j){ fmKeep(url, j); return j; });
+      });
+    }
+    function fmErrWords(e, what){
+      var k = e && e.kind;
+      what = what || "The catalogue";
+      if(k === "busy") return "archive.org is busy and asked us to wait. Try again in a minute.";
+      if(k === "offline" || k === "timeout"){
+        if(navigator.onLine === false) return what + " needs the internet, and this device is offline. Tracks already in your library keep working.";
+        return what + " needs the internet, and archive.org could not be reached. It has outages now and then. Tracks already in your library keep working.";
+      }
+      if(k === "bad") return "archive.org sent an answer that could not be read. Try again in a minute.";
+      if(k === "gone") return "That release is no longer on archive.org.";
+      return "archive.org refused the request" + (e && e.extra ? " (" + e.extra + ")" : "") + ". Try again in a minute.";
+    }
+
+    // ---------- free music: searching, and one release ----------
+    // One page of a search: {found, rows, dropped, raw}. If the Archive will
+    // not take the fuller form of the question, the plain form that was seen
+    // working is used from then on (CC BY only, fewer columns).
+    function fmSearch(genreId, q, sort, page, rows, signal, fresh){
+      function ask(plain){
+        return fmGet(fmSearchURL(genreId, q, sort, page, rows, plain), FM_CFG.t.searchTTL, signal, "search", null, fresh).then(function(j){
+          var r = j && j.response;
+          if(!r || !Array.isArray(r.docs)) throw fmErr("bad");
+          var out = [], dropped = 0;
+          r.docs.forEach(function(d){ var row = fmRow(d); if(row) out.push(row); else dropped++; });
+          FM.dropped += dropped;
+          return { found:fmNum(r.numFound), rows:out, dropped:dropped, raw:r.docs.length, plain:plain };
+        });
+      }
+      return ask(FM.plain).catch(function(e){
+        if(FM.plain || (e.kind !== "http" && e.kind !== "bad" && e.kind !== "refused")) throw e;
+        return ask(true).then(function(res){ FM.plain = true; return res; });
+      });
+    }
+    function fmItem(id, signal, still, fresh){
+      if(!fmIdOK(id)) return Promise.reject(fmErr("gone"));
+      return fmGet(fmMetaURL(id), FM_CFG.t.itemTTL, signal, "meta", still, fresh).then(function(j){
+        var rel = fmParseItem(id, j);
+        if(!rel) throw fmErr(j && typeof j === "object" && !Object.keys(j).length ? "gone" : "bad");
+        return rel;
+      });
+    }
+    function fmFindTrack(rel, file){
+      var i, norm = function(s){ return String(s).toLowerCase().replace(/\.[a-z0-9]{2,5}$/, "").replace(/[^a-z0-9]+/g, ""); };
+      for(i = 0; i < rel.tracks.length; i++) if(rel.tracks[i].file === file) return rel.tracks[i];
+      for(i = 0; i < rel.tracks.length; i++) if(norm(rel.tracks[i].file) === norm(file)) return rel.tracks[i];
+      return null;
+    }
+
+    // ---------- free music: adding a track to the library ----------
+    function fmDlBusy(j){ return !!j && (j.st === "wait" || j.st === "run" || j.st === "store"); }
+    function fmBusyJobs(){ return Object.keys(FM.dl).map(function(k){ return FM.dl[k]; }).filter(fmDlBusy); }
+    function fmDlPump(){
+      while(FM.dlActive < FM_CFG.lanes.dl && FM.dlq.length){
+        var job = FM.dlq.shift();
+        if(job.st !== "wait") continue;
+        FM.dlActive++;
+        fmDlRun(job);
+      }
+    }
+    var fmTickAt = 0;
+    function fmDlTick(job, force){
+      var now = nowMs();
+      if(!force && now - fmTickAt < 120) return;
+      fmTickAt = now;
+      if(job) fmPaintTrack(job.lib);
+      fmFoot(); paintJob();
+    }
+    // The bytes of one file. Starts with the request that was seen working (a
+    // Range from 0); if the connection drops part-way it carries on from where
+    // it stopped, three times at most; nothing is kept unless it is complete.
+    function fmDlBytes(job){
+      var url = fmFileURL(job.id, job.tr.file), max = FM_CFG.limits.maxBytes, chunks = [], busyTries = 0, resumes = 0, plainTried = false;
+      function once(from, ranged){
+        var opt = { signal:job.ac.signal, credentials:"omit" };
+        if(ranged) opt.headers = { Range:"bytes=" + from + "-" };
+        return window.fetch(url, opt).then(function(r){
+          if(fmBusyStatus(r.status)) throw fmErr("busy", parseFloat(r.headers.get("Retry-After")) || 0);
+          if(r.status === 404 || r.status === 410) throw fmErr("gone");
+          if(r.status === 416 && from > 0){ chunks = []; job.got = 0; return once(0, false); }
+          if(!r.ok) throw fmErr("http", r.status);
+          var part = r.status === 206, total = 0, cr = /\/(\d+)\s*$/.exec(r.headers.get("Content-Range") || ""), len = fmNum(r.headers.get("Content-Length"));
+          if(from > 0 && !part){ chunks = []; job.got = 0; from = 0; }          // the whole file was sent again
+          if(cr) total = +cr[1]; else if(len) total = from + len;
+          if(total) job.total = total;
+          if(job.total > max) throw fmErr("big");
+          if(!r.body || !r.body.getReader) return r.arrayBuffer().then(function(ab){ chunks.push(new Uint8Array(ab)); job.got += ab.byteLength; });
+          var rd = r.body.getReader();
+          function pull(){
+            return rd.read().then(function(x){
+              if(x.done) return;
+              chunks.push(x.value); job.got += x.value.length;
+              if(job.got > max){ try { rd.cancel(); } catch(e){} throw fmErr("big"); }
+              fmDlTick(job);
+              return pull();
+            });
+          }
+          return pull();
+        }, function(e){
+          if(job.ac.signal.aborted) throw fmErr("abort");
+          if(e && e.kind) throw e;
+          if(ranged && from === 0 && !plainTried){ plainTried = true; return once(0, false); }     // a browser that will not send Range across origins
+          throw fmErr("offline");
+        }).then(function(){
+          if(job.total && job.got < job.total) throw fmErr("cut");
+        });
+      }
+      function go(from){
+        return once(from, true).catch(function(e){
+          if(job.ac.signal.aborted) throw fmErr("abort");
+          if(e.kind === "busy" && busyTries < 3) return fmBusyWait(busyTries++, e.extra).then(function(){ return go(job.got); });
+          if((e.kind === "cut" || e.kind === "offline" || !e.kind) && job.got > 0 && resumes < 3){ resumes++; job.resumed = resumes; return later(FM_CFG.t.backoff * 0.5 * resumes).then(function(){ return go(job.got); }); }
+          if(!e.kind || e.kind === "cut") throw fmErr("offline");
+          throw e;
+        });
+      }
+      return go(0).then(function(){ return chunks; });
+    }
+    function fmStoreFile(id, file, ext){
+      return opfsDir().then(function(dir){
+        if(dir){
+          var name = id + "." + ext;
+          return dir.getFileHandle(name, { create:true }).then(function(fh){ return fh.createWritable(); })
+            .then(function(w){ return w.write(file).then(function(){ return w.close(); }); })
+            .then(function(){ return { kind:"opfs", name:name }; }, function(){
+              // a half-written file must not stay behind
+              return dir.removeEntry(name).then(function(){ throw fmErr("full"); }, function(){ throw fmErr("full"); });
+            });
+        }
+        return dbPut("blobs", { id:id, blob:file }).then(function(ok){
+          if(!ok) throw fmErr("full");
+          return { kind:"idb" };
+        });
+      }).catch(function(e){ throw e && e.kind ? e : fmErr("full"); });
+    }
+    function fmRoom(need){
+      if(!navigator.storage || !navigator.storage.estimate) return Promise.resolve();
+      return navigator.storage.estimate().then(function(e){
+        if(e && e.quota && need && e.quota - (e.usage || 0) < need * 1.1 + 2097152) throw fmErr("full");
+      }, function(){});
+    }
+    function fmRecord(rel, tr, file, src, tags, lib){
+      var old = T.by[lib], t = old || blankTrack(lib), lic = tr.lic;
+      t.src = src; t.gone = false; t.file = tr.file.split("/").pop(); t.size = file.size; t.mtime = 0;
+      if(!old){
+        t.artist = tr.artist || fmText(tags.artist, 200) || "";
+        t.title = tr.title || fmCleanTitle(tags.title || tr.file, t.artist);
+        t.album = rel.title || fmText(tags.album, 200); t.genre = fmText(tags.genre, 80) || (rel.subjects[0] || ""); t.year = fmText(tags.year, 4) || rel.year || "";
+        t.dur = tags.dur || tr.secs || 0;
+        if(tags.bpm){ t.bpm = Math.round(tags.bpm * 100) / 100; t.bpmSrc = "tag"; }
+        if(tags.key && parseKey(tags.key)){ t.key = keyName(parseKey(tags.key)); t.keySrc = "tag"; }
+      }
+      t.free = { id:rel.id, file:tr.file, item:fmItemURL(rel.id), lic:{ code:lic.code, version:lic.version, url:lic.url, name:lic.name },
+                 title:tr.title, artist:tr.artist || rel.artist || "", release:rel.title, label:rel.label || "", fetched:Date.now() };
+      addTrackMem(t); saveTrack(t, true);
+      return t;
+    }
+    function fmDlWords(k, extra){
+      if(k === "full") return "The browser's storage for this site is full. Remove some tracks (Library, How much is stored) and try again.";
+      if(k === "big") return "That file is larger than " + fmtBytes(FM_CFG.limits.maxBytes) + " and was left out.";
+      if(k === "gone") return "That file is no longer on archive.org.";
+      if(k === "lic") return "That release no longer has a licence that allows mixing, so it was not added.";
+      if(k === "busy") return "archive.org is busy and asked us to wait. Try again in a minute.";
+      if(k === "badfile") return "archive.org sent something that is not an audio file.";
+      if(k === "offline" || k === "timeout") return navigator.onLine === false ? "This device is offline, so the download did not finish. Try again when it is back." : "The download did not finish: archive.org could not be reached. Try again.";
+      return "archive.org refused the download" + (extra ? " (" + extra + ")" : "") + ". Try again in a minute.";
+    }
+    function fmDlRun(job){
+      job.st = "run"; job.got = 0;
+      emit("job", { kind:"free" });
+      fmItem(job.id, job.ac.signal).then(function(rel){
+        var tr = rel.lic.ok ? fmFindTrack(rel, job.file) : null;
+        if(!rel.lic.ok) throw fmErr("lic");
+        if(!tr) throw fmErr("gone");
+        job.rel = rel; job.tr = tr; job.title = tr.title; job.total = tr.size || 0;
+        fmDlTick(job, true);
+        return fmRoom(tr.size);
+      }).then(function(){ return fmDlBytes(job); }).then(function(chunks){
+        if(job.got < 2048) throw fmErr("badfile");
+        var tr = job.tr, mime = tr.ext === "mp3" ? "audio/mpeg" : (tr.ext === "flac" ? "audio/flac" : (tr.ext === "wav" ? "audio/wav" : "audio/ogg"));
+        var file = new File(chunks, tr.file.split("/").pop(), { type:mime, lastModified:Date.now() });
+        chunks = null;
+        job.st = "store"; fmDlTick(job, true);
+        return readTags(file, false).then(function(tags){
+          return fmStoreFile(job.lib, file, tr.ext).then(function(src){ return fmRecord(job.rel, tr, file, src, tags, job.lib); });
+        });
+      }).then(function(t){
+        job.st = "done";
+        askPersist();
+        emit("library", { count:T.list.length });
+        if(SET.autoAnalyse) queueAnalysis([t.id]);
+        job.res({ ok:true, id:t.id });
+      }, function(e){
+        var k = e && e.kind || "offline";
+        job.st = k === "abort" ? "stop" : "err";
+        job.msg = k === "abort" ? "" : fmDlWords(k, e && e.extra);
+        job.res({ ok:false, why:job.msg, cancelled:k === "abort", kind:k });
+      }).then(function(){
+        FM.dlActive = Math.max(0, FM.dlActive - 1);
+        emit("job", { kind:"free", end:true });
+        if(job.st !== "err" && FM.dl[job.lib] === job) delete FM.dl[job.lib];
+        fmDlTick(job, true); fmDlPump(); fmSto();
+      });
+    }
+    // Queue one file of a release. Resolves {ok, id} or {ok:false, why, kind, cancelled}; never rejects.
+    function fmAdd(id, file){
+      if(!fmIdOK(id) || !fmFileOK(file)) return Promise.resolve({ ok:false, why:"That track is not in the catalogue.", kind:"gone" });
+      var lib = fmLibId(id, file);
+      if(fmInLib(lib)) return Promise.resolve({ ok:true, id:lib, existing:true });
+      var cur = FM.dl[lib];
+      if(fmDlBusy(cur)) return cur.p;
+      var job = { lib:lib, id:id, file:file, st:"wait", got:0, total:0, ac:new AbortController(), msg:"", title:file.split("/").pop(), rel:null, tr:{ file:file } };
+      job.p = new Promise(function(res){ job.res = res; });
+      FM.dl[lib] = job; FM.dlq.push(job);
+      fmDlPump(); fmDlTick(job, true);
+      return job.p;
+    }
+    function fmCancel(lib){
+      var job = FM.dl[lib]; if(!job) return;
+      if(job.st === "wait"){ job.st = "stop"; delete FM.dl[lib]; job.res({ ok:false, why:"", cancelled:true, kind:"abort" }); }
+      else if(job.st === "run"){ try { job.ac.abort(); } catch(e){} }
+      else if(job.st === "err") delete FM.dl[lib];
+      fmDlTick(job, true);
+    }
+    function fmCancelAll(){
+      Object.keys(FM.dl).forEach(function(k){ if(fmDlBusy(FM.dl[k])) fmCancel(k); });
+    }
+    // Several tracks, one after another through the same queue. list: [{id, file}]
+    function fmAddMany(list, playlistName, what){
+      var todo = list.filter(function(r){ return !fmInLib(fmLibId(r.id, r.file)); });
+      var b = { total:todo.length, done:0, ok:0, failed:0, cancel:false, ids:[], why:"" };
+      list.forEach(function(r){ var lib = fmLibId(r.id, r.file); if(fmInLib(lib)) b.ids.push(lib); });
+      b.p = Promise.all(todo.map(function(r){
+        return fmAdd(r.id, r.file).then(function(res){
+          b.done++;
+          if(res.ok){ b.ok++; b.ids.push(res.id); }
+          else if(res.cancelled) b.cancel = true;
+          else {
+            b.failed++; if(!b.why) b.why = res.why;
+            if(res.kind === "full" || ((res.kind === "offline" || res.kind === "timeout") && b.failed >= 3 && !b.ok)) fmCancelAll();
+          }
+        });
+      })).then(function(){
+        if(playlistName && b.ids.length){
+          var p = playlists.filter(function(x){ return x.name === playlistName; })[0] || newPlaylist(playlistName);
+          addToPlaylist(p.id, b.ids);
+        }
+        var msg = (what || "Free music") + ": " + b.ok + (b.ok === 1 ? " track" : " tracks") + " added" +
+          (b.failed ? ", " + b.failed + " could not be downloaded" : "") + (b.cancel ? ". Stopped early" : "") + "." +
+          (b.failed && b.why ? " " + b.why : "") + (playlistName && b.ids.length ? " They are in the playlist “" + playlistName + "”." : "");
+        note(msg);
+        fmFoot(); paintJob();
+        return { ok:b.ok, failed:b.failed, cancelled:b.cancel, total:b.total, ids:b.ids };
+      });
+      return b.p;
+    }
+    // the line beside the library's own tools while downloads run
+    function fmJob(){
+      var jobs = fmBusyJobs();
+      if(!jobs.length) return null;
+      var run = jobs.filter(function(j){ return j.st !== "wait"; })[0] || jobs[0], pct = run.total ? " " + Math.min(99, Math.round(run.got / run.total * 100)) + "%" : "";
+      return { txt:"Downloading " + (jobs.length === 1 ? "“" + run.title + "”" : jobs.length + " tracks: “" + run.title + "”") + pct, cancel:fmCancelAll };
+    }
+    function fmLoadDeck(id, file, deckIndex){
+      return fmAdd(id, file).then(function(r){
+        if(!r.ok){ if(r.why) note(r.why); return false; }
+        var D = decks[deckIndex] || decks[0];
+        return D.load(r.id);
+      });
+    }
+
+    // ---------- free music: listening before adding ----------
+    // The first 45 seconds, streamed by an <audio> element (the browser asks the
+    // Archive for the part it needs; nothing is stored). Through the headphone
+    // output when the mixer has one set up, otherwise the computer's speakers.
+    // A preview never touches the decks.
+    function fmPvStop(){
+      var pv = FMU.pv, a = pv.a, key = pv.key;
+      clearTimeout(pv.timer);
+      if(pv.node){ try { pv.node.disconnect(); } catch(e){} }
+      if(a){ try { a.pause(); a.removeAttribute("src"); a.load(); if(a._url) URL.revokeObjectURL(a._url); } catch(e2){} }
+      FMU.pv = { a:null, key:"", timer:0, node:null, phones:false };
+      if(key) fmPaintTrack(key);
+    }
+    function fmPreview(id, file, plain){
+      var key = fmLibId(id, file), src = fmFileURL(id, file), t = T.by[key];
+      if(FMU.pv.key === key && !plain){ fmPvStop(); return; }
+      fmPvStop();
+      var a = new Audio(), phones = false, started = false, pv = FMU.pv;
+      a.preload = "auto";
+      if(!plain && ENG && ENG.M && ENG.M.mode !== "speakers" && ENG.ctx && ENG.ctx.state === "running" && ENG.M.hpOut){
+        try {
+          a.crossOrigin = "anonymous";
+          var n = ENG.ctx.createMediaElementSource(a), g = ENG.ctx.createGain();
+          g.gain.value = 0.8; n.connect(g); g.connect(ENG.M.hpOut);
+          pv.node = g; phones = true;
+        } catch(e){ phones = false; a = new Audio(); a.preload = "auto"; }
+      }
+      pv.a = a; pv.key = key; pv.phones = phones;
+      a.addEventListener("playing", function(){
+        if(FMU.pv.a !== a || started) return;
+        started = true;
+        FMU.pv.timer = setTimeout(function(){ if(FMU.pv.a === a) fmPvStop(); }, FM_CFG.t.preview * 1000);
+        fmPaintTrack(key);
+      });
+      a.addEventListener("ended", function(){ if(FMU.pv.a === a) fmPvStop(); });
+      a.addEventListener("error", function(){
+        if(FMU.pv.a !== a) return;
+        if(phones){ fmPreview(id, file, true); return; }              // the headphone route needs the Archive's leave to read the sound; without it, the speakers
+        fmPvStop();
+        note(navigator.onLine === false ? "A preview needs the internet, and this device is offline." : "The preview could not be played. archive.org may be busy; try again in a moment.");
+      });
+      if(t && fmInLib(key)){
+        // already on this device: play the stored file, no network
+        trackFile(t, false).then(function(f){ if(FMU.pv.a !== a) return; a._url = URL.createObjectURL(f); a.src = a._url; var p0 = a.play(); if(p0 && p0.catch) p0.catch(function(){}); }, function(){ if(FMU.pv.a === a) fmPvStop(); });
+      } else {
+        a.src = src;
+        var p = a.play();
+        if(p && p.catch) p.catch(function(){});
+      }
+      fmPaintTrack(key);
+    }
+
+    // ---------- free music: starter crates ----------
+    // crates.json beside the page, read once. null when it is not there.
+    function fmPinned(){
+      if(FM.pinned !== undefined) return Promise.resolve(FM.pinned);
+      if(FM.pinP) return FM.pinP;
+      if(!/^https?:$/.test(window.location.protocol)){ FM.pinned = null; return Promise.resolve(null); }
+      FM.pinP = window.fetch(FM_CFG.pinned, { credentials:"omit", cache:"no-cache" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+        var out = null;
+        if(j && typeof j === "object" && j.crates && typeof j.crates === "object"){
+          out = { made:fmText(j.made, 30), crates:{} };
+          FM_CFG.crates.forEach(function(c){
+            var rows = Array.isArray(j.crates[c.id]) ? j.crates[c.id].slice(0, 40).map(fmCrateRow).filter(Boolean) : [];
+            if(rows.length) out.crates[c.id] = rows;
+          });
+        }
+        FM.pinned = out; return out;
+      }).catch(function(){ FM.pinned = null; return null; });
+      return FM.pinP;
+    }
+    // Work a crate out from the Archive: the most downloaded releases of the
+    // style, read four at a time until there are enough tracks.
+    function fmCrateResolve(def, fresh, onStep){
+      var C = FM_CFG.crate;
+      return fmSearch(def.genre, "", "downloads", 1, C.look, null, fresh).then(function(res){
+        var rows = res.rows, rels = [], i = 0, lastErr = null, picked = [];
+        function batch(){
+          if(picked.length >= C.size || i >= rows.length) return picked;
+          var part = rows.slice(i, i + 4); i += 4;
+          return Promise.all(part.map(function(r){ return fmItem(r.id).then(null, function(e){ lastErr = e; return null; }); })).then(function(got){
+            got.forEach(function(rel){ if(rel) rels.push(rel); });
+            picked = fmCratePick(rels, C);
+            if(onStep) onStep(Math.min(i, rows.length), rows.length, picked.length);
+            if(!rels.length && lastErr && i >= 8) throw lastErr;                 // nothing at all came back: say why instead of going on
+            return batch();
+          });
+        }
+        return batch();
+      });
+    }
+    // -> {id, rows, pinned, at}
+    function fmCrate(id, fresh, onStep){
+      var def = fmCrateDef(id);
+      if(!def) return Promise.reject(fmErr("gone"));
+      return fmPinned().then(function(pin){
+        if(pin && pin.crates[id]) return { id:id, rows:pin.crates[id], pinned:true, at:pin.made };
+        return (fresh ? Promise.resolve(null) : dbGet("meta", "fmcrate:" + id)).then(function(c){
+          var rows = c && Array.isArray(c.rows) && typeof c.at === "number" && Date.now() - c.at < FM_CFG.t.crateTTL && Date.now() >= c.at ? c.rows.map(fmCrateRow).filter(Boolean) : [];
+          if(rows.length) return { id:id, rows:rows, pinned:false, at:c.at };
+          return fmCrateResolve(def, fresh, onStep).then(function(picked){
+            var out = { id:id, rows:picked, pinned:false, at:Date.now() };
+            if(picked.length) dbPut("meta", out, "fmcrate:" + id);
+            return out;
+          });
+        });
+      });
+    }
+
+    // ---------- free music: credits ----------
+    function fmCreditOf(t){
+      var f = t.free, lic = fmTrackLic(t);
+      if(!lic.ok) return null;
+      return { lib:t.id, id:f.id, title:fmText(f.title, 200) || fmText(t.title, 200), artist:fmText(f.artist, 200) || fmText(t.artist, 200), lic:lic.url };
+    }
+    // One line per track, in the order given; a track is named once.
+    function fmCreditsText(items){
+      var seen = {}, out = [];
+      (items || []).forEach(function(c){
+        var line = c ? fmCreditLine(c) : "";
+        if(!line || seen[line]) return;
+        seen[line] = true; out.push(line);
+      });
+      return out.join("\n");
+    }
+    // the share-alike licence among these credits (the newest version), or null
+    function fmShareAlike(items){
+      var sa = null;
+      (items || []).forEach(function(c){
+        var l = c ? fmLicence(c.lic) : null;
+        if(l && l.ok && l.code === "by-sa" && (!sa || parseFloat(l.version) > parseFloat(sa.version))) sa = l;
+      });
+      return sa;
+    }
+    function fmSAWords(sa){ return "This mix contains music under " + sa.name + ", so a published mix that contains it has to be shared under the same licence."; }
+    function fmLibCredits(){
+      return fmFreeTracks().sort(function(a, b){ return a._a < b._a ? -1 : (a._a > b._a ? 1 : (a._t < b._t ? -1 : (a._t > b._t ? 1 : 0))); }).map(fmCreditOf).filter(Boolean);
+    }
+    function fmHistCredits(h){
+      var out = [], seen = {};
+      (h && h.items || []).forEach(function(it){
+        var t = T.by[it.id], c = t ? fmCreditOf(t) : null;
+        if(c && !seen[c.lib]){ seen[c.lib] = true; out.push(c); }
+      });
+      return out;
+    }
+    function fmCopy(text, done){
+      function ok(){ note(done || "Copied."); }
+      function old(){
+        var ta = el("textarea"); ta.value = text; ta.style.cssText = "position:fixed;left:-999px;top:0;";
+        document.body.appendChild(ta); ta.select();
+        var good = false;
+        try { good = document.execCommand("copy"); } catch(e){}
+        document.body.removeChild(ta);
+        if(good) ok(); else note("The browser did not allow copying. Select the text and copy it by hand.");
+      }
+      FMU.lastCopy = text;
+      try {
+        if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, old);
+        else old();
+      } catch(e){ old(); }
+    }
+    // what plays while the master is being recorded
+    function fmMixNote(t){
+      var m = FMU.mix;
+      if(!m || !t || m.seen[t.id]) return;
+      m.seen[t.id] = true;
+      var c = fmCreditOf(t);
+      if(c) m.items.push(c); else m.other++;
+    }
+    function fmMixEnd(d){
+      var m = FMU.mix; FMU.mix = null;
+      if(!m || !(m.items.length + m.other)) return;
+      var mix = { at:m.at, secs:Math.round((d && d.seconds) || (Date.now() - m.at) / 1000), items:m.items.slice(0, 300), other:m.other };
+      if(!mix.items.length) return;
+      FM.mixes.push(mix); FM.mixes = FM.mixes.slice(-20);
+      dbPut("meta", FM.mixes, "fmmixes");
+      setTimeout(function(){ fmMixPop(mix); }, 80);
+      if(FM.on && FM.view === "credits") fmRender();
+    }
+    function fmMixPop(mix){
+      var text = fmCreditsText(mix.items), sa = fmShareAlike(mix.items), n = mix.items.length;
+      openPop(UI.rec, "dj-pop dj-free-pop", function(p){
+        p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Credits for this recording");
+        p.appendChild(el("h3", "", "Credits for this recording"));
+        p.appendChild(el("p", "", n + (n === 1 ? " track" : " tracks") + " in this recording " + (n === 1 ? "comes" : "come") + " from Free music. " +
+          "The licences ask that the artists are named wherever the mix is published. These are the lines to put in its description." +
+          (mix.other ? " " + mix.other + (mix.other === 1 ? " other track was" : " other tracks were") + " played too; no licence is recorded here for " + (mix.other === 1 ? "it." : "them.") : "")));
+        var pre = el("pre", "", text); pre.id = "djfmmixtext"; p.appendChild(pre);
+        if(sa) p.appendChild(el("p", "sa", fmSAWords(sa)));
+        var r = el("div", "rowx"), cp = btn("dj-free-go", "Copy credits"), sv = btn("", "Save as a text file"), x = btn("", "Close");
+        cp.id = "djfmmixcopy";
+        cp.addEventListener("click", function(){ fmCopy(text, "The credits for this recording were copied."); });
+        sv.addEventListener("click", function(){ offerFile(new Blob([text + "\n"], { type:"text/plain" }), "First Loop mix credits " + fmtDate(mix.at) + ".txt"); });
+        x.addEventListener("click", closePops);
+        r.appendChild(cp); r.appendChild(sv); r.appendChild(x); p.appendChild(r);
+        p.appendChild(el("p", "fine", "They are kept under Credits in the library."));
+      });
+    }
+    function fmCleanMix(x){
+      if(!x || typeof x !== "object" || !Array.isArray(x.items)) return null;
+      var items = x.items.slice(0, 300).map(function(c){
+        return c && typeof c === "object" && fmIdOK(c.id) && fmLicence(c.lic).ok ? { lib:String(c.lib || ""), id:c.id, title:fmText(c.title, 200), artist:fmText(c.artist, 200), lic:fmLicence(c.lic).url } : null;
+      }).filter(Boolean);
+      return items.length ? { at:+x.at || 0, secs:+x.secs || 0, items:items, other:+x.other || 0 } : null;
+    }
+    function fmBackupAdd(o){
+      if(!o) return o;
+      return dbGet("meta", "fmmixes").then(function(m){
+        var mixes = (Array.isArray(m) ? m : FM.mixes).map(fmCleanMix).filter(Boolean);
+        if(mixes.length) o.free = { mixes:mixes };
+        return o;
+      }, function(){ return o; });
+    }
+    function fmBackupIn(d){
+      if(!d || !Array.isArray(d.mixes)) return;
+      dbGet("meta", "fmmixes").then(function(have){
+        (Array.isArray(have) ? have : []).concat(d.mixes).map(fmCleanMix).filter(Boolean).forEach(function(m){ if(!FM.mixes.some(function(x){ return x.at === m.at; })) FM.mixes.push(m); });
+        FM.mixes.sort(function(a, b){ return a.at - b.at; }); FM.mixes = FM.mixes.slice(-20);
+        dbPut("meta", FM.mixes, "fmmixes");
+        if(FM.on && FM.view === "credits") fmRender();
+      });
+    }
+    function fmXmlComment(t){
+      var c = fmIs(t) ? fmCreditOf(t) : null, line = c ? fmCreditLine(c) : "";
+      return line ? (t.comment ? t.comment + " | " : "") + line : t.comment;
+    }
+
+    // ---------- free music: on screen ----------
+    function fmLink(text, href, cls){
+      var a = el("a", cls || "", text);
+      a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer";
+      return a;
+    }
+    function fmBadge(l, link){
+      var b = link ? fmLink(l.short, l.url, "dj-lic") : el("span", "dj-lic", l.short);
+      b.dataset.code = l.code; b.title = l.name + ". " + fmLicWords(l);
+      return b;
+    }
+    function fmDate(ms){ var d = new Date(ms); return isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" }); }
+    function fmBuild(){
+      var c = el("section", "dj-free"); c.hidden = true; c.id = "djfm"; c.setAttribute("aria-label", "Free music");
+      FMU.root = c;
+      var tools = el("div", "dj-free-tools");
+      var back = btn("dj-free-back", "‹ Library", "Back to your own library"); back.addEventListener("click", function(){ setNode("all"); });
+      tools.appendChild(back);
+      FMU.h = el("h2", "", "Free music"); tools.appendChild(FMU.h);
+      var q = el("input", "dj-i q"); q.type = "search"; q.id = "djfmq"; q.placeholder = "Search artist, title or label"; q.setAttribute("aria-label", "Search free music");
+      q.autocomplete = "off"; q.spellcheck = false; q.maxLength = 80;
+      var qt = 0;
+      q.addEventListener("input", function(){ clearTimeout(qt); qt = setTimeout(function(){ fmGo({ q:q.value }); }, FM_CFG.t.debounce); });
+      q.addEventListener("keydown", function(e){
+        e.stopPropagation();
+        if(e.key === "Enter"){ clearTimeout(qt); fmGo({ q:q.value }); }
+        else if(e.key === "Escape"){ if(q.value){ q.value = ""; clearTimeout(qt); fmGo({ q:"" }); } else q.blur(); }
+      });
+      FMU.q = q; tools.appendChild(q);
+      var so = el("select", "dj-s"); so.id = "djfmsort"; so.setAttribute("aria-label", "Order of the results");
+      Object.keys(FM_CFG.sorts).forEach(function(k){ var o = el("option", "", FM_CFG.sorts[k][1]); o.value = k; so.appendChild(o); });
+      so.value = FMS.sort;
+      so.addEventListener("change", function(){ FMS.sort = so.value; fmSaveSet(); if(FM.view === "browse") fmGo({}); });
+      FMU.sort = so; tools.appendChild(so);
+      tools.appendChild(el("span", "gap"));
+      var cr = btn("", "Credits", "The lines that name the artists, ready to copy"); cr.id = "djfmcredits"; cr.setAttribute("aria-pressed", "false");
+      cr.addEventListener("click", function(){ setNode(FM.view === "credits" ? "free" : "credits"); });
+      FMU.credBtn = cr; tools.appendChild(cr);
+      var dk = btn("dj-free-decks", "Decks", "Show or hide the waveforms, decks and mixer while browsing. They come back when a track is loaded."); dk.id = "djfmdecks"; dk.setAttribute("aria-pressed", "true");
+      dk.addEventListener("click", function(){ FM.big = !FM.big; fmFrame(); });
+      FMU.decksBtn = dk; tools.appendChild(dk);
+      var hp = el("button", "help", "?"); hp.type = "button"; hp.id = "djfmhelp"; hp.setAttribute("aria-label", "About free music"); hp.setAttribute("aria-haspopup", "dialog");
+      hp.addEventListener("click", function(){ fmAbout(hp); });
+      tools.appendChild(hp);
+      c.appendChild(tools);
+      // crates and styles
+      var chips = el("div", "dj-free-chips"); chips.setAttribute("role", "toolbar"); chips.setAttribute("aria-label", "Starter crates and styles");
+      chips.appendChild(el("span", "dj-l", "Starter crates"));
+      FM_CFG.crates.forEach(function(k){
+        var b = el("button", "dj-chip crate", k.name); b.type = "button"; b.dataset.crate = k.id; b.setAttribute("aria-pressed", "false"); b.title = "About ten well-downloaded " + k.name + " tracks to start mixing with";
+        b.addEventListener("click", function(){ fmGo({ crate:k.id }); });
+        chips.appendChild(b);
+      });
+      chips.appendChild(el("span", "sep"));
+      chips.appendChild(el("span", "dj-l", "Styles"));
+      [{ id:"", name:"All" }].concat(FM_CFG.genres).forEach(function(g){
+        var b = el("button", "dj-chip", g.name); b.type = "button"; b.dataset.genre = g.id; b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function(){ fmGo({ genre:g.id }); });
+        chips.appendChild(b);
+      });
+      // one line of chips; the wheel moves it sideways
+      chips.addEventListener("wheel", function(e){
+        if(chips.scrollWidth <= chips.clientWidth || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        e.preventDefault(); chips.scrollLeft += e.deltaY;
+      }, { passive:false });
+      FMU.chips = chips; c.appendChild(chips);
+      var ban = el("div", "dj-free-cratehead"); ban.hidden = true; FMU.banner = ban; c.appendChild(ban);
+      var head = el("div", "dj-free-head"); head.setAttribute("aria-hidden", "true"); FMU.head = head; c.appendChild(head);
+      var body = el("div", "dj-free-body"); body.tabIndex = 0; body.id = "djfmbody"; body.setAttribute("aria-label", "Free music list"); FMU.body = body; c.appendChild(body);
+      body.addEventListener("keydown", function(e){
+        // the list scrolls with the usual keys; they must not reach the decks
+        if(/^(Arrow(Up|Down)|Page(Up|Down)|Home|End|Enter| )$/.test(e.key) && !e.shiftKey) e.stopPropagation();
+      });
+      var foot = el("div", "dj-free-foot");
+      FMU.st = el("span", "st"); FMU.st.setAttribute("role", "status"); foot.appendChild(FMU.st);
+      FMU.dlT = el("span", "dl"); FMU.dlT.hidden = true; foot.appendChild(FMU.dlT);
+      FMU.dlX = btn("", "Cancel downloads"); FMU.dlX.hidden = true; FMU.dlX.addEventListener("click", fmCancelAll); foot.appendChild(FMU.dlX);
+      FMU.sto = el("span", "sto"); foot.appendChild(FMU.sto);
+      c.appendChild(foot);
+      try {
+        FMU.io = new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            var t = e.target;
+            if(t === FMU.more){ if(e.isIntersecting && FM.on && FM.view === "browse" && !FM.err && fmMoreNear()) fmLoad(false); return; }      // the notice can be a frame old: look again
+            t._vis = e.isIntersecting;
+            if(e.isIntersecting && t.dataset.id && !FM.items[t.dataset.id]) setTimeout(function(){ if(t._vis && t.isConnected) fmNeed(t.dataset.id, t); }, 300);
+          });
+        }, { root:body, rootMargin:"160px 0px" });
+      } catch(e){ FMU.io = null; }
+      // "/" goes to this search box while the catalogue is on screen
+      window.addEventListener("keydown", function(e){
+        if(view !== "dj" || !FM.on || FM.view === "credits" || e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+        if(typeof palIsOpen !== "undefined" && palIsOpen) return;
+        e.preventDefault(); e.stopImmediatePropagation(); FMU.q.focus(); FMU.q.select();
+      }, true);
+      // what the rest of the DJ area tells the catalogue
+      on("loading", function(){ if(FM.on && FM.big){ FM.big = false; fmFrame(); } });
+      on("load", function(){ if(FM.on){ if(FM.big){ FM.big = false; fmFrame(); } fmPaintAllTracks(); } });
+      on("play", function(d){
+        if(d && d.playing){
+          var D = decks[d.deck - 1];
+          if(D && D.track) fmMixNote(D.track);
+          if(FMU.pv.a && !FMU.pv.phones) fmPvStop();
+        }
+      });
+      on("record", function(d){
+        if(d && d.on){ FMU.mix = { at:Date.now(), items:[], other:0, seen:{} }; decks.forEach(function(D){ if(D.playing && D.track) fmMixNote(D.track); }); }
+        else fmMixEnd(d);
+      });
+      on("library", function(){ if(FM.on){ if(FM.view === "credits") fmRender(); else { fmPaintAllTracks(); Object.keys(FMU.rel).forEach(fmPaintRel); } } });
+      dbGet("meta", "fmmixes").then(function(m){ if(Array.isArray(m)){ var got = m.map(fmCleanMix).filter(Boolean); got.forEach(function(x){ if(!FM.mixes.some(function(y){ return y.at === x.at; })) FM.mixes.push(x); }); FM.mixes.sort(function(a, b){ return a.at - b.at; }); } });
+      return c;
+    }
+    function fmHead(kind){
+      var h = FMU.head;
+      if(h.dataset.kind === kind) return;
+      h.dataset.kind = kind; h.textContent = "";
+      (kind === "trk" ? [["c-n", ""], ["c-p", ""], ["c-t", "Title"], ["c-a", "Artist"], ["c-l r", "Time"], ["c-z r", "Size"], ["c-x", ""]]
+                      : [["c-w", ""], ["c-t", "Release"], ["c-a", "Artist / label"], ["c-y", "Year"], ["c-c", "Licence"], ["c-n r", "Tracks"], ["c-d r", "Time"], ["c-x", ""]])
+        .forEach(function(c){ h.appendChild(el("span", c[0], c[1])); });
+      h.style.gridTemplateColumns = kind === "trk" ? "var(--fmt)" : "";
+    }
+    function fmFrame(){
+      if(!FMU.root) return;
+      FMU.root.hidden = !FM.on;
+      UI.lib.dataset.fm = FM.on ? "true" : "false";
+      var cred = FM.view === "credits";
+      FMU.h.textContent = cred ? "Credits" : "Free music";
+      FMU.chips.hidden = cred; FMU.head.hidden = cred; FMU.q.hidden = cred; FMU.sort.hidden = cred || FM.view === "crate";
+      FMU.banner.hidden = FM.view !== "crate";
+      FMU.credBtn.setAttribute("aria-pressed", cred ? "true" : "false");
+      // room to browse: with nothing on a deck the list takes the place of the waveforms, decks and mixer
+      if(FM.on && FM.big === undefined) FM.big = !decks.some(function(D){ return D.track || D.loading; });
+      var big = FM.on && !!FM.big;
+      if((root.dataset.fmbig === "true") !== big){ root.dataset.fmbig = big ? "true" : "false"; setTimeout(sizeAll, 0); }
+      FMU.decksBtn.setAttribute("aria-pressed", big ? "false" : "true");
+      [].forEach.call(FMU.chips.querySelectorAll(".dj-chip"), function(b){
+        var on2 = b.dataset.crate !== undefined ? (FM.view === "crate" && FM.crate === b.dataset.crate) : (FM.view === "browse" && FM.genre === b.dataset.genre);
+        b.setAttribute("aria-pressed", on2 ? "true" : "false");
+      });
+      if(!cred) fmHead(FM.view === "crate" ? "trk" : "rel");
+      // the chosen chip is kept in view on its one line
+      var pc = FMU.chips.querySelector('.dj-chip[aria-pressed="true"]'), cw = FMU.chips.clientWidth;
+      if(pc && FM.on && cw){
+        var l = pc.offsetLeft, r = l + pc.offsetWidth;
+        if(l - 60 < FMU.chips.scrollLeft) FMU.chips.scrollLeft = Math.max(0, l - 60);
+        else if(r + 60 > FMU.chips.scrollLeft + cw) FMU.chips.scrollLeft = r + 60 - cw;
+      }
+    }
+    function fmTree(node){
+      node("free", "Free music", null, { title:"Music under licences that allow mixing and sharing, from the Internet Archive" });
+      var n = fmFreeTracks().length;
+      node("credits", "Credits", n || null, { title:"The lines that name the artists of the free music in this library and in your recordings" });
+    }
+    function fmOnNode(id){
+      var want = id === "free" || id === "credits";
+      if(!want){ if(FM.on){ FM.on = false; FM.big = undefined; fmPvStop(); fmFrame(); } return; }
+      FM.on = true;
+      if(id === "credits") FM.view = "credits";
+      else if(FM.view === "credits") FM.view = FM.crate ? "crate" : "browse";
+      if(id === "free" && !FM.started){
+        FM.started = true; fmPrune();
+        if(!FMS.seen){
+          FMS.seen = true; fmSaveSet();
+          if(!FM.crate && !FM.genre && !FM.q && !T.list.some(function(t){ return !isFL(t); })){ FM.crate = "house"; FM.view = "crate"; }
+        }
+        fmFrame(); fmGo({});
+      } else { fmFrame(); if(FM.shown !== FM.view || FM.view === "credits") fmRender(); }
+      fmFoot(); fmSto();
+    }
+    function fmPanel(kind, text, retry, label){
+      var p = el("div", "dj-free-panel"); p.dataset.kind = kind;
+      p.appendChild(el("p", "", text));
+      if(retry){ var r = el("div", "rowx"), b = btn("", label || "Try again"); b.addEventListener("click", retry); r.appendChild(b); p.appendChild(r); }
+      return p;
+    }
+    // ---- a release row, and the tracks under it ----
+    function fmRelEl(r){
+      var w = el("div", "fm-rel"); w.dataset.id = r.id; w.dataset.open = FM.open[r.id] ? "true" : "false";
+      var row = el("div", "fm-r"), tw = el("button", "tw", "▸"), c = {};
+      tw.type = "button"; tw.setAttribute("aria-expanded", "false"); tw.setAttribute("aria-label", "Show the tracks of " + r.title);
+      row.appendChild(tw);
+      c.t = el("span", "c-t", r.title); c.t.title = r.title;
+      c.a = el("span", "c-a", (r.artist || "Various artists") + (r.label && r.label !== r.artist ? " · " + r.label : ""));
+      c.y = el("span", "c-y", r.year);
+      c.c = el("span", "c-c"); c.c.appendChild(fmBadge(r.lic));
+      c.n = el("span", "c-n r", ""); c.d = el("span", "c-d r", ""); c.x = el("span", "c-x");
+      [c.t, c.a, c.y, c.c, c.n, c.d, c.x].forEach(function(s){ row.appendChild(s); });
+      row.addEventListener("click", function(e){ if(e.target.closest(".c-x")) return; fmToggle(r.id); });
+      w.appendChild(row);
+      FMU.rel[r.id] = { w:w, row:row, c:c, tw:tw, r:r, box:null };
+      if(FMU.io) FMU.io.observe(w);
+      return w;
+    }
+    function fmToggle(id){
+      if(FM.open[id]) delete FM.open[id]; else { FM.open[id] = true; fmNeed(id, null); }
+      fmPaintRel(id);
+    }
+    function fmNeed(id, elm){
+      var it = FM.items[id];
+      if(it && (it.rel || it.loading)) return it.p || Promise.resolve(it.rel);
+      it = FM.items[id] = { loading:true };
+      it.p = fmItem(id, null, elm ? function(){ return (elm._vis && elm.isConnected) || !!FM.open[id]; } : null).then(function(rel){
+        FM.items[id] = { rel:rel }; fmPaintRel(id); return rel;
+      }, function(e){
+        if(e.kind === "skipped") delete FM.items[id]; else FM.items[id] = { err:e };
+        fmPaintRel(id); return null;
+      });
+      fmPaintRel(id);
+      return it.p;
+    }
+    function fmRelSecs(rel){ var s = 0, all = true; rel.tracks.forEach(function(tr){ if(tr.secs) s += tr.secs; else all = false; }); return all ? s : 0; }
+    function fmPaintRel(id){
+      var u = FMU.rel[id]; if(!u || !u.w.isConnected) return;
+      var it = FM.items[id], c = u.c, open = !!FM.open[id], rel = it && it.rel;
+      u.w.dataset.open = open ? "true" : "false"; u.tw.setAttribute("aria-expanded", open ? "true" : "false");
+      var n = "", d = "", off = false, tip = "";
+      if(it && it.loading) n = "…";
+      else if(it && it.err){ n = "?"; tip = fmErrWords(it.err, "The track list"); }
+      else if(rel){
+        n = String(rel.tracks.length); off = !rel.tracks.length;
+        var s = fmRelSecs(rel); d = s ? fmtTime(s) : "";
+        tip = off ? (rel.lic.ok ? "No file here fits: see the note under the release" : "The licence on the release's own page does not allow mixing") : "";
+      }
+      if(c.n.textContent !== n) c.n.textContent = n;
+      c.n.title = tip;
+      if(c.d.textContent !== d) c.d.textContent = d;
+      u.w.dataset.off = off ? "true" : "false";
+      // Add all
+      var todo = rel ? rel.tracks.filter(function(tr){ return !fmInLib(fmLibId(id, tr.file)); }).length : -1, key = rel ? rel.tracks.length + ":" + todo : "";
+      if(c.x._k !== key){
+        c.x._k = key; c.x.textContent = "";
+        if(rel && rel.tracks.length){
+          var b = btn("", todo ? (todo === rel.tracks.length ? "Add release" : "Add the rest") : "In library", todo ? "Download " + todo + (todo === 1 ? " track" : " tracks") + " of this release into your library" : "Every track of this release is in your library");
+          b.disabled = !todo;
+          b.addEventListener("click", function(){ fmAddMany(rel.tracks.map(function(tr){ return { id:id, file:tr.file }; }), "", "“" + rel.title + "”"); });
+          c.x.appendChild(b);
+        }
+      }
+      // the tracks
+      if(!open){ if(u.box){ u.w.removeChild(u.box); u.box = null; } return; }
+      var stamp = it && it.loading ? "load" : (it && it.err ? "err" : (rel ? "rel" : ""));
+      if(u.box && u.box._stamp === stamp) return;
+      if(u.box) u.w.removeChild(u.box);
+      var box = u.box = el("div", "fm-tracks"); box._stamp = stamp;
+      if(stamp === "load" || !stamp) box.appendChild(el("div", "fm-note", "Reading the track list from archive.org"));
+      else if(stamp === "err"){
+        var nt = el("div", "fm-note", fmErrWords(it.err, "The track list") + " "), rb = btn("", "Try again");
+        rb.addEventListener("click", function(){ delete FM.items[id]; fmNeed(id, null); });
+        nt.appendChild(rb); box.appendChild(nt);
+      } else {
+        rel.tracks.forEach(function(tr){ box.appendChild(fmTrackEl({ id:id, file:tr.file, title:tr.title, artist:tr.artist, secs:tr.secs, size:tr.size, lic:tr.lic, n:tr.n }, rel.lic)); });
+        var L = rel.left, bits = [], note2 = el("div", "fm-note");
+        if(!rel.lic.ok) bits.push("The release's own page gives a licence that does not allow mixing, so nothing from it is offered.");
+        else if(!rel.tracks.length) bits.push("No file of this release fits the decks.");
+        if(L.short) bits.push(L.short + (L.short === 1 ? " file is" : " files are") + " shorter than a minute");
+        if(L.long) bits.push(L.long + (L.long === 1 ? " is" : " are") + " longer than 20 minutes");
+        if(L.big) bits.push(L.big + (L.big === 1 ? " is" : " are") + " larger than " + fmtBytes(FM_CFG.limits.maxBytes));
+        if(L.lic) bits.push(L.lic + (L.lic === 1 ? " has" : " have") + " a licence of " + (L.lic === 1 ? "its" : "their") + " own that does not allow mixing");
+        if(L.other) bits.push(L.other + (L.other === 1 ? " is" : " are") + " in a format the browser cannot play");
+        var left = L.short + L.long + L.big + L.lic + L.other;
+        note2.textContent = (bits.length ? (left && rel.lic.ok && rel.tracks.length ? "Left out: " : "") + bits.join("; ") + (/\.$/.test(bits[bits.length - 1]) ? " " : ". ") : "") +
+          (rel.lic.ok ? rel.lic.name + ". " + fmLicWords(rel.lic) + " " : "");
+        note2.appendChild(fmLink("Release page on archive.org", fmItemURL(id)));
+        box.appendChild(note2);
+      }
+      u.w.appendChild(box);
+    }
+    // One track row. ref: {id, file, title, artist, secs, size, lic, n, release}. relLic: the licence of the release it is under, if shown there.
+    function fmTrackEl(ref, relLic){
+      var lib = fmLibId(ref.id, ref.file), row = el("div", "fm-t"); row.dataset.lib = lib; row.dataset.ref = ref.id + "/" + ref.file;
+      row.appendChild(el("span", "c-n", ref.n ? String(ref.n) : ""));
+      var pc = el("span", "c-p"), pv = el("button", "fm-pv"); pv.type = "button"; pv.setAttribute("aria-pressed", "false");
+      pv.setAttribute("aria-label", "Preview “" + ref.title + "”"); pv.title = "Listen to the first " + FM_CFG.t.preview + " seconds. A preview does not use the decks.";
+      pv.addEventListener("click", function(){ fmPreview(ref.id, ref.file); });
+      pc.appendChild(pv); row.appendChild(pc);
+      var t = el("span", "c-t", ref.title); t.title = ref.title + (ref.release ? " · from “" + ref.release + "”" : "");
+      if(ref.release) t.appendChild(el("small", "", ref.release));
+      if(ref.lic && (!relLic || relLic.url !== ref.lic.url)){ var bd = fmBadge(ref.lic); bd.style.marginLeft = "8px"; t.appendChild(bd); }
+      row.appendChild(t);
+      row.appendChild(el("span", "c-a", ref.artist || ""));
+      row.appendChild(el("span", "c-l r", ref.secs ? fmtTime(ref.secs) : ""));
+      row.appendChild(el("span", "c-z r", ref.size ? fmtBytes(ref.size) : ""));
+      var x = el("span", "c-x"); row.appendChild(x);
+      row._paint = function(){
+        var job = FM.dl[lib], inLib = fmInLib(lib), key, pct = 0;
+        pv.setAttribute("aria-pressed", FMU.pv.key === lib ? "true" : "false");
+        if(inLib) key = "in:" + decks.length;
+        else if(job && job.st === "wait") key = "wait";
+        else if(job && (job.st === "run" || job.st === "store")){ key = "run"; pct = job.total ? Math.min(100, Math.round(job.got / job.total * 100)) : 0; }
+        else if(job && job.st === "err") key = "err:" + job.msg;
+        else key = "add:" + decks.length;
+        if(x._k === key){ if(key === "run" && x._bar){ x._bar.style.width = pct + "%"; x._pc.textContent = job.st === "store" ? "saving" : (job.total ? pct + "%" : fmtBytes(job.got)); } return; }
+        x._k = key; x.textContent = ""; x._bar = null;
+        function deckBtns(){
+          decks.forEach(function(D){
+            var b = btn("ld", String(D.n), inLib ? "Load on deck " + D.n : "Add to your library and load on deck " + D.n);
+            b.dataset.d = D.i;
+            b.addEventListener("click", function(){ if(inLib) D.load(lib); else fmLoadDeck(ref.id, ref.file, D.i); });
+            x.appendChild(b);
+          });
+        }
+        if(inLib){ x.appendChild(el("span", "in", "In library")); deckBtns(); }
+        else if(key === "wait" || key === "run"){
+          if(key === "wait") x.appendChild(el("span", "why", "Waiting"));
+          else { var bar = el("span", "bar"), fill = el("i"); bar.appendChild(fill); x.appendChild(bar); x._bar = fill; x._pc = el("span", "pc", ""); x.appendChild(x._pc); fill.style.width = pct + "%"; x._pc.textContent = job.st === "store" ? "saving" : (job.total ? pct + "%" : ""); }
+          var cx = btn("", "×", "Stop this download"); cx.setAttribute("aria-label", "Stop this download"); cx.style.padding = "0 5px";
+          cx.addEventListener("click", function(){ fmCancel(lib); });
+          x.appendChild(cx);
+        } else {
+          if(job && job.st === "err"){ var w = el("span", "why err", "Not added"); w.title = job.msg; x.appendChild(w); }
+          var ab = btn("add", job && job.st === "err" ? "Try again" : "Add", "Download this track once into your library on this device");
+          ab.addEventListener("click", function(){ if(FM.dl[lib] && FM.dl[lib].st === "err") delete FM.dl[lib]; fmAdd(ref.id, ref.file).then(function(r){ if(!r.ok && r.why) note(r.why); }); });
+          x.appendChild(ab);
+          if(!(job && job.st === "err")) deckBtns();
+        }
+      };
+      (FMU.trk[lib] = (FMU.trk[lib] || []).filter(function(r){ return r.isConnected; })).push(row);
+      row._paint();
+      return row;
+    }
+    function fmPaintTrack(lib){
+      var a = FMU.trk[lib]; if(!a) return;
+      a = FMU.trk[lib] = a.filter(function(r){ return r.isConnected; });
+      a.forEach(function(r){ r._paint(); });
+      if(!a.length) delete FMU.trk[lib];
+    }
+    function fmPaintAllTracks(){ Object.keys(FMU.trk).forEach(fmPaintTrack); }
+    // ---- the views ----
+    function fmGo(o){
+      o = o || {};
+      if(o.q !== undefined){ FM.q = String(o.q).slice(0, 80); FM.view = "browse"; FM.crate = ""; }
+      if(o.genre !== undefined){ FM.genre = fmGenre(o.genre) ? o.genre : ""; FM.view = "browse"; FM.crate = ""; }
+      if(o.crate !== undefined){ FM.crate = fmCrateDef(o.crate) ? o.crate : ""; FM.view = FM.crate ? "crate" : "browse"; }
+      if(o.view === "credits" || o.view === "browse") FM.view = o.view;
+      if(FMU.q && FMU.q.value !== FM.q && document.activeElement !== FMU.q) FMU.q.value = FM.q;
+      fmFrame();
+      if(FM.view === "credits"){ fmRender(); return Promise.resolve(); }
+      if(FM.view === "crate") return fmCrateShow(!!o.refresh);
+      return fmLoad(true);
+    }
+    function fmRender(){
+      var b = FMU.body; if(!b) return;
+      FM.shown = FM.view;
+      FMU.trk = {}; FMU.rel = {};
+      if(FMU.io) FMU.io.disconnect();
+      b.textContent = ""; FMU.more = null;
+      if(FM.view === "credits"){ fmRenderCredits(b); fmFoot(); return; }
+      if(FM.view === "crate"){ fmRenderCrate(b); fmFoot(); return; }
+      if(FM.err && !FM.rows.length){
+        b.appendChild(fmPanel("err", fmErrWords(FM.err, "Browsing free music"), function(){ fmLoad(true); }));
+      } else if(FM.done && !FM.rows.length){
+        var g = fmGenre(FM.genre);
+        b.appendChild(fmPanel("none", (FM.q.trim() ? "Nothing matches “" + FM.q.trim() + "”" : "Nothing was found") + (g ? " in " + g.name : "") + " under the licences that allow mixing. Try fewer words or another style."));
+      } else {
+        var frag = document.createDocumentFragment();
+        FM.rows.forEach(function(r){ frag.appendChild(fmRelEl(r)); });
+        b.appendChild(frag);
+        FMU.more = el("div", "fm-more"); b.appendChild(FMU.more);
+        if(FMU.io) FMU.io.observe(FMU.more);
+        fmMoreText();
+        FM.rows.forEach(function(r){ if(FM.items[r.id]) fmPaintRel(r.id); });
+      }
+      fmFoot();
+    }
+    function fmMoreNear(){
+      if(!FMU.more || !FMU.more.isConnected || FMU.root.hidden) return false;
+      return FMU.more.getBoundingClientRect().top < FMU.body.getBoundingClientRect().bottom + 160;
+    }
+    function fmMoreText(){
+      var m = FMU.more; if(!m) return;
+      m.textContent = "";
+      if(FM.err){
+        m.appendChild(el("span", "", fmErrWords(FM.err, "The rest of the list")));
+        var b = btn("", "Try again"); b.addEventListener("click", function(){ FM.err = null; fmMoreText(); fmLoad(false); }); m.appendChild(b);
+      } else if(FM.loading) m.appendChild(el("span", "", FM.rows.length ? "Asking archive.org for more" : "Asking archive.org"));
+      else if(FM.done && FM.rows.length > 12) m.appendChild(el("span", "", "That is the end of the list."));
+    }
+    // The next page of the search (the first when reset). Resolves when it is on screen.
+    function fmLoad(reset){
+      if(reset){
+        if(FM.ac){ try { FM.ac.abort(); } catch(e){} }
+        FM.token++; FM.page = 0; FM.rows = []; FM.seen = {}; FM.found = 0; FM.done = false; FM.err = null; FM.loading = false; FM.open = {};
+        fmRender(); FMU.body.scrollTop = 0;
+      }
+      if(FM.loading) return FM.p;
+      if(FM.done || FM.err) return Promise.resolve();
+      FM.loading = true;
+      var token = FM.token, ac = FM.ac = new AbortController();
+      fmMoreText(); fmFoot();
+      FM.p = fmSearch(FM.genre, FM.q, FMS.sort, FM.page + 1, FM_CFG.rows, ac.signal).then(function(res){
+        if(token !== FM.token) return;
+        FM.loading = false; FM.page++; FM.found = res.found;
+        var fresh = res.rows.filter(function(r){ if(FM.seen[r.id]) return false; FM.seen[r.id] = true; return true; });
+        FM.rows = FM.rows.concat(fresh);
+        if(res.raw < FM_CFG.rows || FM.page * FM_CFG.rows >= Math.min(res.found, 10000)) FM.done = true;
+        if(FM.shown === "browse" && FM.view === "browse"){
+          if(!FM.rows.length || !FMU.more) fmRender();
+          else {
+            var frag = document.createDocumentFragment();
+            fresh.forEach(function(r){ frag.appendChild(fmRelEl(r)); });
+            FMU.body.insertBefore(frag, FMU.more);
+            fmMoreText(); fmFoot();
+          }
+        }
+        // a page with nothing that may be listed, or a screen not yet full: carry on
+        if(!FM.done && (!fresh.length || fmMoreNear())) return later(20).then(function(){ if(token === FM.token) return fmLoad(false); });
+      }, function(e){
+        if(token !== FM.token || (e && e.kind === "abort")) return;
+        FM.loading = false; FM.err = e;
+        if(FM.shown === "browse" && FM.view === "browse"){ if(FM.rows.length) fmMoreText(); else fmRender(); }
+        fmFoot();
+      });
+      return FM.p;
+    }
+    function fmCrateShow(fresh){
+      var id = FM.crate, def = fmCrateDef(id), token = ++FM.ctoken;
+      FM.cl = { id:id, loading:true, step:"" };
+      fmRender();
+      return fmCrate(id, fresh, function(done, of, got){
+        if(token !== FM.ctoken) return;
+        FM.cl.step = got + " of " + FM_CFG.crate.size + " tracks found, " + done + " of " + of + " releases read";
+        if(FMU.crateSub) FMU.crateSub.textContent = "Putting the crate together from the most downloaded " + def.name + " releases: " + FM.cl.step + ".";
+      }).then(function(c){
+        if(token !== FM.ctoken) return;
+        FM.cl = c;
+        if(FM.shown === "crate" && FM.view === "crate") fmRender();
+      }, function(e){
+        if(token !== FM.ctoken) return;
+        FM.cl = { id:id, err:e };
+        if(FM.shown === "crate" && FM.view === "crate") fmRender();
+      });
+    }
+    function fmRenderCrate(b){
+      var c = FM.cl || { id:FM.crate, loading:true }, def = fmCrateDef(c.id) || { name:"" }, rows = c.rows || [];
+      var hd = FMU.banner, tx = el("div", "tx");
+      hd.textContent = "";
+      tx.appendChild(el("b", "", "Starter crate: " + def.name));
+      var sub = el("span", "", ""); FMU.crateSub = sub; tx.appendChild(sub);
+      hd.appendChild(tx);
+      if(c.loading) sub.textContent = "Putting the crate together from the most downloaded " + def.name + " releases on archive.org.";
+      else if(c.err) sub.textContent = "";
+      else if(c.pinned) sub.textContent = rows.length + " tracks to start mixing with, under licences that allow it. A fixed list, checked" + (c.at ? " on " + c.at : "") + ".";
+      else sub.textContent = rows.length + (rows.length === 1 ? " track" : " tracks") + " from the most downloaded " + def.name + " releases on archive.org, 3 to 9 minutes long, under licences that allow mixing. " +
+        "Picked automatically on " + fmDate(c.at) + " by download count; nobody at First Loop chose them by ear.";
+      if(rows.length){
+        var todo = rows.filter(function(r){ return !fmInLib(fmLibId(r.id, r.file)); }), bytes = todo.reduce(function(s, r){ return s + (r.size || 0); }, 0);
+        var all = btn("dj-free-go", todo.length ? "Add " + (todo.length === rows.length ? "all " : "the other ") + todo.length + (bytes ? " (" + fmtBytes(bytes) + ")" : "") : "All in library",
+          "Download these tracks into your library on this device, one after another");
+        all.id = "djfmcrateadd"; all.disabled = !todo.length;
+        all.addEventListener("click", function(){ fmAddMany(rows, "Starter crate: " + def.name, "Starter crate " + def.name).then(function(){ if(FM.shown === "crate") fmRender(); }); });
+        hd.appendChild(all);
+      }
+      if(!c.loading && !c.pinned){
+        var rf = btn("", "Refresh", "Ask archive.org again and put the crate together afresh"); rf.id = "djfmcraterefresh";
+        rf.addEventListener("click", function(){ fmGo({ crate:c.id, refresh:true }); });
+        hd.appendChild(rf);
+      }
+      if(c.err) b.appendChild(fmPanel("err", fmErrWords(c.err, "A starter crate"), function(){ fmGo({ crate:c.id }); }));
+      else if(!c.loading && !rows.length) b.appendChild(fmPanel("none", "No tracks were found for this crate just now. Try Refresh, or pick a style above.", null));
+      rows.forEach(function(r, i){
+        b.appendChild(fmTrackEl({ id:r.id, file:r.file, title:r.title, artist:r.artist, secs:r.secs, size:r.size, lic:fmLicence(r.lic), n:i + 1, release:r.release }, null));
+      });
+    }
+    function fmRenderCredits(b){
+      var w = el("div", "dj-free-cred"), lib = fmLibCredits();
+      function copyBtn(text, done){ var c = btn("", "Copy credits"); c.addEventListener("click", function(){ fmCopy(text, done); }); return c; }
+      function block(title, sub, items, cls){
+        var m = el("div", "mix " + (cls || "")), hd = el("div", "hd"), text = fmCreditsText(items), sa = fmShareAlike(items);
+        hd.appendChild(el("b", "", title)); hd.appendChild(el("span", "", sub)); hd.appendChild(copyBtn(text, "The credits were copied."));
+        m.appendChild(hd); m.appendChild(el("pre", "", text));
+        if(sa) m.appendChild(el("p", "sa", fmSAWords(sa)));
+        return m;
+      }
+      var h = el("h3"); h.appendChild(el("span", "", "Recorded mixes")); w.appendChild(h);
+      if(!FM.mixes.length) w.appendChild(el("p", "", "When you record a mix that has free music in it, the lines that name its artists are offered when the recording stops, and kept here."));
+      FM.mixes.slice().reverse().forEach(function(mx){
+        w.appendChild(block(fmDate(mx.at) + ", " + new Date(mx.at).toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" }),
+          fmtTime(mx.secs) + " long, " + mx.items.length + (mx.items.length === 1 ? " free track" : " free tracks") + (mx.other ? ", " + mx.other + " other" : ""), mx.items, "rec"));
+      });
+      var sess = history.slice().reverse().slice(0, 30).map(function(hh){ return { h:hh, items:fmHistCredits(hh) }; }).filter(function(x){ return x.items.length; });
+      h = el("h3"); h.appendChild(el("span", "", "Sessions")); w.appendChild(h);
+      if(!sess.length) w.appendChild(el("p", "", "Each time you play, the free music that went through the decks is listed here with its credits, one list per session."));
+      sess.forEach(function(x){
+        var d = new Date(x.h.at);
+        w.appendChild(block(d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" }) + ", " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" }),
+          x.items.length + (x.items.length === 1 ? " free track played" : " free tracks played"), x.items, "sess"));
+      });
+      h = el("h3"); h.appendChild(el("span", "", "Free music in this library"));
+      if(lib.length){ var all = copyBtn(fmCreditsText(lib), "The credits for all the free music in the library were copied."); all.id = "djfmcopyall"; h.appendChild(all); }
+      w.appendChild(h);
+      if(!lib.length) w.appendChild(el("p", "", "No free music in the library yet. Tracks you add from Free music are listed here with their licence and where they came from."));
+      else w.appendChild(el("p", "", "CC BY and CC BY-SA ask that the artist is named wherever a mix is published; one line per track, in this form, does that. CC0 and public-domain tracks need no credit, and are listed so you know where they came from."));
+      lib.forEach(function(c){
+        var r = el("div", "cr"), l = fmLicence(c.lic);
+        var t = el("span", "t", c.title); t.title = fmCreditLine(c);
+        r.appendChild(t); r.appendChild(el("span", "a", c.artist));
+        r.appendChild(fmBadge(l, true)); r.appendChild(fmLink("archive.org/details/" + c.id, fmItemURL(c.id)));
+        w.appendChild(r);
+      });
+      var sa = fmShareAlike(lib);
+      if(sa) w.appendChild(el("p", "sa", "Some of these are under CC BY-SA: a published mix that contains one has to be shared under the same licence."));
+      b.appendChild(w);
+    }
+    function fmFoot(){
+      if(!FMU.st) return;
+      var s = "";
+      if(FM.view === "browse"){
+        if(FM.loading && !FM.rows.length) s = "Asking archive.org";
+        else if(FM.err && !FM.rows.length) s = "";
+        else if(FM.rows.length) s = FM.rows.length + (FM.done ? (FM.rows.length === 1 ? " release" : " releases") : " of about " + String(FM.found).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " releases") +
+          (FM.plain ? " · CC BY only (the wider question was refused)" : "") + " · from archive.org";
+      } else if(FM.view === "crate"){
+        var c = FM.cl;
+        s = c && c.rows ? c.rows.length + (c.rows.length === 1 ? " track" : " tracks") + " · from archive.org" : "";
+      } else s = fmFreeTracks().length + " free tracks in the library";
+      if(FMU.st.textContent !== s) FMU.st.textContent = s;
+      var j = fmJob();
+      FMU.dlT.hidden = FMU.dlX.hidden = !j; FMU.sto.hidden = !!j;
+      if(j && FMU.dlT.textContent !== j.txt) FMU.dlT.textContent = j.txt;
+    }
+    function fmSto(){
+      if(!FMU.sto) return;
+      storageLine().then(function(s){
+        var free = 0;
+        T.list.forEach(function(t){ if(fmIs(t) && t.src && (t.src.kind === "opfs" || t.src.kind === "idb") && !t.gone) free += t.size || 0; });
+        FMU.sto.textContent = "Free music stored in this browser: " + fmtBytes(free) + (s && s.quota ? " · " + fmtBytes(s.used) + " of about " + fmtBytes(s.quota) + " used" : "");
+      });
+    }
+    function fmAbout(anchor){
+      openPop(anchor, "dj-pop dj-free-pop", function(p){
+        p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "About free music");
+        p.appendChild(el("h3", "", "About free music"));
+        p.appendChild(el("p", "", "Where it comes from: the Internet Archive (archive.org), a non-profit library. Independent artists and small labels have put their releases there for anyone to download. This list reads its netlabels collection."));
+        p.appendChild(el("p", "", "What the licences allow: only releases under CC BY, CC BY-SA, CC0 or the Public Domain Mark are listed. Those allow playing, mixing and publishing the mix, also commercially. " +
+          "CC BY and CC BY-SA ask that the artist is named; Credits writes those lines for you. A published mix that contains CC BY-SA music has to be shared under the same licence. " +
+          "Releases marked non-commercial (NC) or no-derivatives (ND), and releases with no licence, are left out."));
+        p.appendChild(el("p", "", "Whose it is: this is other people's work, shared freely by them. First Loop does not host it, did not choose it by ear, and cannot promise that every uploader labelled a release correctly. Each release links to its own page on archive.org."));
+        p.appendChild(el("p", "", "What happens on this device: searching free music contacts archive.org directly from your browser. Add downloads a file once and keeps it in this browser, so it works without the internet afterwards."));
+        p.appendChild(el("p", "", "Famous commercial catalogues (Spotify, Apple Music, TIDAL, Beatport) cannot be connected yet: that needs licence agreements."));
+        var r = el("div", "rowx"); r.appendChild(fmLink("archive.org/details/netlabels", FM_CFG.origin + FM_CFG.paths.item + FM_CFG.collection)); r.appendChild(fmLink("About the licences", "https://creativecommons.org/share-your-work/cclicenses/"));
+        p.appendChild(r);
+      });
+    }
+    // ---- in the rest of the library ----
+    // the note over an empty library: free music first, then your own folder, then the songs made here
+    function fmEmpty(e){
+      var p = el("p", "dj-free-start");
+      var go = btn("dj-free-go", "Start with free music", "Opens the catalogue with a House starter crate: tracks you may mix and share"); go.id = "djfmstart";
+      go.addEventListener("click", function(){ FM.started = true; FMS.seen = true; fmSaveSet(); fmPrune(); FM.crate = "house"; FM.view = "crate"; setNode("free"); fmGo({ crate:"house" }); });
+      p.appendChild(go);
+      var af = btn("", "Add your own music folder", "Point at a folder of music on this computer. Nothing is copied or uploaded."); af.id = "djfmfolder";
+      if(window.showDirectoryPicker) af.addEventListener("click", function(){ pickFolder(); });
+      else { af.disabled = true; af.title = "Add folder is not available in this browser. Chrome and Edge on a computer have it. Use Add files instead."; }
+      p.appendChild(af);
+      e.appendChild(p);
+      var p2 = el("p");
+      p2.appendChild(el("strong", "", "Free music"));
+      p2.appendChild(document.createTextNode(" is a catalogue of tracks under licences that allow mixing and sharing, downloaded from archive.org when you add one. "));
+      p2.appendChild(el("strong", "", "Add folder"));
+      p2.appendChild(document.createTextNode(window.showDirectoryPicker ? " reads your own music where it is; " : " is not available in this browser (Chrome and Edge on a computer have it); "));
+      p2.appendChild(el("strong", "", "Add files"));
+      p2.appendChild(document.createTextNode(" (or dropping files on this list) copies them into this browser. The songs you make in First Loop are already below, with five demo songs."));
+      e.appendChild(p2);
+      e.appendChild(el("p", "", "Your files stay on this device. Nothing is uploaded. Streaming services and shops with famous commercial catalogues (Spotify, Apple Music, TIDAL, Beatport) cannot be connected yet: that needs licence agreements."));
+    }
+    function fmRowMark(cell, t){
+      var s = t.free ? (fmTrackLic(t).short || "") : "";
+      if((cell.dataset.lic || "") !== s){ if(s) cell.dataset.lic = s; else delete cell.dataset.lic; }
+    }
+    function fmInfo(p, t){
+      if(!fmIs(t)) return;
+      var lic = fmTrackLic(t), c = lic.ok ? fmCreditOf(t) : null, box = el("div", "dj-free-info");
+      if(!c){ box.appendChild(el("span", "", "From archive.org, but no licence that allows mixing is recorded for it.")); p.appendChild(box); return; }
+      var l1 = el("div", "l1"); l1.appendChild(fmBadge(lic, true)); l1.appendChild(el("span", "", lic.name)); box.appendChild(l1);
+      box.appendChild(el("span", "", fmLicWords(lic)));
+      box.appendChild(fmLink("archive.org/details/" + c.id, fmItemURL(c.id)));
+      var b = btn("", "Copy credit line"); b.addEventListener("click", function(){ fmCopy(fmCreditLine(c), "The credit line was copied."); });
+      box.appendChild(b);
+      p.appendChild(box);
+    }
+    // ---- DJ.library.free ----
+    function fmRowOut(r){ return { id:r.id, title:r.title, artist:r.artist, label:r.label, year:r.year, licence:r.lic.code, licenceName:r.lic.name, licenceUrl:r.lic.url, downloads:r.downloads, url:fmItemURL(r.id) }; }
+    function fmRefParse(ref){
+      if(ref && typeof ref === "object") return { id:ref.id || ref.identifier, file:ref.file };
+      var s = String(ref || ""), i = s.indexOf("/");
+      return i > 0 ? { id:s.slice(0, i), file:s.slice(i + 1) } : { id:s, file:"" };
+    }
+    var fmAPI = {
+      genres:function(){ return FM_CFG.genres.map(function(g){ return { id:g.id, name:g.name }; }); },
+      crates:function(){ return FM_CFG.crates.map(function(c){ return { id:c.id, name:c.name, genre:c.genre }; }); },
+      licence:function(url){ return fmLicence(url); },
+      search:function(q, o){
+        o = o || {};
+        return fmSearch(fmGenre(o.genre) ? o.genre : "", q, FM_CFG.sorts[o.sort] ? o.sort : "downloads", Math.max(1, o.page | 0), clamp(o.rows | 0 || 20, 1, 100)).then(function(res){ return res.rows.map(fmRowOut); },
+          function(e){ throw new Error(fmErrWords(e, "Searching free music")); });
+      },
+      release:function(id){
+        return fmItem(String(id)).then(function(rel){
+          var o = fmRowOut({ id:rel.id, title:rel.title, artist:rel.artist, label:rel.label, year:rel.year, lic:rel.lic.ok ? rel.lic : { code:"", name:"", url:"" }, downloads:0 });
+          o.allowed = rel.lic.ok;
+          o.tracks = rel.tracks.map(function(tr){ var lib = fmLibId(rel.id, tr.file); return { ref:rel.id + "/" + tr.file, title:tr.title, artist:tr.artist, seconds:tr.secs, bytes:tr.size, licence:tr.lic.code, inLibrary:fmInLib(lib), libraryId:lib }; });
+          return o;
+        }, function(e){ throw new Error(fmErrWords(e, "The track list")); });
+      },
+      add:function(ref, o){
+        var r = fmRefParse(ref);
+        return init().then(function(){ return fmAdd(r.id, r.file); }).then(function(res){
+          if(!res.ok) throw new Error(res.why || "The download was stopped.");
+          if(o && o.deck) return deckOf(o.deck).load(res.id).then(function(){ return res.id; });
+          return res.id;
+        });
+      },
+      crate:function(id, o){
+        return fmCrate(String(id), !!(o && o.refresh)).then(function(c){
+          return { id:c.id, name:(fmCrateDef(c.id) || {}).name, pinned:!!c.pinned, tracks:c.rows.map(function(r){ var lib = fmLibId(r.id, r.file); return { ref:r.id + "/" + r.file, title:r.title, artist:r.artist, release:r.release, seconds:r.secs, bytes:r.size, licence:fmLicence(r.lic).code, inLibrary:fmInLib(lib), libraryId:lib }; }) };
+        }, function(e){ throw new Error(fmErrWords(e, "A starter crate")); });
+      },
+      open:function(o){
+        o = o || {};
+        if(view !== "dj") setView("dj");
+        return init().then(function(){
+          FM.started = true;
+          setNode(o.view === "credits" ? "credits" : "free");
+          if(o.view === "credits") return fmAPI.state();
+          // a style or a crate named without a search starts from an empty search box
+          return Promise.resolve(fmGo({ genre:o.genre, q:o.q === undefined && (o.genre !== undefined || o.crate !== undefined) ? "" : o.q, crate:o.crate })).then(function(){ return fmAPI.state(); });
+        });
+      },
+      state:function(){
+        return { open:FM.on, view:FM.view, genre:FM.genre, search:FM.q, crate:FM.crate, sort:FMS.sort, loading:FM.view === "browse" ? FM.loading : (FM.view === "crate" && !!(FM.cl && FM.cl.loading)), showing:FM.view === "crate" ? ((FM.cl && FM.cl.rows) || []).length : FM.rows.length,
+                 found:FM.found, error:FM.view === "browse" ? (FM.err ? fmErrWords(FM.err) : "") : (FM.view === "crate" && FM.cl && FM.cl.err ? fmErrWords(FM.cl.err) : ""), downloading:fmBusyJobs().length, inLibrary:fmFreeTracks().length, plain:FM.plain, requests:fmNet.sent };
+      },
+      cancel:fmCancelAll,
+      credits:function(){ return fmLibCredits().map(function(c){ return { id:c.lib, title:c.title, artist:c.artist, licence:fmLicence(c.lic).name, source:fmItemURL(c.id), line:fmCreditLine(c) }; }); },
+      creditsText:function(ids){
+        var list = ids ? [].concat(ids).map(function(id){ return T.by[id] ? fmCreditOf(T.by[id]) : null; }).filter(Boolean) : fmLibCredits();
+        return fmCreditsText(list);
+      },
+      mixes:function(){ return FM.mixes.map(function(m){ return { at:m.at, seconds:m.secs, text:fmCreditsText(m.items), tracks:m.items.length, other:m.other, shareAlike:!!fmShareAlike(m.items) }; }); }
+    };
+    // a line in Find
+    if(typeof palAdd === "function") palAdd("djfree", "Free music to mix", "DJ catalogue", "free music, catalogue, creative commons, archive.org, netlabel, starter crate, royalty free, credits, attribution", "top", ['.viewtab[data-view="dj"]'], { run:function(){ fmAPI.open({}); } });
+    // ===== /DJ free music =====
 
     // ---------- keyboard: only in the DJ area, never while typing ----------
     function typing(t){ return !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable); }
@@ -20302,7 +22093,7 @@
     function rowOut(t){
       return { id:t.id, title:t.title, artist:t.artist, album:t.album || "", genre:t.genre || "", bpm:t.bpm || 0, key:t.key || "", camelot:camelot(t.key),
                duration:t.dur || 0, rating:t.rating || 0, plays:t.plays || 0, added:t.added || 0, analysed:t.analysed === ANALYSER_VERSION,
-               source:t.src ? t.src.kind : "", missing:!!(t.gone || (t.src && t.src.kind === "missing")) };
+               source:t.src ? t.src.kind : "", missing:!!(t.gone || (t.src && t.src.kind === "missing")), free:fmIs(t), licence:fmCode(t) };
     }
     var controller = { active:false, name:"", channels:0 };
     var API = {
@@ -20462,7 +22253,8 @@
         history:function(){ return history.map(function(h){ return { id:h.id, at:h.at, items:h.items.slice() }; }); },
         importXML:function(text){ var r = importXML(text); refreshList(); return r; },
         exportXML:exportXML,
-        related:function(id){ return relatedTo(id ? T.by[id] : activeTrack()).map(rowOut); }
+        related:function(id){ return relatedTo(id ? T.by[id] : activeTrack()).map(rowOut); },
+        free:fmAPI
       },
       audioInfo:function(){
         var c = ENG && ENG.ctx;
@@ -20516,6 +22308,7 @@
         prof:function(on2){ send({ t:"prof", on:!!on2 }); return ENG && ENG.prof; },
         forceFallback:function(on2){ forceFallback = !!on2; },
         workletURL:workletURL, prepare:prepare, runWorker:runWorker, aq:aq, busy:busy,
+        fm:{ CFG:FM_CFG, FM:FM, FMU:FMU, net:fmNet, licence:fmLicence, parseItem:fmParseItem, query:fmQuery, searchURL:fmSearchURL, row:fmRow, secs:fmSecs, creditLine:fmCreditLine, cratePick:fmCratePick, libId:fmLibId, go:fmGo, add:fmAdd, addMany:fmAddMany, preview:fmPreview, text:fmText },
         drawCost:function(n){
           var t0 = nowMs(), k;
           for(k = 0; k < n; k++) decks.forEach(function(D){ drawWave(D, UI.deck[D.i].wave); drawOverview(D, UI.deck[D.i].ov, UI.deck[D.i]); });

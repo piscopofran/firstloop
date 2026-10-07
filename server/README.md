@@ -142,21 +142,26 @@ For a sense of scale: the default model is Claude Haiku 4.5
 per million output tokens on Anthropic's models overview page
 (https://platform.claude.com/docs/en/models/overview, read on 6 October 2026).
 
-- **Ordinary use.** One message to the Assistant sends roughly 3,000 to 5,000
-  input tokens (the instructions, the description of the song, the recent
-  conversation) and gets a few hundred back: about half a cent to one cent.
+- **Ordinary use.** One message to the Assistant sends roughly 5,500 to 8,000
+  input tokens and gets a few hundred back: about two thirds of a cent to one
+  cent. Of those input tokens about 4,100 are the instructions (they grew
+  with the DJ area and the equipment diagrams); the description of what is on
+  screen is 800 to 1,500 (measured: 2.3 KB for a new song, 3.1 KB in the DJ
+  area with two tracks loaded and twelve tracks listed, 4.2 KB with a
+  controller's diagram as well, 6.9 KB for the fullest possible song); the
+  rest is the recent conversation.
 - **The worst case, in plain words.** The most one request can cost is the
   largest request the service will pass on, plus the longest reply it allows.
-  The largest request is 24 KB of text plus the instructions; text can be as
-  dense as one token per byte, so call it 27,000 input tokens: 2.7 cents. The
+  The largest request is 26 KB of text plus the instructions; text can be as
+  dense as one token per byte, so call it 31,000 input tokens: 3.1 cents. The
   longest reply is 1,200 tokens: 0.6 cents. So no single message can cost more
-  than about 3.3 cents. The service answers at most 600 messages a day, so the
-  worst possible day is 600 x 3.3 cents, about **$20**, and the worst possible
-  month about $600. That would take somebody deliberately sending the largest
+  than about 3.7 cents. The service answers at most 600 messages a day, so the
+  worst possible day is 600 x 3.7 cents, about **$22**, and the worst possible
+  month about $670. That would take somebody deliberately sending the largest
   possible requests all day, every day. A day of real people using the site
-  flat out is more like $3 to $6.
+  flat out is more like $4 to $6.
 - If you change `FL_DAILY_CAP`, `FL_MAX_TOKENS` or the model, the same sum
-  applies with the new numbers: (27,000 x input price + reply tokens x output
+  applies with the new numbers: (31,000 x input price + reply tokens x output
   price) x messages per day.
 
 These are estimates, and prices change: check https://www.anthropic.com/pricing
@@ -172,7 +177,7 @@ estimate although a few of them may still be billed. The invoice from
 Anthropic is the real figure.
 
 With invite codes, the most a single code can cost you is its allowance times
-the worst-case message above: a code for 300 messages is at most about $10,
+the worst-case message above: a code for 300 messages is at most about $11,
 and in ordinary use $2 to $3.
 
 ## The limits built in, and what they are not
@@ -184,11 +189,15 @@ and in ordinary use $2 to $3.
   Assistant says it has reached its limit for the day; the rest of the app
   keeps working. The count restarts at midnight UTC.
 - A reply is at most about 1,200 tokens (`FL_MAX_TOKENS`).
-- A request is at most 24 KB, of which the description of the song at most
-  12 KB, with at most 14 messages of at most 4,000 characters each. (A full
-  song, 32 bars with all 8 parts filled, measures about 7 KB.)
-- The description of the song is checked field by field against what the page
-  really sends. Anything else in it is dropped, every name is cut to 60
+- A request is at most 26 KB, of which the description of the song, the DJ
+  decks and the connected equipment at most 14 KB, with at most 14 messages
+  of at most 4,000 characters each. (Measured: the fullest possible song, 32
+  bars with all 8 parts filled, is 6.9 KB; with two decks loaded and the
+  largest equipment diagram on top of it, 10.6 KB. The limit is that plus
+  about 30 per cent, because track titles in other alphabets take more
+  bytes.)
+- The description of the song, the decks and the equipment is checked field
+  by field against what the page really sends. Anything else in it is dropped, every name is cut to 60
   characters, and it is given to the AI as data, separate from the
   instructions.
 - The instructions the AI works under are fixed inside the service. A visitor
@@ -255,8 +264,11 @@ The owner token is kept only as a sha256 scramble
 (`/var/lib/firstloop-chat/admin.hash`).
 
 Recordings made in the app are never sent at all. The page sends only the
-messages typed in the current conversation and the notes, settings and track
-names of the open song.
+messages typed in the current conversation; the notes, settings and track
+names of the open song; from the DJ area what is on the two decks, where the
+mixer's controls are, and the titles, artists, tempo and key of the tracks at
+the top of the list on screen (never the music itself); and the names of
+connected MIDI and sound devices with the last few controls touched.
 
 ## Changing the model or the limits
 
@@ -291,7 +303,7 @@ https://platform.claude.com/docs/en/models/overview.
 
 ```
 systemctl status firstloop-chat             # is it running
-curl -s http://127.0.0.1:8788/api/chat      # {"ok": true, "model": "...", "open": 0}
+curl -s http://127.0.0.1:8788/api/chat      # {"ok": true, "model": "...", "open": 0, "v": 2}
 tail /var/log/firstloop-chat/chat.log       # recent requests (no message text)
 journalctl -u firstloop-chat -n 30          # if it will not start
 ```
@@ -369,9 +381,15 @@ If you are finished with the key, delete it in the Anthropic Console as well.
   `python3 server/check-prompt.py` compares them and exits 1 if they differ;
   `python3 server/check-prompt.py --write` copies the page's prompt into the
   service. After changing the prompt, run the installer on the server again.
-- Protocol, all on `/api/chat`. `GET` returns `{ok, model, open}`, with
+- Protocol, all on `/api/chat`. `GET` returns `{ok, model, open, v}`, with
   `ok: false` and a `reason` (`no_key`, `bad_key`, `config`) when it cannot
   answer; `open` is the free messages a day without a code (0 = code needed).
+  `v` (`WIRE_VERSION`, 2 since v29) says which description of the app the
+  service understands. The page reads it: to a service that says `v` 2 or
+  more it sends `dj`, `equipment` and the fuller `midi` lists; to an older
+  one (no `v`) it sends exactly what it always did, because that service
+  would drop the new fields and its instructions know nothing of the decks.
+  The page and the service can therefore be updated in either order.
   `GET /api/chat?admin` is the owner page. `POST` takes JSON with an `op`:
   - absent or `chat`: `{"song": {...}, "messages": [{"role", "content"}, ...],
     "code": "LOOP-..."}` (code optional). Answers with a `text/event-stream`
@@ -400,6 +418,13 @@ If you are finished with the key, delete it in the Anthropic Console as well.
 - The model's reply is one JSON object. Besides `say` and `actions` it may
   carry `topic`, `gear` and `missing`; `read_envelope` picks those and the
   action types out at the end of a reply for the counts. `say` is not kept.
+  Any action name of the right shape is counted, so a new kind of action
+  needs nothing here except, if it should read as words on the owner page, a
+  line in `ACTION` in the page's script (new topics: `TOPICS` and `TOPIC`).
+- Updating from the v27 or v28 service changes nothing in the database: the
+  schema is the same (version 1) and the new topics, actions and counts are
+  new names in the tables that are already there. The installer leaves the
+  database, the key file, the owner link and nginx as they are.
 - The database is `state.db` beside `FL_STATE` (`FL_DB` to move it), schema
   version in `PRAGMA user_version`. One connection under one lock. An
   allowance is taken before the AI is called and given back if no text

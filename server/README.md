@@ -303,7 +303,7 @@ https://platform.claude.com/docs/en/models/overview.
 
 ```
 systemctl status firstloop-chat             # is it running
-curl -s http://127.0.0.1:8788/api/chat      # {"ok": true, "model": "...", "open": 0, "v": 2}
+curl -s http://127.0.0.1:8788/api/chat      # {"ok": true, "model": "...", "open": 0, "v": 3}
 tail /var/log/firstloop-chat/chat.log       # recent requests (no message text)
 journalctl -u firstloop-chat -n 30          # if it will not start
 ```

@@ -1598,7 +1598,7 @@
     user-select:none;-webkit-user-select:none;touch-action:manipulation;}
   .gearmap .gm-s{fill:var(--surface-2);stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;}
   .gearmap .gm-hit{fill:transparent;stroke:var(--line-2);}
-  .gearmap .gm-cap{fill:var(--raised);}
+  .gearmap .gm-grip{fill:var(--raised);}
   .gearmap .gm-pad{fill:var(--raised);}
   .gearmap .gm-x{fill:none;stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;opacity:.55;}
   .gearmap .gm-dot,.gearmap .gm-black{fill:currentColor;stroke:none;opacity:.6;}
@@ -1619,10 +1619,9 @@
   .gearmap .gm-badge circle{fill:var(--accent);stroke:var(--surface);stroke-width:1.5px;vector-effect:non-scaling-stroke;}
   .gearmap .gm-badge text{fill:var(--on-accent);font-weight:700;}
   .gearmap .gm-pick .gm-s{stroke:var(--ink);stroke-width:2px;fill:var(--sel);}
-  .gearmap .gm-flash .gm-s{fill:var(--good);stroke:var(--ink);animation:gm-flash .7s ease-out both;}
-  .gearmap .gm-touch{fill:none;stroke:var(--good);stroke-width:2.5px;animation:gm-touch .7s ease-out both;}
-  @keyframes gm-flash{0%{fill:var(--ink);}35%{fill:var(--good);}100%{fill:var(--good);}}
-  @keyframes gm-touch{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+  .gearmap .gm-flash .gm-s{fill:var(--good);stroke:var(--ink);animation:gm-flash .3s ease-out both;}
+  .gearmap .gm-touch{fill:none;stroke:var(--good);stroke-width:2.5px;}
+  @keyframes gm-flash{0%{fill:var(--ink);}100%{fill:var(--good);}}
   .gearmap .gm-loc-all{fill:none;stroke:var(--ink-3);stroke-width:1px;vector-effect:non-scaling-stroke;}
   .gearmap .gm-loc-part{fill:var(--accent);stroke:none;}
   .gearmap .gm-loc-t{fill:var(--ink-2);letter-spacing:.01em;font-weight:600;}
@@ -1665,9 +1664,8 @@
   #equippanel[data-eqview="ctrl"] .eq-sec:not([data-eqtab="ctrl"]),
   #equippanel[data-eqview="diagram"] .eq-sec:not([data-eqtab="diagram"]){display:none;}
   .eq-tabs + .eq-sec,.eq-sec.eq-first{border-top:0;}
-  .eq-mon li .eq-means{color:var(--ink-3);font-family:var(--sans);}
-  .eq-mon li .eq-means::before{content:"  \2192  ";}
-  .eq-mon li .eq-means[data-known="1"]{color:var(--good);}
+  .eq-mon li[data-means]::after{content:"  \2192  " attr(data-means);color:var(--ink-3);font-family:var(--sans);white-space:normal;}
+  .eq-mon li[data-means][data-known="1"]::after{color:var(--good);}
   .eq-sec .eq-wide{width:100%;}
   .eq-badge{display:inline-block;padding:1px 6px;border:1px solid var(--line-2);border-radius:9px;font-size:11px;font-weight:600;color:var(--ink-2);}
   .eq-range{display:flex;align-items:center;gap:8px;width:100%;}
@@ -1701,7 +1699,7 @@
     padding:7px 8px 7px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-2);font-size:12.5px;
     box-shadow:0 8px 24px color-mix(in srgb, var(--bg) 70%, transparent);}
   #ctrlhint[hidden]{display:none;}
-  @media (prefers-reduced-motion:reduce){ .gearmap .gm-flash .gm-s,.gearmap .gm-touch{animation:none;} }
+  @media (prefers-reduced-motion:reduce){ .gearmap .gm-flash .gm-s{animation:none;} }
   /* ===== /controllers + diagrams (css) ===== */
 </style>
 </head>
@@ -11705,7 +11703,8 @@
     }
     equipLog.forEach(function(r){
       var li = document.createElement("li"); li.textContent = equipMonLine(r, many);
-      if(r.m){ var mn = document.createElement("span"); mn.className = "eq-means"; mn.dataset.known = r.mk ? "1" : "0"; mn.textContent = r.m; li.appendChild(mn); }
+      // what it was understood as, shown after the line (kept out of the line's own text)
+      if(r.m){ li.dataset.means = r.m; li.dataset.known = r.mk ? "1" : "0"; li.title = "Understood as: " + r.m; }
       host.appendChild(li);
     });
     if(stick) host.scrollTop = host.scrollHeight;
@@ -19223,7 +19222,7 @@
 
     // A keyboard controller: wheels, pads, knobs, transport, keys.
     function genericKeys(key, title, whites, opt){
-      var KW = 11, W = Math.max(whites * KW + 56, 250), H = 150;
+      var KW = 11, W = Math.max(whites * KW + 56, 272), H = 150;
       define(key, title, false, W, H, 4.4, function(b){
         var k, x;
         b.P(0, 0, W, H, "", { body:1 });
@@ -19315,8 +19314,8 @@
     });
 
     define("generic-audio", "Audio interface", false, 300, 170, 4.6, function(b){
-      b.P(0, 20, 300, 60, "FRONT", { body:1, side:1 });
-      b.P(0, 106, 300, 60, "BACK", { body:1, side:1 });
+      b.P(0, 20, 300, 60, "FRONT", { body:1 });
+      b.P(0, 106, 300, 60, "BACK", { body:1 });
       b.R("front", 0, 6, 300, 80, "Front");
       b.R("back", 0, 92, 300, 78, "Back");
       b.at("Front", "front", "", "ai.");
@@ -19396,16 +19395,18 @@
       });
       var out = [m.title + (m.exact ? "" : " (typical layout)") + ". Control ids, X = the word before each name:"];
       groups.forEach(function(g){
-        var parts = [], i = 0, a, j, base;
-        while(i < g.sufs.length){
-          a = g.sufs[i];
-          if(a.run){
-            base = a.s.replace(/\d+$/, ""); j = i;
-            while(j + 1 < g.sufs.length && g.sufs[j + 1].run && g.sufs[j + 1].l === a.l && g.sufs[j + 1].s.replace(/\d+$/, "") === base) j++;
-            parts.push(j > i ? a.s + ".." + g.sufs[j].s + " " + a.l : a.s + " " + a.l);
-            i = j + 1;
-          } else { parts.push(a.s + " " + a.l); i++; }
-        }
+        var parts = [], done = {};
+        g.sufs.forEach(function(a){
+          if(done[a.s]) return;
+          if(!a.run){ parts.push(a.s + " " + a.l); return; }
+          // a numbered run, in whatever order it is drawn: pad1..pad8
+          var base = a.s.replace(/\d+$/, ""), nums = [];
+          g.sufs.forEach(function(b2){ if(b2.run && b2.l === a.l && b2.s.replace(/\d+$/, "") === base && /\d+$/.test(b2.s)){ nums.push(+/\d+$/.exec(b2.s)[0]); done[b2.s] = true; } });
+          nums.sort(function(x, y){ return x - y; });
+          var whole = nums.length > 1 && nums[nums.length - 1] - nums[0] === nums.length - 1;
+          if(whole) parts.push(base + nums[0] + ".." + base + nums[nums.length - 1] + " " + a.l);
+          else nums.forEach(function(n){ parts.push(base + n + " " + a.l); });
+        });
         var head = g.k === "dN." ? "DECK d1.X (left) d2.X (right)" : (g.k === "mix.chN." ? "CHANNEL mix.chN.X, N=" + g.pres.map(function(p){ return p.replace(/\D/g, ""); }).sort().join(",") : g.sec.toUpperCase() + " " + g.k + "X");
         out.push(head + ": " + parts.join("; "));
       });
@@ -19430,17 +19431,17 @@
       } else if(t === "fv"){
         add("rect", { x:x, y:y, width:w, height:ht, rx:1.4 }, "gm-s gm-hit");
         add("line", { x1:x + w / 2, y1:y + 2, x2:x + w / 2, y2:y + ht - 2 }, "gm-x");
-        add("rect", { x:x, y:y + ht * 0.58 - 3.5, width:w, height:7, rx:1.2 }, "gm-s gm-cap");
+        add("rect", { x:x, y:y + ht * 0.58 - 3.5, width:w, height:7, rx:1.2 }, "gm-s gm-grip");
         box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
       } else if(t === "fh"){
         add("rect", { x:x, y:y, width:w, height:ht, rx:1.4 }, "gm-s gm-hit");
         add("line", { x1:x + 2, y1:y + ht / 2, x2:x + w - 2, y2:y + ht / 2 }, "gm-x");
-        add("rect", { x:x + w / 2 - 3.5, y:y, width:7, height:ht, rx:1.2 }, "gm-s gm-cap");
+        add("rect", { x:x + w / 2 - 3.5, y:y, width:7, height:ht, rx:1.2 }, "gm-s gm-grip");
         box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
       } else if(t === "lv"){
         add("rect", { x:x, y:y, width:w, height:ht, rx:2 });
         add("rect", { x:x + w / 2 - 2, y:y + 4, width:4, height:ht - 8, rx:2 }, "gm-x");
-        add("circle", { cx:x + w / 2, cy:y + ht / 2, r:3.2 }, "gm-s gm-cap");
+        add("circle", { cx:x + w / 2, cy:y + ht / 2, r:3.2 }, "gm-s gm-grip");
         box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
       } else if(t === "wh"){
         add("rect", { x:x, y:y, width:w, height:ht, rx:w / 2 });
@@ -19572,6 +19573,8 @@
       inside.appendChild(layer);
       var marks = sv("g", { "class":"gm-marks" });
       svg.appendChild(marks);
+      var touches = sv("g", { "class":"gm-touches" });
+      svg.appendChild(touches);
       if(vb.part){
         // where on the unit this close-up is
         var lh = top * 0.78, lw = lh * m.w / m.h, lx = box.x + pad, ly = box.y + pad * 0.6, s = lw / m.w;
@@ -19581,7 +19584,7 @@
         var lt = sv("text", { x:lx + lw + 4, y:ly + lh / 2 + m.fs * 0.5, "font-size":m.fs * 1.5, "class":"gm-sec gm-loc-t" }); lt.textContent = vb.words;
         loc.appendChild(lt); svg.appendChild(loc);
       }
-      svg._gm = { key:key, vb:box, full:{ x:-pad, y:-pad, w:m.w + pad * 2, h:m.h + pad * 2 }, u:box.w / 320, fs:m.fs, labels:labels, hi:hi, nums:nums, items:items, marks:marks, part:vb.part };
+      svg._gm = { key:key, vb:box, full:{ x:-pad, y:-pad, w:m.w + pad * 2, h:m.h + pad * 2 }, u:box.w / 320, fs:m.fs, labels:labels, hi:hi, nums:nums, items:items, marks:marks, touches:touches, part:vb.part };
       placeMarks(svg);
       watch(svg);
       return svg;
@@ -19590,15 +19593,14 @@
       var g = svg && svg._gm, it = g && g.items[id];
       if(!it) return false;
       var el = it.g, b = it.box, u = g.u;
-      el.classList.remove("gm-flash");
-      try { void el.getBoundingClientRect(); } catch(e){}
-      el.classList.add("gm-flash");
-      var ring = sv("circle", { cx:b.cx, cy:b.cy, r:Math.max(Math.max(b.rx, b.ry) + 2 * u, 11 * u), "class":"gm-ring gm-touch" });
-      g.marks.appendChild(ring);
+      // a control that is already lit (a jog being turned) just stays lit a little longer: no restart, no layout
       if(it.timer) clearTimeout(it.timer);
-      if(it.ring && it.ring.parentNode) it.ring.parentNode.removeChild(it.ring);
-      it.ring = ring;
-      it.timer = setTimeout(function(){ it.timer = null; el.classList.remove("gm-flash"); if(ring.parentNode) ring.parentNode.removeChild(ring); }, 700);
+      else {
+        el.classList.add("gm-flash");
+        it.ring = sv("circle", { cx:b.cx, cy:b.cy, r:Math.max(Math.max(b.rx, b.ry) + 2 * u, 11 * u), "class":"gm-ring gm-touch" });
+        g.touches.appendChild(it.ring);
+      }
+      it.timer = setTimeout(function(){ it.timer = null; el.classList.remove("gm-flash"); if(it.ring && it.ring.parentNode) it.ring.parentNode.removeChild(it.ring); it.ring = null; }, 700);
       return true;
     }
 
@@ -20302,6 +20304,7 @@
         return false;
       }
       var key = (cc ? "c" : "n") + ch + "." + num;
+      if(cmd === 0x80) st = 0x90 | ch;                       // a note-off is the same button as its note-on
       // 1. a walk-through or a single "learn" that is waiting
       if(walk && walk.live && walkOn()){
         walkMsg(dv, key, st, num, val, cc, on);
@@ -20310,6 +20313,10 @@
         touch(gk, e0 ? e0.id : "", val, raw, on);
         return true;
       }
+      // 1b. the Make area's own MIDI learn: when the person has asked it to listen, the next control is its to take;
+      // and a control they tied to a Make target keeps that job everywhere except in the DJ area itself
+      var mk = makeWants(key, cc, ch, num);
+      if(mk){ meaning = mk; known = true; return false; }
       // 2. taught for this device
       var tm = maps[dv.name], te = tm && tm.map[key];
       if(te){
@@ -20343,6 +20350,14 @@
         else if(on || cc) touch(gk, "", val, raw, on);
       } else if(gk && (on || cc)) touch(gk, "", val, raw, on);
       return false;
+    }
+    function makeWants(key, cc, ch, num){
+      try {
+        if(padTeach && padTeach.step === "wait") return "taken by MIDI learn (Make area)";
+        if(typeof view !== "undefined" && view === "dj") return "";
+        var tg = padMidi[key] || (!cc && padMidi["n*." + num]) || (cc && num >= 32 && num < 64 && padMidi["c" + ch + "." + (num - 32)]);
+        return tg ? "Make area: " + padTargetName(tg) : "";
+      } catch(e){ return ""; }
     }
     function runEntry(dev, e, val, on){
       var k = e.k, t = e.t, id14, v;
@@ -20602,7 +20617,7 @@
     function capRow(cap, st, num){
       var k = hx(st) + " " + hx(num), i;
       for(i = 0; i < cap.rows.length; i++) if(cap.rows[i].k === k) return cap.rows[i];
-      var r = { k:k, lo:127, hi:0, n:0, sum:0 };
+      var r = { k:k, lo:127, hi:0, n:0, sum:0, sum2:0, rep:0, last:-1 };
       cap.rows.push(r);
       return r;
     }
@@ -20610,7 +20625,7 @@
       if(!rows || !rows.length) return "nothing arrived";
       return rows.slice(0, 8).map(function(r){
         var cc = r.k.charAt(0) === "B";
-        return r.k + " " + (r.lo === r.hi ? hx(r.lo) : hx(r.lo) + ".." + hx(r.hi)) + " x" + r.n + (cc && r.rel ? " sum " + (r.sum > 0 ? "+" : "") + r.sum : "");
+        return r.k + " " + (r.lo === r.hi ? hx(r.lo) : hx(r.lo) + ".." + hx(r.hi)) + " x" + r.n + (cc && r.rel ? " sum " + ((r.rel === "2" ? r.sum2 : r.sum) > 0 ? "+" : "") + (r.rel === "2" ? r.sum2 : r.sum) : "");
       }).join(", ") + (rows.length > 8 ? ", and " + (rows.length - 8) + " more" : "");
     }
     function walkMsg(dv, key, st, num, val, cc, on){
@@ -20621,7 +20636,15 @@
       if(walk.mode === "check"){
         var r = capRow(cap, st, num);
         r.n++; if(val < r.lo) r.lo = val; if(val > r.hi) r.hi = val;
-        if(cc){ r.sum += val - 64; if(r.n > 2 && r.lo >= 33 && r.hi <= 95 && r.lo !== r.hi) r.rel = true; if(r.lo < 33 || r.hi > 95) r.rel = false; }
+        if(cc){
+          // an endless knob or a jog repeats small values; a fader sweeps. Two ways of counting steps: around 64, or 1.. up and 127.. down
+          r.sum += val - 64; r.sum2 += val < 64 ? val : val - 128;
+          if(val === r.last) r.rep++;
+          r.last = val;
+          if(val < 33 || val > 95) r.notB = true;
+          if(!((val >= 1 && val <= 30) || val >= 98)) r.not2 = true;
+          r.rel = r.rep >= 2 && r.n > 2 ? (!r.notB ? "b" : (!r.not2 ? "2" : "")) : "";
+        }
         if(cap.timer) clearTimeout(cap.timer);
         var mine = walk;
         cap.timer = setTimeout(function(){
@@ -21044,6 +21067,8 @@
     }
     load();
     wireDJ();
+    // devices the browser listed before this block ran
+    try { if(typeof midiAccess !== "undefined" && midiAccess) setTimeout(function(){ ports(midiAccess); }, 0); } catch(e){}
     var api = {
       onMsg:onMsg, meaning:function(){ return { text:meaning, known:known }; }, ports:ports, build:build, paint:paint,
       sysexWanted:function(){ return sx.want; }, isDJ:isDJ, learnOne:learnOne, taught:taughtCount, tinfo:tinfo, targets:teachList,
@@ -21057,22 +21082,26 @@
     return api;
   })();
   // ---- the hooks the rest of the app calls ----
+  // Some of these are reached while the page is still starting (a mapping from an earlier visit makes
+  // the browser be asked before this block has run), so each one answers safely when CTRL is not there yet.
   // onMIDI: true means a controller table or a taught DJ control took the message.
-  function ctrlOnMIDI(e){ try { return CTRL.onMsg(e); } catch(err){ return false; } }
+  function ctrlOnMIDI(e){ try { return CTRL ? CTRL.onMsg(e) : false; } catch(err){ return false; } }
   // what the last message was understood as, for the monitor
-  function ctrlMeaning(){ return CTRL.meaning(); }
+  function ctrlMeaning(){ return CTRL ? CTRL.meaning() : null; }
   // a DJ controller's stray buttons never play notes into the song
   function ctrlIsDJ(e){
     var nm = "", mk = "";
+    if(!CTRL) return false;
     try { nm = String((e.target && e.target.name) || ""); mk = String((e.target && e.target.manufacturer) || ""); } catch(err){}
     return CTRL.isDJ(nm, mk);
   }
-  function ctrlPorts(access){ try { CTRL.ports(access); } catch(e){} }
-  function ctrlSysex(){ return CTRL.sysexWanted(); }
-  function ctrlPanelBuild(){ CTRL.build(); }
-  function ctrlPanelPaint(){ CTRL.paint(); }
+  function ctrlPorts(access){ try { if(CTRL) CTRL.ports(access); } catch(e){} }
+  function ctrlSysex(){ return CTRL ? CTRL.sysexWanted() : false; }
+  function ctrlPanelBuild(){ if(CTRL) CTRL.build(); }
+  function ctrlPanelPaint(){ if(CTRL) CTRL.paint(); }
   // midiLearnStart("dj:d1.play") learns one DJ control; "" when listening started, else the reason
   function ctrlLearnStart(target, from){
+    if(!CTRL) return "the page is still starting";
     return CTRL.learnOne(target, function(ok, key){
       var ti = CTRL.tinfo(target), msg = ok ? "Done. " + ti.name + " is now tied to the control you just used." : "Learning " + (ti ? ti.name : "that control") + " stopped: nothing arrived from a device in 45 seconds.";
       try { say(msg); } catch(e){}

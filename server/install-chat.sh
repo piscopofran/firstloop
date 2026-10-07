@@ -599,6 +599,21 @@ PY
 
 admin_hash_ok() { [ -f "$ADMIN_HASH" ] && grep -qE '^[0-9a-f]{64}$' "$ADMIN_HASH" 2>/dev/null; }
 
+# How many invite codes the owner has made so far. Prints nothing when that
+# cannot be read (no database yet, or one this Python cannot open); the caller
+# then speaks as if there were none. The database is only read, never changed.
+code_count() {
+  [ -s "$STATE_DIR/state.db" ] || return 0
+  python3 - "$STATE_DIR/state.db" 2>/dev/null <<'PY' || true
+import sqlite3, sys
+try:
+    db = sqlite3.connect("file:" + sys.argv[1].replace("?", "%3f").replace("#", "%23") + "?mode=ro", uri=True, timeout=3)
+    print(db.execute("SELECT COUNT(*) FROM codes WHERE code NOT LIKE '(%'").fetchone()[0])
+except Exception:
+    pass
+PY
+}
+
 # Makes a new owner token and prints the owner link. $@ = the nginx files of the site.
 print_new_admin_link() {
   local token base
@@ -685,7 +700,7 @@ put_back_previous() {
 # ---------------------------------------------------------------------------
 install_all() {
   local -a SITE_FILES=()
-  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog ST_SECRET test_ok=1 free
+  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog ST_SECRET test_ok=1 free codes
 
   say "Step 1 of 6: finding the First Loop site in nginx"
   tlog="$(mktemp)" || die "Could not create a temporary file. Nothing has been changed."
@@ -881,7 +896,16 @@ install_all() {
   fi
   free="$(printf '%s' "$PROBE" | sed -n 's/.*"open": *\([0-9][0-9]*\).*/\1/p')"
   printf '\n'
-  if [ "${free:-0}" = "0" ]; then
+  codes="$(code_count)"
+  case "$codes" in ''|*[!0-9]*) codes=0 ;; esac
+  if [ "${free:-0}" = "0" ] && [ "$codes" -gt 0 ]; then
+    if [ "$codes" -eq 1 ]; then
+      note "As before, people need an invite code to use the AI. Your invite code is kept and works as it did."
+    else
+      note "As before, people need an invite code to use the AI. Your $codes invite codes are kept and work as they did."
+    fi
+    note "The owner page is where you make more, or change one."
+  elif [ "${free:-0}" = "0" ]; then
     note "People now need an invite code to use the AI, and so do you."
     note "Next: open your owner link, press 'Create your first invite code', and type that"
     note "code into the Assistant on your site (Invite code, at the top of the Assistant)."

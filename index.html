@@ -1748,7 +1748,7 @@
   <div class="dock-in">
     <span class="brand">
       <span class="wordmark">First&nbsp;Loop</span>
-      <span class="build">v29</span>
+      <span class="build">v30</span>
       <button class="lvl" id="lvlchip" type="button" hidden title="Go to the controls opened most recently"></button>
     </span>
     <div class="transport">
@@ -3911,7 +3911,7 @@
   // Nothing here identifies anybody. It records what happened in the app, nothing about the person,
   // and it is never transmitted: it sits in this browser until someone presses a send button.
   var LOG = {
-    build: "v29",
+    build: "v30",
     started: Date.now(),
     tour: { reached: 0, finished: false, skipped: false, stepMs: {} },
     asked: 0, applied: 0, whyOpened: 0,
@@ -20219,76 +20219,91 @@
     define("ddj-grv6", "DDJ-GRV6", true, 711, 462, 4.7, function(b){
       var OY = 42, d;
       b.P(0, OY, 711, 376, "", { body:1 });
-      b.R("deck1", 0, OY, 255, 376, "Left side: deck 1");
-      b.R("deck2", 456, OY, 255, 376, "Right side: deck 2");
-      b.R("mixer", 255, OY, 201, 376, "Middle: browse, mixer, effects");
+      // Positions measured from AlphaTheta's own top-view picture of the unit and the
+      // numbered close-ups in the VirtualDJ hardware manual (7 Oct 2026). Both decks have
+      // the same layout (the right one is not a mirror image).
+      b.R("deck1", 0, OY, 263, 376, "Left side: deck 1");
+      b.R("deck2", 449, OY, 262, 376, "Right side: deck 2");
+      b.R("mixer", 263, OY, 186, 376, "Middle: browse, mixer, effects");
       b.R("front", 0, 422, 711, 36, "Front edge");
       b.R("rear", 0, 0, 711, 38, "Back");
       for(d = 1; d <= 2; d++) (function(d, ox){
         var tail = " (deck " + d + ")", k, y = OY, other = d === 1 ? 3 : 4;
         b.at("Deck " + d, "deck" + d, tail, "d" + d + ".");
-        b.T(ox + 127, y + 371, "DECK " + d, 9, "middle");
-        // the raised gloss strip
-        b.P(ox + 6, y + 6, 243, 40, "GROOVE CIRCUIT", { strip:1 });
-        b.C("gc_gain", "k", ox + 22, y + 30, 7, 0, "GAIN", "Drum loop gain", "the volume of the drum loop that Drum Swap brings in");
-        for(k = 1; k <= 4; k++) b.C("gc_swap" + k, "b", ox + 20 + k * 19, y + 23, 16, 13, String(k), "Drum Swap " + k, "swaps the track’s own drums for drum loop " + k + " (in rekordbox)", { run:"Drum Swap buttons" });
-        b.C("gc_capture", "b", ox + 122, y + 23, 22, 13, "CAPTURE", "Drum Capture", "keeps the drums of the playing track as a loop to drop into another track (in rekordbox)", { fs:3.6 });
+        b.T(ox + 130, y + 371, "DECK " + d, 8, "middle");
+        // the raised gloss strip along the top
+        b.P(ox + 5, y + 4, 252, 42, "GROOVE CIRCUIT", { strip:1 });
+        b.C("gc_gain", "k", ox + 21, y + 28, 7, 0, "LEVEL", "Drum loop level", "the volume of the drum loop that Drum Swap brings in");
+        for(k = 1; k <= 4; k++) b.C("gc_swap" + k, "b", ox + 25 + k * 18, y + 20, 15, 15, String(k), "Drum Swap " + k, "swaps the track’s own drums for drum loop " + k + " (in rekordbox)", { run:"Drum Swap buttons" });
+        b.C("gc_capture", "r", ox + 130, y + 28, 6, 0, "CAP", "Drum Capture", "keeps the drums of the playing track as a loop to drop into another track (in rekordbox)", { fs:3 });
         var RL = ["1/8", "1/4", "1/2", "1"];
-        for(k = 1; k <= 4; k++) b.C("gc_roll" + k, "b", ox + 133 + k * 18, y + 23, 15, 13, RL[k - 1], "Drum Roll " + RL[k - 1], "repeats a " + RL[k - 1] + "-beat slice of the drums for a fill (in rekordbox)", { run:"Drum Roll buttons" });
-        b.C("gc_release", "lv", ox + 227, y + 16, 16, 26, "", "Drum Release lever", "a lever that drops the drums away for a breakdown (in rekordbox)");
-        // the line of eight pads above the jog wheel
-        for(k = 1; k <= 8; k++) b.C("pad" + k, "p", ox + 14 + (k - 1) * 28.5, y + 58, 25, 19, String(k), "Pad " + k,
+        for(k = 1; k <= 4; k++) b.C("gc_roll" + k, "b", ox + 136 + k * 17, y + 20, 16, 15, RL[k - 1], "Drum Roll " + RL[k - 1], "repeats a " + RL[k - 1] + "-beat slice of the drums for a fill (in rekordbox)", { run:"Drum Roll buttons" });
+        b.C("gc_release", "lv", ox + 233, y + 14, 15, 28, "", "Drum Release lever", "a lever that drops the drums away for a breakdown (in rekordbox)");
+        // the line of eight pads
+        for(k = 1; k <= 8; k++) b.C("pad" + k, "p", ox + 12 + (k - 1) * 30, y + 59, 26, 18, String(k), "Pad " + k,
           "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:6 });
-        b.C("loop_in", "b", ox + 14, y + 86, 21, 12, "IN", "Loop in", "marks where a loop starts; held down it makes a 4-beat loop");
-        b.C("loop_out", "b", ox + 37, y + 86, 21, 12, "OUT", "Loop out", "marks where the loop ends and starts it going round");
-        b.C("reloop", "b", ox + 60, y + 86, 23, 12, "RELOOP\nEXIT", "Reloop / exit", "leaves the loop, or goes back into the last one", { fs:3.6 });
-        b.C("mode_hotcue", "b", ox + 93, y + 86, 21, 12, "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues", { fs:3.5 });
-        b.C("mode_stems", "b", ox + 116, y + 86, 21, 12, "STEMS", "Stems mode", "makes the pads switch the parts of a track (vocals, drums, bass) on and off (in rekordbox or Serato)", { fs:3.5 });
-        b.C("mode_bjump", "b", ox + 139, y + 86, 21, 12, "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats", { fs:3.5 });
-        b.C("mode_sampler", "b", ox + 162, y + 86, 21, 12, "SAMPLER", "Sampler mode", "makes the pads play short samples (in rekordbox or Serato)", { fs:3.3 });
-        b.C("call_prev", "b", ox + 192, y + 86, 16, 12, "CALL\n−", "Call back", "goes to the saved cue or loop before this point; while a loop is on, halves it", { fs:3.5 });
-        b.C("call_next", "b", ox + 209, y + 86, 16, 12, "CALL\n+", "Call forward", "goes to the next saved cue or loop; while a loop is on, doubles it", { fs:3.5 });
-        b.C("memory", "b", ox + 227, y + 86, 22, 12, "MEMORY", "Memory", "saves the cue point or the loop with the track", { fs:3.4 });
-        b.C("jog", "j", ox + 116, y + 232, 92, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the outer edge to push it a little faster or slower");
-        b.C("slip", "b", ox + 218, y + 106, 30, 11, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop; with SHIFT, vinyl mode on or off");
-        b.C("quantize", "b", ox + 218, y + 121, 30, 11, "QUANTIZE", "Quantize", "makes cues and loops snap to the nearest beat", { fs:3.6 });
-        b.C("deck_sel", "b", ox + 218, y + 136, 30, 11, "DECK " + d + "/" + other, "Deck select", "switches this side between deck " + d + " and deck " + other + " (First Loop has two decks)", { fs:3.8 });
-        b.C("master_tempo", "b", ox + 218, y + 153, 30, 13, "MASTER\nTEMPO", "Master Tempo", "keeps the key of the track the same while the tempo changes; with SHIFT, changes the tempo range", { fs:3.5 });
-        b.C("tempo", "fv", ox + 226, y + 178, 14, 100, "TEMPO", "Tempo slider", "makes the track faster (towards you) or slower (away from you)");
-        b.C("sync", "b", ox + 216, y + 300, 33, 13, "BEAT SYNC", "Beat Sync", "matches this deck’s tempo and beat to the other deck; with SHIFT, makes this deck the master", { fs:3.6 });
-        b.C("key_sync", "b", ox + 216, y + 320, 33, 13, "KEY SYNC", "Key Sync", "matches this deck’s key to the other deck", { fs:3.6 });
-        b.C("shift", "b", ox + 6, y + 280, 26, 12, "SHIFT", "Shift", "held down, gives the other buttons their second job");
-        b.C("cue", "r", ox + 22, y + 318, 13, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
-        b.C("play", "r", ox + 22, y + 351, 13, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
-      })(d, d === 1 ? 0 : 456);
-      // browse, top middle
+        // the row under the pads: loop buttons left, pad modes middle, call and memory right
+        b.C("loop_in", "r", ox + 22, y + 95, 7.5, 0, "IN", "Loop in", "marks where a loop starts; held down it makes a 4-beat loop", { fs:4 });
+        b.C("loop_out", "r", ox + 47, y + 95, 7.5, 0, "OUT", "Loop out", "marks where the loop ends and starts it going round", { fs:3.6 });
+        b.C("reloop", "r", ox + 70, y + 95, 5.5, 0, "RE", "Reloop / exit", "leaves the loop, or goes back into the last one", { fs:3 });
+        b.T(ox + 70, y + 86, "RELOOP/EXIT", 2.8, "middle");
+        b.C("mode_hotcue", "b", ox + 92, y + 90, 17, 10, "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues", { fs:2.9 });
+        b.C("mode_stems", "b", ox + 111, y + 90, 17, 10, "STEMS", "Stems mode", "makes the pads switch the parts of a track (vocals, drums, bass) on and off (in rekordbox or Serato)", { fs:3 });
+        b.C("mode_bjump", "b", ox + 130, y + 90, 17, 10, "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats", { fs:3 });
+        b.C("mode_sampler", "b", ox + 149, y + 90, 17, 10, "SAMPLER", "Sampler mode", "makes the pads play short samples (in rekordbox or Serato)", { fs:2.8 });
+        b.T(ox + 129, y + 86, "PAD MODE", 2.8, "middle");
+        b.C("call_prev", "r", ox + 199, y + 95, 5.5, 0, "◀", "Call back", "goes to the saved cue or loop before this point; while a loop is on, halves it", { fs:4 });
+        b.C("call_next", "r", ox + 218, y + 95, 5.5, 0, "▶", "Call forward", "goes to the next saved cue or loop; while a loop is on, doubles it", { fs:4 });
+        b.T(ox + 208.5, y + 86, "CALL", 2.8, "middle");
+        b.C("memory", "r", ox + 241, y + 95, 5.5, 0, "M", "Memory", "saves the cue point or the loop with the track", { fs:3.4 });
+        b.T(ox + 241, y + 86, "MEMORY", 2.8, "middle");
+        // above the jog wheel: slip and quantize on the left, deck select on the right
+        b.C("slip", "b", ox + 13, y + 116, 17, 10, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop; with SHIFT, vinyl mode on or off", { fs:3.4 });
+        b.C("quantize", "b", ox + 32, y + 116, 17, 10, "QUANT", "Quantize", "makes cues and loops snap to the nearest beat", { fs:3 });
+        b.C("deck_sel", "b", ox + 210, y + 116, 40, 12, "DECK " + other + " · " + d, "Deck select", "two buttons that switch this side between deck " + d + " and deck " + other + " (First Loop has two decks)", { fs:3.6 });
+        b.C("jog", "j", ox + 130, y + 216, 94, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the outer edge to push it a little faster or slower");
+        // bottom left: shift, cue, play
+        b.C("shift", "r", ox + 15, y + 262, 6, 0, "S", "Shift", "held down, gives the other buttons their second job", { fs:4 });
+        b.T(ox + 15, y + 273, "SHIFT", 2.8, "middle");
+        b.C("cue", "r", ox + 21, y + 300, 13, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
+        b.C("play", "r", ox + 21, y + 340, 13, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
+        // bottom right: master tempo, then beat sync and key sync beside the tempo slider
+        b.C("master_tempo", "r", ox + 246, y + 262, 5.5, 0, "MT", "Master Tempo", "keeps the key of the track the same while the tempo changes; with SHIFT, changes the tempo range", { fs:3 });
+        b.T(ox + 246, y + 252, "MASTER TEMPO", 2.6, "middle");
+        b.C("tempo", "fv", ox + 240, y + 278, 13, 78, "TEMPO", "Tempo slider", "makes the track faster (towards you) or slower (away from you)");
+        b.C("sync", "b", ox + 211, y + 300, 22, 11, "BEAT\nSYNC", "Beat Sync", "matches this deck’s tempo and beat to the other deck; with SHIFT, makes this deck the master", { fs:3.2 });
+        b.C("key_sync", "b", ox + 211, y + 320, 22, 11, "KEY\nSYNC", "Key Sync", "matches this deck’s key to the other deck", { fs:3.2 });
+      })(d, d === 1 ? 0 : 449);
+      // browse, in the top strip between the two Groove Circuit strips
       b.at("Browse", "mixer", "", "browse.");
-      b.T(355.5, OY + 12, "BROWSE", 5, "middle");
-      b.C("knob", "e", 355.5, OY + 38, 15, 0, "", "Browse knob (rotary selector)", "turn to scroll through the track list, press to choose; it also tilts like a joystick in rekordbox");
-      b.C("back", "b", 300, OY + 22, 26, 11, "BACK", "Back", "goes back to the folder list (in rekordbox)");
-      b.C("view", "b", 300, OY + 40, 26, 11, "VIEW", "View", "makes the track list bigger or smaller on the computer screen (in rekordbox)");
-      b.C("discover", "b", 385, OY + 22, 28, 11, "DISCOVER", "Discover", "shows tracks that would go well after this one (in rekordbox)", { fs:3.5 });
-      b.C("preview", "b", 385, OY + 40, 28, 11, "PREVIEW", "Preview", "plays the chosen track quietly in the headphones before loading it (in rekordbox)", { fs:3.6 });
-      var CX = [null, 339, 371, 307, 403];           // channels sit 3, 1, 2, 4 from left to right
-      for(d = 1; d <= 4; d++) b.C("load" + d, "b", CX[d] - 12, OY + 64, 24, 11, "LOAD " + d, "Load " + d, "puts the chosen track on deck " + d, { run:"Load buttons", fs:3.8 });
+      b.C("knob", "e", 338, OY + 25, 13, 0, "", "Browse knob (rotary selector)", "turn to scroll through the track list, press to choose; it also tilts like a joystick in rekordbox");
+      b.C("discover", "b", 268, OY + 8, 25, 10, "DISCOVER", "Discover", "shows tracks that would go well after this one (in rekordbox)", { fs:3 });
+      b.C("back", "b", 295, OY + 8, 22, 10, "BACK", "Back", "goes back to the folder list (in rekordbox)", { fs:3.4 });
+      b.C("view", "b", 359, OY + 8, 22, 10, "VIEW", "View", "makes the track list bigger or smaller on the computer screen (in rekordbox)", { fs:3.4 });
+      b.C("preview", "b", 383, OY + 8, 25, 10, "PREVIEW", "Preview", "plays the chosen track quietly in the headphones before loading it (in rekordbox)", { fs:3 });
+      var LX = [null, 295, 359, 268, 383], LW = [0, 22, 22, 25, 25];   // LOAD 3, LOAD 1, knob, LOAD 2, LOAD 4
+      for(d = 1; d <= 4; d++) b.C("load" + d, "b", LX[d], OY + 30, LW[d], 10, "LOAD " + d, "Load " + d, "puts the chosen track on deck " + d, { run:"Load buttons", fs:3.3 });
+      var CX = [null, 319, 355, 283, 391];           // channels sit 3, 1, 2, 4 from left to right
       for(d = 1; d <= 4; d++){
-        strip(b, d, CX[d], OY + 96, 26, { r:8, cw:22, ch:11, fh:86, fname:"COLOR" });
-        b.T(CX[d], OY + 338, String(d), 5.5, "middle");
+        strip(b, d, CX[d], OY + 80, 30, { r:8, cw:20, ch:10, fh:62, fname:"COLOR" });
+        b.T(CX[d], OY + 322, String(d), 5, "middle");
       }
       b.at("Mixer", "mixer", "", "mix.");
-      b.C("xfader", "fh", 315, OY + 347, 80, 12, "", "Crossfader", "slides the sound between the left decks and the right decks");
-      b.C("master", "k", 276, OY + 96, 8, 0, "MASTER\nLEVEL", "Master level", "the volume of the main output to the speakers", { fs:3.5 });
-      b.C("booth", "k", 276, OY + 128, 8, 0, "BOOTH\nLEVEL", "Booth level", "the volume of the second (booth) output", { fs:3.5 });
-      b.C("master_cue", "b", 264, OY + 156, 24, 11, "MASTER\nCUE", "Master cue", "sends the main mix to the headphones", { fs:3.3 });
-      b.C("cfx_on", "b", 264, OY + 198, 24, 12, "COLOR FX\nON/OFF", "Sound Color FX on/off", "switches the four COLOR knobs on or off; with SHIFT, picks another colour effect (in rekordbox)", { fs:3.1 });
+      b.C("xfader", "fh", 302, OY + 341, 70, 12, "", "Crossfader", "slides the sound between the left decks and the right decks");
+      b.C("cfx_on", "r", 268, OY + 226, 4.5, 0, "FX", "Sound Color FX on/off", "the small button left of the COLOR knobs: switches them on or off; with SHIFT, picks another colour effect (in rekordbox)", { fs:2.6 });
+      // the right-hand column of the mixer: master, booth, master cue, then Beat FX
+      b.C("master", "k", 428, OY + 80, 8, 0, "MASTER\nLEVEL", "Master level", "the volume of the main output to the speakers", { fs:3.2 });
+      b.C("booth", "k", 428, OY + 112, 8, 0, "BOOTH\nLEVEL", "Booth level", "the volume of the second (booth) output", { fs:3.2 });
+      b.C("master_cue", "b", 417, OY + 136, 22, 9, "MASTER CUE", "Master cue", "sends the main mix to the headphones", { fs:2.6 });
       b.at("Beat FX", "mixer", "", "fx.");
-      b.T(437, OY + 84, "BEAT FX", 4.2, "middle");
-      b.C("beat_dn", "b", 423, OY + 90, 13, 10, "◀", "Beat shorter", "halves the length the Beat FX works over");
-      b.C("beat_up", "b", 438, OY + 90, 13, 10, "▶", "Beat longer", "doubles the length the Beat FX works over");
-      b.C("select", "k", 437, OY + 122, 8, 0, "FX SELECT", "Beat FX select", "chooses which Beat FX is used (echo, reverb, flanger and others)", { fs:3.5 });
-      b.C("ch", "b", 424, OY + 146, 26, 11, "CH SELECT", "Beat FX channel", "chooses which channel the Beat FX is put on", { fs:3.3 });
-      b.C("depth", "k", 437, OY + 180, 8, 0, "LEVEL\nDEPTH", "Beat FX level/depth", "how much of the Beat FX is heard", { fs:3.5 });
-      b.C("on", "r", 437, OY + 216, 9, 0, "ON\nOFF", "Beat FX on/off", "switches the Beat FX on or off", { fs:3.4 });
+      b.T(428, OY + 154, "BEAT FX", 3.6, "middle");
+      b.P(416, OY + 157, 24, 14, "", { strip:1 });
+      b.C("beat_dn", "b", 416, OY + 176, 11, 9, "◀", "Beat shorter", "halves the length the Beat FX works over");
+      b.C("beat_up", "b", 429, OY + 176, 11, 9, "▶", "Beat longer", "doubles the length the Beat FX works over");
+      b.C("select", "k", 428, OY + 204, 8, 0, "FX SELECT", "Beat FX select", "chooses which Beat FX is used (echo, reverb, flanger and others)", { fs:3 });
+      b.C("ch", "b", 416, OY + 230, 24, 36, "1  2\n3  4\nSP MST", "Beat FX channel buttons", "six small buttons that choose which channel the Beat FX is put on: 1, 2, 3, 4, sampler or master", { fs:3.4 });
+      b.C("depth", "k", 428, OY + 286, 8, 0, "LEVEL\nDEPTH", "Beat FX level/depth", "how much of the Beat FX is heard", { fs:3.2 });
+      b.C("on", "r", 428, OY + 326, 9, 0, "ON\nOFF", "Beat FX on/off", "switches the Beat FX on or off", { fs:3.4 });
       // the front edge
       b.P(0, 424, 711, 34, "FRONT EDGE", { strip:1, side:1 });
       b.at("Front", "front", "", "front.");
@@ -20992,7 +21007,7 @@
     var testMode = /[?&]fltest/.test(window.location.search);
     var AT_RE = /alphatheta|pioneer|\bddj-|\bxdj-|\bdjm-|opus-?quad|omnis-?duo/i;
     var SET_KEY = "firstloop.ctrl", MAP_KEY = "firstloop.djmap", WALK_KEY = "firstloop.ctrlwalk";
-    var JOG_TICKS = 720;          // steps in one turn of a platter: not known for the GRV6; 720 is what the sibling mappings assume
+    var JOG_TICKS = 2080;         // steps in one turn of a platter: the owner's DDJ-GRV6 sent 2,087 for one full turn (controller check, 7 Oct 2026)
     var TURN_SECONDS = 1.8;       // one turn of a record at 33 1/3
     var SX_FLX4 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x04, 0x05, 0x00, 0x50, 0x02, 0xF7];   // DDJ-FLX4: asked again every 200 ms
     var SX_400 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x02, 0x06, 0x00, 0x03, 0x01, 0xF7];    // DDJ-400: asked once

@@ -12739,7 +12739,7 @@
     var numbers = {};
     ids.forEach(function(id, i){ numbers[id] = i + 1; });
     if(typeof G.enlarge === "function"){
-      try { G.enlarge(g.k, { highlight:ids.slice(), dim:true, labels:true, numbers:numbers, title:g.t || "" }); return; } catch(e){}
+      try { G.enlarge(g.k, { highlight:ids.slice(), dim:true, labels:true, numbers:numbers, title:g.t || "", back:from }); return; } catch(e){}
     }
     asstGmClose();
     var svg = asstGmDraw(G, g, ids, true);

@@ -21506,6 +21506,8 @@
       },
       mixes:function(){ return FM.mixes.map(function(m){ return { at:m.at, seconds:m.secs, text:fmCreditsText(m.items), tracks:m.items.length, other:m.other, shareAlike:!!fmShareAlike(m.items) }; }); }
     };
+    // a line in Find
+    if(typeof palAdd === "function") palAdd("djfree", "Free music to mix", "DJ catalogue", "free music, catalogue, creative commons, archive.org, netlabel, starter crate, royalty free, credits, attribution", "top", ['.viewtab[data-view="dj"]'], { run:function(){ fmAPI.open({}); } });
     // ===== /DJ free music =====
 
     // ---------- keyboard: only in the DJ area, never while typing ----------

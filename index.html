@@ -1591,6 +1591,118 @@
   @media (min-width:700px) and (max-width:1099.98px){ .dj-info{width:200px;} }
   @media (prefers-reduced-motion:reduce){ .dj-read.time[data-warn="true"] .big{animation:none;} }
   /* ===== /DJ area (css) ===== */
+  /* ===== controllers + diagrams (css) ===== */
+  /* Drawings of equipment (GEARMAP) and the controller parts of the Equipment
+     panel. Only the shared colour variables. Lines stay one pixel at any size. */
+  .gearmap{display:block;width:100%;height:auto;color:var(--ink-2);font-family:var(--sans);overflow:hidden;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation;}
+  .gearmap .gm-s{fill:var(--surface-2);stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;}
+  .gearmap .gm-hit{fill:transparent;stroke:var(--line-2);}
+  .gearmap .gm-cap{fill:var(--raised);}
+  .gearmap .gm-pad{fill:var(--raised);}
+  .gearmap .gm-x{fill:none;stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;opacity:.55;}
+  .gearmap .gm-dot,.gearmap .gm-black{fill:currentColor;stroke:none;opacity:.6;}
+  .gearmap .gm-body{fill:var(--surface);stroke:var(--ink-3);stroke-width:1.5px;vector-effect:non-scaling-stroke;}
+  .gearmap .gm-strip{fill:var(--bg);stroke:var(--line-2);stroke-width:1px;vector-effect:non-scaling-stroke;}
+  .gearmap text{fill:var(--ink-2);stroke:none;font-weight:600;letter-spacing:.01em;pointer-events:none;}
+  .gearmap .gm-sec{fill:var(--ink-3);font-weight:700;letter-spacing:.06em;}
+  .gearmap .gm-lab{fill:var(--ink);}
+  .gearmap[data-lab="off"] .gm-lab,.gearmap[data-lab="off"] .gm-deco text{display:none;}
+  .gearmap[data-lab="off"] .gm-deco text.gm-sec[font-size="9"],.gearmap[data-lab="off"] .gm-deco text.gm-sec[font-size="7"]{display:inline;}
+  .gearmap .gm-c{outline:none;}
+  .gearmap .gm-c:focus-visible .gm-s{stroke:var(--ink);stroke-width:2px;}
+  .gearmap.gm-dim .gm-c:not(.gm-hi){opacity:.32;}
+  .gearmap.gm-dim .gm-deco{opacity:.6;}
+  .gearmap .gm-hi .gm-s{fill:color-mix(in srgb, var(--accent) 34%, var(--surface-2));stroke:var(--accent);stroke-width:1.5px;}
+  .gearmap .gm-hi .gm-x{stroke:var(--accent);opacity:.9;}
+  .gearmap .gm-ring{fill:color-mix(in srgb, var(--accent) 14%, transparent);stroke:var(--accent);stroke-width:2px;vector-effect:non-scaling-stroke;pointer-events:none;}
+  .gearmap .gm-badge circle{fill:var(--accent);stroke:var(--surface);stroke-width:1.5px;vector-effect:non-scaling-stroke;}
+  .gearmap .gm-badge text{fill:var(--on-accent);font-weight:700;}
+  .gearmap .gm-pick .gm-s{stroke:var(--ink);stroke-width:2px;fill:var(--sel);}
+  .gearmap .gm-flash .gm-s{fill:var(--good);stroke:var(--ink);animation:gm-flash .7s ease-out both;}
+  .gearmap .gm-touch{fill:none;stroke:var(--good);stroke-width:2.5px;animation:gm-touch .7s ease-out both;}
+  @keyframes gm-flash{0%{fill:var(--ink);}35%{fill:var(--good);}100%{fill:var(--good);}}
+  @keyframes gm-touch{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+  .gearmap .gm-loc-all{fill:none;stroke:var(--ink-3);stroke-width:1px;vector-effect:non-scaling-stroke;}
+  .gearmap .gm-loc-part{fill:var(--accent);stroke:none;}
+  .gearmap .gm-loc-t{fill:var(--ink-2);letter-spacing:.01em;font-weight:600;}
+  .gm-fig{margin:0;width:100%;display:flex;flex-direction:column;gap:5px;}
+  .gm-host{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:6px;}
+  .gm-row{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;}
+  .gm-cap{margin:0;font-size:11.5px;color:var(--ink-3);}
+  .gm-read{margin:0;font-size:12px;color:var(--ink);min-height:1.45em;}
+  .gm-read:empty::before{content:"Touch a control on your equipment and it lights up here.";color:var(--ink-3);}
+  .gm-big{flex:none;}
+  .gm-view{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);display:grid;
+    grid-template-columns:minmax(0,1fr) 320px;grid-template-rows:auto minmax(0,1fr);font-size:12.5px;}
+  .gm-vhead{grid-column:1 / -1;display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line-2);background:var(--surface);}
+  .gm-vhead h2{font-size:13px;font-weight:600;margin-right:auto;}
+  .gm-stage{min-width:0;min-height:0;overflow:hidden;padding:10px;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;outline:none;}
+  .gm-stage:active{cursor:grabbing;}
+  .gm-stage:focus-visible{box-shadow:inset 0 0 0 1px var(--ink-3);}
+  .gm-stage .gearmap{max-height:100%;touch-action:none;}
+  .gm-stage .gearmap .gm-c{cursor:pointer;}
+  .gm-side{min-height:0;display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-left:1px solid var(--line-2);background:var(--surface);overflow:hidden;}
+  .gm-q{width:100%;height:28px;padding:0 8px;font-size:12.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r);}
+  .gm-info{margin:0;color:var(--ink);min-height:2.9em;}
+  .gm-side .gm-read:empty{display:none;}
+  .gm-list{list-style:none;margin:0;padding:0;flex:1 1 auto;min-height:0;overflow-y:auto;border-top:1px solid var(--line);}
+  .gm-list li{border-bottom:1px solid var(--line);}
+  .gm-item{appearance:none;display:block;width:100%;text-align:left;background:none;border:0;padding:5px 4px;color:var(--ink-2);font:inherit;cursor:pointer;}
+  .gm-item strong{display:block;color:var(--ink);font-weight:600;}
+  .gm-item:hover,.gm-item[aria-pressed="true"]{background:var(--surface-2);}
+  .gm-item[aria-pressed="true"]{box-shadow:inset 3px 0 0 var(--accent);}
+  @media (max-width:760px){
+    .gm-view{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,46%) minmax(0,1fr);}
+    .gm-side{border-left:0;border-top:1px solid var(--line-2);}
+  }
+  /* the Equipment panel: three tabs, and what the controller parts need */
+  .eq-tabs{display:flex;gap:0;padding:0 8px;border-bottom:1px solid var(--line-2);position:sticky;top:34px;z-index:1;background:var(--surface);}
+  .eq-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:6px 9px;font:inherit;font-size:12px;font-weight:600;color:var(--ink-3);cursor:pointer;}
+  .eq-tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);}
+  .eq-tab:hover{color:var(--ink);}
+  #equippanel[data-eqview="status"] .eq-sec[data-eqtab]:not([data-eqtab="status"]),
+  #equippanel[data-eqview="ctrl"] .eq-sec:not([data-eqtab="ctrl"]),
+  #equippanel[data-eqview="diagram"] .eq-sec:not([data-eqtab="diagram"]){display:none;}
+  .eq-tabs + .eq-sec,.eq-sec.eq-first{border-top:0;}
+  .eq-mon li .eq-means{color:var(--ink-3);font-family:var(--sans);}
+  .eq-mon li .eq-means::before{content:"  \2192  ";}
+  .eq-mon li .eq-means[data-known="1"]{color:var(--good);}
+  .eq-sec .eq-wide{width:100%;}
+  .eq-badge{display:inline-block;padding:1px 6px;border:1px solid var(--line-2);border-radius:9px;font-size:11px;font-weight:600;color:var(--ink-2);}
+  .eq-range{display:flex;align-items:center;gap:8px;width:100%;}
+  .eq-range input[type="range"]{flex:1 1 auto;min-width:0;accent-color:var(--accent);}
+  .eq-range output{flex:none;min-width:3.2em;text-align:right;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);}
+  .eq-adv{width:100%;}
+  .eq-adv summary{cursor:pointer;font-weight:600;color:var(--ink);}
+  .eq-adv > *:not(summary){margin-top:6px;}
+  .eq-walk{width:100%;display:flex;flex-direction:column;gap:6px;}
+  .eq-walk[hidden]{display:none;}
+  .eq-walk .gearmap{max-height:min(300px, 38vh);}
+  .eq-step{margin:0;font-size:11.5px;color:var(--ink-3);font-weight:600;}
+  .eq-ask{margin:0;font-size:14px;font-weight:600;color:var(--ink);line-height:1.35;}
+  .eq-got{margin:0;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);min-height:1.5em;overflow-wrap:anywhere;}
+  .eq-got[data-ok="1"]{color:var(--good);}
+  .eq-bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;width:100%;}
+  .eq-bar > i{display:block;height:100%;background:var(--accent);width:0;}
+  .eq-ctl{list-style:none;margin:0;padding:0;width:100%;display:flex;flex-direction:column;}
+  .eq-ctl li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--line);}
+  .eq-ctl li > span{flex:1 1 auto;min-width:0;}
+  .eq-ctl li em{font-style:normal;color:var(--ink-3);font-family:var(--mono);font-size:11px;}
+  .eq-ctl li[data-sec]{font-weight:600;color:var(--ink-2);border-bottom-color:var(--line-2);padding-top:7px;}
+  .eq-ref{list-style:none;margin:0;padding:0;width:100%;}
+  .eq-ref li{padding:4px 0;border-bottom:1px solid var(--line);color:var(--ink-2);}
+  .eq-ref li strong{color:var(--ink);font-weight:600;}
+  .eq-ref li[data-sec]{font-weight:600;color:var(--ink-3);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-top:9px;}
+  .eq-ref li .eq-badge{margin-left:6px;}
+  .eq-ref li[data-hot="1"]{box-shadow:inset 3px 0 0 var(--good);padding-left:7px;}
+  #ctrldiapick{flex:1 1 auto;min-width:0;height:26px;font:inherit;font-size:12px;color:var(--ink);background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r);padding:0 6px;}
+  #ctrlhint{position:fixed;left:10px;bottom:34px;z-index:70;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 20px);
+    padding:7px 8px 7px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-2);font-size:12.5px;
+    box-shadow:0 8px 24px color-mix(in srgb, var(--bg) 70%, transparent);}
+  #ctrlhint[hidden]{display:none;}
+  @media (prefers-reduced-motion:reduce){ .gearmap .gm-flash .gm-s,.gearmap .gm-touch{animation:none;} }
+  /* ===== /controllers + diagrams (css) ===== */
 </style>
 </head>
 <body>
@@ -4289,7 +4401,8 @@
     if(midiAsking) return;
     midiAsking = true;
     var p;
-    try { p = navigator.requestMIDIAccess({ sysex:false }); } catch(e){ p = Promise.reject(e); }
+    // extended (system exclusive) messages are only asked for once the person has chosen them in the Equipment panel
+    try { p = navigator.requestMIDIAccess({ sysex:typeof ctrlSysex === "function" && ctrlSysex() }); } catch(e){ p = Promise.reject(e); }
     p.then(function(access){
       midiAsking = false; midiOK = true; midiWhy = "";
       if(midiAccess && midiAccess !== access){ try { midiAccess.onstatechange = null; } catch(e){} }
@@ -4314,6 +4427,7 @@
         paintGearNote();
         if(typeof midiChanged === "function") midiChanged();
         if(typeof equipPorts === "function") equipPorts();
+        if(typeof ctrlPorts === "function") ctrlPorts(access);
       }
       access.onstatechange = hook;
       hook();
@@ -4380,8 +4494,12 @@
   }
 
   function onMIDI(e){
+    // a known DJ controller, or a control taught for the DJ area, comes first; the monitor then shows what it was taken as
+    var took = typeof ctrlOnMIDI === "function" && ctrlOnMIDI(e);
     if(typeof equipOnMIDI === "function") equipOnMIDI(e);     // the monitor and the activity light see everything
+    if(took) return;
     if(typeof padsOnMIDI === "function" && padsOnMIDI(e)) return;
+    if(typeof ctrlIsDJ === "function" && ctrlIsDJ(e)) return;  // a DJ controller's other buttons never play notes
     var d = e.data; if(!d || d.length < 3) return;
     var cmd = d[0] & 0xF0, note = d[1], vel = d[2];
     if(cmd !== 0x90 || vel === 0) return;    // note-on only
@@ -8507,6 +8625,8 @@
   }
   // Starts listening for one target. Returns "" when it started, or the reason it could not.
   function midiLearnStart(target, from){
+    // "dj:d1.play" and the like are controls of the DJ area, kept per device by the controller layer
+    if(typeof ctrlLearnStart === "function" && /^dj:/.test(String(target))) return ctrlLearnStart(String(target).slice(3), from);
     if(!MIDI_TARGET.test(target)) return "there is no such target";
     if(!navigator.requestMIDIAccess){ midiOK = false; midiWhy = "none"; return "this browser has no Web MIDI"; }
     padMidiNote("");
@@ -11542,14 +11662,16 @@
     else return;
     key += "|" + dev;
     var lastRow = equipLog[equipLog.length - 1];
+    // what the controller layer took the message as ("deck 1 play", "unknown"), when it had a view
+    var means = typeof ctrlMeaning === "function" && st < 0xF0 ? ctrlMeaning() : null;
     // a knob being turned is one line whose value follows it, not a hundred lines
-    if(lastRow && lastRow.k === key){ lastRow.t = text; lastRow.n++; }
+    if(lastRow && lastRow.k === key){ lastRow.t = text; lastRow.n++; if(means){ lastRow.m = means.text; lastRow.mk = means.known; } }
     else {
       // clock and sensing arrive many times a second: each keeps the one line it already has
       var old = null;
       if(quiet) equipLog.forEach(function(r){ if(r.k === key) old = r; });
       if(old) old.n++;
-      else { equipLog.push({ k:key, t:text, dev:dev, n:1 }); if(equipLog.length > 30) equipLog.shift(); }
+      else { equipLog.push({ k:key, t:text, dev:dev, n:1, m:means ? means.text : "", mk:!!(means && means.known) }); if(equipLog.length > 30) equipLog.shift(); }
     }
     if(equipOpenNow && !equipMonTimer) equipMonTimer = setTimeout(equipMonPaint, 120);
     if(quiet) return;
@@ -11582,7 +11704,9 @@
       host.appendChild(p);
     }
     equipLog.forEach(function(r){
-      var li = document.createElement("li"); li.textContent = equipMonLine(r, many); host.appendChild(li);
+      var li = document.createElement("li"); li.textContent = equipMonLine(r, many);
+      if(r.m){ var mn = document.createElement("span"); mn.className = "eq-means"; mn.dataset.known = r.mk ? "1" : "0"; mn.textContent = r.m; li.appendChild(mn); }
+      host.appendChild(li);
     });
     if(stick) host.scrollTop = host.scrollHeight;
     if(equipUI.clear) equipUI.clear.disabled = !equipLog.length;
@@ -11602,7 +11726,7 @@
     equipSound.forEach(function(s){ L.push("  " + s.io + ": " + s.label); });
     L.push("Controls mapped: " + Object.keys(padMidi).length);
     L.push("Messages, oldest first:" + (equipLog.length ? "" : " none received"));
-    equipLog.forEach(function(r){ L.push("  " + equipMonLine(r, true)); });
+    equipLog.forEach(function(r){ L.push("  " + equipMonLine(r, true) + (r.m ? "   -> " + r.m : "")); });
     return L.join("\n");
   }
   function equipCopy(){
@@ -11942,6 +12066,7 @@
     u.forget.disabled = !n;
     u.auto.checked = equipAuto;
     equipMonPaint();
+    if(typeof ctrlPanelPaint === "function") ctrlPanelPaint();
   }
   function equipOpen(){
     if(!equipPanel) equipPanelBuild();
@@ -12045,14 +12170,15 @@
     s.appendChild(el("p", "eq-fine", "The first time a device is seen here, the Assistant is asked to introduce it. That uses one AI message. The names of connected devices go along with every message you send."));
 
     document.body.appendChild(equipPanel);
+    if(typeof ctrlPanelBuild === "function") ctrlPanelBuild();     // the Controller and Diagram tabs
     // a popover, not a dialog: a press anywhere else, or Escape, puts it away
     document.addEventListener("pointerdown", function(e){
       if(!equipOpenNow || !e.target.closest) return;
-      if(e.target.closest("#equippanel, #equipbtn, #equiprow, .asst-act")) return;
+      if(e.target.closest("#equippanel, #equipbtn, #equiprow, .asst-act, #gearmapview, #ctrlhint")) return;
       equipClose(false);
     }, true);
     document.addEventListener("keydown", function(e){
-      if(e.key === "Escape" && equipOpenNow && !(typeof padTeach !== "undefined" && padTeach)){ e.stopPropagation(); equipClose(true); }
+      if(e.key === "Escape" && equipOpenNow && !(typeof padTeach !== "undefined" && padTeach) && !document.getElementById("gearmapview")){ e.stopPropagation(); equipClose(true); }
     }, true);
   }
   // the parts that are always on screen: called from asstBuild
@@ -18852,6 +18978,2108 @@
     }
   })();
   // ===== /DJ area =====
+  // ===== controllers + diagrams =====
+  // ---- GEARMAP: drawings of equipment ----
+  // Our own line drawings (no photographs, no logos), made here from short
+  // tables of positions. The Assistant picks controls by id; a control that is
+  // physically touched lights up in every drawing on screen.
+  //
+  //   GEARMAP.keyFor(deviceName, manufacturer) -> key or ""
+  //   GEARMAP.current()                        -> key for what is connected now, or ""
+  //   GEARMAP.keys()                           -> every key
+  //   GEARMAP.info(key)                        -> {key, title, exact, note} or null
+  //   GEARMAP.controls(key)                    -> [{id, label, section, does}]
+  //   GEARMAP.render(key, {highlight:[ids], dim, labels, numbers:{id:n}, crop}) -> <svg> or null
+  //        crop: undefined = when controls are highlighted, show only the part of the unit they are on
+  //        (with a small "where on the unit" mark); false = always the whole unit.
+  //   GEARMAP.digest(key)                      -> text for the model, at most 1,600 characters
+  //   GEARMAP.onTouch(fn)                      -> unsubscribe; fn({key, id, value, raw}), at most 20 a second
+  //   GEARMAP.flash(svg, id)                   make one control blink in a drawing made by render()
+  //   GEARMAP.figure(key, opts)                -> <figure>: drawing + caption + "You touched" line + Enlarge
+  //        opts as for render, plus live:false, enlarge:false. figure.gmSet(opts) redraws it.
+  //   GEARMAP.enlarge(key, opts)               the whole-screen view with pan, zoom and a list to search
+  //
+  // In a drawing every control is <g class="gm-c" data-id="..."> (focusable, with its name).
+  //
+  // Where the DDJ-GRV6 drawing comes from (all read on 7 October 2026; text only, no image was copied):
+  //   - AlphaTheta, DDJ-GRV6 Instruction Manual, "Part names" (top panel = browse section, deck sections,
+  //     Groove Circuit section, mixer section, effects section; front panel; rear panel), read from
+  //     recordcase.de/media/b9/fe/da/1728374275/AlphaTheta-DDJ-GRV6-User-Manual.pdf
+  //   - alphatheta.com/en/product/dj-controller/ddj-grv6/ and the launch note
+  //     alphatheta.com/en/information/introducing-ddj-grv6-4-channel-performance-dj-controller/
+  //     (pads above the jog wheels, Groove Circuit on a raised strip above the pads, 206 mm jogs,
+  //     711.4 x 375.9 mm, smart rotary selector, terminals)
+  //   - virtualdj.com/manuals/hardware/alphatheta/ddjgrv6/layout/ (decks, mixer, pads, browser,
+  //     stemsfx, frontrear): every control by section, headphone and mic knobs on the front
+  //   - digitaldjtips.com/reviews/alphatheta-ddj-grv6-controller/ ("hard buttons in a line of eight"
+  //     above the jogwheels; gloss strip across the top; short pitch faders)
+  //   - wearecrossfader.co.uk/blog/ddj-grv6-review/ (joystick at the centre; colour FX knobs with a
+  //     button next to them; crossfader at the bottom of the mixer)
+  //   - support.serato.com ... AlphaTheta-DDJ-GRV6-Quickstart-Guide (control names, front and rear)
+  // Confirmed by those: which controls exist, which section each is in, where the sections sit.
+  // Not confirmed: the exact place of each button inside its section. Hence the caption.
+  var GEARMAP = (function(){
+    var NS = "http://www.w3.org/2000/svg", MAPS = {}, KEYS = [];
+    var NOTE_OWN = "Diagram drawn by First Loop; positions are approximate.";
+    var NOTE_GEN = "Typical layout for this kind of equipment — yours may differ.";
+    function sv(tag, at){
+      var e = document.createElementNS(NS, tag), k;
+      if(at) for(k in at) if(at.hasOwnProperty(k)) e.setAttribute(k, at[k]);
+      return e;
+    }
+    function h(tag, cls, text){
+      var e = document.createElement(tag);
+      if(cls) e.className = cls;
+      if(text !== undefined && text !== null) e.textContent = text;
+      return e;
+    }
+    function define(key, title, exact, w, ht, fs, build){
+      MAPS[key] = { key:key, title:title, exact:!!exact, note:exact ? NOTE_OWN : NOTE_GEN, w:w, h:ht, fs:fs, c:[], by:{}, deco:[], rg:{}, build:build };
+      KEYS.push(key);
+    }
+    // the tables are only worked out when a drawing is first asked for
+    function M(key){
+      var m = MAPS.hasOwnProperty(key) ? MAPS[key] : null;
+      if(m && m.build){ var b = m.build; m.build = null; b(maker(m)); }
+      return m;
+    }
+    function maker(m){
+      var cur = { sec:"", rg:"", tail:"", pre:"" };
+      return {
+        at:function(sec, rg, tail, pre){ cur = { sec:sec, rg:rg, tail:tail || "", pre:pre || "" }; },
+        // a region: the part of the unit a close-up is cut to
+        R:function(name, x, y, w, ht, words){ m.rg[name] = { x:x, y:y, w:w, h:ht, words:words }; },
+        // an outline with an optional title
+        P:function(x, y, w, ht, title, o){ m.deco.push({ k:"p", x:x, y:y, w:w, h:ht, t:title || "", o:o || {} }); },
+        T:function(x, y, text, size, anchor){ m.deco.push({ k:"t", x:x, y:y, t:text, s:size, a:anchor || "start" }); },
+        // a control: id (after the section's prefix), shape, place, the words printed on it,
+        // a short name, and what it does
+        C:function(id, t, x, y, w, ht, cap, s, does, o){
+          var c = { id:cur.pre + id, t:t, x:x, y:y, w:w, h:ht, cap:cap, s:s, label:s + cur.tail, section:cur.sec, rg:cur.rg, does:does, o:o || {} };
+          m.c.push(c); m.by[c.id] = c;
+          return c;
+        }
+      };
+    }
+
+    // ---------- the drawings ----------
+    var EQN = { eq_hi:["HI", "High EQ", "treble"], eq_mid:["MID", "Mid EQ", "middle"], eq_low:["LOW", "Low EQ", "bass"] };
+    // one channel strip of a DJ mixer, top to bottom
+    function strip(b, n, cx, y, gap, o){
+      var r = o.r || 8, t = " of channel " + n, yy = y;
+      b.at("Mixer", "mixer", " (channel " + n + ")", "mix.ch" + n + ".");
+      b.C("trim", "k", cx, yy, r, 0, "TRIM", "Trim", "sets how loud channel " + n + " comes into the mixer, before the EQ"); yy += gap;
+      ["eq_hi", "eq_mid", "eq_low"].forEach(function(k){
+        b.C(k, "k", cx, yy, r, 0, EQN[k][0], EQN[k][1], "turns the " + EQN[k][2] + t + " up or down; fully left removes it"); yy += gap;
+      });
+      b.C("filter", "k", cx, yy + 2, r + 1, 0, o.fname || "FILTER", "Filter knob", "one-knob filter for channel " + n + ": left takes away the highs, right takes away the lows, the middle is off"); yy += gap + 2;
+      b.C("cue", "b", cx - o.cw / 2, yy - 4, o.cw, o.ch || 11, "CUE", "Headphone cue", "sends channel " + n + " to the headphones so you can hear it before the audience does"); yy += (o.ch || 11) + 6;
+      b.C("fader", "fv", cx - 6, yy, 12, o.fh, "", "Channel fader", "the volume of channel " + n + " in the mix");
+    }
+    // DDJ-GRV6: millimetres. The top panel is 711 x 376; the rear and front edges are drawn as strips above and below it.
+    define("ddj-grv6", "DDJ-GRV6", true, 711, 462, 4.7, function(b){
+      var OY = 42, d;
+      b.P(0, OY, 711, 376, "", { body:1 });
+      b.R("deck1", 0, OY, 255, 376, "Left side: deck 1");
+      b.R("deck2", 456, OY, 255, 376, "Right side: deck 2");
+      b.R("mixer", 255, OY, 201, 376, "Middle: browse, mixer, effects");
+      b.R("front", 0, 422, 711, 36, "Front edge");
+      b.R("rear", 0, 0, 711, 38, "Back");
+      for(d = 1; d <= 2; d++) (function(d, ox){
+        var tail = " (deck " + d + ")", k, y = OY, other = d === 1 ? 3 : 4;
+        b.at("Deck " + d, "deck" + d, tail, "d" + d + ".");
+        b.T(ox + 127, y + 371, "DECK " + d, 9, "middle");
+        // the raised gloss strip
+        b.P(ox + 6, y + 6, 243, 40, "GROOVE CIRCUIT", { strip:1 });
+        b.C("gc_gain", "k", ox + 22, y + 30, 7, 0, "GAIN", "Drum loop gain", "the volume of the drum loop that Drum Swap brings in");
+        for(k = 1; k <= 4; k++) b.C("gc_swap" + k, "b", ox + 20 + k * 19, y + 23, 16, 13, String(k), "Drum Swap " + k, "swaps the track’s own drums for drum loop " + k + " (in rekordbox)", { run:"Drum Swap buttons" });
+        b.C("gc_capture", "b", ox + 122, y + 23, 22, 13, "CAPTURE", "Drum Capture", "keeps the drums of the playing track as a loop to drop into another track (in rekordbox)", { fs:3.6 });
+        var RL = ["1/8", "1/4", "1/2", "1"];
+        for(k = 1; k <= 4; k++) b.C("gc_roll" + k, "b", ox + 133 + k * 18, y + 23, 15, 13, RL[k - 1], "Drum Roll " + RL[k - 1], "repeats a " + RL[k - 1] + "-beat slice of the drums for a fill (in rekordbox)", { run:"Drum Roll buttons" });
+        b.C("gc_release", "lv", ox + 227, y + 16, 16, 26, "", "Drum Release lever", "a lever that drops the drums away for a breakdown (in rekordbox)");
+        // the line of eight pads above the jog wheel
+        for(k = 1; k <= 8; k++) b.C("pad" + k, "p", ox + 14 + (k - 1) * 28.5, y + 58, 25, 19, String(k), "Pad " + k,
+          "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:6 });
+        b.C("loop_in", "b", ox + 14, y + 86, 21, 12, "IN", "Loop in", "marks where a loop starts; held down it makes a 4-beat loop");
+        b.C("loop_out", "b", ox + 37, y + 86, 21, 12, "OUT", "Loop out", "marks where the loop ends and starts it going round");
+        b.C("reloop", "b", ox + 60, y + 86, 23, 12, "RELOOP\nEXIT", "Reloop / exit", "leaves the loop, or goes back into the last one", { fs:3.6 });
+        b.C("mode_hotcue", "b", ox + 93, y + 86, 21, 12, "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues", { fs:3.5 });
+        b.C("mode_stems", "b", ox + 116, y + 86, 21, 12, "STEMS", "Stems mode", "makes the pads switch the parts of a track (vocals, drums, bass) on and off (in rekordbox or Serato)", { fs:3.5 });
+        b.C("mode_bjump", "b", ox + 139, y + 86, 21, 12, "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats", { fs:3.5 });
+        b.C("mode_sampler", "b", ox + 162, y + 86, 21, 12, "SAMPLER", "Sampler mode", "makes the pads play short samples (in rekordbox or Serato)", { fs:3.3 });
+        b.C("call_prev", "b", ox + 192, y + 86, 16, 12, "CALL\n−", "Call back", "goes to the saved cue or loop before this point; while a loop is on, halves it", { fs:3.5 });
+        b.C("call_next", "b", ox + 209, y + 86, 16, 12, "CALL\n+", "Call forward", "goes to the next saved cue or loop; while a loop is on, doubles it", { fs:3.5 });
+        b.C("memory", "b", ox + 227, y + 86, 22, 12, "MEMORY", "Memory", "saves the cue point or the loop with the track", { fs:3.4 });
+        b.C("jog", "j", ox + 116, y + 232, 92, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the outer edge to push it a little faster or slower");
+        b.C("slip", "b", ox + 218, y + 106, 30, 11, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop; with SHIFT, vinyl mode on or off");
+        b.C("quantize", "b", ox + 218, y + 121, 30, 11, "QUANTIZE", "Quantize", "makes cues and loops snap to the nearest beat", { fs:3.6 });
+        b.C("deck_sel", "b", ox + 218, y + 136, 30, 11, "DECK " + d + "/" + other, "Deck select", "switches this side between deck " + d + " and deck " + other + " (First Loop has two decks)", { fs:3.8 });
+        b.C("master_tempo", "b", ox + 218, y + 153, 30, 13, "MASTER\nTEMPO", "Master Tempo", "keeps the key of the track the same while the tempo changes; with SHIFT, changes the tempo range", { fs:3.5 });
+        b.C("tempo", "fv", ox + 226, y + 178, 14, 100, "TEMPO", "Tempo slider", "makes the track faster (towards you) or slower (away from you)");
+        b.C("sync", "b", ox + 216, y + 300, 33, 13, "BEAT SYNC", "Beat Sync", "matches this deck’s tempo and beat to the other deck; with SHIFT, makes this deck the master", { fs:3.6 });
+        b.C("key_sync", "b", ox + 216, y + 320, 33, 13, "KEY SYNC", "Key Sync", "matches this deck’s key to the other deck", { fs:3.6 });
+        b.C("shift", "b", ox + 6, y + 280, 26, 12, "SHIFT", "Shift", "held down, gives the other buttons their second job");
+        b.C("cue", "r", ox + 22, y + 318, 13, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
+        b.C("play", "r", ox + 22, y + 351, 13, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
+      })(d, d === 1 ? 0 : 456);
+      // browse, top middle
+      b.at("Browse", "mixer", "", "browse.");
+      b.T(355.5, OY + 12, "BROWSE", 5, "middle");
+      b.C("knob", "e", 355.5, OY + 38, 15, 0, "", "Browse knob (rotary selector)", "turn to scroll through the track list, press to choose; it also tilts like a joystick in rekordbox");
+      b.C("back", "b", 300, OY + 22, 26, 11, "BACK", "Back", "goes back to the folder list (in rekordbox)");
+      b.C("view", "b", 300, OY + 40, 26, 11, "VIEW", "View", "makes the track list bigger or smaller on the computer screen (in rekordbox)");
+      b.C("discover", "b", 385, OY + 22, 28, 11, "DISCOVER", "Discover", "shows tracks that would go well after this one (in rekordbox)", { fs:3.5 });
+      b.C("preview", "b", 385, OY + 40, 28, 11, "PREVIEW", "Preview", "plays the chosen track quietly in the headphones before loading it (in rekordbox)", { fs:3.6 });
+      var CX = [null, 339, 371, 307, 403];           // channels sit 3, 1, 2, 4 from left to right
+      for(d = 1; d <= 4; d++) b.C("load" + d, "b", CX[d] - 12, OY + 64, 24, 11, "LOAD " + d, "Load " + d, "puts the chosen track on deck " + d, { run:"Load buttons", fs:3.8 });
+      for(d = 1; d <= 4; d++){
+        strip(b, d, CX[d], OY + 96, 26, { r:8, cw:22, ch:11, fh:86, fname:"COLOR" });
+        b.T(CX[d], OY + 338, String(d), 5.5, "middle");
+      }
+      b.at("Mixer", "mixer", "", "mix.");
+      b.C("xfader", "fh", 315, OY + 347, 80, 12, "", "Crossfader", "slides the sound between the left decks and the right decks");
+      b.C("master", "k", 276, OY + 96, 8, 0, "MASTER\nLEVEL", "Master level", "the volume of the main output to the speakers", { fs:3.5 });
+      b.C("booth", "k", 276, OY + 128, 8, 0, "BOOTH\nLEVEL", "Booth level", "the volume of the second (booth) output", { fs:3.5 });
+      b.C("master_cue", "b", 264, OY + 156, 24, 11, "MASTER\nCUE", "Master cue", "sends the main mix to the headphones", { fs:3.3 });
+      b.C("cfx_on", "b", 264, OY + 198, 24, 12, "COLOR FX\nON/OFF", "Sound Color FX on/off", "switches the four COLOR knobs on or off; with SHIFT, picks another colour effect (in rekordbox)", { fs:3.1 });
+      b.at("Beat FX", "mixer", "", "fx.");
+      b.T(437, OY + 84, "BEAT FX", 4.2, "middle");
+      b.C("beat_dn", "b", 423, OY + 90, 13, 10, "◀", "Beat shorter", "halves the length the Beat FX works over");
+      b.C("beat_up", "b", 438, OY + 90, 13, 10, "▶", "Beat longer", "doubles the length the Beat FX works over");
+      b.C("select", "k", 437, OY + 122, 8, 0, "FX SELECT", "Beat FX select", "chooses which Beat FX is used (echo, reverb, flanger and others)", { fs:3.5 });
+      b.C("ch", "b", 424, OY + 146, 26, 11, "CH SELECT", "Beat FX channel", "chooses which channel the Beat FX is put on", { fs:3.3 });
+      b.C("depth", "k", 437, OY + 180, 8, 0, "LEVEL\nDEPTH", "Beat FX level/depth", "how much of the Beat FX is heard", { fs:3.5 });
+      b.C("on", "r", 437, OY + 216, 9, 0, "ON\nOFF", "Beat FX on/off", "switches the Beat FX on or off", { fs:3.4 });
+      // the front edge
+      b.P(0, 424, 711, 34, "FRONT EDGE", { strip:1, side:1 });
+      b.at("Front", "front", "", "front.");
+      b.C("phones", "pt", 96, 441, 6, 0, "PHONES", "Headphone sockets", "where headphones plug in (a large and a small socket)", { lp:"r" });
+      b.at("Front", "front", "", "mix.");
+      b.C("hp_level", "k", 150, 441, 7, 0, "LEVEL", "Headphones level", "the volume in the headphones", { lp:"r" });
+      b.C("hp_mix", "k", 190, 441, 7, 0, "MIX", "Headphones mix", "what the headphones hear: the cued channel at one end (CUE), the main mix at the other (MASTER)", { lp:"r" });
+      b.C("mic_level", "k", 236, 441, 7, 0, "MIC LEVEL", "Mic level", "the volume of the microphone", { lp:"r" });
+      // the back, as you see it from behind
+      b.P(0, 2, 711, 34, "BACK (seen from behind)", { strip:1, side:1 });
+      b.at("Rear", "rear", "", "rear.");
+      b.C("usb_power", "pt", 250, 19, 5, 0, "USB\nPOWER", "USB power socket", "USB-C socket for a power adapter, when the computer cannot power the unit", { lp:"r", fs:3.6 });
+      b.C("usb", "pt", 300, 19, 5, 0, "USB", "USB socket (computer)", "USB-C socket for the cable to the computer", { lp:"r" });
+      b.C("booth", "pt", 386, 19, 5, 0, "BOOTH", "Booth output", "second output, for monitor speakers next to you", { lp:"r" });
+      b.C("master2", "pt", 446, 19, 5, 0, "MASTER 2", "Master 2 output", "main output on RCA sockets, for home speakers or an amplifier", { lp:"r" });
+      b.C("master1", "pt", 516, 19, 5, 0, "MASTER 1", "Master 1 output", "main output on large jack sockets, for powered speakers", { lp:"r" });
+      b.C("mic_att", "k", 590, 19, 5, 0, "MIC ATT.", "Mic attenuator", "turns a loud microphone down before it reaches the mixer", { lp:"r" });
+      b.C("mic", "pt", 648, 19, 5, 0, "MIC", "Mic input", "where a microphone plugs in", { lp:"r" });
+    });
+
+    // A typical DJ controller with two or four channels (modelled on small two-deck units).
+    function genericDJ(key, title, chans){
+      var MW = chans === 4 ? 190 : 150, DW = 198, W = DW * 2 + MW, H = 310;
+      define(key, title, false, W, H, 4.6, function(b){
+        var d, k;
+        b.P(0, 0, W, H, "", { body:1 });
+        b.R("deck1", 0, 0, DW, H, "Left side: deck 1");
+        b.R("deck2", DW + MW, 0, DW, H, "Right side: deck 2");
+        b.R("mixer", DW, 0, MW, H, "Middle: browse and mixer");
+        for(d = 1; d <= 2; d++) (function(d, ox){
+          var tail = " (deck " + d + ")";
+          b.at("Deck " + d, "deck" + d, tail, "d" + d + ".");
+          b.T(ox + 130, 16, "DECK " + d, 7, "middle");
+          b.C("jog", "j", ox + 92, 96, 62, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the edge to push it a little faster or slower");
+          b.C("tempo", "fv", ox + 172, 40, 13, 96, "TEMPO", "Tempo slider", "makes the track faster or slower");
+          b.C("sync", "b", ox + 163, 154, 31, 12, "BEAT SYNC", "Beat Sync", "matches this deck\u2019s tempo and beat to the other deck", { fs:3.4 });
+          b.C("loop_in", "b", ox + 8, 8, 20, 11, "IN", "Loop in", "marks where a loop starts");
+          b.C("loop_out", "b", ox + 30, 8, 20, 11, "OUT", "Loop out", "marks where the loop ends and starts it going round");
+          b.C("reloop", "b", ox + 52, 8, 24, 11, "RELOOP", "Reloop / exit", "leaves the loop, or goes back into the last one", { fs:3.5 });
+          b.C("shift", "b", ox + 6, 180, 24, 12, "SHIFT", "Shift", "held down, gives the other buttons their second job");
+          b.C("cue", "r", ox + 18, 222, 12, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
+          b.C("play", "r", ox + 18, 258, 12, 0, "\u25B6/\u2759\u2759", "Play / pause", "starts the track, or pauses it");
+          var MODES = [["mode_hotcue", "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues"], ["mode_padfx", "PAD FX", "Pad FX mode", "makes the pads switch quick effects on"],
+                       ["mode_bjump", "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats"], ["mode_sampler", "SAMPLER", "Sampler mode", "makes the pads play short samples"]];
+          MODES.forEach(function(q, i){ b.C(q[0], "b", ox + 44 + i * 34, 178, 31, 10, q[1], q[2], q[3], { fs:3.5 }); });
+          for(k = 1; k <= 8; k++) b.C("pad" + k, "p", ox + 44 + ((k - 1) % 4) * 34, 194 + (k > 4 ? 54 : 0), 31, 48, String(k), "Pad " + k,
+            "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:7 });
+        })(d, d === 1 ? 0 : DW + MW);
+        b.at("Browse", "mixer", "", "browse.");
+        b.C("knob", "e", DW + MW / 2, 26, 11, 0, "BROWSE", "Browse knob", "turn to scroll through the track list, press to choose", { lp:"a", fs:3.8 });
+        var order = chans === 4 ? [3, 1, 2, 4] : [1, 2], pitch = chans === 4 ? 34 : 44, x0 = DW + MW / 2 - pitch * (order.length - 1) / 2;
+        order.forEach(function(n, i){
+          var cx = x0 + i * pitch;
+          b.at("Browse", "mixer", "", "browse.");
+          b.C("load" + n, "b", cx - 12, 46, 24, 11, "LOAD " + n, "Load " + n, "puts the chosen track on deck " + n, { run:"Load buttons", fs:3.8 });
+          strip(b, n, cx, 74, 24, { r:7.5, cw:22, ch:11, fh:68 });
+        });
+        b.at("Mixer", "mixer", "", "mix.");
+        b.C("xfader", "fh", DW + MW / 2 - 34, H - 22, 68, 12, "", "Crossfader", "slides the sound between the left deck and the right deck");
+        b.C("master", "k", DW + 15, 74, 7, 0, "MASTER", "Master level", "the volume of the main output to the speakers", { fs:3.5 });
+        b.C("hp_mix", "k", DW + 15, 122, 7, 0, "PHONES\nMIX", "Headphones mix", "what the headphones hear: the cued channel at one end, the main mix at the other", { fs:3.4 });
+        b.C("hp_level", "k", DW + 15, 174, 7, 0, "PHONES\nLEVEL", "Headphones level", "the volume in the headphones", { fs:3.4 });
+        b.at("Beat FX", "mixer", "", "fx.");
+        b.C("select", "k", DW + MW - 15, 74, 7, 0, "FX\nSELECT", "Effect select", "chooses which effect is used", { fs:3.4 });
+        b.C("depth", "k", DW + MW - 15, 122, 7, 0, "LEVEL\nDEPTH", "Effect level/depth", "how much of the effect is heard", { fs:3.4 });
+        b.C("on", "r", DW + MW - 15, 172, 8, 0, "FX", "Effect on/off", "switches the effect on or off", { fs:3.6 });
+      });
+    }
+    genericDJ("generic-dj2", "DJ controller, two channels", 2);
+    genericDJ("generic-dj4", "DJ controller, four channels", 4);
+
+    // A keyboard controller: wheels, pads, knobs, transport, keys.
+    function genericKeys(key, title, whites, opt){
+      var KW = 11, W = Math.max(whites * KW + 56, 250), H = 150;
+      define(key, title, false, W, H, 4.4, function(b){
+        var k, x;
+        b.P(0, 0, W, H, "", { body:1 });
+        b.R("top", 0, 0, W, 72, "Top row: pads, knobs, buttons");
+        b.R("keys", 0, 66, W, 84, "Keys and wheels");
+        b.at("Wheels", "keys", "", "keys.");
+        b.C("pitch", "wh", 10, 82, 12, 52, "PITCH", "Pitch wheel", "bends the note up or down while held; springs back to the middle", { lp:"a", fs:3.4 });
+        b.C("mod", "wh", 28, 82, 12, 52, "MOD", "Modulation wheel", "adds vibrato or another movement to the sound; stays where you leave it", { lp:"a", fs:3.4 });
+        b.C("oct_dn", "b", 8, 54, 16, 10, "OCT −", "Octave down", "moves the whole keyboard an octave lower", { fs:3.3 });
+        b.C("oct_up", "b", 26, 54, 16, 10, "OCT +", "Octave up", "moves the whole keyboard an octave higher", { fs:3.3 });
+        b.at("Keys", "keys", "", "keys.");
+        b.C("keys", "kb", 48, 74, whites * KW, 68, "", "Keys", "play notes; how hard you press sets how loud each note is", { n:whites });
+        b.at("Pads", "top", "", "pads.");
+        var px = 52;
+        for(k = 1; k <= 8; k++){ b.C("pad" + k, "p", px + ((k - 1) % 4) * 19, 12 + (k > 4 ? 21 : 0), 17, 19, String(k), "Pad " + k, "plays a drum sound or starts a clip; harder hits are louder", { run:"Pads", fs:5 }); }
+        b.at("Knobs", "top", "", "knob.");
+        x = px + 4 * 19 + 14;
+        var nk = opt.knobs, cols = nk / 2, kp = Math.min(22, (W - x - (opt.faders ? opt.faders * 13 + 80 : 70)) / cols);
+        if(kp < 15) kp = 15;
+        for(k = 1; k <= nk; k++) b.C(String(k), "k", x + ((k - 1) % cols) * kp, 21 + (k > cols ? 26 : 0), 6, 0, String(k), "Knob " + k, "an endless or ordinary knob that can be tied to any setting (filter, volume, effect)", { run:"Knobs", fs:3.6 });
+        x += cols * kp + 2;
+        if(opt.faders){
+          b.at("Faders", "top", "", "fader.");
+          for(k = 1; k <= opt.faders; k++) b.C(String(k), "fv", x + (k - 1) * 13, 12, 9, 44, String(k), "Fader " + k, "a slider that can be tied to any level, usually the volume of a track", { run:"Faders", fs:3.6 });
+          x += opt.faders * 13 + 6;
+        }
+        b.at("Transport", "top", "", "tr.");
+        var tx = Math.max(x, W - 66);
+        b.C("play", "b", tx, 14, 18, 12, "▶", "Play", "starts playback in the music program");
+        b.C("stop", "b", tx + 20, 14, 18, 12, "■", "Stop", "stops playback");
+        b.C("rec", "b", tx + 40, 14, 18, 12, "●", "Record", "starts recording what you play");
+        b.C("loop", "b", tx, 32, 18, 12, "LOOP", "Loop", "plays the same section round and round", { fs:3.3 });
+        b.C("rew", "b", tx + 20, 32, 18, 12, "◀◀", "Back", "moves backwards through the song", { fs:3.6 });
+        b.C("ff", "b", tx + 40, 32, 18, 12, "▶▶", "Forward", "moves forwards through the song", { fs:3.6 });
+      });
+    }
+    genericKeys("generic-keys25", "Keyboard controller, 25 keys", 15, { knobs:8, faders:0 });
+    genericKeys("generic-keys49", "Keyboard controller, 49 keys", 29, { knobs:8, faders:8 });
+    genericKeys("generic-keys61", "Keyboard controller, 61 keys", 36, { knobs:8, faders:9 });
+
+    define("generic-pads16", "Pad controller, 16 pads", false, 250, 190, 4.6, function(b){
+      var k, r, c;
+      b.P(0, 0, 250, 190, "", { body:1 });
+      b.R("pads", 0, 0, 158, 190, "Pads");
+      b.R("side", 150, 0, 100, 190, "Knobs, faders and buttons");
+      b.at("Pads", "pads", "", "pads.");
+      // numbered from the bottom left, the way drum pads usually are
+      for(k = 1; k <= 16; k++){ r = 3 - Math.floor((k - 1) / 4); c = (k - 1) % 4;
+        b.C("pad" + k, "p", 12 + c * 36, 14 + r * 41, 32, 37, String(k), "Pad " + k, "plays a drum sound or starts a clip; harder hits are louder", { run:"Pads", fs:7 }); }
+      b.at("Knobs", "side", "", "knob.");
+      for(k = 1; k <= 4; k++) b.C(String(k), "k", 170 + ((k - 1) % 2) * 26, 26 + (k > 2 ? 28 : 0), 7, 0, String(k), "Knob " + k, "a knob that can be tied to any setting (filter, volume, effect)", { run:"Knobs", fs:3.6 });
+      b.at("Faders", "side", "", "fader.");
+      for(k = 1; k <= 2; k++) b.C(String(k), "fv", 216 + (k - 1) * 15, 14, 10, 56, String(k), "Fader " + k, "a slider that can be tied to any level", { run:"Faders", fs:3.6 });
+      b.at("Buttons", "side", "", "pads.");
+      b.C("bank", "b", 162, 92, 38, 12, "PAD BANK", "Pad bank", "switches the pads to another set of sixteen sounds", { fs:3.5 });
+      b.C("note_repeat", "b", 204, 92, 38, 12, "NOTE REPEAT", "Note repeat", "held down, repeats the pad in time with the tempo", { fs:3.2 });
+      b.C("full_level", "b", 162, 108, 38, 12, "FULL LEVEL", "Full level", "makes every hit as loud as possible, however softly it is played", { fs:3.3 });
+      b.at("Transport", "side", "", "tr.");
+      b.C("play", "b", 162, 150, 24, 14, "▶", "Play", "starts playback in the music program");
+      b.C("stop", "b", 190, 150, 24, 14, "■", "Stop", "stops playback");
+      b.C("rec", "b", 218, 150, 24, 14, "●", "Record", "starts recording what you play");
+    });
+
+    define("generic-groovebox", "Drum machine or groovebox", false, 320, 190, 4.6, function(b){
+      var k;
+      b.P(0, 0, 320, 190, "", { body:1 });
+      b.R("top", 0, 0, 320, 100, "Screen, knobs and buttons");
+      b.R("steps", 0, 92, 320, 98, "Pads and step buttons");
+      b.at("Screen", "top", "", "gb.");
+      b.C("display", "d", 14, 14, 78, 40, "", "Screen", "shows the pattern, the sound and the setting being changed");
+      b.C("data", "e", 114, 34, 11, 0, "DATA", "Data knob", "turn to change the value on the screen, press to confirm", { fs:3.6 });
+      b.at("Knobs", "top", "", "knob.");
+      for(k = 1; k <= 8; k++) b.C(String(k), "k", 150 + ((k - 1) % 4) * 26, 22 + (k > 4 ? 28 : 0), 7, 0, String(k), "Knob " + k, "changes one part of the selected sound (tune, decay, filter, level)", { run:"Sound knobs", fs:3.6 });
+      b.at("Volume", "top", "", "gb.");
+      b.C("volume", "k", 286, 26, 9, 0, "VOLUME", "Volume", "the volume of the whole machine", { fs:3.6 });
+      b.C("tempo", "k", 286, 60, 7, 0, "TEMPO", "Tempo", "how fast the pattern plays", { fs:3.6 });
+      b.at("Transport", "top", "", "tr.");
+      b.C("play", "b", 14, 68, 24, 13, "▶", "Play", "starts the pattern");
+      b.C("stop", "b", 41, 68, 24, 13, "■", "Stop", "stops the pattern");
+      b.C("rec", "b", 68, 68, 24, 13, "●", "Record", "records what you play into the pattern");
+      b.at("Modes", "top", "", "gb.");
+      b.C("pattern", "b", 104, 68, 30, 13, "PATTERN", "Pattern", "chooses which pattern plays", { fs:3.5 });
+      b.C("track", "b", 137, 68, 30, 13, "TRACK", "Track / instrument", "chooses which drum or instrument the knobs and steps belong to", { fs:3.5 });
+      b.C("shift", "b", 170, 68, 30, 13, "SHIFT", "Shift", "held down, gives the other buttons their second job", { fs:3.5 });
+      b.at("Pads", "steps", "", "pads.");
+      for(k = 1; k <= 8; k++) b.C("pad" + k, "p", 14 + (k - 1) * 37, 104, 33, 34, String(k), "Pad " + k, "plays one drum sound; harder hits are louder", { run:"Pads", fs:6.5 });
+      b.at("Steps", "steps", "", "step.");
+      for(k = 1; k <= 16; k++) b.C(String(k), "b", 14 + (k - 1) * 18.5, 152, 15.5, 20, String(k), "Step " + k, "one of the sixteen steps of the bar: lit means the selected drum plays there", { run:"Step buttons", fs:4.2 });
+    });
+
+    define("generic-audio", "Audio interface", false, 300, 170, 4.6, function(b){
+      b.P(0, 20, 300, 60, "FRONT", { body:1, side:1 });
+      b.P(0, 106, 300, 60, "BACK", { body:1, side:1 });
+      b.R("front", 0, 6, 300, 80, "Front");
+      b.R("back", 0, 92, 300, 78, "Back");
+      b.at("Front", "front", "", "ai.");
+      b.C("in1", "pt", 26, 50, 10, 0, "INPUT 1", "Input 1", "where a microphone, guitar or keyboard plugs in", { fs:3.6 });
+      b.C("gain1", "k", 60, 46, 8, 0, "GAIN 1", "Gain 1", "how much input 1 is turned up; set it so the light stays green on loud parts", { fs:3.6 });
+      b.C("in2", "pt", 96, 50, 10, 0, "INPUT 2", "Input 2", "a second input, for a second microphone or the other side of a stereo instrument", { fs:3.6 });
+      b.C("gain2", "k", 130, 46, 8, 0, "GAIN 2", "Gain 2", "how much input 2 is turned up", { fs:3.6 });
+      b.C("phantom", "b", 150, 30, 22, 11, "48V", "48V phantom power", "sends power up the cable for condenser microphones; leave it off for everything else");
+      b.C("inst", "b", 150, 46, 22, 11, "INST", "Instrument switch", "sets the input for a guitar or bass plugged straight in", { fs:3.8 });
+      b.C("direct", "b", 150, 62, 22, 11, "DIRECT", "Direct monitor", "lets you hear the input straight away, without the delay of the computer", { fs:3.5 });
+      b.C("monitor", "k", 208, 48, 13, 0, "MONITOR", "Monitor level", "the volume of the speakers", { fs:3.8 });
+      b.C("hp_level", "k", 248, 46, 8, 0, "PHONES", "Headphones level", "the volume in the headphones", { fs:3.6 });
+      b.C("phones", "pt", 280, 50, 7, 0, "", "Headphone socket", "where headphones plug in");
+      b.at("Back", "back", "", "ai.");
+      b.C("usb", "sw", 22, 128, 18, 12, "USB", "USB socket", "the cable to the computer: it carries the sound both ways and usually the power", { lp:"b" });
+      b.C("midi_in", "pt", 80, 134, 8, 0, "MIDI IN", "MIDI in", "takes notes from a keyboard or drum machine with a round MIDI plug", { fs:3.6 });
+      b.C("midi_out", "pt", 116, 134, 8, 0, "MIDI OUT", "MIDI out", "sends notes to a synthesizer or drum machine", { fs:3.6 });
+      b.C("out_l", "pt", 190, 134, 8, 0, "OUT L", "Line output left", "to the left speaker", { fs:3.6 });
+      b.C("out_r", "pt", 226, 134, 8, 0, "OUT R", "Line output right", "to the right speaker", { fs:3.6 });
+    });
+
+    // ---------- which drawing fits a device ----------
+    function keyFor(name, maker){
+      var n = String(name || ""), mk = String(maker || ""), kind = "";
+      if(!n && !mk) return "";
+      if(/ddj-?grv6/i.test(n)) return "ddj-grv6";
+      try { kind = typeof equipKind === "function" ? equipKind(n, mk) : ""; } catch(e){ kind = ""; }
+      if(kind === "dj controller" || (!kind && /\b(dj|ddj|deck|mixtrack)\b/i.test(n))){
+        return /flx-?6|flx-?10|ddj-?(1000|800|sx|sz|rz|rx|rzx|xp)|grv|xdj-?(xz|rx3|az)|opus|omnis|\b(s4|s8|mc6000|mc7000|prime 4|four)\b|platinum|\b4 ?(ch|deck)/i.test(n) ? "generic-dj4" : "generic-dj2";
+      }
+      if(kind === "keyboard" || (!kind && /key|piano/i.test(n))){
+        if(/\b(61|73|76|88)\b|[a-z](61|88)\b/i.test(n)) return "generic-keys61";
+        if(/\b(25|32|37)\b|[a-z](25|32|37)\b|mini|\blpk|nano|micro/i.test(n)) return "generic-keys25";
+        return "generic-keys49";
+      }
+      if(kind === "pad controller") return "generic-pads16";
+      if(kind === "drum machine" || kind === "groovebox") return "generic-groovebox";
+      if(kind === "audio interface") return "generic-audio";
+      return "";
+    }
+    function current(){
+      var devs = [], i, k, best = "";
+      try { devs = typeof equipDevices === "function" ? equipDevices() : []; } catch(e){ devs = []; }
+      for(i = 0; i < devs.length; i++){
+        k = keyFor(devs[i].name, devs[i].maker);
+        if(!k) continue;
+        if(k === "ddj-grv6") return k;
+        if(!best || (/^generic-dj/.test(k) && !/^generic-dj/.test(best))) best = k;
+      }
+      return best;
+    }
+    function info(key){
+      var m = M(key);
+      return m ? { key:m.key, title:m.title, exact:m.exact, note:m.note } : null;
+    }
+    function controls(key){
+      var m = M(key);
+      return m ? m.c.map(function(c){ return { id:c.id, label:c.label, section:c.section, does:c.does }; }) : [];
+    }
+
+    // ---------- the short list the model reads ----------
+    // Ids are written once per group: "DECK d1.X d2.X: play Play / pause; ..." means d1.play and d2.play.
+    // A run is written "pad1..pad8".
+    function digest(key){
+      var m = M(key);
+      if(!m) return "";
+      var groups = [], at = {};
+      m.c.forEach(function(c){
+        var cut = c.id.lastIndexOf("."), pre = c.id.slice(0, cut + 1), suf = c.id.slice(cut + 1);
+        var gk = pre.replace(/^d[12]\./, "dN.").replace(/^mix\.ch\d\./, "mix.chN.");
+        var g = at[gk];
+        if(!g){ g = at[gk] = { k:gk, pres:[], sufs:[], seen:{}, sec:c.section }; groups.push(g); }
+        if(g.pres.indexOf(pre) < 0) g.pres.push(pre);
+        if(g.seen[suf]) return;
+        g.seen[suf] = true;
+        g.sufs.push({ s:suf, l:c.o.run || c.s, run:!!c.o.run });
+      });
+      var out = [m.title + (m.exact ? "" : " (typical layout)") + ". Control ids, X = the word before each name:"];
+      groups.forEach(function(g){
+        var parts = [], i = 0, a, j, base;
+        while(i < g.sufs.length){
+          a = g.sufs[i];
+          if(a.run){
+            base = a.s.replace(/\d+$/, ""); j = i;
+            while(j + 1 < g.sufs.length && g.sufs[j + 1].run && g.sufs[j + 1].l === a.l && g.sufs[j + 1].s.replace(/\d+$/, "") === base) j++;
+            parts.push(j > i ? a.s + ".." + g.sufs[j].s + " " + a.l : a.s + " " + a.l);
+            i = j + 1;
+          } else { parts.push(a.s + " " + a.l); i++; }
+        }
+        var head = g.k === "dN." ? "DECK d1.X (left) d2.X (right)" : (g.k === "mix.chN." ? "CHANNEL mix.chN.X, N=" + g.pres.map(function(p){ return p.replace(/\D/g, ""); }).sort().join(",") : g.sec.toUpperCase() + " " + g.k + "X");
+        out.push(head + ": " + parts.join("; "));
+      });
+      return out.join("\n");
+    }
+
+    // ---------- drawing ----------
+    function shape(c, into){
+      var x = c.x, y = c.y, w = c.w, ht = c.h, t = c.t, box, k, e;
+      function add(tag, at, cls){ at["class"] = cls || "gm-s"; e = sv(tag, at); into.appendChild(e); return e; }
+      if(t === "b" || t === "p" || t === "sw" || t === "d"){
+        add("rect", { x:x, y:y, width:w, height:ht, rx:t === "p" ? 2.4 : 1.4 }, t === "p" ? "gm-s gm-pad" : "gm-s");
+        if(t === "d") add("rect", { x:x + 3, y:y + 3, width:w - 6, height:ht - 6, rx:1 }, "gm-x");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "r" || t === "k" || t === "e" || t === "pt" || t === "j"){
+        add("circle", { cx:x, cy:y, r:w });
+        if(t === "k") add("line", { x1:x, y1:y - w, x2:x, y2:y - w * 0.3 }, "gm-x");
+        if(t === "e") add("circle", { cx:x, cy:y, r:w * 0.62 }, "gm-x");
+        if(t === "pt") add("circle", { cx:x, cy:y, r:w * 0.42 }, "gm-x");
+        if(t === "j"){ add("circle", { cx:x, cy:y, r:w * 0.88 }, "gm-x"); add("circle", { cx:x, cy:y, r:w * 0.5 }, "gm-x"); add("circle", { cx:x, cy:y - w * 0.69, r:w * 0.03 }, "gm-x gm-dot"); }
+        box = { cx:x, cy:y, rx:w, ry:w };
+      } else if(t === "fv"){
+        add("rect", { x:x, y:y, width:w, height:ht, rx:1.4 }, "gm-s gm-hit");
+        add("line", { x1:x + w / 2, y1:y + 2, x2:x + w / 2, y2:y + ht - 2 }, "gm-x");
+        add("rect", { x:x, y:y + ht * 0.58 - 3.5, width:w, height:7, rx:1.2 }, "gm-s gm-cap");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "fh"){
+        add("rect", { x:x, y:y, width:w, height:ht, rx:1.4 }, "gm-s gm-hit");
+        add("line", { x1:x + 2, y1:y + ht / 2, x2:x + w - 2, y2:y + ht / 2 }, "gm-x");
+        add("rect", { x:x + w / 2 - 3.5, y:y, width:7, height:ht, rx:1.2 }, "gm-s gm-cap");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "lv"){
+        add("rect", { x:x, y:y, width:w, height:ht, rx:2 });
+        add("rect", { x:x + w / 2 - 2, y:y + 4, width:4, height:ht - 8, rx:2 }, "gm-x");
+        add("circle", { cx:x + w / 2, cy:y + ht / 2, r:3.2 }, "gm-s gm-cap");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "wh"){
+        add("rect", { x:x, y:y, width:w, height:ht, rx:w / 2 });
+        for(k = 1; k <= 3; k++) add("line", { x1:x + 2.5, y1:y + ht * k / 4, x2:x + w - 2.5, y2:y + ht * k / 4 }, "gm-x");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "kb"){
+        var n = c.o.n || 15, kw = w / n, pat = [1, 1, 0, 1, 1, 1, 0];
+        add("rect", { x:x, y:y, width:w, height:ht, rx:1 });
+        for(k = 1; k < n; k++) add("line", { x1:x + k * kw, y1:y, x2:x + k * kw, y2:y + ht }, "gm-x");
+        for(k = 0; k < n - 1; k++) if(pat[k % 7]) add("rect", { x:x + (k + 1) * kw - kw * 0.3, y:y, width:kw * 0.6, height:ht * 0.6 }, "gm-x gm-black");
+        box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      }
+      return box;
+    }
+    function words(c, box, fs, into){
+      if(!c.cap) return;
+      var lines = String(c.cap).split("\n"), t = c.t, lp = c.o.lp || ((t === "k" || t === "e" || t === "pt" || t === "fv" || t === "fh" || t === "wh" || t === "kb") ? "b" : "in");
+      var size = c.o.fs || fs, lh = size * 1.08, x = box.cx, y, anchor = "middle";
+      if(lp === "in") y = box.cy - (lines.length - 1) * lh / 2 + size * 0.36;
+      else if(lp === "b") y = box.cy + box.ry + size * 1.02;
+      else if(lp === "a") y = box.cy - box.ry - (lines.length - 1) * lh - size * 0.4;
+      else { x = lp === "r" ? box.cx + box.rx + 2.5 : box.cx - box.rx - 2.5; anchor = lp === "r" ? "start" : "end"; y = box.cy - (lines.length - 1) * lh / 2 + size * 0.36; }
+      var tx = sv("text", { x:x, y:y, "font-size":size, "text-anchor":anchor, "class":"gm-lab" + (lp === "in" ? " gm-in" : ""), "aria-hidden":"true" });
+      lines.forEach(function(s, i){
+        var ts = sv("tspan", { x:x }); if(i) ts.setAttribute("dy", lh); ts.textContent = s; tx.appendChild(ts);
+      });
+      into.appendChild(tx);
+    }
+    function idList(m, list){
+      var out = [], seen = {};
+      (Array.isArray(list) ? list : []).forEach(function(id){
+        if(typeof id === "string" && m.by.hasOwnProperty(id) && !seen[id]){ seen[id] = true; out.push(id); }
+      });
+      return out;
+    }
+    // what part of the unit to show for these controls: the whole of it, or the regions they are on
+    function cropFor(m, ids, crop){
+      var full = { x:0, y:0, w:m.w, h:m.h, part:false, words:"" };
+      if(crop === false || !ids.length) return full;
+      var names = [], x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      ids.forEach(function(id){ var r = m.by[id].rg; if(r && m.rg[r] && names.indexOf(r) < 0) names.push(r); });
+      if(typeof crop === "string" && m.rg[crop]) names = [crop];
+      if(!names.length) return full;
+      names.forEach(function(n){ var r = m.rg[n]; x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+      if((x1 - x0) * (y1 - y0) > 0.72 * m.w * m.h) return full;
+      // a strip (front edge, back) on its own is too thin to read: show it with what it belongs to
+      if((y1 - y0) < (x1 - x0) * 0.12) return full;
+      return { x:x0, y:y0, w:x1 - x0, h:y1 - y0, part:true, words:names.map(function(n){ return m.rg[n].words; }).join("; ") };
+    }
+    var RO = null, clipN = 0;
+    function fit(svg){
+      var g = svg._gm; if(!g) return;
+      var wpx = svg.clientWidth || (svg.getBoundingClientRect ? svg.getBoundingClientRect().width : 0);
+      if(!wpx) return;
+      var u = g.vb.w / wpx;                       // units to a pixel
+      if(Math.abs(u - g.u) < 0.002 && g.fitted) return;
+      g.u = u; g.fitted = true;
+      if(g.labels === "auto") svg.setAttribute("data-lab", g.fs / u >= 5.2 ? "on" : "off");
+      svg.setAttribute("data-big", g.fs / u >= 9 ? "1" : "0");
+      placeMarks(svg);
+    }
+    function watch(svg){
+      if(typeof ResizeObserver === "undefined") return;
+      if(!RO) RO = new ResizeObserver(function(list){ list.forEach(function(en){ fit(en.target); }); });
+      try { RO.observe(svg); } catch(e){}
+    }
+    // rings and numbers keep the same size on screen whatever the drawing's size
+    function placeMarks(svg){
+      var g = svg._gm, u = g.u, layer = g.marks, vb = g.vb;
+      while(layer.firstChild) layer.removeChild(layer.firstChild);
+      g.hi.forEach(function(id){
+        var it = g.items[id]; if(!it) return;
+        var b = it.box, r = Math.max(Math.max(b.rx, b.ry) + 2.5 * Math.min(u, 1.2), 10 * u);
+        if(b.rect && Math.max(b.rx, b.ry) > 10 * u){
+          layer.appendChild(sv("rect", { x:b.cx - b.rx - 2 * u, y:b.cy - b.ry - 2 * u, width:(b.rx + 2 * u) * 2, height:(b.ry + 2 * u) * 2, rx:3 * u, "class":"gm-ring" }));
+          r = 0;
+        } else layer.appendChild(sv("circle", { cx:b.cx, cy:b.cy, r:r, "class":"gm-ring" }));
+        var n = g.nums[id];
+        if(n === undefined) return;
+        var br = 8.5 * u, bx = r ? b.cx + r * 0.72 : b.cx + b.rx, by = r ? b.cy - r * 0.72 : b.cy - b.ry;
+        bx = Math.max(vb.x + br, Math.min(vb.x + vb.w - br, bx)); by = Math.max(vb.y + br, Math.min(vb.y + vb.h - br, by));
+        var bg = sv("g", { "class":"gm-badge", "aria-hidden":"true" });
+        bg.appendChild(sv("circle", { cx:bx, cy:by, r:br }));
+        var t = sv("text", { x:bx, y:by + 3.9 * u, "font-size":11 * u, "text-anchor":"middle" }); t.textContent = String(n);
+        bg.appendChild(t); layer.appendChild(bg);
+      });
+    }
+    function render(key, opts){
+      var m = M(key);
+      if(!m) return null;
+      opts = opts || {};
+      var hi = idList(m, opts.highlight), nums = {}, k, v;
+      if(opts.numbers && typeof opts.numbers === "object") for(k in opts.numbers) if(opts.numbers.hasOwnProperty(k) && m.by.hasOwnProperty(k)){
+        v = +opts.numbers[k];
+        if(v === v && v >= 0 && v < 1000){ nums[k] = Math.round(v); if(hi.indexOf(k) < 0) hi.push(k); }
+      }
+      var vb = cropFor(m, hi, opts.crop), pad = Math.max(m.w, m.h) * 0.012, top = vb.part ? m.fs * 3.4 : 0;
+      var box = { x:vb.x - pad, y:vb.y - pad - top, w:vb.w + pad * 2, h:vb.h + pad * 2 + top };
+      var svg = sv("svg", { "class":"gearmap" + (opts.dim ? " gm-dim" : ""), viewBox:[box.x, box.y, box.w, box.h].join(" "), role:"group",
+        "aria-label":"Diagram of " + m.title + (vb.part ? ", " + vb.words : ""), "data-key":key, preserveAspectRatio:"xMidYMid meet", focusable:"false" });
+      var labels = opts.labels === true ? "on" : (opts.labels === false ? "off" : "auto");
+      svg.setAttribute("data-lab", labels === "auto" ? "off" : labels);
+      var deco = sv("g", { "class":"gm-deco", "aria-hidden":"true" });
+      m.deco.forEach(function(d){
+        if(d.k === "p"){
+          deco.appendChild(sv("rect", { x:d.x, y:d.y, width:d.w, height:d.h, rx:d.o.body ? 5 : 3, "class":d.o.body ? "gm-body" : "gm-strip" }));
+          if(d.t){ var t = sv("text", { x:d.x + 4, y:d.o.side ? d.y + d.h / 2 + m.fs * 0.36 : d.y + m.fs * 1.25, "font-size":m.fs * (d.o.side ? 1 : 0.86), "class":"gm-sec" }); t.textContent = d.t; deco.appendChild(t); }
+        } else { var tt = sv("text", { x:d.x, y:d.y, "font-size":d.s, "text-anchor":d.a, "class":"gm-sec" }); tt.textContent = d.t; deco.appendChild(tt); }
+      });
+      var items = {}, layer = sv("g", { "class":"gm-ctl" }), inside = svg;
+      if(vb.part){
+        // a close-up shows nothing of what lies outside it
+        var cid = "gmclip" + (++clipN), cp = sv("clipPath", { id:cid });
+        cp.appendChild(sv("rect", { x:vb.x - pad * 0.6, y:vb.y - pad * 0.6, width:vb.w + pad * 1.2, height:vb.h + pad * 1.2 }));
+        svg.appendChild(cp);
+        inside = sv("g", { "clip-path":"url(#" + cid + ")" });
+        svg.appendChild(inside);
+      }
+      inside.appendChild(deco);
+      m.c.forEach(function(c){
+        var on = hi.indexOf(c.id) >= 0;
+        var g = sv("g", { "class":"gm-c" + (on ? " gm-hi" : ""), "data-id":c.id, tabindex:"0", role:"img", "aria-label":c.label + ": " + c.does });
+        var ti = sv("title"); ti.textContent = c.label + " — " + c.does; g.appendChild(ti);
+        var bx = shape(c, g);
+        words(c, bx, m.fs, g);
+        layer.appendChild(g);
+        items[c.id] = { g:g, box:bx, c:c };
+      });
+      inside.appendChild(layer);
+      var marks = sv("g", { "class":"gm-marks" });
+      svg.appendChild(marks);
+      if(vb.part){
+        // where on the unit this close-up is
+        var lh = top * 0.78, lw = lh * m.w / m.h, lx = box.x + pad, ly = box.y + pad * 0.6, s = lw / m.w;
+        var loc = sv("g", { "class":"gm-loc", "aria-hidden":"true" });
+        loc.appendChild(sv("rect", { x:lx, y:ly, width:lw, height:lh, rx:1, "class":"gm-loc-all" }));
+        loc.appendChild(sv("rect", { x:lx + vb.x * s, y:ly + vb.y * s, width:vb.w * s, height:vb.h * s, rx:0.6, "class":"gm-loc-part" }));
+        var lt = sv("text", { x:lx + lw + 4, y:ly + lh / 2 + m.fs * 0.5, "font-size":m.fs * 1.5, "class":"gm-sec gm-loc-t" }); lt.textContent = vb.words;
+        loc.appendChild(lt); svg.appendChild(loc);
+      }
+      svg._gm = { key:key, vb:box, full:{ x:-pad, y:-pad, w:m.w + pad * 2, h:m.h + pad * 2 }, u:box.w / 320, fs:m.fs, labels:labels, hi:hi, nums:nums, items:items, marks:marks, part:vb.part };
+      placeMarks(svg);
+      watch(svg);
+      return svg;
+    }
+    function flash(svg, id){
+      var g = svg && svg._gm, it = g && g.items[id];
+      if(!it) return false;
+      var el = it.g, b = it.box, u = g.u;
+      el.classList.remove("gm-flash");
+      try { void el.getBoundingClientRect(); } catch(e){}
+      el.classList.add("gm-flash");
+      var ring = sv("circle", { cx:b.cx, cy:b.cy, r:Math.max(Math.max(b.rx, b.ry) + 2 * u, 11 * u), "class":"gm-ring gm-touch" });
+      g.marks.appendChild(ring);
+      if(it.timer) clearTimeout(it.timer);
+      if(it.ring && it.ring.parentNode) it.ring.parentNode.removeChild(it.ring);
+      it.ring = ring;
+      it.timer = setTimeout(function(){ it.timer = null; el.classList.remove("gm-flash"); if(ring.parentNode) ring.parentNode.removeChild(ring); }, 700);
+      return true;
+    }
+
+    // ---------- touched controls ----------
+    var listeners = [], lastAt = 0, waiting = null, waitTimer = null;
+    function deliver(ev){
+      lastAt = Date.now();
+      listeners.slice().forEach(function(fn){ try { fn(ev); } catch(e){} });
+    }
+    // the controller layer calls this for every message from a device; listeners hear at most 20 a second
+    function touch(ev){
+      if(!listeners.length) return;
+      var now = Date.now();
+      if(now - lastAt >= 50 && !waitTimer){ deliver(ev); return; }
+      // a press must not be lost behind a stream of jog or fader messages
+      if(waiting && waiting.id !== ev.id && waiting.press && !ev.press) return;
+      waiting = ev;
+      if(!waitTimer) waitTimer = setTimeout(function(){ waitTimer = null; var w = waiting; waiting = null; if(w) deliver(w); }, Math.max(1, 50 - (now - lastAt)));
+    }
+    function onTouch(fn){
+      if(typeof fn !== "function") return function(){};
+      listeners.push(fn);
+      return function(){ var i = listeners.indexOf(fn); if(i >= 0) listeners.splice(i, 1); };
+    }
+    function rawWords(raw){
+      if(!raw || !raw.length) return "";
+      var st = raw[0], cmd = st & 0xF0, ch = (st & 0x0F) + 1;
+      if(cmd === 0xB0) return "control " + raw[1] + ", channel " + ch + ", value " + raw[2];
+      if(cmd === 0x90 || cmd === 0x80) return "note " + raw[1] + ", channel " + ch + ", value " + raw[2];
+      return "message " + Array.prototype.map.call(raw, function(b){ return ("0" + b.toString(16).toUpperCase()).slice(-2); }).join(" ");
+    }
+    function touchWords(key, ev){
+      var m = M(key), c = m && ev.id && m.by[ev.id];
+      if(c) return "You touched: " + c.label + " — " + c.does;
+      return "That control is not in the diagram yet" + (ev.raw ? " (" + rawWords(ev.raw) + ")" : "") + ".";
+    }
+
+    // ---------- a drawing with its caption, its "You touched" line and Enlarge ----------
+    function figure(key, opts){
+      var m = M(key);
+      if(!m) return null;
+      var fig = h("figure", "gm-fig"), host = h("div", "gm-host"), cap = h("figcaption", "gm-cap", m.note), read = h("p", "gm-read"), row = h("div", "gm-row");
+      var o = opts || {}, svg = null, off = null, was = false;
+      read.setAttribute("role", "status");
+      fig.appendChild(host); fig.appendChild(read); row.appendChild(cap);
+      if(o.enlarge !== false){
+        var big = h("button", "tinybtn gm-big", "Enlarge"); big.type = "button";
+        big.title = "Open the diagram full width, with a list of every control";
+        big.addEventListener("click", function(){ enlarge(key, { highlight:o.highlight, numbers:o.numbers, back:big }); });
+        row.appendChild(big);
+      }
+      fig.appendChild(row);
+      function draw(){
+        host.textContent = "";
+        svg = render(key, o);
+        host.appendChild(svg);
+      }
+      fig.gmSet = function(next){ o = next || {}; draw(); };
+      fig.gmSvg = function(){ return svg; };
+      draw();
+      if(o.live !== false) off = onTouch(function(ev){
+        if(!fig.isConnected){ if(was && off){ off(); off = null; } return; }
+        was = true;
+        if(ev.key && ev.key !== key) return;
+        if(ev.id) flash(svg, ev.id);
+        read.textContent = touchWords(key, ev);
+      });
+      return fig;
+    }
+
+    // ---------- the whole-screen view ----------
+    var view = null;
+    function enlarge(key, opts){
+      var m = M(key);
+      if(!m) return null;
+      opts = opts || {};
+      if(view) closeView();
+      var root = h("div", "gm-view"), head = h("div", "gm-vhead"), stage = h("div", "gm-stage"), side = h("div", "gm-side");
+      root.id = "gearmapview"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Diagram of " + m.title);
+      var ttl = h("h2", "", m.title), q = h("input", "gm-q"), close = h("button", "tinybtn", "Close");
+      q.type = "search"; q.placeholder = "Find a control"; q.setAttribute("aria-label", "Find a control by name"); q.id = "gearmapq";
+      close.type = "button"; close.id = "gearmapclose";
+      var zin = h("button", "tinybtn", "+"), zout = h("button", "tinybtn", "−"), zall = h("button", "tinybtn", "Whole unit");
+      zin.type = zout.type = zall.type = "button"; zin.setAttribute("aria-label", "Zoom in"); zout.setAttribute("aria-label", "Zoom out");
+      zin.id = "gearmapzin"; zout.id = "gearmapzout"; zall.id = "gearmapall";
+      head.appendChild(ttl); head.appendChild(zout); head.appendChild(zin); head.appendChild(zall); head.appendChild(close);
+      var svg = render(key, { highlight:opts.highlight, numbers:opts.numbers, labels:true, crop:false });
+      var g = svg._gm, vb = { x:g.vb.x, y:g.vb.y, w:g.vb.w, h:g.vb.h }, home = { x:vb.x, y:vb.y, w:vb.w, h:vb.h };
+      stage.appendChild(svg); stage.tabIndex = 0; stage.setAttribute("aria-label", "The diagram. Drag to move, scroll or pinch to zoom, arrow keys to move, plus and minus to zoom.");
+      var info = h("p", "gm-info"), note = h("p", "gm-cap", m.note), read = h("p", "gm-read"), list = h("ul", "gm-list");
+      info.setAttribute("role", "status"); read.setAttribute("role", "status"); info.id = "gearmapinfo";
+      info.textContent = "Press a control in the diagram or in the list to see what it does.";
+      list.id = "gearmaplist";
+      side.appendChild(q); side.appendChild(info); side.appendChild(read); side.appendChild(list); side.appendChild(note);
+      root.appendChild(head); root.appendChild(stage); root.appendChild(side);
+      function apply(){
+        // keep the picture's shape and stay near the unit
+        var minW = home.w / 12; if(vb.w < minW){ vb.h *= minW / vb.w; vb.w = minW; } if(vb.w > home.w * 1.05){ vb.w = home.w; vb.h = home.h; }
+        vb.x = Math.max(home.x - vb.w * 0.5, Math.min(home.x + home.w - vb.w * 0.5, vb.x));
+        vb.y = Math.max(home.y - vb.h * 0.5, Math.min(home.y + home.h - vb.h * 0.5, vb.y));
+        svg.setAttribute("viewBox", [vb.x, vb.y, vb.w, vb.h].join(" "));
+        g.vb = { x:vb.x, y:vb.y, w:vb.w, h:vb.h }; g.fitted = false; fit(svg);
+      }
+      function zoom(f, px, py){
+        var r = svg.getBoundingClientRect(), fx = r.width ? (px - r.left) / r.width : 0.5, fy = r.height ? (py - r.top) / r.height : 0.5;
+        if(px === undefined){ fx = 0.5; fy = 0.5; }
+        var nw = vb.w / f, nh = vb.h / f;
+        vb.x += (vb.w - nw) * fx; vb.y += (vb.h - nh) * fy; vb.w = nw; vb.h = nh;
+        apply();
+      }
+      function show(id, centre){
+        var it = g.items[id]; if(!it) return;
+        info.textContent = it.c.label + " — " + it.c.does + ".";
+        Array.prototype.forEach.call(list.children, function(li){ li.firstChild.setAttribute("aria-pressed", li.dataset.id === id ? "true" : "false"); });
+        Array.prototype.forEach.call(svg.querySelectorAll(".gm-c.gm-pick"), function(n){ n.classList.remove("gm-pick"); });
+        it.g.classList.add("gm-pick");
+        if(centre){
+          if(vb.w > home.w * 0.6){ vb.w = home.w * 0.5; vb.h = home.h * 0.5; }
+          vb.x = it.box.cx - vb.w / 2; vb.y = it.box.cy - vb.h / 2; apply();
+        }
+        flash(svg, id);
+      }
+      m.c.forEach(function(c){
+        var li = h("li"), bt = h("button", "gm-item"); bt.type = "button"; li.dataset.id = c.id; li.dataset.find = (c.label + " " + c.section + " " + c.does + " " + c.id).toLowerCase();
+        bt.appendChild(h("strong", "", c.label)); bt.appendChild(h("span", "", c.does));
+        bt.setAttribute("aria-pressed", "false");
+        bt.addEventListener("click", function(){ show(c.id, true); });
+        li.appendChild(bt); list.appendChild(li);
+        var el = g.items[c.id].g;
+        el.setAttribute("role", "button");
+        el.addEventListener("click", function(){ if(!moved) show(c.id, false); });
+        el.addEventListener("mouseenter", function(){ info.textContent = c.label + " — " + c.does + "."; });
+        el.addEventListener("focus", function(){ info.textContent = c.label + " — " + c.does + "."; });
+        el.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); show(c.id, false); } });
+      });
+      q.addEventListener("input", function(){
+        var w = q.value.toLowerCase().trim().split(/\s+/), n = 0;
+        Array.prototype.forEach.call(list.children, function(li){
+          var hit = w.every(function(x){ return !x || li.dataset.find.indexOf(x) >= 0; });
+          li.hidden = !hit; if(hit) n++;
+        });
+        read.textContent = q.value ? (n ? n + (n === 1 ? " control" : " controls") + " found." : "No control with that name in this diagram.") : "";
+      });
+      // drag to move, wheel or pinch to zoom
+      var pts = {}, moved = false, lastD = 0;
+      function count(){ return Object.keys(pts).length; }
+      stage.addEventListener("pointerdown", function(e){
+        pts[e.pointerId] = { x:e.clientX, y:e.clientY }; moved = false; lastD = 0;
+        try { stage.setPointerCapture(e.pointerId); } catch(err){}
+      });
+      stage.addEventListener("pointermove", function(e){
+        var p = pts[e.pointerId]; if(!p) return;
+        var r = svg.getBoundingClientRect(), dx = e.clientX - p.x, dy = e.clientY - p.y, ids = Object.keys(pts);
+        if(ids.length === 1){
+          if(Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+          if(moved && r.width){ vb.x -= dx * vb.w / r.width; vb.y -= dy * vb.h / r.height; p.x = e.clientX; p.y = e.clientY; apply(); }
+        } else if(ids.length === 2){
+          p.x = e.clientX; p.y = e.clientY; moved = true;
+          var a = pts[ids[0]], b2 = pts[ids[1]], dist = Math.sqrt((a.x - b2.x) * (a.x - b2.x) + (a.y - b2.y) * (a.y - b2.y));
+          if(lastD > 0 && dist > 0) zoom(dist / lastD, (a.x + b2.x) / 2, (a.y + b2.y) / 2);
+          lastD = dist;
+        }
+      });
+      function up(e){
+        delete pts[e.pointerId]; lastD = 0;
+        // the press that ended a drag is not a press on a control
+        if(moved) setTimeout(function(){ moved = false; }, 0);
+        if(!count() && !moved){
+          var t = document.elementFromPoint(e.clientX, e.clientY), cg = t && t.closest ? t.closest(".gm-c") : null;
+          if(cg && cg.dataset.id) show(cg.dataset.id, false);
+        }
+      }
+      stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+      stage.addEventListener("wheel", function(e){ e.preventDefault(); zoom(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.clientX, e.clientY); }, { passive:false });
+      stage.addEventListener("keydown", function(e){
+        var st = vb.w * 0.12;
+        if(e.key === "+" || e.key === "="){ zoom(1.25); e.preventDefault(); }
+        else if(e.key === "-" || e.key === "_"){ zoom(0.8); e.preventDefault(); }
+        else if(e.key === "0"){ vb = { x:home.x, y:home.y, w:home.w, h:home.h }; apply(); e.preventDefault(); }
+        else if(e.key === "ArrowLeft"){ vb.x -= st; apply(); e.preventDefault(); }
+        else if(e.key === "ArrowRight"){ vb.x += st; apply(); e.preventDefault(); }
+        else if(e.key === "ArrowUp"){ vb.y -= st; apply(); e.preventDefault(); }
+        else if(e.key === "ArrowDown"){ vb.y += st; apply(); e.preventDefault(); }
+      });
+      zin.addEventListener("click", function(){ zoom(1.4); });
+      zout.addEventListener("click", function(){ zoom(1 / 1.4); });
+      zall.addEventListener("click", function(){ vb = { x:home.x, y:home.y, w:home.w, h:home.h }; apply(); });
+      close.addEventListener("click", closeView);
+      function key2(e){
+        if(e.key === "Escape"){ e.stopPropagation(); e.preventDefault(); closeView(); return; }
+        if(e.key === "Tab"){
+          // stay inside the view
+          var f = root.querySelectorAll("button:not([hidden]), input, [tabindex='0']"), vis = Array.prototype.filter.call(f, function(n){ return n.offsetParent !== null || n.ownerSVGElement; });
+          if(!vis.length) return;
+          var first = vis[0], last = vis[vis.length - 1];
+          if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+          else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+        }
+      }
+      root.addEventListener("keydown", key2, true);
+      var off = onTouch(function(ev){
+        if(ev.key && ev.key !== key) return;
+        if(ev.id) flash(svg, ev.id);
+        read.textContent = touchWords(key, ev);
+      });
+      document.body.appendChild(root);
+      view = { root:root, off:off, back:opts.back || document.activeElement, key:key, svg:svg,
+               state:function(){ return { x:vb.x, y:vb.y, w:vb.w, h:vb.h, home:home }; } };
+      try { close.focus({ preventScroll:true }); } catch(e){}
+      fit(svg);
+      return root;
+    }
+    function closeView(){
+      if(!view) return;
+      var v = view; view = null;
+      try { v.off(); } catch(e){}
+      if(v.root.parentNode) v.root.parentNode.removeChild(v.root);
+      try { if(v.back && v.back.focus) v.back.focus({ preventScroll:true }); } catch(e2){}
+    }
+    return { keyFor:keyFor, current:current, keys:function(){ return KEYS.slice(); }, info:info, controls:controls, render:render, digest:digest,
+             onTouch:onTouch, flash:flash, figure:figure, enlarge:enlarge, close:closeView, touchWords:touchWords,
+             _touch:touch, _view:function(){ return view; }, _map:M };
+  })();
+  try { if(/[?&]fltest/.test(window.location.search)) window.__flGEARMAP = GEARMAP; } catch(e){}
+
+  // ---- CTRL: DJ controllers drive the DJ area ----
+  // Sits ahead of MIDI learn (onMIDI asks ctrlOnMIDI first). For each message:
+  //   1. a walk-through that is waiting for it (controller check, teaching) takes it;
+  //   2. else a control the person taught for this device (kept per device name) acts;
+  //   3. else the built-in table for a controller the app knows acts;
+  //   4. else it is "unknown": the monitor shows it and MIDI learn may have it.
+  // Every number in the built-in table is from DJ_RESEARCH section 1: the Mixxx
+  // mapping written for the DDJ-GRV6 (pull request 15801, "very experimental")
+  // and the merged Mixxx mapping for its sibling the DDJ-FLX4. Rows marked fam
+  // are in the FLX4 mapping only. Controls with no trustworthy number are not
+  // in the table at all, so they arrive as "unknown" and can be taught.
+  //
+  // What a control does is named by a target, the same words the drawings use
+  // for ids where a drawing has that control:
+  //   dN.play  dN.cue  dN.sync  dN.master  dN.start  dN.shift
+  //   dN.jog (top of the platter)  dN.jog_bend (top, vinyl off)  dN.jog_side  dN.jog_search  dN.jog_touch
+  //   dN.tempo  dN.nudge_dn  dN.nudge_up  dN.jump_back  dN.jump_fwd
+  //   dN.loop_in  dN.loop_out  dN.reloop  dN.loop_auto  dN.loop_halve  dN.loop_double
+  //   dN.pad1..pad8 (hot cues)  dN.clear1..clear8  dN.bjump1..bjump8
+  //   mix.chN.trim|eq_hi|eq_mid|eq_low|filter|fader|cue   mix.xfader  mix.master  mix.hp_mix  mix.hp_level
+  //   browse.knob  browse.up  browse.down  browse.press  browse.load1  browse.load2
+  //   fx.on  fx.depth  fx.t1  fx.t2  fx.tm (which channel the effect is on)
+  var CTRL = (function(){
+    var testMode = /[?&]fltest/.test(window.location.search);
+    var AT_RE = /alphatheta|pioneer|\bddj-|\bxdj-|\bdjm-|opus-?quad|omnis-?duo/i;
+    var SET_KEY = "firstloop.ctrl", MAP_KEY = "firstloop.djmap", WALK_KEY = "firstloop.ctrlwalk";
+    var JOG_TICKS = 720;          // steps in one turn of a platter: not known for the GRV6; 720 is what the sibling mappings assume
+    var TURN_SECONDS = 1.8;       // one turn of a record at 33 1/3
+    var SX_FLX4 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x04, 0x05, 0x00, 0x50, 0x02, 0xF7];   // DDJ-FLX4: asked again every 200 ms
+    var SX_400 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x02, 0x06, 0x00, 0x03, 0x01, 0xF7];    // DDJ-400: asked once
+    var set = { jog:1, flip:false, leds:true, builtin:true, sysex:false };
+    var maps = {};
+    function saveSet(){ try { window.localStorage.setItem(SET_KEY, JSON.stringify(set)); } catch(e){} }
+    function saveMaps(){ try { window.localStorage.setItem(MAP_KEY, JSON.stringify(maps)); } catch(e){} }
+    function hx(n){ return ("0" + (n & 255).toString(16).toUpperCase()).slice(-2); }
+    function el(tag, cls, text){
+      var n = document.createElement(tag);
+      if(cls) n.className = cls;
+      if(text !== undefined && text !== null) n.textContent = text;
+      return n;
+    }
+    function btn(cls, text, fn, id){ var b = el("button", cls, text); b.type = "button"; if(id) b.id = id; b.addEventListener("click", fn); return b; }
+
+    // ---------- targets: everything a control can be tied to ----------
+    var DECKW = { play:["Play / pause", "press"], cue:["Cue", "hold"], sync:["Beat sync", "press"], jog:["Jog wheel (turn the top)", "rel"], jog_touch:["Jog wheel touch (the top, without turning)", "hold"],
+      tempo:["Tempo slider", "abs"], nudge_dn:["Nudge slower (hold)", "hold"], nudge_up:["Nudge faster (hold)", "hold"], jump_back:["Beat jump back", "press"], jump_fwd:["Beat jump forward", "press"],
+      loop_in:["Loop in", "hold"], loop_out:["Loop out", "press"], loop_auto:["Auto loop (4 beats)", "press"], loop_halve:["Loop half as long", "press"], loop_double:["Loop twice as long", "press"], reloop:["Reloop / exit", "press"],
+      master:["Make this deck the tempo master", "press"], start:["Back to the start of the track", "press"], shift:["Shift", "hold"],
+      jog_bend:["Jog wheel (top, vinyl off)", "rel"], jog_side:["Jog wheel (outer edge)", "rel"], jog_search:["Jog wheel (fast search)", "rel"] };
+    var CHW = { trim:["trim", "abs"], eq_hi:["high EQ", "abs"], eq_mid:["mid EQ", "abs"], eq_low:["low EQ", "abs"], filter:["filter", "abs"], fader:["fader", "abs"], cue:["headphone cue", "press"] };
+    var GLOBW = { "mix.xfader":["Crossfader", "abs"], "mix.master":["Master level", "abs"], "mix.hp_mix":["Headphones mix", "abs"], "mix.hp_level":["Headphones level", "abs"],
+      "browse.knob":["Browse knob (turn)", "rel"], "browse.up":["Browse up (a button)", "press"], "browse.down":["Browse down (a button)", "press"], "browse.press":["Browse knob (press)", "press"],
+      "browse.load1":["Load to deck 1", "press"], "browse.load2":["Load to deck 2", "press"], "fx.on":["Effect on / off", "press"], "fx.depth":["Effect depth", "abs"],
+      "fx.t1":["Effect on channel 1", "press"], "fx.t2":["Effect on channel 2", "press"], "fx.tm":["Effect on the master", "press"] };
+    function tinfo(t){
+      var m = /^d([12])\.([a-z_]+?)(\d?)$/.exec(t), w;
+      if(m){
+        if(m[3]){
+          if(m[2] === "pad") return { name:"Deck " + m[1] + " hot cue " + m[3], kind:"hold", sec:"Deck " + m[1] };
+          if(m[2] === "clear") return { name:"Deck " + m[1] + " clear hot cue " + m[3], kind:"press", sec:"Deck " + m[1] };
+          if(m[2] === "bjump") return { name:"Deck " + m[1] + " beat jump pad " + m[3], kind:"press", sec:"Deck " + m[1] };
+          return null;
+        }
+        w = DECKW[m[2]];
+        return w ? { name:"Deck " + m[1] + " " + w[0].charAt(0).toLowerCase() + w[0].slice(1), kind:w[1], sec:"Deck " + m[1] } : null;
+      }
+      m = /^mix\.ch([12])\.([a-z_]+)$/.exec(t);
+      if(m){ w = CHW[m[2]]; return w ? { name:"Channel " + m[1] + " " + w[0], kind:w[1], sec:"Mixer channel " + m[1] } : null; }
+      w = GLOBW.hasOwnProperty(t) ? GLOBW[t] : null;
+      return w ? { name:w[0], kind:w[1], sec:t.indexOf("browse.") === 0 ? "Browse" : (t.indexOf("fx.") === 0 ? "Effect" : "Mixer") } : null;
+    }
+    // the order the guided teaching walks in
+    function teachList(){
+      var out = [], d, k;
+      function deck(d){
+        ["play", "cue", "sync", "jog", "jog_touch", "tempo", "nudge_dn", "nudge_up", "jump_back", "jump_fwd", "loop_in", "loop_out", "loop_auto", "loop_halve", "loop_double"].forEach(function(a){ out.push("d" + d + "." + a); });
+        for(k = 1; k <= 8; k++) out.push("d" + d + ".pad" + k);
+      }
+      function chan(c){ ["trim", "eq_hi", "eq_mid", "eq_low", "filter", "fader", "cue"].forEach(function(a){ out.push("mix.ch" + c + "." + a); }); }
+      for(d = 1; d <= 2; d++){ deck(d); chan(d); }
+      ["mix.xfader", "mix.master", "mix.hp_mix", "mix.hp_level", "browse.knob", "browse.up", "browse.down", "browse.load1", "browse.load2", "fx.on", "fx.depth"].forEach(function(t){ out.push(t); });
+      return out;
+    }
+
+    // ---------- doing what a control asks ----------
+    var vinyl = {}, shift = {}, loopHold = {}, hinted = false, hintEl = null;
+    function hint(){
+      if(hinted) return;
+      hinted = true;
+      if(typeof view !== "undefined" && view === "dj") return;
+      hintEl = el("div"); hintEl.id = "ctrlhint"; hintEl.setAttribute("role", "status");
+      hintEl.appendChild(el("span", "", "Your controller drives the DJ area."));
+      hintEl.appendChild(btn("sendbtn", "Open the DJ area", function(){ hintGone(); setView("dj"); }, "ctrlhintgo"));
+      var x = btn("tinybtn", "Close", hintGone, "ctrlhintx");
+      hintEl.appendChild(x);
+      document.body.appendChild(hintEl);
+      setTimeout(hintGone, 20000);
+    }
+    function hintGone(){ if(hintEl && hintEl.parentNode) hintEl.parentNode.removeChild(hintEl); hintEl = null; }
+    // ph: "down", "up", "abs" (v from 0 to 1), "rel" (v in steps)
+    function act(t, ph, v){
+      var m = /^d([12])\.([a-z_]+?)(\d?)$/.exec(t), d, n, a, k, spt;
+      if(typeof DJ === "undefined" || !DJ) return;
+      if(m){
+        n = +m[1]; a = m[2]; k = m[3] ? +m[3] - 1 : -1; d = DJ.deck(n);
+        if(a !== "shift") hint();
+        if(k >= 0){
+          if(a === "pad") d.hotcue(k, ph === "down" ? "press" : "release");
+          else if(a === "clear"){ if(ph === "down") d.hotcue(k, "clear"); }
+          else if(a === "bjump"){ if(ph === "down") d.seekBy([-1, 1, -2, 2, -4, 4, -8, 8][k]); }
+          return;
+        }
+        spt = TURN_SECONDS / JOG_TICKS * set.jog;
+        switch(a){
+          case "play": if(ph === "down") d.toggle(); break;
+          case "cue": if(ph === "down") d.cueDown(); else if(ph === "up") d.cueUp(); break;
+          case "start": if(ph === "down") d.seek(0); break;
+          case "shift": shift[n] = ph === "down"; break;
+          case "sync": if(ph === "down") d.sync(); break;
+          case "master": if(ph === "down") d.setMaster(); break;
+          case "jog_touch": d.jogTouch(ph === "down"); break;
+          case "jog": d.jogTurn(v * spt, true); break;
+          case "jog_bend": case "jog_side": d.jogTurn(v * spt, false); break;
+          case "jog_search": var s = d.state(); if(s.loaded) d.seek(Math.max(0, Math.min(s.duration, s.position + v * spt * 16))); break;
+          case "tempo": d.setTempo((set.flip ? -1 : 1) * (1 - 2 * v)); break;
+          case "nudge_dn": d.nudge(ph === "down" ? -1 : 0); break;
+          case "nudge_up": d.nudge(ph === "down" ? 1 : 0); break;
+          case "jump_back": if(ph === "down") d.seekBy(-d.jumpSize()); break;
+          case "jump_fwd": if(ph === "down") d.seekBy(d.jumpSize()); break;
+          case "loop_in":
+            // a short press marks the start; kept down, it becomes a 4-beat loop
+            if(loopHold[n]){ clearTimeout(loopHold[n]); loopHold[n] = null; }
+            if(ph === "down"){ d.loopIn(); loopHold[n] = setTimeout(function(){ loopHold[n] = null; if(!d.state().loop.active) d.autoLoop(4); }, 700); }
+            break;
+          case "loop_out": if(ph === "down") d.loopOut(); break;
+          case "reloop": if(ph === "down") d.reloop(); break;
+          case "loop_auto": if(ph === "down") d.autoLoop(4); break;
+          case "loop_halve": if(ph === "down") d.loopHalve(); break;
+          case "loop_double": if(ph === "down") d.loopDouble(); break;
+        }
+        return;
+      }
+      m = /^mix\.ch([12])\.([a-z_]+)$/.exec(t);
+      var mx = DJ.mixer;
+      if(m){
+        n = +m[1]; a = m[2]; hint();
+        if(a === "trim") mx.trim(n, v); else if(a === "eq_hi") mx.eq(n, "high", v); else if(a === "eq_mid") mx.eq(n, "mid", v); else if(a === "eq_low") mx.eq(n, "low", v);
+        else if(a === "filter") mx.filter(n, v); else if(a === "fader") mx.fader(n, v); else if(a === "cue"){ if(ph === "down") mx.cue(n); }
+        return;
+      }
+      switch(t){
+        case "mix.xfader": hint(); mx.crossfader(v); break;
+        case "mix.master": mx.master(v); break;
+        case "mix.hp_mix": mx.hpMix(v); break;
+        case "mix.hp_level": mx.hpLevel(v); break;
+        case "browse.knob": hint(); DJ.init(); if(v) DJ.library.selectMove(v > 0 ? Math.ceil(v) : Math.floor(v)); break;
+        case "browse.up": if(ph === "down"){ hint(); DJ.init(); DJ.library.selectMove(-1); } break;
+        case "browse.down": if(ph === "down"){ hint(); DJ.init(); DJ.library.selectMove(1); } break;
+        case "browse.press": if(ph === "down"){ if(typeof view !== "undefined" && view !== "dj") setView("dj"); } break;
+        case "browse.load1": if(ph === "down"){ hint(); DJ.init(); DJ.library.loadSelected(1); } break;
+        case "browse.load2": if(ph === "down"){ hint(); DJ.init(); DJ.library.loadSelected(2); } break;
+        case "fx.on": if(ph === "down") mx.fx.on(); break;
+        case "fx.depth": mx.fx.depth(v); break;
+        case "fx.t1": if(ph === "down") mx.fx.target(1); break;
+        case "fx.t2": if(ph === "down") mx.fx.target(2); break;
+        case "fx.tm": if(ph === "down") mx.fx.target("master"); break;
+      }
+    }
+    // Knobs, faders and jog wheels can send a thousand messages a second. The
+    // newest position (or the sum of the steps) is kept and applied once a frame.
+    var pend = {}, pendN = 0, frame = 0, STAT = { msgs:0, flushes:0, acts:0, ms:0, maxMs:0 };
+    function later(fn){
+      if(document.hidden || !window.requestAnimationFrame) return setTimeout(fn, 16);
+      return window.requestAnimationFrame(fn);
+    }
+    function queue(t, ph, v, pre){
+      var p = pend[t];
+      if(!p){ p = pend[t] = { ph:ph, v:0, pre:null }; pendN++; }
+      if(ph === "rel") p.v += v; else p.v = v;
+      if(pre) p.pre = pre;
+      if(!frame) frame = later(flush);
+    }
+    function flush(){
+      frame = 0;
+      var q = pend, k, p, t0 = testMode ? performance.now() : 0;
+      pend = {}; pendN = 0;
+      for(k in q) if(q.hasOwnProperty(k)){
+        p = q[k];
+        try { if(p.pre) p.pre(); act(k, p.ph, p.v); } catch(e){}
+        STAT.acts++;
+      }
+      STAT.flushes++;
+      if(testMode){ var dt = performance.now() - t0; STAT.ms += dt; if(dt > STAT.maxMs) STAT.maxMs = dt; }
+    }
+    function doNow(t, ph, v){ try { act(t, ph, v); } catch(e){} STAT.acts++; }
+
+    // ---------- the built-in tables ----------
+    // by["n90.11"] / by["cb0.19"] -> { id (the control in the drawing), t (target or ""), k (kind), sh (sent with SHIFT held), led, why, fam, lsb, vin }
+    // kinds: btn (acts when pressed), hold (pressed and let go), msb / lsb (a 14-bit pair), abs (7-bit), jog (steps around 64), enc (1.. up, 127.. down), ign
+    function buildProfile(grv6){
+      var P = { key:grv6 ? "ddj-grv6" : "ddj", by:{}, list:[], title:grv6 ? "DDJ-GRV6" : "typical DDJ layout", grv6:grv6 };
+      function add(st, num, id, t, k, o){
+        var e = { st:st, num:num, id:id, t:t, k:k, key:((st & 0xF0) === 0xB0 ? "c" : "n") + hx(st).toLowerCase() + "." + num };
+        if(o) for(var q in o) if(o.hasOwnProperty(q)) e[q] = o[q];
+        P.by[e.key] = e; P.list.push(e);
+        return e;
+      }
+      function pair(st, num, id, t, o){ add(st, num, id, t, "msb", o); add(st, num + 0x20, id, t, "lsb", o); }
+      var n, k, N, C, d, live, no;
+      for(n = 0; n < 4; n++){
+        N = 0x90 + n; C = 0xB0 + n; d = "d" + (n + 1) + "."; live = n < 2;
+        no = live ? null : { why:"First Loop has two decks" };
+        function A(st, num, id, t, kind, o){
+          if(!live){ add(st, num, "", "", "ign", { why:"deck " + (n + 1) + ": First Loop has two decks", sh:o && o.sh }); return; }
+          add(st, num, d + id, t ? d + t : "", kind, o);
+        }
+        A(N, 0x0B, "play", "play", "btn", { led:1 });
+        if(grv6) A(N, 0x47, "play", "", "ign", { sh:1, led:1, why:"PLAY with SHIFT has no job in First Loop" });
+        A(N, 0x0C, "cue", "cue", "hold", { led:1 });
+        A(N, 0x48, "cue", "start", "btn", { sh:1 });
+        A(N, 0x3F, "shift", "shift", "hold");
+        A(N, 0x36, "jog", "jog_touch", "hold");
+        A(N, 0x67, "jog", "jog_touch", "hold", { sh:1 });
+        A(C, 0x22, "jog", "jog", "jog", { vin:true });
+        A(C, 0x23, "jog", "jog_bend", "jog", { vin:false });
+        A(C, 0x21, "jog", "jog_side", "jog");
+        A(C, 0x29, "jog", "jog_search", "jog", { sh:1 });
+        if(live) pair(C, 0x00, d + "tempo", d + "tempo"); else { add(C, 0x00, "", "", "ign", no); add(C, 0x20, "", "", "ign", no); }
+        A(N, 0x10, "loop_in", "loop_in", "hold", { led:1 });
+        A(N, 0x4C, "loop_in", "loop_halve", "btn", { sh:1, led:1 });
+        A(N, 0x11, "loop_out", "loop_out", "btn", { led:1 });
+        A(N, 0x4E, "loop_out", "loop_double", "btn", { sh:1, led:1 });
+        A(N, 0x4D, "reloop", "reloop", "btn", { led:1 });
+        A(N, 0x50, "reloop", "reloop", "btn", { sh:1, led:1 });
+        A(N, 0x58, "sync", "sync", "btn", { led:1 });
+        A(N, 0x5C, "sync", "master", "btn", { long:1 });
+        // the mixer strip of this channel
+        if(live){
+          add(N, 0x54, "mix.ch" + (n + 1) + ".cue", "mix.ch" + (n + 1) + ".cue", "btn", { led:1 });
+          [[0x13, "fader"], [0x04, "trim"], [0x07, "eq_hi"], [0x0B, "eq_mid"], [0x0F, "eq_low"]].forEach(function(q){ pair(C, q[0], "mix.ch" + (n + 1) + "." + q[1], "mix.ch" + (n + 1) + "." + q[1]); });
+        } else {
+          add(N, 0x54, "mix.ch" + (n + 1) + ".cue", "", "ign", { why:"channel " + (n + 1) + ": First Loop has two channels" });
+          [[0x13, "fader"], [0x04, "trim"], [0x07, "eq_hi"], [0x0B, "eq_mid"], [0x0F, "eq_low"]].forEach(function(q){
+            add(C, q[0], "mix.ch" + (n + 1) + "." + q[1], "", "ign", { why:"channel " + (n + 1) + ": First Loop has two channels" });
+            add(C, q[0] + 0x20, "mix.ch" + (n + 1) + "." + q[1], "", "ign", { why:"channel " + (n + 1) + ": First Loop has two channels" });
+          });
+        }
+      }
+      // pads: the mode is kept in the controller, so each mode has its own notes
+      for(n = 0; n < 2; n++){
+        N = 0x97 + n * 2; d = "d" + (n + 1) + ".";
+        for(k = 0; k < 8; k++){
+          add(N, k, d + "pad" + (k + 1), d + "pad" + (k + 1), "hold", { led:1 });
+          add(N + 1, k, d + "pad" + (k + 1), d + "clear" + (k + 1), "btn", { sh:1, led:1 });
+          add(N, 0x20 + k, d + "pad" + (k + 1), d + "bjump" + (k + 1), "btn", { mode:"beat jump" });
+          add(N, 0x30 + k, d + "pad" + (k + 1), "", "ign", { mode:"sampler", why:"sampler pad: the DJ area has no sampler" });
+        }
+      }
+      // the middle: crossfader, headphones, browse
+      pair(0xB6, 0x1F, "mix.xfader", "mix.xfader");
+      pair(0xB6, 0x0C, "mix.hp_mix", "mix.hp_mix");
+      if(grv6) add(0xB6, 0x0D, "mix.hp_level", "mix.hp_level", "abs");
+      pair(0xB6, 0x17, "mix.ch1.filter", "mix.ch1.filter", { fam:1 });
+      pair(0xB6, 0x18, "mix.ch2.filter", "mix.ch2.filter", { fam:1 });
+      add(0xB6, 0x40, "browse.knob", "browse.knob", "enc");
+      add(0x96, 0x41, "browse.knob", "browse.press", "btn");
+      add(0x96, 0x42, "browse.knob", "", "ign", { sh:1, why:"browse press with SHIFT has no job in First Loop" });
+      add(0x96, 0x46, "browse.load1", "browse.load1", "btn");
+      add(0x96, 0x47, "browse.load2", "browse.load2", "btn");
+      add(0x96, 0x48, "browse.load3", "", "ign", { why:"First Loop has two decks" });
+      add(0x96, 0x49, "browse.load4", "", "ign", { why:"First Loop has two decks" });
+      // Beat FX
+      add(0x94, 0x47, "fx.on", "fx.on", "btn", { led:1 });
+      pair(0xB4, 0x02, "fx.depth", "fx.depth");
+      if(grv6){
+        add(0x94, 0x10, "fx.ch", "fx.t1", "btn"); add(0x94, 0x11, "fx.ch", "fx.t2", "btn");
+        add(0x94, 0x12, "fx.ch", "", "ign", { why:"channel 3: First Loop has two channels" }); add(0x94, 0x13, "fx.ch", "", "ign", { why:"channel 4: First Loop has two channels" });
+        add(0x94, 0x14, "fx.ch", "fx.tm", "btn");
+        for(k = 0x15; k <= 0x1B; k++) add(0x94, k, "fx.ch", "", "ign", { why:"that effect channel is not in First Loop" });
+        for(k = 0x20; k <= 0x2D; k++) add(0x94, k, "fx.select", "", "ign", { why:"effect select position " + (k - 0x1F) + ": choose the effect on screen for now" });
+      }
+      return P;
+    }
+    var PROFILES = {}, profCache = {};
+    function profileFor(name, maker){
+      var key = name + "|" + (maker || "");
+      if(profCache.hasOwnProperty(key)) return profCache[key];
+      var p = null, which = /ddj-?grv6/i.test(name) ? "ddj-grv6" : (/\bddj-/i.test(name) && AT_RE.test(name + " " + (maker || "")) ? "ddj" : "");
+      if(which) p = PROFILES[which] || (PROFILES[which] = buildProfile(which === "ddj-grv6"));
+      profCache[key] = p;
+      return p;
+    }
+    function entryWords(e){
+      var ti = e.t ? tinfo(e.t) : null, w;
+      if(ti) w = ti.name.charAt(0).toLowerCase() + ti.name.slice(1);
+      else w = e.why || "not used by First Loop";
+      if(e.mode) w += " (" + e.mode + " pads)";
+      if(e.sh) w += ", with SHIFT";
+      if(e.long) w += " (held)";
+      if(!ti && e.t === "") w += e.why ? "" : "";
+      return w;
+    }
+
+    // ---------- devices: names, outputs, lights ----------
+    var outs = {}, gmKey = {}, isDJc = {};
+    function devOf(e){
+      var nm = "", mk = "";
+      try { nm = String((e.target && e.target.name) || ""); mk = String((e.target && e.target.manufacturer) || ""); } catch(err){}
+      return { name:nm, maker:mk };
+    }
+    function keyOf(name, maker){
+      var k = name + "|" + maker;
+      if(!gmKey.hasOwnProperty(k)){
+        gmKey[k] = GEARMAP.keyFor(name, maker);
+        var kind = ""; try { kind = equipKind(name, maker); } catch(e){}
+        isDJc[k] = kind === "dj controller" || kind === "dj mixer" || !!profileFor(name, maker);
+      }
+      return gmKey[k];
+    }
+    function isDJ(name, maker){ keyOf(name, maker); return !!isDJc[name + "|" + maker] || !!maps[name]; }
+    // the device the Controller tab is about: one with a table, else one that was taught, else any DJ controller, else the first
+    function currentDev(){
+      var devs = [], i, best = null, rank = 0, r;
+      try { devs = equipDevices(); } catch(e){ devs = []; }
+      for(i = 0; i < devs.length; i++){
+        r = profileFor(devs[i].name, devs[i].maker) ? 4 : (maps[devs[i].name] ? 3 : (isDJ(devs[i].name, devs[i].maker) ? 2 : 1));
+        if(r > rank){ rank = r; best = devs[i]; }
+      }
+      return best;
+    }
+    function send(name, bytes){
+      var o = outs[name];
+      if(!o) return false;
+      try { o.send(bytes); return true; } catch(e){ return false; }
+    }
+    function sysexLive(){ try { return !!(midiAccess && midiAccess.sysexEnabled); } catch(e){ return false; } }
+    // Extended messages only ever go to a device whose name or maker says AlphaTheta or Pioneer.
+    function sendSysex(name, bytes){
+      var o = outs[name], mk = "";
+      if(!o || !sysexLive()) return false;
+      try { mk = String(o.manufacturer || ""); } catch(e){}
+      if(!AT_RE.test(name) && !AT_RE.test(mk)) return false;
+      try { o.send(bytes); return true; } catch(e2){ return false; }
+    }
+    var sx = { want:false, timer:null, tried:false, note:"" };
+    function sysexTick(){
+      Object.keys(outs).forEach(function(nm){ if(/ddj-?flx4/i.test(nm)) sendSysex(nm, SX_FLX4); });
+    }
+    function sysexStart(){
+      if(!sysexLive()) return;
+      var any = false;
+      Object.keys(outs).forEach(function(nm){
+        if(/ddj-?flx4/i.test(nm)) any = true;
+        else if(/ddj-?400/i.test(nm) && !sx["q" + nm]){ sx["q" + nm] = true; sendSysex(nm, SX_400); }
+      });
+      if(any && !sx.timer) sx.timer = setInterval(sysexTick, 200);
+      if(!any && sx.timer){ clearInterval(sx.timer); sx.timer = null; }
+    }
+    // the person ticked "allow extended messages": ask the browser again, this time with them
+    function sysexAsk(cb){
+      sx.want = true; sx.note = "";
+      midiConnect(function(){
+        var ok = sysexLive();
+        if(!ok){ sx.want = false; set.sysex = false; sx.note = "The browser did not allow extended messages, so nothing has changed. Everything else works as before."; }
+        else { set.sysex = true; sx.note = "Extended messages are allowed."; sysexStart(); }
+        saveSet();
+        if(cb) cb(ok);
+        paint();
+      }, true);
+    }
+    function sysexOff(){
+      sx.want = false; set.sysex = false; saveSet(); sx.note = "";
+      if(sx.timer){ clearInterval(sx.timer); sx.timer = null; }
+      if(sysexLive()) midiConnect(function(){ paint(); }, true);
+      paint();
+    }
+    function ledsFor(p, id, on){
+      var out = [], i, e;
+      for(i = 0; i < p.list.length; i++){ e = p.list[i]; if(e.led && e.id === id && (e.st & 0xF0) === 0x90) out.push([e.st, e.num, on ? 0x7F : 0x00]); }
+      return out;
+    }
+    function led(id, on){
+      if(!set.leds) return;
+      Object.keys(outs).forEach(function(nm){
+        var p = profileFor(nm, "");
+        if(!p) return;
+        ledsFor(p, id, on).forEach(function(b){ send(nm, b); });
+      });
+    }
+    function rawLed(bytes, grvOnly){
+      if(!set.leds) return;
+      Object.keys(outs).forEach(function(nm){ var p = profileFor(nm, ""); if(p && (!grvOnly || p.grv6)) send(nm, bytes); });
+    }
+    var VU = [0, 0x26, 0x41, 0x57, 0x65, 0x77], vuLast = [-1, -1];
+    function vuOf(peak){ return peak > 0.98 ? 5 : (peak > 0.7 ? 4 : (peak > 0.45 ? 3 : (peak > 0.2 ? 2 : (peak > 0.03 ? 1 : 0)))); }
+    function ledsAll(){
+      if(!set.leds || typeof DJ === "undefined" || !DJ || !DJ.ready()) return;
+      var n, s, k, m;
+      for(n = 1; n <= 2; n++){
+        try { s = DJ.deck(n).state(); } catch(e){ continue; }
+        led("d" + n + ".play", s.playing); led("d" + n + ".cue", s.loaded); led("d" + n + ".sync", s.sync);
+        led("d" + n + ".loop_in", s.loop.active); led("d" + n + ".loop_out", s.loop.active); led("d" + n + ".reloop", s.loop.active);
+        for(k = 0; k < 8; k++) led("d" + n + ".pad" + (k + 1), s.hotcues[k] !== null && s.hotcues[k] !== undefined);
+        rawLed([0x9F, n - 1, s.loaded ? 0x7F : 0x00], true);
+      }
+      try { m = DJ.mixer.state(); } catch(e2){ m = null; }
+      if(m && m.ready){ m.channels.forEach(function(c){ if(c.ch <= 2) led("mix.ch" + c.ch + ".cue", c.cue); }); led("fx.on", m.fx.on); }
+    }
+    function wireDJ(){
+      if(typeof DJ === "undefined" || !DJ || !DJ.on) return;
+      DJ.on("play", function(d){ led("d" + d.deck + ".play", d.playing); });
+      DJ.on("cue", function(d){ led("d" + d.deck + ".cue", true); });
+      DJ.on("sync", function(d){ led("d" + d.deck + ".sync", d.on); });
+      DJ.on("loop", function(d){ led("d" + d.deck + ".loop_in", d.active); led("d" + d.deck + ".loop_out", d.active); led("d" + d.deck + ".reloop", d.active); });
+      DJ.on("hotcue", function(d){ led("d" + d.deck + ".pad" + (d.index + 1), d.set !== false); });
+      DJ.on("load", function(d){
+        var s; try { s = DJ.deck(d.deck).state(); } catch(e){ return; }
+        led("d" + d.deck + ".cue", true); led("d" + d.deck + ".play", s.playing);
+        for(var k = 0; k < 8; k++) led("d" + d.deck + ".pad" + (k + 1), s.hotcues[k] !== null && s.hotcues[k] !== undefined);
+        rawLed([0x9F, d.deck - 1, 0x7F], true);
+      });
+      DJ.on("unload", function(d){
+        led("d" + d.deck + ".cue", false); led("d" + d.deck + ".play", false);
+        for(var k = 0; k < 8; k++) led("d" + d.deck + ".pad" + (k + 1), false);
+        rawLed([0x9F, d.deck - 1, 0x00], true);
+      });
+      DJ.on("mixer", function(d){ if(d.control === "cue" && d.ch <= 2) led("mix.ch" + d.ch + ".cue", !!d.value); });
+      DJ.on("fx", function(d){ if(d) led("fx.on", !!d.on); });
+      DJ.on("mode", function(d){ if(d && d.vinyl !== undefined) vinyl[d.deck] = !!d.vinyl; });
+      DJ.on("levels", function(L){
+        if(!set.leds || !L || !L.ch) return;
+        for(var i = 0; i < 2; i++){ var v = vuOf(L.ch[i] ? L.ch[i].peak : 0); if(v !== vuLast[i]){ vuLast[i] = v; rawLed([0xB0 + i, 0x02, VU[v]], true); } }
+      });
+      DJ.on("ready", function(){ ledsAll(); });
+    }
+    // midiConnect's hook calls this whenever the browser's list of devices changes
+    function ports(access){
+      var next = {}, names = [];
+      try { if(access && access.outputs) access.outputs.forEach(function(o){ if(o.state !== "disconnected"){ var nm = String(o.name || "MIDI device"); if(!next[nm]) next[nm] = o; } }); } catch(e){}
+      var fresh = Object.keys(next).filter(function(nm){ return !outs[nm]; });
+      outs = next;
+      var active = null;
+      try { (midiPorts.ins || []).forEach(function(p){ if(!active && (profileFor(p.name, p.maker) || maps[p.name])) active = p.name; }); } catch(e2){}
+      try { if(typeof DJ !== "undefined" && DJ && DJ.setController){ var was = lastCtl; lastCtl = active || ""; if(was !== lastCtl) DJ.setController({ active:!!active, name:active || "" }); } } catch(e3){}
+      if(fresh.length){ vuLast = [-1, -1]; ledsAll(); }
+      // extended messages were allowed on an earlier visit: ask again only if the browser will not have to ask the person
+      if(set.sysex && !sx.want && !sx.tried && access && !sysexLive()){
+        sx.tried = true;
+        try {
+          navigator.permissions.query({ name:"midi", sysex:true }).then(function(r){
+            if(r && r.state === "granted"){ sx.want = true; midiConnect(function(){ if(!sysexLive()) sx.want = false; else sysexStart(); paint(); }, true); }
+          }, function(){});
+        } catch(e4){}
+      }
+      sysexStart();
+      paint();
+    }
+    var lastCtl = null;
+
+    // ---------- every message from every device comes through here first ----------
+    var meaning = "", known = false, enc14 = {};
+    function touch(key, id, val, raw, press){ if(key || id) GEARMAP._touch({ key:key, id:id || "", value:val, raw:raw, press:!!press }); }
+    function onMsg(e){
+      var d = e && e.data;
+      meaning = ""; known = false;
+      if(!d || d.length < 2) return false;
+      var st = d[0];
+      if(st >= 0xF0) return false;
+      var cmd = st & 0xF0, ch = st & 0x0F, num = d[1] & 0x7F, val = d.length > 2 ? d[2] & 0x7F : 0;
+      var note = cmd === 0x90 || cmd === 0x80, on = cmd === 0x90 && val > 0, cc = cmd === 0xB0;
+      var dv = devOf(e), gk = keyOf(dv.name, dv.maker), raw = [st, num, val];
+      STAT.msgs++;
+      if(!note && !cc){
+        // a keyboard's wheel still lights up in its drawing
+        if(gk && /^generic-keys/.test(gk) && cmd === 0xE0) touch(gk, "keys.pitch", val, raw);
+        return false;
+      }
+      var key = (cc ? "c" : "n") + ch + "." + num;
+      // 1. a walk-through or a single "learn" that is waiting
+      if(walk && walk.live && walkOn()){
+        walkMsg(dv, key, st, num, val, cc, on);
+        meaning = walk.mode === "check" ? "noted for the controller check" : "taken by teaching"; known = true;
+        var p0 = profileFor(dv.name, dv.maker), e0 = p0 && p0.by[(cc ? "c" : "n") + hx(st).toLowerCase() + "." + num];
+        touch(gk, e0 ? e0.id : "", val, raw, on);
+        return true;
+      }
+      // 2. taught for this device
+      var tm = maps[dv.name], te = tm && tm.map[key];
+      if(te){
+        runTaught(dv.name, key, te, val, cc, on, note);
+        var ti = tinfo(te.t);
+        meaning = (ti ? ti.name.charAt(0).toLowerCase() + ti.name.slice(1) : te.t) + " (taught)"; known = true;
+        touch(gk, te.t, val, raw, on);
+        return true;
+      }
+      if(tm && cc && tm.fine && tm.fine[key]){ runFine(dv.name, tm.fine[key], val); meaning = "fine part of a taught control"; known = true; return true; }
+      // 3. the built-in table
+      var p = set.builtin ? profileFor(dv.name, dv.maker) : null;
+      if(p){
+        var en = p.by[(cc ? "c" : "n") + hx(st).toLowerCase() + "." + num];
+        if(en){
+          runEntry(dv.name, en, val, on);
+          meaning = entryWords(en); known = true;
+          touch(gk, en.id, val, raw, on);
+          return true;
+        }
+      }
+      // 4. not known
+      if(isDJ(dv.name, dv.maker)){
+        meaning = "unknown";
+        if(on || cc) touch(gk, "", val, raw, on);
+        return false;
+      }
+      if(gk && /^generic-keys/.test(gk)){
+        if(note && ch !== 9){ if(on) touch(gk, "keys.keys", val, raw, true); }
+        else if(cc && num === 1) touch(gk, "keys.mod", val, raw);
+        else if(on || cc) touch(gk, "", val, raw, on);
+      } else if(gk && (on || cc)) touch(gk, "", val, raw, on);
+      return false;
+    }
+    function runEntry(dev, e, val, on){
+      var k = e.k, t = e.t, id14, v;
+      if(k === "ign" || !t) return;
+      if(k === "btn"){ if(on) doNow(t, "down"); }
+      else if(k === "hold") doNow(t, on ? "down" : "up");
+      else if(k === "abs") queue(t, "abs", val / 127);
+      else if(k === "msb" || k === "lsb"){
+        id14 = dev + "|" + t;
+        v = enc14[id14] || (enc14[id14] = { m:0, l:0, fine:false });
+        if(k === "msb") v.m = val; else { v.l = val; v.fine = true; }
+        queue(t, "abs", v.fine ? ((v.m << 7) | v.l) / 16383 : v.m / 127);
+      }
+      else if(k === "jog"){
+        var n = +t.charAt(1), want = e.vin;
+        queue(t, "rel", val - 64, want === undefined ? null : function(){
+          if(vinyl[n] === undefined){ try { vinyl[n] = !!DJ.deck(n).state().vinyl; } catch(err){} }
+          if(vinyl[n] !== want){ try { DJ.deck(n).setVinyl(want); } catch(err2){} vinyl[n] = want; }
+        });
+      }
+      else if(k === "enc") queue(t, "rel", val < 64 ? val : val - 128);
+    }
+    var tstate = {};
+    function runTaught(dev, key, te, val, cc, on, note){
+      var k = te.k, t = te.t, st = tstate[dev + "|" + key] || (tstate[dev + "|" + key] = {});
+      if(k === "press" || k === "hold"){
+        var down = cc ? val > 0 : on, changed = down !== !!st.down;
+        if(!cc && !on && !note) return;
+        st.down = down;
+        if(!changed) return;
+        if(k === "press"){ if(down) doNow(t, "down"); }
+        else doNow(t, down ? "down" : "up");
+      } else if(k === "abs"){
+        if(!cc) return;
+        st.m = val;
+        queue(t, "abs", te.hi && st.fine ? ((st.m << 7) | (st.l || 0)) / 16383 : val / 127);
+      } else if(k === "rel"){
+        if(!cc) return;
+        queue(t, "rel", te.m === "rel2" ? (val < 64 ? val : val - 128) : val - 64);
+      }
+    }
+    function runFine(dev, mainKey, val){
+      var tm = maps[dev], te = tm && tm.map[mainKey]; if(!te) return;
+      var st = tstate[dev + "|" + mainKey] || (tstate[dev + "|" + mainKey] = {});
+      st.l = val; st.fine = true;
+      if(st.m !== undefined) queue(te.t, "abs", ((st.m << 7) | st.l) / 16383);
+    }
+
+    // ---------- taught controls: keeping, sending out, taking in ----------
+    function cleanMap(o){
+      if(!o || typeof o !== "object" || !o.map || typeof o.map !== "object") return null;
+      var out = { map:{}, fine:{} }, n = 0;
+      Object.keys(o.map).forEach(function(k){
+        var e = o.map[k], ti;
+        if(n >= 200 || !/^[cn]\d{1,2}\.\d{1,3}$/.test(k) || !e || typeof e.t !== "string") return;
+        ti = tinfo(e.t);
+        if(!ti) return;
+        var c = { t:e.t, k:ti.kind };
+        if(ti.kind === "rel") c.m = e.m === "rel2" ? "rel2" : "relb";
+        if(ti.kind === "abs" && e.hi && k.charAt(0) === "c"){
+          var q = k.slice(1).split("."), num = +q[1];
+          if(num < 32){ c.hi = 1; out.fine["c" + q[0] + "." + (num + 32)] = k; }
+        }
+        out.map[k] = c; n++;
+      });
+      return out;
+    }
+    function bind(dev, key, target, extra){
+      var tm = maps[dev] || (maps[dev] = { map:{}, fine:{} }), ti = tinfo(target);
+      if(!ti) return false;
+      Object.keys(tm.map).forEach(function(k){ if(k === key || tm.map[k].t === target) delete tm.map[k]; });
+      var c = { t:target, k:ti.kind };
+      if(extra && extra.m) c.m = extra.m;
+      if(extra && extra.hi) c.hi = 1;
+      tm.map[key] = c;
+      maps[dev] = cleanMap(tm) || { map:{}, fine:{} };
+      saveMaps();
+      ports(typeof midiAccess !== "undefined" ? midiAccess : null);
+      return true;
+    }
+    function forget(dev, target){
+      var tm = maps[dev], n = 0;
+      if(!tm) return 0;
+      Object.keys(tm.map).forEach(function(k){ if(!target || tm.map[k].t === target){ delete tm.map[k]; n++; } });
+      if(!Object.keys(tm.map).length) delete maps[dev]; else maps[dev] = cleanMap(tm);
+      saveMaps();
+      ports(typeof midiAccess !== "undefined" ? midiAccess : null);
+      return n;
+    }
+    function taughtCount(dev){ return maps[dev] ? Object.keys(maps[dev].map).length : 0; }
+    function keyWords(k){
+      var q = k.slice(1).split(".");
+      return (k.charAt(0) === "c" ? "control " : "note ") + q[1] + ", channel " + (+q[0] + 1);
+    }
+    function exportText(dev){
+      var tm = maps[dev], o = { firstloop:"dj-controller-map", version:1, device:dev, map:{} };
+      if(tm) Object.keys(tm.map).forEach(function(k){ var e = tm.map[k], c = { t:e.t }; if(e.m) c.m = e.m; if(e.hi) c.hi = 1; o.map[k] = c; });
+      return JSON.stringify(o, null, 1);
+    }
+    // returns the number of controls taken in, or a sentence saying why not
+    function importText(text, dev){
+      var o;
+      try { o = JSON.parse(text); } catch(e){ return "That file is not a First Loop controller mapping (it could not be read)."; }
+      if(!o || o.firstloop !== "dj-controller-map" || !o.map) return "That file is not a First Loop controller mapping.";
+      var c = cleanMap(o), name = dev || String(o.device || "").slice(0, 80);
+      if(!c || !Object.keys(c.map).length) return "That mapping has no controls First Loop knows.";
+      if(!name) return "The mapping does not say which device it is for, and none is connected.";
+      maps[name] = c; saveMaps();
+      ports(typeof midiAccess !== "undefined" ? midiAccess : null);
+      return Object.keys(c.map).length;
+    }
+    function download(name, text){
+      try {
+        var a = document.createElement("a"), url = URL.createObjectURL(new Blob([text], { type:"application/json" }));
+        a.href = url; a.download = name; document.body.appendChild(a); a.click();
+        setTimeout(function(){ try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch(e){} }, 500);
+        return true;
+      } catch(e2){ return false; }
+    }
+    function copyText(text, note, box){
+      function said(ok){
+        note.textContent = ok ? "Copied. Paste it into a message to the developer." : "Copying was not allowed here. The text is below: select it and copy it.";
+        box.hidden = ok;
+        if(!ok){ box.value = text; try { box.focus(); box.select(); } catch(e){} }
+      }
+      function old(){
+        var ok = false, ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; ta.style.top = "0";
+        document.body.appendChild(ta);
+        try { ta.select(); ok = document.execCommand("copy"); } catch(e){ ok = false; }
+        document.body.removeChild(ta);
+        said(ok);
+      }
+      try { if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ said(true); }, old); return; } } catch(e){}
+      old();
+    }
+
+    // ---------- the walk-throughs: controller check, and teaching ----------
+    // walk = { mode:"check"|"teach"|"one", dev, maker, gk, list:[step], i, res:{}, live, cap, done }
+    // check step: { id, say, only (regexp on the target, to tell apart the ways one control is used), sh, slow, sec }
+    // teach step: { t (target), id (for the drawing), sec }
+    var walk = null, UI = {};
+    var GRV_CHECK = [
+      ["Deck 1 (left side)", "d1.play"], [0, "d1.cue"], [0, "d1.shift"], [0, "d1.sync", "Press BEAT SYNC on the left deck once, shortly, and let go.", "sync$"],
+      [0, "d1.jog", "Put a finger on the shiny top of the left jog wheel without turning it, then lift it off.", "jog_touch"],
+      [0, "d1.jog", "Turn the top of the left jog wheel exactly one full turn to the right, slowly, then let go.", "jog$|jog_bend|jog_touch", 0, 1],
+      [0, "d1.jog", "Without touching the top, turn the outer edge of the left jog wheel a little.", "jog_side"],
+      [0, "d1.tempo"], [0, "d1.loop_in"], [0, "d1.loop_out"], [0, "d1.reloop"], [0, "d1.call_prev"], [0, "d1.memory"],
+      [0, "d1.mode_hotcue"], [0, "d1.pad1", "Press pad 1 on the left deck (after HOT CUE) and let go.", "pad1"],
+      [0, "d1.pad1", "Hold SHIFT on the left deck and press pad 1.", "clear1|shift", 1],
+      [0, "d1.master_tempo"], [0, "d1.key_sync"], [0, "d1.slip"],
+      ["Mixer", "mix.ch1.trim"], [0, "mix.ch1.eq_hi"], [0, "mix.ch1.eq_mid"], [0, "mix.ch1.eq_low"], [0, "mix.ch1.filter"], [0, "mix.ch1.cue"], [0, "mix.ch1.fader"], [0, "mix.xfader"],
+      [0, "mix.master"], [0, "mix.booth"], [0, "mix.hp_mix"], [0, "mix.hp_level"],
+      ["Browse", "browse.knob", "Turn the big browse knob three clicks to the right, then three clicks to the left.", "knob"], [0, "browse.knob", "Press the big browse knob down once.", "press"], [0, "browse.load1"], [0, "browse.load2"],
+      ["Beat FX", "fx.on"], [0, "fx.depth"], [0, "fx.select", "Turn FX SELECT one position at a time through all its positions."],
+      ["Deck 2 (right side)", "d2.play"], [0, "d2.cue"], [0, "d2.jog", "Turn the top of the right jog wheel a little.", "jog$|jog_bend|jog_touch"], [0, "d2.tempo"], [0, "d2.pad1"], [0, "mix.ch2.fader"],
+      ["Groove Circuit", "d1.gc_swap1"], [0, "d1.gc_release"]
+    ];
+    var DJ_CHECK = ["d1.play", "d1.cue", "d1.shift", "d1.sync", "d1.jog", "d1.tempo", "d1.loop_in", "d1.loop_out", "d1.reloop", "d1.mode_hotcue", "d1.pad1", "d1.pad8",
+      "mix.ch1.trim", "mix.ch1.eq_hi", "mix.ch1.eq_mid", "mix.ch1.eq_low", "mix.ch1.filter", "mix.ch1.cue", "mix.ch1.fader", "mix.xfader", "mix.master", "mix.hp_mix", "mix.hp_level",
+      "browse.knob", "browse.load1", "browse.load2", "fx.on", "fx.depth", "d2.play", "d2.cue", "d2.jog", "d2.tempo", "d2.pad1", "mix.ch2.fader", "mix.ch2.filter"];
+    function askFor(c){
+      var t = c.t, L = c.label;
+      if(t === "k") return "Turn " + L + " all the way to the left, then all the way to the right.";
+      if(t === "e") return "Turn " + L + " a few clicks each way.";
+      if(t === "fv" || t === "fh") return "Move " + L + " all the way one way, then all the way back.";
+      if(t === "j") return "Touch the top of the " + L + " and turn it a little.";
+      if(t === "lv") return "Push the " + L + " away from you and let go, then pull it towards you and let go.";
+      if(t === "kb") return "Play any three keys, one after another.";
+      if(t === "wh") return "Move the " + L + " up and down.";
+      if(t === "pt" || t === "d" || t === "sw") return "";
+      return "Press " + L + " once and let go.";
+    }
+    function checkList(gk){
+      var m = GEARMAP._map(gk), out = [], sec = "";
+      if(!m) return out;
+      if(gk === "ddj-grv6"){
+        GRV_CHECK.forEach(function(q){
+          var c = m.by[q[1]]; if(!c) return;
+          if(q[0]) sec = q[0];
+          out.push({ id:q[1], say:q[2] || askFor(c), only:q[3] || "", sh:!!q[4], slow:!!q[5], sec:sec });
+        });
+        return out;
+      }
+      var ids = /^generic-dj/.test(gk) ? DJ_CHECK : m.c.map(function(c){ return c.id; });
+      ids.forEach(function(id){
+        var c = m.by[id], say = c ? askFor(c) : "";
+        if(!c || !say || out.length >= 40) return;
+        out.push({ id:id, say:say, only:"", sh:false, slow:false, sec:c.section });
+      });
+      return out;
+    }
+    function expected(dev, maker, step){
+      var p = profileFor(dev, maker), out = [], re = step.only ? new RegExp("\\.(" + step.only + ")") : null;
+      if(!p) return out;
+      p.list.forEach(function(e){
+        if(e.id !== step.id || e.k === "ign" && !e.t && e.why && /two (decks|channels)/.test(e.why)) return;
+        if(re ? !re.test(e.t) : (!!e.sh !== !!step.sh || e.mode || e.long)) return;
+        if(e.k === "lsb") return;
+        out.push(hx(e.st) + " " + hx(e.num));
+      });
+      if(step.sh) p.list.forEach(function(e){ if(e.t === step.id.slice(0, 3) + "shift") out.push(hx(e.st) + " " + hx(e.num)); });
+      return out;
+    }
+    function walkOn(){
+      if(!walk || !walk.live) return false;
+      if(walk.mode === "one") return true;
+      return typeof equipOpenNow !== "undefined" && equipOpenNow && equipPanel && equipPanel.dataset.eqview === "ctrl";
+    }
+    function walkSave(){
+      if(!walk || walk.mode === "one") return;
+      try { window.localStorage.setItem(WALK_KEY + "." + walk.mode, JSON.stringify({ dev:walk.dev, gk:walk.gk, i:walk.i, res:walk.res, done:!!walk.done })); } catch(e){}
+    }
+    function walkStored(mode, dev){
+      try {
+        var o = JSON.parse(window.localStorage.getItem(WALK_KEY + "." + mode) || "null");
+        return o && o.dev === dev && o.res && typeof o.res === "object" ? o : null;
+      } catch(e){ return null; }
+    }
+    function walkStart(mode, fresh){
+      var d = currentDev();
+      if(!d){ if(UI.walkNote) UI.walkNote.textContent = "No equipment is connected yet. Connect it on the Status tab first."; return false; }
+      var gk = GEARMAP.keyFor(d.name, d.maker), list, old = fresh ? null : walkStored(mode, d.name);
+      if(mode === "check") list = checkList(gk);
+      else list = teachList().map(function(t){ var ti = tinfo(t); return { t:t, id:t, sec:ti.sec }; });
+      if(!list.length){ if(UI.walkNote) UI.walkNote.textContent = "There is no drawing for this equipment yet, so there is nothing to walk through. The Status tab still shows every message it sends."; return false; }
+      walk = { mode:mode, dev:d.name, maker:d.maker, gk:gk, list:list, i:old && !old.done ? Math.min(old.i | 0, list.length) : 0, res:old && !old.done ? old.res : {}, live:true, cap:null, done:false };
+      if(old && old.done && mode === "check"){ walk.res = old.res; walk.i = list.length; walk.done = true; walk.live = false; }
+      walkShow();
+      return true;
+    }
+    function walkStop(){
+      if(!walk) return;
+      if(walk.cap && walk.cap.timer) clearTimeout(walk.cap.timer);
+      if(walk.oneTimer) clearTimeout(walk.oneTimer);
+      walkSave();
+      walk = null;
+      if(equipPanel) equipPanel.removeAttribute("data-walk");
+      paint();
+    }
+    function walkGo(delta){
+      if(!walk) return;
+      if(walk.cap && walk.cap.timer) clearTimeout(walk.cap.timer);
+      walk.cap = null;
+      walk.i = Math.max(0, Math.min(walk.list.length, walk.i + delta));
+      walk.done = walk.i >= walk.list.length;
+      walk.live = !walk.done;
+      walkSave();
+      walkShow();
+    }
+    function walkSkip(){
+      if(!walk || walk.done) return;
+      var st = walk.list[walk.i];
+      if(walk.mode === "check") walk.res[walk.i] = { state:walk.cap && walk.cap.rows.length ? "got" : "none", got:walk.cap ? walk.cap.rows : [] };
+      walkGo(1);
+    }
+    function capRow(cap, st, num){
+      var k = hx(st) + " " + hx(num), i;
+      for(i = 0; i < cap.rows.length; i++) if(cap.rows[i].k === k) return cap.rows[i];
+      var r = { k:k, lo:127, hi:0, n:0, sum:0 };
+      cap.rows.push(r);
+      return r;
+    }
+    function gotWords(rows){
+      if(!rows || !rows.length) return "nothing arrived";
+      return rows.slice(0, 8).map(function(r){
+        var cc = r.k.charAt(0) === "B";
+        return r.k + " " + (r.lo === r.hi ? hx(r.lo) : hx(r.lo) + ".." + hx(r.hi)) + " x" + r.n + (cc && r.rel ? " sum " + (r.sum > 0 ? "+" : "") + r.sum : "");
+      }).join(", ") + (rows.length > 8 ? ", and " + (rows.length - 8) + " more" : "");
+    }
+    function walkMsg(dv, key, st, num, val, cc, on){
+      var step = walk.list[walk.i];
+      if(!step || walk.done) return;
+      if(walk.dev && dv.name !== walk.dev && walk.mode !== "one") return;
+      var cap = walk.cap || (walk.cap = { rows:[], keys:[], vals:[], t0:Date.now(), timer:null, first:key, firstCC:cc });
+      if(walk.mode === "check"){
+        var r = capRow(cap, st, num);
+        r.n++; if(val < r.lo) r.lo = val; if(val > r.hi) r.hi = val;
+        if(cc){ r.sum += val - 64; if(r.n > 2 && r.lo >= 33 && r.hi <= 95 && r.lo !== r.hi) r.rel = true; if(r.lo < 33 || r.hi > 95) r.rel = false; }
+        if(cap.timer) clearTimeout(cap.timer);
+        var mine = walk;
+        cap.timer = setTimeout(function(){
+          if(walk !== mine || walk.cap !== cap) return;
+          walk.res[walk.i] = { state:"got", got:cap.rows };
+          walkPaintGot(true);
+          cap.timer = setTimeout(function(){ if(walk === mine && walk.cap === cap) walkGo(1); }, 500);
+        }, step.slow ? 1600 : 650);
+        walkPaintGot(false);
+        return;
+      }
+      // teaching: what kind of message the target needs
+      var ti = tinfo(step.t), kind = ti.kind, me = walk;
+      if(walk.lastKey === key && Date.now() - walk.lastAt < 700) return;      // the control just taught, still moving
+      function done(k2, extra){
+        if(walk !== me) return;
+        if(cap.timer) clearTimeout(cap.timer);
+        bind(dv.name, k2, step.t, extra);
+        me.lastKey = k2; me.lastAt = Date.now();
+        me.res[me.i] = { state:"got", key:k2 };
+        if(UI.got){ UI.got.textContent = "Learned: " + keyWords(k2) + (extra && extra.hi ? " (fine, two messages)" : "") + "."; UI.got.dataset.ok = "1"; }
+        if(me.mode === "one"){ var cb = me.cb; walkStop(); if(cb) cb(true, k2); return; }
+        cap.timer = setTimeout(function(){ if(walk === me && me.cap === cap) walkGo(1); }, 450);
+        me.capDone = true;
+      }
+      if(cap.bound) return;
+      if(kind === "press" || kind === "hold"){
+        if(cc ? val === 0 : !on) return;
+        cap.bound = true; done(key);
+        return;
+      }
+      if(!cc){ if(on && UI.got){ UI.got.textContent = "That was a button or a key. " + ti.name + " needs a knob, a fader or a wheel: move one now."; UI.got.dataset.ok = "0"; } return; }
+      if(cap.keys.indexOf(key) < 0) cap.keys.push(key);
+      if(key === cap.keys[0] || kind === "rel") cap.vals.push(val);
+      if(!cap.timer) cap.timer = setTimeout(function(){
+        cap.timer = null;
+        if(walk !== me || me.cap !== cap) return;
+        cap.bound = true;
+        var k0 = cap.keys[0], q = k0.slice(1).split("."), n0 = +q[1], extra = {}, pairKey;
+        if(kind === "abs"){
+          // a fader that sends a coarse and a fine message: the coarse one is 32 lower
+          pairKey = "c" + q[0] + "." + (n0 < 32 ? n0 + 32 : n0 - 32);
+          if(n0 < 64 && cap.keys.indexOf(pairKey) >= 0){ extra.hi = 1; if(n0 >= 32) k0 = pairKey; }
+        } else {
+          var two = cap.vals.every(function(v){ return (v >= 1 && v <= 30) || v >= 98; });
+          extra.m = two ? "rel2" : "relb";
+        }
+        done(k0, extra);
+      }, kind === "abs" ? 160 : 300);
+    }
+    function verdict(exp, rows){
+      if(!rows || !rows.length) return "nothing";
+      if(!exp.length) return "new";
+      var all = rows.every(function(r){ return exp.indexOf(r.k) >= 0; }), some = rows.some(function(r){ return exp.indexOf(r.k) >= 0; });
+      return all ? "ok" : (some ? "partly" : "different");
+    }
+    function walkPaintGot(final){
+      if(!walk || !UI.got) return;
+      var step = walk.list[walk.i], rows = walk.cap ? walk.cap.rows : [];
+      if(walk.mode !== "check" || !step) return;
+      var v = verdict(expected(walk.dev, walk.maker, step), rows);
+      UI.got.textContent = "Received: " + gotWords(rows) + (final ? (v === "ok" ? "  — as expected" : (v === "new" ? "  — noted" : (v === "nothing" ? "" : "  — not what the built-in mapping expects; noted"))) : "");
+      UI.got.dataset.ok = final && v === "ok" ? "1" : "0";
+    }
+    function report(){
+      var d = currentDev(), o = walk && walk.mode === "check" ? walk : null, st, L = ["First Loop controller check"], b = document.querySelector(".build");
+      var dev = o ? o.dev : (d ? d.name : ""), maker = o ? o.maker : (d ? d.maker : ""), stored = o ? null : walkStored("check", dev);
+      var gk = o ? o.gk : (stored ? stored.gk : GEARMAP.keyFor(dev, maker)), list = checkList(gk), res = o ? o.res : (stored ? stored.res : {});
+      var p = profileFor(dev, maker), counts = { ok:0, partly:0, different:0, "new":0, nothing:0, skipped:0 }, sec = "";
+      L.push("Device: " + (dev || "none") + " | " + (maker || "maker not given") + (d ? " | in " + d.ins + ", out " + d.outs : ""));
+      L.push("Mapping: " + (p ? "built-in " + p.key + (p.grv6 ? " (experimental)" : " (typical DDJ layout)") + (set.builtin ? "" : ", switched off") : "none built in") + " | taught controls: " + taughtCount(dev) + " | drawing: " + (gk || "none"));
+      L.push("Version: " + (b ? b.textContent.trim() : "?") + " | Browser: " + String(navigator.userAgent || "").slice(0, 160));
+      L.push("Extended messages: " + (sysexLive() ? "on" : "off") + " | Jog sensitivity: " + set.jog.toFixed(2) + " | Tempo reversed: " + (set.flip ? "yes" : "no"));
+      L.push("Each line: step, control | expected (status number) | received (status number, values, count; sum = jog steps added up)");
+      list.forEach(function(step, i){
+        var r = res[i], exp = expected(dev, maker, step), v;
+        if(step.sec !== sec){ sec = step.sec; L.push(sec); }
+        if(!r){ counts.skipped++; v = "not done"; }
+        else { v = verdict(exp, r.got); counts[v]++; }
+        L.push(" " + (i + 1) + " " + step.id + (step.only ? " (" + step.only.replace(/[$|]/g, " ").trim().replace(/\s+/g, "/") + ")" : "") + (step.sh ? " +SHIFT" : "") + " | " + (exp.length ? exp.join(", ") : "?") + " | " +
+          (r ? gotWords(r.got) : "-") + " | " + ({ ok:"as expected", partly:"partly as expected", different:"DIFFERENT", "new":"new", nothing:"NOTHING ARRIVED", "not done":"not done" })[v]);
+      });
+      L.push("Summary: " + counts.ok + " as expected, " + counts.partly + " partly, " + counts.different + " different, " + counts["new"] + " new, " + counts.nothing + " nothing arrived, " + counts.skipped + " not done");
+      return L.join("\n");
+    }
+    // one control, asked for by name (the list in the Controller tab, or the Assistant through midiLearnStart("dj:..."))
+    function learnOne(target, cb){
+      var ti = tinfo(target);
+      if(!ti) return "there is no such target";
+      if(!navigator.requestMIDIAccess) return "this browser has no Web MIDI";
+      if(walk) walkStop();
+      walk = { mode:"one", dev:"", maker:"", gk:"", list:[{ t:target, id:target, sec:ti.sec }], i:0, res:{}, live:true, cap:null, done:false, cb:cb };
+      walk.oneTimer = setTimeout(function(){ if(walk && walk.mode === "one" && walk.list[0].t === target){ var f = walk.cb; walkStop(); if(f) f(false, ""); } }, 45000);
+      if(midiOK !== true) midiConnect(null);
+      paint();
+      return "";
+    }
+
+    // ---------- on screen: the Controller and Diagram tabs of the Equipment panel ----------
+    var fig = null, figKey = "", refFig = null, refKey = "", refPick = "";
+    function sec(tab, title, first){
+      var s = el("div", "eq-sec" + (first ? " eq-first" : ""));
+      s.dataset.eqtab = tab;
+      if(title) s.appendChild(el("span", "lbl", title));
+      equipPanel.appendChild(s);
+      return s;
+    }
+    function check(id, text, fn){
+      var lab = el("label", "eq-check"), inp = el("input"); inp.type = "checkbox"; inp.id = id;
+      inp.addEventListener("change", function(){ fn(!!inp.checked); });
+      lab.appendChild(inp); lab.appendChild(el("span", "", text));
+      return { lab:lab, inp:inp };
+    }
+    function setTab(t){
+      if(!equipPanel) return;
+      equipPanel.dataset.eqview = t;
+      Array.prototype.forEach.call(UI.tabs.children, function(b){ b.setAttribute("aria-selected", b.dataset.t === t ? "true" : "false"); b.tabIndex = b.dataset.t === t ? 0 : -1; });
+      try { window.sessionStorage.setItem("firstloop.eqtab", t); } catch(e){}
+      paint();
+    }
+    function build(){
+      if(!equipPanel || UI.tabs) return;
+      var u = UI, s, c, row;
+      Array.prototype.forEach.call(equipPanel.querySelectorAll(".eq-sec"), function(n){ n.dataset.eqtab = "status"; });
+      u.tabs = el("div", "eq-tabs"); u.tabs.setAttribute("role", "tablist"); u.tabs.setAttribute("aria-label", "Equipment");
+      [["status", "Status"], ["ctrl", "Controller"], ["diagram", "Diagram"]].forEach(function(q){
+        var b = btn("eq-tab", q[1], function(){ setTab(q[0]); }, "equiptab-" + q[0]);
+        b.dataset.t = q[0]; b.setAttribute("role", "tab");
+        u.tabs.appendChild(b);
+      });
+      u.tabs.addEventListener("keydown", function(e){
+        if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        var order = ["status", "ctrl", "diagram"], i = order.indexOf(equipPanel.dataset.eqview) + (e.key === "ArrowRight" ? 1 : -1);
+        i = (i + 3) % 3; setTab(order[i]);
+        try { u.tabs.children[i].focus(); } catch(err){}
+      });
+      var head = equipPanel.querySelector(".eq-head");
+      equipPanel.insertBefore(u.tabs, head ? head.nextSibling : equipPanel.firstChild);
+
+      // --- Controller tab ---
+      s = sec("ctrl", "", true); u.secState = s;
+      u.state = el("p", "eq-state"); u.state.id = "ctrlstate";
+      u.exp = el("p", "eq-note"); u.exp.id = "ctrlexp";
+      c = check("ctrlbuiltin", "Use First Loop’s own mapping for this controller", function(on){ set.builtin = on; saveSet(); paint(); });
+      u.builtin = c.inp; u.builtinLab = c.lab;
+      s.appendChild(u.state); s.appendChild(u.exp); s.appendChild(c.lab);
+
+      s = sec("ctrl", "Jog sensitivity"); u.secOpt = s;
+      row = el("div", "eq-range");
+      u.jog = el("input"); u.jog.type = "range"; u.jog.min = "0.25"; u.jog.max = "4"; u.jog.step = "0.05"; u.jog.id = "ctrljog";
+      u.jog.setAttribute("aria-label", "Jog sensitivity");
+      u.jogOut = el("output"); u.jogOut.id = "ctrljogout";
+      u.jog.addEventListener("input", function(){ set.jog = Math.max(0.25, Math.min(4, +u.jog.value || 1)); u.jogOut.textContent = set.jog.toFixed(2) + "×"; saveSet(); });
+      row.appendChild(u.jog); row.appendChild(u.jogOut); s.appendChild(row);
+      s.appendChild(el("p", "eq-fine", "How far the track moves when the jog wheel turns. If one turn of the wheel moves the record more or less than one turn on screen, change this. The right value for the DDJ-GRV6 is not known yet; the controller check measures it."));
+      c = check("ctrlflip", "The tempo slider works the wrong way round: reverse it", function(on){ set.flip = on; saveSet(); }); u.flip = c.inp; s.appendChild(c.lab);
+      c = check("ctrlleds", "Lights on the controller follow First Loop", function(on){ set.leds = on; saveSet(); if(on){ vuLast = [-1, -1]; ledsAll(); } }); u.leds = c.inp; s.appendChild(c.lab);
+
+      s = sec("ctrl", "Controller check"); u.secCheck = s;
+      s.appendChild(el("p", "eq-state", "A walk through the controls, one at a time. You press or move the control that is lit in the drawing; First Loop writes down exactly what arrived. At the end, Copy report gives a short text to send to the developer. It takes about five minutes and can be stopped and carried on later."));
+      row = el("div", "eq-row");
+      u.checkGo = btn("sendbtn", "Start the controller check", function(){ walkStart("check", false); }, "ctrlcheckgo");
+      u.checkNew = btn("tinybtn", "Start again", function(){ walkStart("check", true); }, "ctrlchecknew");
+      u.checkCopy = btn("tinybtn", "Copy report", function(){ copyText(report(), u.copyNote, u.copyBox); }, "ctrlcheckcopy");
+      row.appendChild(u.checkGo); row.appendChild(u.checkNew); row.appendChild(u.checkCopy); s.appendChild(row);
+      u.walkNote = el("p", "eq-note"); u.walkNote.id = "ctrlwalknote"; u.walkNote.setAttribute("role", "status"); s.appendChild(u.walkNote);
+      u.copyNote = el("p", "eq-note"); u.copyNote.id = "ctrlcopynote"; u.copyNote.setAttribute("role", "status"); s.appendChild(u.copyNote);
+      u.copyBox = el("textarea", "eq-copybox"); u.copyBox.id = "ctrlreportbox"; u.copyBox.readOnly = true; u.copyBox.rows = 6; u.copyBox.hidden = true;
+      u.copyBox.setAttribute("aria-label", "The controller check report as text"); s.appendChild(u.copyBox);
+
+      s = sec("ctrl", "Teach your controller"); u.secTeach = s;
+      u.teachWords = el("p", "eq-state"); u.teachWords.id = "ctrlteachwords"; s.appendChild(u.teachWords);
+      row = el("div", "eq-row");
+      u.teachGo = btn("sendbtn", "Teach your controller", function(){ walkStart("teach", false); }, "ctrlteachgo");
+      u.teachNew = btn("tinybtn", "From the first control", function(){ walkStart("teach", true); }, "ctrlteachnew");
+      row.appendChild(u.teachGo); row.appendChild(u.teachNew); s.appendChild(row);
+      row = el("div", "eq-row");
+      u.exportB = btn("tinybtn", "Save mapping as a file", function(){
+        var d = currentDev(); if(!d) return;
+        var ok = download("firstloop-" + d.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-mapping.json", exportText(d.name));
+        u.mapNote.textContent = ok ? "Saved. The file is in your downloads folder." : "This browser did not let the file be saved.";
+      }, "ctrlexport");
+      u.importB = btn("tinybtn", "Load a mapping file", function(){ u.file.value = ""; u.file.click(); }, "ctrlimport");
+      u.file = el("input"); u.file.type = "file"; u.file.accept = ".json,application/json"; u.file.hidden = true; u.file.id = "ctrlfile";
+      u.file.addEventListener("change", function(){
+        var f = u.file.files && u.file.files[0]; if(!f) return;
+        var rd = new FileReader();
+        rd.onload = function(){ var d = currentDev(), r = importText(String(rd.result || ""), d ? d.name : ""); u.mapNote.textContent = typeof r === "number" ? "Loaded " + r + (r === 1 ? " control" : " controls") + (d ? " for " + d.name : "") + "." : r; paint(); };
+        rd.onerror = function(){ u.mapNote.textContent = "The file could not be read."; };
+        rd.readAsText(f);
+      });
+      u.forgetB = btn("tinybtn danger", "Forget what was taught", function(){
+        var d = currentDev(); if(!d) return;
+        var n = forget(d.name);
+        u.mapNote.textContent = n ? "Forgot " + n + (n === 1 ? " taught control" : " taught controls") + " for " + d.name + "." : "Nothing was taught for this device.";
+        try { window.localStorage.removeItem(WALK_KEY + ".teach"); } catch(e){}
+        paint();
+      }, "ctrlforget");
+      row.appendChild(u.exportB); row.appendChild(u.importB); row.appendChild(u.forgetB); row.appendChild(u.file); s.appendChild(row);
+      u.mapNote = el("p", "eq-note"); u.mapNote.id = "ctrlmapnote"; u.mapNote.setAttribute("role", "status"); s.appendChild(u.mapNote);
+      u.all = el("details", "eq-adv"); u.all.id = "ctrlall";
+      u.all.appendChild(el("summary", "", "Every control, one at a time"));
+      u.list = el("ul", "eq-ctl"); u.list.id = "ctrllist"; u.all.appendChild(u.list);
+      u.all.addEventListener("toggle", function(){ if(u.all.open) paintList(); });
+      s.appendChild(u.all);
+
+      s = sec("ctrl", ""); u.secAdv = s;
+      u.adv = el("details", "eq-adv"); u.adv.id = "ctrladv";
+      u.adv.appendChild(el("summary", "", "Advanced"));
+      c = check("ctrlsysex", "Allow extended messages (needed by some controllers before their lights or controls respond)", function(on){
+        if(on) sysexAsk(function(ok){ u.sysex.checked = ok; }); else sysexOff();
+      });
+      u.sysex = c.inp; u.adv.appendChild(c.lab);
+      u.adv.appendChild(el("p", "eq-fine", "Off, First Loop only listens to ordinary notes and controls. On, the browser asks once more for permission, and First Loop may send a short identification message to AlphaTheta and Pioneer controllers that are known to need one (DDJ-FLX4, DDJ-400). It never sends these to any other make."));
+      u.sxNote = el("p", "eq-note"); u.sxNote.id = "ctrlsxnote"; u.sxNote.setAttribute("role", "status"); u.adv.appendChild(u.sxNote);
+      u.grv = el("div", "eq-wide"); u.grv.id = "ctrlgrv";
+      u.grvGo = btn("tinybtn", "Try the DDJ-400 style start message", function(){
+        var d = currentDev(), ok = d && /ddj-?grv6/i.test(d.name) && sendSysex(d.name, SX_400);
+        u.grvNote.textContent = ok ? "Sent once. If the lights or controls change, say so in your report; if nothing changes, that is a useful answer too." : "It could not be sent: extended messages are not allowed yet, or the controller has no output the browser can see.";
+      }, "ctrlgrvstart");
+      u.grv.appendChild(el("p", "eq-fine", "An experiment for the DDJ-GRV6. Nobody has confirmed whether this controller needs a start message. The button sends, once, the message that makes the older DDJ-400 report where its knobs and faders are. It is harmless if the GRV6 ignores it."));
+      u.grv.appendChild(u.grvGo);
+      u.grvNote = el("p", "eq-note"); u.grvNote.id = "ctrlgrvnote"; u.grvNote.setAttribute("role", "status"); u.grv.appendChild(u.grvNote);
+      u.adv.appendChild(u.grv);
+      s.appendChild(u.adv);
+
+      // the walk-through takes the tab over while it runs
+      s = sec("ctrl", "", true); u.secWalk = s; s.id = "ctrlwalk";
+      u.walk = el("div", "eq-walk");
+      u.step = el("p", "eq-step"); u.step.id = "ctrlstep";
+      u.bar = el("div", "eq-bar"); u.barIn = document.createElement("i"); u.bar.appendChild(u.barIn);
+      u.ask = el("p", "eq-ask"); u.ask.id = "ctrlask"; u.ask.setAttribute("role", "status");
+      u.figHost = el("div", "eq-wide"); u.figHost.id = "ctrlfig";
+      u.got = el("p", "eq-got"); u.got.id = "ctrlgot"; u.got.setAttribute("role", "status");
+      row = el("div", "eq-row");
+      u.back = btn("tinybtn", "Back", function(){ walkGo(-1); }, "ctrlback");
+      u.skip = btn("tinybtn", "Skip", walkSkip, "ctrlskip");
+      u.stop = btn("tinybtn", "Stop for now", walkStop, "ctrlstop");
+      u.copy2 = btn("sendbtn", "Copy report", function(){ copyText(report(), u.copyNote2, u.copyBox2); }, "ctrlcopy2");
+      row.appendChild(u.back); row.appendChild(u.skip); row.appendChild(u.copy2); row.appendChild(u.stop);
+      u.copyNote2 = el("p", "eq-note"); u.copyNote2.id = "ctrlcopynote2"; u.copyNote2.setAttribute("role", "status");
+      u.copyBox2 = el("textarea", "eq-copybox"); u.copyBox2.id = "ctrlreportbox2"; u.copyBox2.readOnly = true; u.copyBox2.rows = 8; u.copyBox2.hidden = true;
+      u.copyBox2.setAttribute("aria-label", "The controller check report as text");
+      u.walk.appendChild(u.step); u.walk.appendChild(u.bar); u.walk.appendChild(u.ask); u.walk.appendChild(u.figHost); u.walk.appendChild(u.got); u.walk.appendChild(row);
+      u.walk.appendChild(u.copyNote2); u.walk.appendChild(u.copyBox2);
+      s.appendChild(u.walk);
+
+      // --- Diagram tab ---
+      s = sec("diagram", "", true); u.secDia = s;
+      u.diaWords = el("p", "eq-state"); u.diaWords.id = "ctrldiawords"; s.appendChild(u.diaWords);
+      row = el("div", "eq-row");
+      var lab = el("label", "lbl", "Show "); lab.setAttribute("for", "ctrldiapick");
+      u.pick = el("select"); u.pick.id = "ctrldiapick";
+      u.pick.addEventListener("change", function(){ refPick = u.pick.value; paintDiagram(true); });
+      row.appendChild(lab); row.appendChild(u.pick); s.appendChild(row);
+      u.diaHost = el("div", "eq-wide"); u.diaHost.id = "ctrldiagram"; s.appendChild(u.diaHost);
+      s = sec("diagram", "What each control does");
+      u.ref = el("ul", "eq-ref"); u.ref.id = "ctrlref"; s.appendChild(u.ref);
+
+      var t0 = "status";
+      try { t0 = window.sessionStorage.getItem("firstloop.eqtab") || "status"; } catch(e){}
+      setTab(/^(status|ctrl|diagram)$/.test(t0) ? t0 : "status");
+      GEARMAP.onTouch(function(ev){
+        if(!equipOpenNow || !equipPanel || equipPanel.dataset.eqview !== "diagram" || !ev.id) return;
+        Array.prototype.forEach.call(u.ref.children, function(li){ li.dataset.hot = li.dataset.id === ev.id ? "1" : "0"; });
+      });
+    }
+    // while a walk-through runs it has the Controller tab to itself; true when one is running
+    function secs(){
+      var u = UI, walking = !!(walk && walk.mode !== "one");
+      if(walking) equipPanel.setAttribute("data-walk", "1"); else equipPanel.removeAttribute("data-walk");
+      [u.secState, u.secOpt, u.secCheck, u.secTeach, u.secAdv].forEach(function(s){ s.hidden = walking; });
+      u.secWalk.hidden = !walking;
+      return walking;
+    }
+    function walkShow(){
+      if(!walk || !equipPanel || !UI.walk || walk.mode === "one"){ paint(); return; }
+      secs();
+      var u = UI, n = walk.list.length, step = walk.list[walk.i], check = walk.mode === "check";
+      u.barIn.style.width = Math.round(100 * Math.min(walk.i, n) / n) + "%";
+      u.copy2.hidden = !(check && Object.keys(walk.res).length);
+      u.back.disabled = walk.i <= 0;
+      u.skip.hidden = walk.done;
+      u.got.dataset.ok = "0";
+      u.copyNote2.textContent = ""; u.copyBox2.hidden = true;
+      if(walk.done){
+        var got = 0, k; for(k in walk.res) if(walk.res.hasOwnProperty(k) && walk.res[k].state === "got") got++;
+        u.step.textContent = (check ? "Controller check" : "Teaching") + " · finished";
+        u.ask.textContent = check ? "That was the last control. " + got + " of " + n + " sent something. Press Copy report and paste it into a message to the developer."
+          : "That was the last control. " + taughtCount(walk.dev) + " controls on " + walk.dev + " now drive the DJ area.";
+        u.got.textContent = "";
+        u.figHost.textContent = ""; fig = null; figKey = "";
+        u.stop.textContent = "Done";
+        return;
+      }
+      u.stop.textContent = "Stop for now";
+      u.skip.textContent = check ? "Nothing happens: next" : "Skip this one";
+      u.step.textContent = (check ? "Controller check" : "Teaching " + walk.dev) + " · " + step.sec + " · " + (walk.i + 1) + " of " + n;
+      var m = GEARMAP._map(walk.gk), c = m && m.by[step.id], ti = check ? null : tinfo(step.t), prev = walk.res[walk.i];
+      if(check) u.ask.textContent = step.say;
+      else u.ask.textContent = ti.kind === "abs" ? "Move the knob or fader you want for: " + ti.name + "."
+        : (ti.kind === "rel" ? (/jog/.test(step.t) ? "Turn the jog wheel you want for: " + ti.name + "." : "Turn the knob you want for: " + ti.name + ".")
+        : (/jog_touch/.test(step.t) ? "Touch the top of that jog wheel without turning it (skip this if nothing happens)." : "Press the button you want for: " + ti.name + "."));
+      u.got.textContent = prev ? (check ? "Last time: " + gotWords(prev.got) + "." : (prev.key ? "Already taught: " + keyWords(prev.key) + ". Press it again to keep it, or another control to change it." : "")) : "Waiting…";
+      if(!check && !prev){
+        var tm = maps[walk.dev], has = "";
+        if(tm) Object.keys(tm.map).forEach(function(k2){ if(tm.map[k2].t === step.t) has = k2; });
+        if(has) u.got.textContent = "Already taught: " + keyWords(has) + ". Move another control to change it, or skip.";
+      }
+      if(m){
+        var o = { highlight:c ? [step.id] : [], dim:!!c, numbers:{}, enlarge:true };
+        if(!fig || figKey !== walk.gk){ u.figHost.textContent = ""; fig = GEARMAP.figure(walk.gk, o); figKey = walk.gk; if(fig) u.figHost.appendChild(fig); }
+        else fig.gmSet(o);
+      } else { u.figHost.textContent = ""; fig = null; figKey = ""; }
+    }
+    function paintList(){
+      var u = UI, d = currentDev(), tm = d && maps[d.name], sec = "";
+      if(!u.list) return;
+      u.list.textContent = "";
+      teachList().forEach(function(t){
+        var ti = tinfo(t), li, has = "", waiting = walk && walk.mode === "one" && walk.list[0].t === t;
+        if(ti.sec !== sec){ sec = ti.sec; li = el("li", "", sec); li.dataset.sec = "1"; u.list.appendChild(li); }
+        if(tm) Object.keys(tm.map).forEach(function(k){ if(tm.map[k].t === t) has = k; });
+        li = el("li"); li.dataset.t = t;
+        var sp = el("span", "", ti.name.replace(/^(Deck|Channel) \d /, "").replace(/^./, function(x){ return x.toUpperCase(); }));
+        if(has){ sp.appendChild(document.createTextNode(" ")); sp.appendChild(el("em", "", keyWords(has))); }
+        li.appendChild(sp);
+        var b = btn("tinybtn", waiting ? "Listening… (cancel)" : (has ? "Change" : "Learn"), function(){
+          if(walk && walk.mode === "one" && walk.list[0].t === t){ walkStop(); return; }
+          var why = learnOne(t, function(){ paint(); });
+          if(why) UI.mapNote.textContent = "Learning could not start: " + why + ".";
+        });
+        b.setAttribute("aria-pressed", waiting ? "true" : "false");
+        b.setAttribute("aria-label", (has ? "Change " : "Learn ") + ti.name);
+        li.appendChild(b);
+        if(has) li.appendChild(btn("tinybtn", "Forget", function(){ forget(d.name, t); paint(); }));
+        u.list.appendChild(li);
+      });
+    }
+    function paintDiagram(force){
+      var u = UI, cur = GEARMAP.current(), key = refPick || cur || "generic-dj2", inf = GEARMAP.info(key), d = currentDev();
+      if(!inf){ key = "generic-dj2"; inf = GEARMAP.info(key); }
+      if(!u.pick.options.length || u.pick.dataset.cur !== cur){
+        u.pick.textContent = ""; u.pick.dataset.cur = cur;
+        var o0 = el("option", "", cur ? "Your equipment (" + GEARMAP.info(cur).title + ")" : "Nothing connected: a typical DJ controller"); o0.value = ""; u.pick.appendChild(o0);
+        GEARMAP.keys().forEach(function(k){ var o = el("option", "", GEARMAP.info(k).title); o.value = k; u.pick.appendChild(o); });
+      }
+      u.pick.value = refPick;
+      u.diaWords.textContent = refPick ? inf.title + "." : (cur ? (d ? d.name + ": " : "") + (inf.exact ? "this drawing was made for this model." : "there is no drawing of this exact model yet, so this is a typical one of its kind.")
+        : (d ? "There is no drawing for " + d.name + " yet. This is a typical DJ controller." : "No equipment is connected. This is a typical DJ controller; plug yours in to see its own."));
+      if(force || refKey !== key || !refFig){
+        refKey = key; u.diaHost.textContent = "";
+        refFig = GEARMAP.figure(key, {});
+        if(refFig) u.diaHost.appendChild(refFig);
+        u.ref.textContent = "";
+        var sec = "", p = d && !refPick ? profileFor(d.name, d.maker) : (key === "ddj-grv6" ? (PROFILES["ddj-grv6"] || (PROFILES["ddj-grv6"] = buildProfile(true))) : null);
+        var live = {};
+        if(p) p.list.forEach(function(e){ if(e.t) live[e.id] = true; });
+        if(d && maps[d.name] && !refPick) Object.keys(maps[d.name].map).forEach(function(k){ live[maps[d.name].map[k].t] = true; });
+        GEARMAP.controls(key).forEach(function(c){
+          var li;
+          if(c.section !== sec){ sec = c.section; li = el("li", "", sec); li.dataset.sec = "1"; u.ref.appendChild(li); }
+          li = el("li"); li.dataset.id = c.id;
+          li.appendChild(el("strong", "", c.label));
+          if(live[c.id]){ var bd = el("span", "eq-badge", "works in First Loop"); li.appendChild(bd); }
+          li.appendChild(document.createTextNode(" — " + c.does + "."));
+          u.ref.appendChild(li);
+        });
+      }
+    }
+    function paint(){
+      if(!equipPanel || !UI.tabs || !equipOpenNow) return;
+      var u = UI, d = currentDev(), p = d ? profileFor(d.name, d.maker) : null, n = d ? taughtCount(d.name) : 0, tab = equipPanel.dataset.eqview;
+      if(tab === "diagram"){ paintDiagram(false); return; }
+      if(tab !== "ctrl") return;
+      if(secs()) return;
+      if(!d){
+        u.state.textContent = midiOK === true ? "No equipment is connected. Plug in a DJ controller and it appears here by itself." : "No equipment is connected yet. The Status tab has the Connect button.";
+        u.exp.textContent = "";
+      } else if(p && p.grv6){
+        u.state.textContent = d.name + ": First Loop has its own mapping for this controller. Its play, cue, sync, jog wheels, tempo sliders, loops, hot cue pads, mixer and browse controls drive the DJ area.";
+        u.exp.textContent = "Experimental — based on a community mapping; some controls may not respond yet. The controller check below finds out which.";
+      } else if(p){
+        u.state.textContent = d.name + ": First Loop uses the typical DDJ layout for this controller, the controls that AlphaTheta and Pioneer DDJ models have in common.";
+        u.exp.textContent = "Typical DDJ layout — not made for this exact model. A control that does nothing or the wrong thing can be taught below; what you teach wins.";
+      } else {
+        u.state.textContent = d.name + ": First Loop has no mapping of its own for this " + (isDJ(d.name, d.maker) ? "controller" : "device") + ". Teach it below: press each control once and it drives the DJ area.";
+        u.exp.textContent = "";
+      }
+      u.builtinLab.hidden = !p; u.builtin.checked = set.builtin;
+      u.jog.value = String(set.jog); u.jogOut.textContent = set.jog.toFixed(2) + "×";
+      u.flip.checked = set.flip; u.leds.checked = set.leds;
+      var stC = d ? walkStored("check", d.name) : null, stT = d ? walkStored("teach", d.name) : null, total = d ? checkList(GEARMAP.keyFor(d.name, d.maker)).length : 0;
+      u.checkGo.disabled = !d || !total;
+      u.checkGo.textContent = stC && !stC.done && stC.i > 0 ? "Carry on the check (step " + (stC.i + 1) + " of " + total + ")" : (stC && stC.done ? "See the finished check" : "Start the controller check");
+      u.checkNew.hidden = !stC; u.checkCopy.hidden = !(stC && Object.keys(stC.res).length);
+      u.teachWords.textContent = d ? (n ? n + (n === 1 ? " control" : " controls") + " taught for " + d.name + ". They are kept for this device, apart from the buttons taught for the Make area."
+        : "Any controller can drive the DJ area: First Loop names a control, you press or move the one you want for it. Skip any your controller does not have. What you teach is kept for this device.")
+        : "Connect a controller first.";
+      u.teachGo.disabled = !d;
+      u.teachGo.textContent = stT && !stT.done && stT.i > 0 ? "Carry on teaching (control " + (stT.i + 1) + " of " + teachList().length + ")" : "Teach your controller";
+      u.teachNew.hidden = !(stT && stT.i > 0);
+      u.exportB.disabled = !n; u.forgetB.disabled = !n; u.importB.disabled = !d;
+      u.sysex.checked = sysexLive() || (sx.want && set.sysex);
+      u.sxNote.textContent = sx.note;
+      u.grv.hidden = !(d && /ddj-?grv6/i.test(d.name));
+      u.grvGo.disabled = !sysexLive();
+      if(u.all.open) paintList();
+    }
+    function load(){
+      try {
+        var s0 = JSON.parse(window.localStorage.getItem(SET_KEY) || "null");
+        if(s0 && typeof s0 === "object"){
+          if(s0.jog > 0) set.jog = Math.max(0.25, Math.min(4, +s0.jog));
+          set.flip = !!s0.flip; set.leds = s0.leds !== false; set.builtin = s0.builtin !== false; set.sysex = !!s0.sysex;
+        }
+        var m0 = JSON.parse(window.localStorage.getItem(MAP_KEY) || "null");
+        if(m0 && typeof m0 === "object") Object.keys(m0).forEach(function(k){ var c = cleanMap(m0[k]); if(c) maps[k] = c; });
+      } catch(e){}
+    }
+    load();
+    wireDJ();
+    var api = {
+      onMsg:onMsg, meaning:function(){ return { text:meaning, known:known }; }, ports:ports, build:build, paint:paint,
+      sysexWanted:function(){ return sx.want; }, isDJ:isDJ, learnOne:learnOne, taught:taughtCount, tinfo:tinfo, targets:teachList,
+      exportText:exportText, importText:importText, report:report, profileFor:profileFor, settings:function(){ return set; }
+    };
+    if(testMode){
+      api._test = { STAT:STAT, maps:function(){ return maps; }, walk:function(){ return walk; }, outs:function(){ return outs; }, sendSysex:sendSysex, sx:sx, bind:bind, forget:forget,
+        checkList:checkList, expected:expected, setTab:setTab, flushNow:function(){ if(frame){ flush(); } }, pending:function(){ return pendN; }, JOG_TICKS:JOG_TICKS };
+      try { window.__flCTRL = api; } catch(e){}
+    }
+    return api;
+  })();
+  // ---- the hooks the rest of the app calls ----
+  // onMIDI: true means a controller table or a taught DJ control took the message.
+  function ctrlOnMIDI(e){ try { return CTRL.onMsg(e); } catch(err){ return false; } }
+  // what the last message was understood as, for the monitor
+  function ctrlMeaning(){ return CTRL.meaning(); }
+  // a DJ controller's stray buttons never play notes into the song
+  function ctrlIsDJ(e){
+    var nm = "", mk = "";
+    try { nm = String((e.target && e.target.name) || ""); mk = String((e.target && e.target.manufacturer) || ""); } catch(err){}
+    return CTRL.isDJ(nm, mk);
+  }
+  function ctrlPorts(access){ try { CTRL.ports(access); } catch(e){} }
+  function ctrlSysex(){ return CTRL.sysexWanted(); }
+  function ctrlPanelBuild(){ CTRL.build(); }
+  function ctrlPanelPaint(){ CTRL.paint(); }
+  // midiLearnStart("dj:d1.play") learns one DJ control; "" when listening started, else the reason
+  function ctrlLearnStart(target, from){
+    return CTRL.learnOne(target, function(ok, key){
+      var ti = CTRL.tinfo(target), msg = ok ? "Done. " + ti.name + " is now tied to the control you just used." : "Learning " + (ti ? ti.name : "that control") + " stopped: nothing arrived from a device in 45 seconds.";
+      try { say(msg); } catch(e){}
+      if(from && typeof asstNotice === "function") asstNotice(msg);
+    });
+  }
+  // ===== /controllers + diagrams =====
 
   // ---------- interaction ----------
   drumGrid.addEventListener("click", function(e){

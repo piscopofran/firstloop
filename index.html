@@ -1639,34 +1639,34 @@
   .dj-lib[data-fm="true"] > .dj-info{grid-column:3;grid-row:1;visibility:hidden;}
   .dj[data-fmbig="true"] .dj-waves,.dj[data-fmbig="true"] .dj-console{display:none;}
   .dj[data-fmbig="true"] > .dj-lib{grid-row-end:-1;}
-  .dj-fm{grid-column:2 / -1;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);
+  .dj-free{grid-column:2 / -1;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg);
     container-type:inline-size;container-name:fm;
     --fmr:20px minmax(130px,2.4fr) minmax(90px,1.5fr) 46px 76px 64px 56px 104px;
     --fmt:20px 24px minmax(120px,2.4fr) minmax(80px,1.5fr) 50px 62px 190px;}
-  .dj-fm-tools{display:flex;align-items:center;gap:5px;padding:4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;}
-  .dj-fm-tools h2{font-size:12px;font-weight:700;margin:0 4px 0 2px;white-space:nowrap;}
-  .dj-fm-tools .dj-i.q{flex:1 1 150px;min-width:80px;max-width:300px;}
-  .dj-fm-tools .gap{flex:1 1 0;}
-  .dj-fm-tools .help{flex:none;}
-  .dj-fm-back{display:none;}
-  .dj-fm > *{flex:none;}
-  .dj-fm-chips{display:flex;align-items:center;gap:4px;padding:4px 30px 4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;
+  .dj-free-tools{display:flex;align-items:center;gap:5px;padding:4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;overflow:hidden;}
+  .dj-free-tools h2{font-size:12px;font-weight:700;margin:0 4px 0 2px;white-space:nowrap;}
+  .dj-free-tools .dj-i.q{flex:1 1 150px;min-width:80px;max-width:300px;}
+  .dj-free-tools .gap{flex:1 1 0;}
+  .dj-free-tools .help{flex:none;}
+  .dj-free-back{display:none;}
+  .dj-free > *{flex:none;}
+  .dj-free-chips{position:relative;display:flex;align-items:center;gap:4px;padding:4px 30px 4px 6px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0;
     overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);}
-  .dj-fm-chips::-webkit-scrollbar{display:none;}
-  .dj-fm-chips .dj-l{flex:none;}
-  .dj-fm-chips .dj-l{margin:0 2px 0 2px;}
-  .dj-fm-chips .sep{width:1px;height:16px;background:var(--line-2);margin:0 5px;flex:none;}
+  .dj-free-chips::-webkit-scrollbar{display:none;}
+  .dj-free-chips .dj-l{flex:none;}
+  .dj-free-chips .dj-l{margin:0 2px 0 2px;}
+  .dj-free-chips .sep{width:1px;height:16px;background:var(--line-2);margin:0 5px;flex:none;}
   .dj-chip{appearance:none;cursor:pointer;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);border-radius:10px;height:20px;padding:0 8px;
     font-size:11px;font-weight:500;white-space:nowrap;flex:none;}
   .dj-chip:hover{color:var(--ink);border-color:var(--ink-3);background:var(--surface-2);}
   .dj-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;}
   .dj-chip.crate{border-radius:var(--r);border-style:dashed;color:var(--ink);}
   .dj-chip.crate[aria-pressed="true"]{border-style:solid;}
-  .dj-fm-head{display:grid;grid-template-columns:var(--fmr);background:var(--surface);border-bottom:1px solid var(--line-2);height:22px;align-items:center;padding-right:var(--sbw,0px);}
-  .dj-fm-head span{padding:0 6px;font-size:10.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line);height:22px;line-height:22px;}
-  .dj-fm-head span:last-child{border-right:0;}
-  .dj-fm-head .r,.fm-r .r,.fm-t .r{text-align:right;}
-  .dj-fm > .dj-fm-body{flex:1 1 0;overflow-y:scroll;overflow-x:hidden;min-height:0;outline:none;position:relative;}
+  .dj-free-head{display:grid;grid-template-columns:var(--fmr);background:var(--surface);border-bottom:1px solid var(--line-2);height:22px;align-items:center;padding-right:var(--sbw,0px);}
+  .dj-free-head span{padding:0 6px;font-size:10.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line);height:22px;line-height:22px;}
+  .dj-free-head span:last-child{border-right:0;}
+  .dj-free-head .r,.fm-r .r,.fm-t .r{text-align:right;}
+  .dj-free > .dj-free-body{flex:1 1 0;overflow-y:scroll;overflow-x:hidden;min-height:0;outline:none;position:relative;}
   .dj-lic{display:inline-block;flex:none;font-size:9px;font-weight:700;letter-spacing:.04em;line-height:13px;padding:0 3px;border-radius:2px;white-space:nowrap;
     border:1px solid var(--ink-3);color:var(--ink-2);text-decoration:none;vertical-align:1px;}
   .dj-lic[data-code="by-sa"]{border-color:var(--accent);color:var(--accent);}
@@ -1712,91 +1712,93 @@
   .fm-t .c-x .bar i{display:block;height:100%;width:0;background:var(--accent);}
   .fm-t .c-x .pc{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);min-width:30px;text-align:right;}
   .fm-note{padding:5px 8px 6px 46px;color:var(--ink-3);font-size:11px;line-height:1.45;user-select:text;-webkit-user-select:text;}
-  .fm-note a,.dj-fm-panel a,.dj-fm-cred a,.dj-fm-pop a,.dj-fm-info a{color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:2px;}
-  .fm-note a:hover,.dj-fm-panel a:hover,.dj-fm-cred a:hover,.dj-fm-pop a:hover,.dj-fm-info a:hover{color:var(--ink);text-decoration-color:var(--accent);}
+  .fm-note a,.dj-free-panel a,.dj-free-cred a,.dj-free-pop a,.dj-free-info a{color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:2px;}
+  .fm-note a:hover,.dj-free-panel a:hover,.dj-free-cred a:hover,.dj-free-pop a:hover,.dj-free-info a:hover{color:var(--ink);text-decoration-color:var(--accent);}
   .fm-more{display:flex;align-items:center;justify-content:center;gap:10px;min-height:34px;padding:6px 10px;color:var(--ink-3);font-size:11.5px;}
-  .dj-fm-panel{margin:10px 12px;padding:10px 12px;border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:var(--r);background:var(--surface);
+  .dj-free-panel{margin:10px 12px;padding:10px 12px;border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:var(--r);background:var(--surface);
     color:var(--ink-2);font-size:12px;line-height:1.5;max-width:84ch;user-select:text;-webkit-user-select:text;}
-  .dj-fm-panel[data-kind="err"]{border-left-color:var(--danger);}
-  .dj-fm-panel p{margin:0 0 6px;}
-  .dj-fm-panel strong{color:var(--ink);}
-  .dj-fm-panel .rowx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
-  .dj-fm-cratehead{display:flex;align-items:center;gap:10px;padding:6px 8px;background:var(--surface);border-bottom:1px solid var(--line);}
-  .dj-fm-cratehead .tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;}
-  .dj-fm-cratehead b{font-size:12.5px;color:var(--ink);}
-  .dj-fm-cratehead span{font-size:11.5px;color:var(--ink-2);line-height:1.4;}
-  .dj-fm-cratehead .dj-b{flex:none;height:24px;}
-  .dj-fm-go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;}
-  .dj-fm-go:hover{background:var(--accent);border-color:var(--ink);}
-  .dj-fm-go:disabled{background:var(--surface-2);border-color:var(--line-2);color:var(--ink-2);opacity:1;}
-  .dj-fm-foot{display:flex;align-items:center;gap:10px;padding:3px 8px;background:var(--surface);border-top:1px solid var(--line-2);font-size:11px;color:var(--ink-2);min-width:0;height:22px;}
-  .dj-fm-foot span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-  .dj-fm-foot .st{flex:1 1 auto;}
-  .dj-fm-foot .dl{color:var(--ink);}
-  .dj-fm-foot .sto{color:var(--ink-3);flex:0 1 auto;}
-  .dj-fm-foot .dj-b{height:18px;font-size:10.5px;flex:none;}
+  .dj-free-panel[data-kind="err"]{border-left-color:var(--danger);}
+  .dj-free-panel p{margin:0 0 6px;}
+  .dj-free-panel strong{color:var(--ink);}
+  .dj-free-panel .rowx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+  .dj-free-cratehead{display:flex;align-items:center;gap:10px;padding:6px 8px;background:var(--surface);border-bottom:1px solid var(--line);}
+  .dj-free-cratehead .tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .dj-free-cratehead b{font-size:12.5px;color:var(--ink);}
+  .dj-free-cratehead span{font-size:11.5px;color:var(--ink-2);line-height:1.4;}
+  .dj-free-cratehead .dj-b{flex:none;height:24px;}
+  .dj-free-go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;}
+  .dj-free-go:hover{background:var(--accent);border-color:var(--ink);}
+  .dj-free-go:disabled{background:var(--surface-2);border-color:var(--line-2);color:var(--ink-2);opacity:1;}
+  .dj-free-foot{display:flex;align-items:center;gap:10px;padding:3px 8px;background:var(--surface);border-top:1px solid var(--line-2);font-size:11px;color:var(--ink-2);min-width:0;height:22px;}
+  .dj-free-foot span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .dj-free-foot .st{flex:1 1 auto;}
+  .dj-free-foot .dl{color:var(--ink);flex:0 1 auto;}
+  .dj-free-foot .sto{color:var(--ink-3);flex:0 1 auto;}
+  .dj-free-foot .dj-b{height:18px;font-size:10.5px;flex:none;}
   /* credits */
-  .dj-fm-cred{padding:10px 12px 18px;max-width:980px;font-size:12px;user-select:text;-webkit-user-select:text;}
-  .dj-fm-cred h3{font-size:13px;font-weight:700;margin:14px 0 2px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line-2);padding-bottom:4px;}
-  .dj-fm-cred h3:first-child{margin-top:0;}
-  .dj-fm-cred h3 span{flex:1 1 auto;}
-  .dj-fm-cred p{margin:4px 0 6px;color:var(--ink-2);line-height:1.5;max-width:92ch;}
-  .dj-fm-cred .mix{border-bottom:1px solid var(--line);padding:5px 0;}
-  .dj-fm-cred .mix .hd{display:flex;align-items:center;gap:10px;}
-  .dj-fm-cred .mix .hd b{font-weight:600;}
-  .dj-fm-cred .mix .hd span{flex:1 1 auto;color:var(--ink-3);font-size:11px;}
-  .dj-fm-cred pre,.dj-fm-pop pre{margin:4px 0 0;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
+  .dj-free-cred{padding:10px 12px 18px;max-width:980px;font-size:12px;user-select:text;-webkit-user-select:text;}
+  .dj-free-cred h3{font-size:13px;font-weight:700;margin:14px 0 2px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line-2);padding-bottom:4px;}
+  .dj-free-cred h3:first-child{margin-top:0;}
+  .dj-free-cred h3 span{flex:1 1 auto;}
+  .dj-free-cred h3 .dj-b{font-weight:500;}
+  .dj-free-cred p{margin:4px 0 6px;color:var(--ink-2);line-height:1.5;max-width:92ch;}
+  .dj-free-cred .mix{border-bottom:1px solid var(--line);padding:5px 0;}
+  .dj-free-cred .mix .hd{display:flex;align-items:center;gap:10px;}
+  .dj-free-cred .mix .hd b{font-weight:600;}
+  .dj-free-cred .mix .hd span{flex:1 1 auto;color:var(--ink-3);font-size:11px;}
+  .dj-free-cred pre,.dj-free-pop pre{margin:4px 0 0;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
     background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:5px 7px;max-height:180px;overflow:auto;}
-  .dj-fm-cred .cr{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.4fr) auto auto;gap:0 10px;align-items:center;min-height:var(--rh);border-bottom:1px solid var(--line);}
-  .dj-fm-cred .cr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-  .dj-fm-cred .cr .a{color:var(--ink-2);}
-  .dj-fm-cred .cr a:not(.dj-lic){font-size:11px;}
-  .dj-fm-cred .sa,.dj-fm-pop .sa{color:var(--ink);border-left:3px solid var(--accent);padding-left:8px;}
-  .dj-fm-pop{width:min(540px,calc(100vw - 24px));}
-  .dj-fm-pop .fine{color:var(--ink-3);font-size:11px;}
+  .dj-free-cred .cr{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.4fr) auto auto;gap:0 10px;align-items:center;min-height:var(--rh);border-bottom:1px solid var(--line);}
+  .dj-free-cred .cr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .dj-free-cred .cr .a{color:var(--ink-2);}
+  .dj-free-cred .cr a:not(.dj-lic){font-size:11px;}
+  .dj-free-cred .sa,.dj-free-pop .sa{color:var(--ink);border-left:3px solid var(--accent);padding-left:8px;}
+  .dj-free-pop{width:min(540px,calc(100vw - 24px));}
+  .dj-free-pop .fine{color:var(--ink-3);font-size:11px;}
   /* in the rest of the library */
-  .dj-empty .dj-fm-start{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px;max-width:none;}
-  .dj-empty .dj-fm-start .dj-b{height:24px;padding:0 10px;}
-  .dj-fm-info{display:flex;flex-direction:column;gap:3px;padding:5px 6px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);font-size:11px;color:var(--ink-2);line-height:1.4;}
-  .dj-fm-info .l1{display:flex;align-items:center;gap:6px;min-width:0;}
-  .dj-fm-info .dj-b{align-self:flex-start;height:20px;}
+  .dj-empty .dj-free-start{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px;max-width:none;}
+  .dj-empty .dj-free-start .dj-b{height:24px;padding:0 10px;}
+  .dj-free-info{display:flex;flex-direction:column;gap:3px;padding:5px 6px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);font-size:11px;color:var(--ink-2);line-height:1.4;}
+  .dj-free-info .l1{display:flex;align-items:center;gap:6px;min-width:0;}
+  .dj-free-info .dj-b{align-self:flex-start;height:20px;}
   @container fm (max-width:820px){
-    .dj-fm > *{--fmr:20px minmax(120px,2.2fr) minmax(80px,1.3fr) 76px 64px 104px;--fmt:20px 24px minmax(110px,2.2fr) minmax(70px,1.2fr) 50px 190px;}
-    .dj-fm-head .c-y,.fm-r .c-y,.dj-fm-head .c-d,.fm-r .c-d,.dj-fm-head .c-z,.fm-t .c-z{display:none;}
-    .dj-fm-tools h2{display:none;}
+    .dj-free > *{--fmr:20px minmax(120px,2.2fr) minmax(80px,1.3fr) 76px 64px 104px;--fmt:20px 24px minmax(110px,2.2fr) minmax(70px,1.2fr) 50px 190px;}
+    .dj-free-head .c-y,.fm-r .c-y,.dj-free-head .c-d,.fm-r .c-d,.dj-free-head .c-z,.fm-t .c-z{display:none;}
+    .dj-free-tools h2{display:none;}
   }
   @container fm (max-width:600px){
-    .dj-fm > *{--fmr:20px minmax(100px,1fr) 70px 58px 84px;--fmt:16px 24px minmax(90px,1fr) 46px 150px;}
-    .dj-fm-head .c-a,.fm-r .c-a,.fm-t .c-a{display:none;}
+    .dj-free > *{--fmr:20px minmax(100px,1fr) 70px 58px 84px;--fmt:16px 24px minmax(90px,1fr) 46px 150px;}
+    .dj-free-head .c-a,.fm-r .c-a,.fm-t .c-a{display:none;}
     .fm-t .c-x .ld{display:none;}
-    .dj-fm-cred .cr{grid-template-columns:minmax(0,1fr) auto;}
-    .dj-fm-cred .cr .a,.dj-fm-cred .cr a:not(.dj-lic){display:none;}
+    .dj-free-cred .cr{grid-template-columns:minmax(0,1fr) auto;}
+    .dj-free-cred .cr .a,.dj-free-cred .cr a:not(.dj-lic){display:none;}
   }
   @media (max-width:699.98px){
-    .dj-fm{grid-column:1;}
-    .dj-fm > *{--fmr:22px minmax(100px,1fr) 66px 54px;--fmt:14px 34px minmax(90px,1fr) 44px 112px;}
+    .dj-free{grid-column:1;}
+    .dj-free > *{--fmr:22px minmax(100px,1fr) 78px 52px;--fmt:16px 36px minmax(80px,1fr) 54px 100px;}
+    .fm-t .c-l{padding:0 2px;}
     .dj-lib[data-fm="true"] > .dj-main{grid-column:1;}
-    .dj-fm-back{display:inline-flex;}
-    .dj-fm-tools{flex-wrap:wrap;}
-    .dj-fm-tools .dj-i.q{order:5;flex:1 1 100%;max-width:none;height:32px;font-size:16px;}
-    .dj-fm-tools .dj-b,.dj-fm-tools .dj-s{height:30px;}
-    .dj-fm-decks{display:none;}
+    .dj-free-back{display:inline-flex;}
+    .dj-free-tools{flex-wrap:wrap;}
+    .dj-free-tools .dj-i.q{order:5;flex:1 1 100%;max-width:none;height:32px;font-size:16px;}
+    .dj-free-tools .dj-b,.dj-free-tools .dj-s{height:30px;}
+    .dj-free-decks{display:none;}
     .dj-chip{height:28px;padding:0 11px;font-size:12px;border-radius:14px;}
-    .dj-fm > .dj-fm-body{flex:none;height:66vh;}
-    .dj-fm-head .c-x,.fm-r .c-x{display:none;}
+    .dj-free > .dj-free-body{flex:none;height:66vh;}
+    .dj-free-head .c-x,.fm-r .c-x{display:none;}
     .fm-pv{width:30px;height:26px;}
     .fm-pv::before{left:11px;top:7px;border-width:5.5px 0 5.5px 9px;}
     .fm-pv[aria-pressed="true"]::before{left:10px;top:8px;width:9px;height:9px;}
     .fm-t .c-x .dj-b{height:26px;padding:0 9px;font-size:11.5px;}
     .fm-t .c-x .bar{display:none;}
     .fm-note{padding-left:10px;}
-    .dj-fm-cratehead{flex-wrap:wrap;}
-    .dj-fm-cratehead .tx{flex-basis:100%;}
-    .dj-fm-cratehead .dj-b{height:30px;}
-    .dj-fm-foot{height:auto;min-height:26px;flex-wrap:wrap;}
-    .dj-fm-foot .sto{display:none;}
+    .dj-free-cratehead{flex-wrap:wrap;}
+    .dj-free-cratehead .tx{flex-basis:100%;}
+    .dj-free-cratehead .dj-b{height:30px;}
+    .dj-free-foot{height:auto;min-height:26px;flex-wrap:wrap;}
+    .dj-free-foot .sto{display:none;}
   }
-  .dj[data-narrow="true"] .dj-fm > .dj-fm-body{flex:none;height:52vh;}
+  .dj[data-narrow="true"] .dj-free > .dj-free-body{flex:none;height:52vh;}
   /* ===== /DJ free music (css) ===== */
   /* ===== controllers + diagrams (css) ===== */
   /* Drawings of equipment (GEARMAP) and the controller parts of the Equipment
@@ -20817,7 +20819,7 @@
     }
     function fmMixPop(mix){
       var text = fmCreditsText(mix.items), sa = fmShareAlike(mix.items), n = mix.items.length;
-      openPop(UI.rec, "dj-pop dj-fm-pop", function(p){
+      openPop(UI.rec, "dj-pop dj-free-pop", function(p){
         p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Credits for this recording");
         p.appendChild(el("h3", "", "Credits for this recording"));
         p.appendChild(el("p", "", n + (n === 1 ? " track" : " tracks") + " in this recording " + (n === 1 ? "comes" : "come") + " from Free music. " +
@@ -20825,7 +20827,7 @@
           (mix.other ? " " + mix.other + (mix.other === 1 ? " other track was" : " other tracks were") + " played too; no licence is recorded here for " + (mix.other === 1 ? "it." : "them.") : "")));
         var pre = el("pre", "", text); pre.id = "djfmmixtext"; p.appendChild(pre);
         if(sa) p.appendChild(el("p", "sa", fmSAWords(sa)));
-        var r = el("div", "rowx"), cp = btn("dj-fm-go", "Copy credits"), sv = btn("", "Save as a text file"), x = btn("", "Close");
+        var r = el("div", "rowx"), cp = btn("dj-free-go", "Copy credits"), sv = btn("", "Save as a text file"), x = btn("", "Close");
         cp.id = "djfmmixcopy";
         cp.addEventListener("click", function(){ fmCopy(text, "The credits for this recording were copied."); });
         sv.addEventListener("click", function(){ offerFile(new Blob([text + "\n"], { type:"text/plain" }), "First Loop mix credits " + fmtDate(mix.at) + ".txt"); });
@@ -20876,10 +20878,10 @@
     }
     function fmDate(ms){ var d = new Date(ms); return isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" }); }
     function fmBuild(){
-      var c = el("section", "dj-fm"); c.hidden = true; c.id = "djfm"; c.setAttribute("aria-label", "Free music");
+      var c = el("section", "dj-free"); c.hidden = true; c.id = "djfm"; c.setAttribute("aria-label", "Free music");
       FMU.root = c;
-      var tools = el("div", "dj-fm-tools");
-      var back = btn("dj-fm-back", "‹ Library", "Back to your own library"); back.addEventListener("click", function(){ setNode("all"); });
+      var tools = el("div", "dj-free-tools");
+      var back = btn("dj-free-back", "‹ Library", "Back to your own library"); back.addEventListener("click", function(){ setNode("all"); });
       tools.appendChild(back);
       FMU.h = el("h2", "", "Free music"); tools.appendChild(FMU.h);
       var q = el("input", "dj-i q"); q.type = "search"; q.id = "djfmq"; q.placeholder = "Search artist, title or label"; q.setAttribute("aria-label", "Search free music");
@@ -20901,7 +20903,7 @@
       var cr = btn("", "Credits", "The lines that name the artists, ready to copy"); cr.id = "djfmcredits"; cr.setAttribute("aria-pressed", "false");
       cr.addEventListener("click", function(){ setNode(FM.view === "credits" ? "free" : "credits"); });
       FMU.credBtn = cr; tools.appendChild(cr);
-      var dk = btn("dj-fm-decks", "Decks", "Show or hide the waveforms, decks and mixer while browsing. They come back when a track is loaded."); dk.id = "djfmdecks"; dk.setAttribute("aria-pressed", "true");
+      var dk = btn("dj-free-decks", "Decks", "Show or hide the waveforms, decks and mixer while browsing. They come back when a track is loaded."); dk.id = "djfmdecks"; dk.setAttribute("aria-pressed", "true");
       dk.addEventListener("click", function(){ FM.big = !FM.big; fmFrame(); });
       FMU.decksBtn = dk; tools.appendChild(dk);
       var hp = el("button", "help", "?"); hp.type = "button"; hp.id = "djfmhelp"; hp.setAttribute("aria-label", "About free music"); hp.setAttribute("aria-haspopup", "dialog");
@@ -20909,7 +20911,7 @@
       tools.appendChild(hp);
       c.appendChild(tools);
       // crates and styles
-      var chips = el("div", "dj-fm-chips"); chips.setAttribute("role", "toolbar"); chips.setAttribute("aria-label", "Starter crates and styles");
+      var chips = el("div", "dj-free-chips"); chips.setAttribute("role", "toolbar"); chips.setAttribute("aria-label", "Starter crates and styles");
       chips.appendChild(el("span", "dj-l", "Starter crates"));
       FM_CFG.crates.forEach(function(k){
         var b = el("button", "dj-chip crate", k.name); b.type = "button"; b.dataset.crate = k.id; b.setAttribute("aria-pressed", "false"); b.title = "About ten well-downloaded " + k.name + " tracks to start mixing with";
@@ -20929,14 +20931,14 @@
         e.preventDefault(); chips.scrollLeft += e.deltaY;
       }, { passive:false });
       FMU.chips = chips; c.appendChild(chips);
-      var ban = el("div", "dj-fm-cratehead"); ban.hidden = true; FMU.banner = ban; c.appendChild(ban);
-      var head = el("div", "dj-fm-head"); head.setAttribute("aria-hidden", "true"); FMU.head = head; c.appendChild(head);
-      var body = el("div", "dj-fm-body"); body.tabIndex = 0; body.id = "djfmbody"; body.setAttribute("aria-label", "Free music list"); FMU.body = body; c.appendChild(body);
+      var ban = el("div", "dj-free-cratehead"); ban.hidden = true; FMU.banner = ban; c.appendChild(ban);
+      var head = el("div", "dj-free-head"); head.setAttribute("aria-hidden", "true"); FMU.head = head; c.appendChild(head);
+      var body = el("div", "dj-free-body"); body.tabIndex = 0; body.id = "djfmbody"; body.setAttribute("aria-label", "Free music list"); FMU.body = body; c.appendChild(body);
       body.addEventListener("keydown", function(e){
         // the list scrolls with the usual keys; they must not reach the decks
         if(/^(Arrow(Up|Down)|Page(Up|Down)|Home|End|Enter| )$/.test(e.key) && !e.shiftKey) e.stopPropagation();
       });
-      var foot = el("div", "dj-fm-foot");
+      var foot = el("div", "dj-free-foot");
       FMU.st = el("span", "st"); FMU.st.setAttribute("role", "status"); foot.appendChild(FMU.st);
       FMU.dlT = el("span", "dl"); FMU.dlT.hidden = true; foot.appendChild(FMU.dlT);
       FMU.dlX = btn("", "Cancel downloads"); FMU.dlX.hidden = true; FMU.dlX.addEventListener("click", fmCancelAll); foot.appendChild(FMU.dlX);
@@ -20946,7 +20948,7 @@
         FMU.io = new IntersectionObserver(function(es){
           es.forEach(function(e){
             var t = e.target;
-            if(t === FMU.more){ if(e.isIntersecting && FM.on && FM.view === "browse" && !FM.err) fmLoad(false); return; }
+            if(t === FMU.more){ if(e.isIntersecting && FM.on && FM.view === "browse" && !FM.err && fmMoreNear()) fmLoad(false); return; }      // the notice can be a frame old: look again
             t._vis = e.isIntersecting;
             if(e.isIntersecting && t.dataset.id && !FM.items[t.dataset.id]) setTimeout(function(){ if(t._vis && t.isConnected) fmNeed(t.dataset.id, t); }, 300);
           });
@@ -21004,6 +21006,13 @@
         b.setAttribute("aria-pressed", on2 ? "true" : "false");
       });
       if(!cred) fmHead(FM.view === "crate" ? "trk" : "rel");
+      // the chosen chip is kept in view on its one line
+      var pc = FMU.chips.querySelector('.dj-chip[aria-pressed="true"]'), cw = FMU.chips.clientWidth;
+      if(pc && FM.on && cw){
+        var l = pc.offsetLeft, r = l + pc.offsetWidth;
+        if(l - 60 < FMU.chips.scrollLeft) FMU.chips.scrollLeft = Math.max(0, l - 60);
+        else if(r + 60 > FMU.chips.scrollLeft + cw) FMU.chips.scrollLeft = r + 60 - cw;
+      }
     }
     function fmTree(node){
       node("free", "Free music", null, { title:"Music under licences that allow mixing and sharing, from the Internet Archive" });
@@ -21027,7 +21036,7 @@
       fmFoot(); fmSto();
     }
     function fmPanel(kind, text, retry, label){
-      var p = el("div", "dj-fm-panel"); p.dataset.kind = kind;
+      var p = el("div", "dj-free-panel"); p.dataset.kind = kind;
       p.appendChild(el("p", "", text));
       if(retry){ var r = el("div", "rowx"), b = btn("", label || "Try again"); b.addEventListener("click", retry); r.appendChild(b); p.appendChild(r); }
       return p;
@@ -21303,7 +21312,7 @@
         "Picked automatically on " + fmDate(c.at) + " by download count; nobody at First Loop chose them by ear.";
       if(rows.length){
         var todo = rows.filter(function(r){ return !fmInLib(fmLibId(r.id, r.file)); }), bytes = todo.reduce(function(s, r){ return s + (r.size || 0); }, 0);
-        var all = btn("dj-fm-go", todo.length ? "Add " + (todo.length === rows.length ? "all " : "the other ") + todo.length + (bytes ? " (" + fmtBytes(bytes) + ")" : "") : "All in library",
+        var all = btn("dj-free-go", todo.length ? "Add " + (todo.length === rows.length ? "all " : "the other ") + todo.length + (bytes ? " (" + fmtBytes(bytes) + ")" : "") : "All in library",
           "Download these tracks into your library on this device, one after another");
         all.id = "djfmcrateadd"; all.disabled = !todo.length;
         all.addEventListener("click", function(){ fmAddMany(rows, "Starter crate: " + def.name, "Starter crate " + def.name).then(function(){ if(FM.shown === "crate") fmRender(); }); });
@@ -21321,7 +21330,7 @@
       });
     }
     function fmRenderCredits(b){
-      var w = el("div", "dj-fm-cred"), lib = fmLibCredits();
+      var w = el("div", "dj-free-cred"), lib = fmLibCredits();
       function copyBtn(text, done){ var c = btn("", "Copy credits"); c.addEventListener("click", function(){ fmCopy(text, done); }); return c; }
       function block(title, sub, items, cls){
         var m = el("div", "mix " + (cls || "")), hd = el("div", "hd"), text = fmCreditsText(items), sa = fmShareAlike(items);
@@ -21374,7 +21383,7 @@
       } else s = fmFreeTracks().length + " free tracks in the library";
       if(FMU.st.textContent !== s) FMU.st.textContent = s;
       var j = fmJob();
-      FMU.dlT.hidden = FMU.dlX.hidden = !j;
+      FMU.dlT.hidden = FMU.dlX.hidden = !j; FMU.sto.hidden = !!j;
       if(j && FMU.dlT.textContent !== j.txt) FMU.dlT.textContent = j.txt;
     }
     function fmSto(){
@@ -21386,7 +21395,7 @@
       });
     }
     function fmAbout(anchor){
-      openPop(anchor, "dj-pop dj-fm-pop", function(p){
+      openPop(anchor, "dj-pop dj-free-pop", function(p){
         p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "About free music");
         p.appendChild(el("h3", "", "About free music"));
         p.appendChild(el("p", "", "Where it comes from: the Internet Archive (archive.org), a non-profit library. Independent artists and small labels have put their releases there for anyone to download. This list reads its netlabels collection."));
@@ -21403,8 +21412,8 @@
     // ---- in the rest of the library ----
     // the note over an empty library: free music first, then your own folder, then the songs made here
     function fmEmpty(e){
-      var p = el("p", "dj-fm-start");
-      var go = btn("dj-fm-go", "Start with free music", "Opens the catalogue with a House starter crate: tracks you may mix and share"); go.id = "djfmstart";
+      var p = el("p", "dj-free-start");
+      var go = btn("dj-free-go", "Start with free music", "Opens the catalogue with a House starter crate: tracks you may mix and share"); go.id = "djfmstart";
       go.addEventListener("click", function(){ FM.started = true; FMS.seen = true; fmSaveSet(); fmPrune(); FM.crate = "house"; FM.view = "crate"; setNode("free"); fmGo({ crate:"house" }); });
       p.appendChild(go);
       var af = btn("", "Add your own music folder", "Point at a folder of music on this computer. Nothing is copied or uploaded."); af.id = "djfmfolder";
@@ -21428,7 +21437,7 @@
     }
     function fmInfo(p, t){
       if(!fmIs(t)) return;
-      var lic = fmTrackLic(t), c = lic.ok ? fmCreditOf(t) : null, box = el("div", "dj-fm-info");
+      var lic = fmTrackLic(t), c = lic.ok ? fmCreditOf(t) : null, box = el("div", "dj-free-info");
       if(!c){ box.appendChild(el("span", "", "From archive.org, but no licence that allows mixing is recorded for it.")); p.appendChild(box); return; }
       var l1 = el("div", "l1"); l1.appendChild(fmBadge(lic, true)); l1.appendChild(el("span", "", lic.name)); box.appendChild(l1);
       box.appendChild(el("span", "", fmLicWords(lic)));

@@ -1394,6 +1394,10 @@
   .dj-tag.mst[data-on="true"]{background:var(--good);border-color:var(--good);}
   .dj-over{position:absolute;inset:0;background:var(--surface);display:flex;align-items:center;gap:8px;padding:0 10px;z-index:2;border-left:3px solid var(--accent);}
   .dj-over span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+  .dj-over button{flex:none;}
+  /* the memory question is a whole sentence: it wraps, and the box grows downwards over the deck */
+  .dj-over[data-why="mem"]{inset:0 0 auto 0;min-height:100%;flex-wrap:wrap;justify-content:flex-end;padding:6px 10px;gap:6px 8px;border-bottom:1px solid var(--line);}
+  .dj-over[data-why="mem"] span{flex:1 1 100%;white-space:normal;font-weight:400;line-height:1.35;}
   .dj-over[data-kind="err"]{border-left-color:var(--danger);}
   .dj-over[data-kind="load"]{border-left-color:var(--ink-3);}
 
@@ -1687,6 +1691,7 @@
   .dj[data-up="4"] .dj-read.key .big,.dj[data-up="4"] .dj-read.time .big{font-size:13px;}
   .dj[data-up="4"] .dj-read.key .big{min-width:26px;}
   .dj[data-up="4"] .dj-over{inset:-2px;}
+  .dj[data-up="4"] .dj-over[data-why="mem"]{inset:-2px -2px auto -2px;}
   .dj[data-up="4"] .dj-ov{grid-area:ov;height:20px;}
   .dj[data-up="4"] .dj-hot{grid-area:hot;}
   .dj[data-up="4"] .dj-hc{height:20px;justify-content:center;padding:0 2px 0 6px;} .dj[data-up="4"] .dj-hc span{display:none;}
@@ -19231,9 +19236,9 @@
       u.keySm.title = t && t.keySrc === "suggested" ? "Worked out by analysis. It is a suggestion; correct it under Info if it sounds wrong." : "";
       // overlay line: confirm, loading, error
       var ov = u.over;
-      ov.textContent = "";
+      ov.textContent = ""; ov.dataset.why = "";
       if(D.pending && T.by[D.pending] && D.pendWhy === "mem"){
-        ov.hidden = false; ov.dataset.kind = "ask";
+        ov.hidden = false; ov.dataset.kind = "ask"; ov.dataset.why = "mem";
         var mtx = "With “" + T.by[D.pending].title + "” the decks would hold about " + D.pendMB + " MB of sound, which may be too much for this device. Unload a deck you are not using first, or load it anyway?";
         ov.appendChild(el("span", "", mtx)); ov.lastChild.title = mtx;
         var my = btn("", "Load anyway"), mn = btn("", "Cancel"), mid = D.pending;
@@ -20510,7 +20515,6 @@
         eng:function(){ return ENG; }, decks:function(){ return decks; }, allDecks:function(){ return allDecks; }, ensureEngine:ensureEngine, UI:UI,
         prof:function(on2){ send({ t:"prof", on:!!on2 }); return ENG && ENG.prof; },
         forceFallback:function(on2){ forceFallback = !!on2; },
-        memBudget:function(mb){ if(mb !== undefined) memTest = +mb || 0; return Math.round(memBudget() / 1048576); },
         workletURL:workletURL, prepare:prepare, runWorker:runWorker, aq:aq, busy:busy,
         drawCost:function(n){
           var t0 = nowMs(), k;
@@ -20518,6 +20522,7 @@
           return (nowMs() - t0) / n;
         },
         laws:{ eq:eqLaw, xf:xfLaw, trim:trimLaw, level:levelLaw, master:masterLaw },
+        memBudget:function(mb){ if(mb !== undefined) memTest = +mb || 0; return Math.round(memBudget() / 1048576); },
         synth:function(n){
           // many made-up records, in memory only, to see how the list holds up
           var names = ["Night","Drive","Echo","Signal","Harbour","Glass","Motion","Copper","Static","Lumen","Paper","Orbit","Velvet","Ridge","Tidal","Ember"];
@@ -21264,7 +21269,8 @@
     }
     function touchWords(key, ev){
       var m = M(key), c = m && ev.id && m.by[ev.id];
-      if(c) return "You touched: " + c.label + (ev.deck > 2 ? " (deck " + ev.deck + ")" : "") + " — " + c.does;
+      // a control of the left or right side that was worked for deck 3 or 4 (after a DECK button) is named with that deck
+      if(c) return "You touched: " + (ev.deck > 2 ? (/\(deck [12]\)/.test(c.label) ? c.label.replace(/\(deck [12]\)/, "(deck " + ev.deck + ")") : c.label + " (deck " + ev.deck + ")") : c.label) + " — " + c.does;
       return "That control is not in the diagram yet" + (ev.raw ? " (" + rawWords(ev.raw) + ")" : "") + ".";
     }
 

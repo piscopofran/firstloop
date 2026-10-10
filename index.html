@@ -15387,7 +15387,15 @@
   //   DJ.on(event, fn)          -> function      call the result to stop listening
   //   DJ.snapshot()             -> object        compact JSON-safe summary (for the Assistant)
   //   DJ.setController({active, name, channels}) shown in snapshot().controller
-  //   DJ.audioInfo()            -> {started, engine, state, sampleRate, baseLatency, outputLatency, maxChannels, routing, sinkId, canChooseOutput}
+  //   DJ.audioInfo()            -> {started, engine, state, sampleRate, baseLatency, outputLatency, maxChannels, routing, sinkId, canChooseOutput,
+  //                                 latencyMs (base + output), latencyMode ("interactive"|"balanced"|"safe"), dropouts {total, inWindow, windowMinutes, lostMs, minutesWatched},
+  //                                 cpuPercent (the deck player's share of the audio thread, one-second average), keylock (false in the reduced player),
+  //                                 keylockQuality ("full"|"light": the lighter one is chosen by itself above about 35% load), keylockDelayMs (0: key lock adds none)}
+  //   DJ.settings({...})        -> {keylockNew, hotGate, needleLock, endWarning (0|30|60 s), recordBits (16|24), quantiseBeats (1|0.5|0.25|0.125), autoGain,
+  //                                 latency}   no argument reads them; an object changes the ones it names (event "settings")
+  //   DJ.setLatency(mode)       -> Promise<mode in use>   refused (unchanged) while a deck plays or a recording runs: a new audio context is made,
+  //                                 the tracks on the decks are loaded again at their places and the mixer is put back as it was
+  //   DJ.dropouts(minutes)      -> the dropouts object above, counted over that many minutes (30 if left out);  DJ.dropoutsReset()
   //   DJ.deckCount()            -> 2 or 4: the decks in use (DJ.maxDecks is 4). DJ.deck(1..4) and channels 1..4 are always there;
   //                                loading a track onto deck 3 or 4 while two are in use brings up four (for this visit)
   //   DJ.setDeckCount(2|4)      -> the count now in use (remembered; refused while deck 3 or 4 is playing). First visit: two decks,
@@ -15405,22 +15413,34 @@
   //     d.cueDown()  d.cueUp()         the CUE button going down and up (CDJ behaviour)
   //     d.hotcue(i, "press"|"release"|"clear")   i = 0..7; press sets an empty one, else jumps
   //     d.setTempo(norm)               -1..1 across the current range (+ is faster)
-  //     d.tempoRange(r)                r = 0.06 | 0.1 | 0.16 | 1 | "next"; no argument reads it
+  //     d.tempoRange(r)                r = 0.06 | 0.1 | 0.16 | 1 (wide: stopped to double speed) | "next"; 6, 10, 16 and "wide" are taken too; no argument reads it
   //     d.tempoReset()
   //     d.nudge(dir)                   -1, 0 (let go), +1: pitch bend while held
   //     d.jogTouch(on)                 the top of the platter touched / released
   //     d.jogTurn(deltaSeconds, viaPlatter)   seconds of audio the platter moved (one turn = 1.8 s).
   //                                    viaPlatter with Vinyl on scratches; otherwise it nudges; paused, it searches
   //     d.seek(seconds)  d.seekBy(beats)      seekBy is a beat jump (negative goes back)
+  //     d.needle(seconds) -> boolean   the whole-track strip: as seek, but with the Needle lock setting refused (false) while the deck plays and the platter is not held
   //     d.jumpSize(beats)              size used by the on-screen jump buttons and keys
   //     d.loopIn()  d.loopOut()  d.autoLoop(beats)  d.loopHalve()  d.loopDouble()  d.reloop()  d.loopMove(beats)
-  //     d.memory("set"|"next"|"prev"|"delete")   memory cues (and, while a loop is on, saved loops); next/prev go there and wait
+  //     d.memory("set"|"next"|"prev"|"delete"|"active")   memory cues (and, while a loop is on, saved loops); next/prev go there and wait;
+  //                                    "active" makes the saved loop the deck is in an active loop (it starts by itself when the track reaches it) or an ordinary one again
   //     d.sync(on)  d.setMaster()      sync(undefined) toggles; returns the new state
   //     d.setQuantise(on)  d.setSlip(on)  d.setVinyl(on)     undefined toggles
+  //     d.setKeylock(on) -> boolean    key lock ("Master Tempo"): the tempo changes, the pitch stays. undefined toggles. Remembered per deck.
+  //                                    It rests (state().keylockBypassed) beyond 50% faster or slower, and is out of the path at 0%,
+  //                                    while the platter is held or scratched and in reverse, as on the hardware.
+  //     d.setKeyShift(n) -> n          key shift in semitones, -12..12 (0 = the track's own key); back to 0 with every track that is loaded
+  //     d.keySync() -> {ok, shift, key, with} | {ok:false, why}    shift this deck to the nearest key that goes with the master deck's (the same key,
+  //                                    a neighbour on the Camelot wheel, the relative major or minor); two semitones at most; switches key lock on
+  //     d.reverse(on) -> boolean       play backwards (undefined toggles);  d.slipReverse(on): backwards while on, then on from where the track would have been
   //     d.state() -> {deck, loaded, loading, trackId, title, artist, bpm, bpmNow, key, camelot, playing,
   //                   position, duration, remaining (s), bar, beatInBar, tempo (-1..1), tempoPercent,
-  //                   tempoRange, sync, master, quantise, slip, vinyl, cue, hotcues[8], loop{active,start,end,beats},
-  //                   memoryCues[], savedLoops[[start,end]], autoLoopBeats, endWarning, analysed, asking}
+  //                   tempoRange, sync, master, quantise, quantiseBeats, slip, vinyl,
+  //                   keylock, keylockActive (the stretcher is making the sound now), keylockBypassed (resting beyond 50%), keyShift,
+  //                   keyNow, camelotNow (the key the deck sounds in: the track's, moved by the key shift and, without key lock, by the tempo),
+  //                   reverse, slipReverse, cue, hotcues[8], loop{active,start,end,beats},
+  //                   memoryCues[], savedLoops[[start,end]], activeLoops[[start,end]], autoLoopBeats, endWarning, analysed, asking}
   //
   //   m = DJ.mixer
   //     m.trim(ch, v)  m.eq(ch, "low"|"mid"|"high"|0|1|2, v)  m.filter(ch, v)  m.fader(ch, v)  m.cue(ch, on)
@@ -15430,7 +15450,11 @@
   //     m.fx.type("echo"|"reverb"|"filter"|"flanger")  m.fx.target(1..4|"master")  m.fx.beats(0.25..4)
   //     m.fx.depth(v)  m.fx.on(bool)  m.fx.state()  m.fx.types (the four names)  m.fx.beatChoices ([0.25, 0.5, 1, 2, 4])
   //     m.routing("speakers"|"split"|"four") -> the mode in use;  m.maxChannels();  m.outputs() -> Promise<[{id,label}]>
-  //     m.setOutput(deviceId) -> Promise<boolean>;  m.record(true|false) -> Promise
+  //     m.setOutput(deviceId) -> Promise<boolean>
+  //     m.record(true) -> Promise<boolean>;  m.record(false) -> Promise<{blob, seconds, frames, bits, sampleRate, name, kind, error}|null>
+  //                               a WAV of the master, 16 or 24 bit (settings().recordBits), written to the browser's storage as it comes
+  //                               (kind "file", else "database" in megabyte pieces, else "memory"); name is "First Loop mix <date> <time>.wav"
+  //     m.recordState() -> {on, seconds, bits, to, peakDb, maxSeconds}
   //     m.testTone("master"|"phones", seconds)     a beep on that output only (440 Hz master, 880 Hz headphones)
   //     m.levels() -> {ch:[{peak, rms, clip}], master:{peak, rms, clip}}     m.state()
   //
@@ -15454,8 +15478,46 @@
   //     "memory" {deck, action}, "sync" {deck, on}, "master" {deck}, "tempo" {deck, tempo, percent, bpm, range}, "mode" {deck, ...},
   //     "beat" {deck, beat, bar, beatInBar} (while the area is on screen), "end" {deck}, "warning" {deck, endOfTrack},
   //     "levels" {ch, master} (about 20 a second, while on screen), "mixer" {control, ch, value}, "fx", "routing",
-  //     "record", "library" {count}, "select" {id}, "analysis", "job", "controller", "decks" {count}, "focus" {deck, left, right}.
+  //     "record", "library" {count}, "select" {id}, "analysis", "job", "controller", "decks" {count}, "focus" {deck, left, right},
+  //     "key" {deck, shift, key, camelot, why}, "mode" also carries keylock / reverse / slipReverse / quantiseBeats, "dropout" {count, ms},
+  //     "settings" {...}, "mixevent" (every entry of the analysis log below, as it is made).
   //     "*" hears everything.
+  //
+  //   a = DJ.analysis          measurements for a coach: read about twenty times a second from the positions the player reports
+  //                             (all decks from the same instant), the mixer's controls and the level meters. Nothing is added to the audio thread.
+  //     a.pair(a, b) -> {a, b, loaded,                       deck numbers; a is the reference
+  //         bpmA, bpmB,                                      tempo now, after the tempo fader and sync
+  //         bpmDiffPercent,                                  (bpmB / bpmA - 1) x 100
+  //         phaseMs,                                         b's nearest beat against a's, from grids and exact positions: + means b's beat comes later
+  //         phaseBeats,                                      the same in beats of a
+  //         barOffsetBeats,                                  beats between the two downbeats (0 = bars line up), -bpb/2..bpb/2
+  //         phraseOffsetBeats,                               beats between the two 8-bar phrases counted from each grid's first downbeat, -16..16
+  //         keyA, keyB, camelotA, camelotB,                  the key each deck sounds in now (key shift and, without key lock, tempo included)
+  //         centsA, centsB,                                  how far each is off that key (0 with key lock on)
+  //         keyCompatible,                                   Camelot rule: same key, one step either way, relative major/minor; null if a key is unknown
+  //         audibleA, audibleB, bothAudible,                 playing, and trim x fader x crossfader x master at least 0.01 (-40 dB), EQ not fully killed
+  //         lowEndClash,                                     both audible at -20 dB or more with both basses in (Low not under -6 dB, filter not cutting below 150 Hz)
+  //         levelPeakDb {a, b, master},                      highest of about the last second: channels before the fader, master before the limiter (0 = full scale)
+  //         clipping, limiting}                              master at 0.98 of full scale or a channel at full scale; the limiter holding the level down
+  //     a.deck(n) -> {deck, loaded, playing, audible, bpm, tempoPercent, key, camelot, bar, beatInBar,
+  //         phraseBars (16, or the length of the track's own phrase when it has phrase data), phrasePos (bars into the phrase, from the grid's
+  //         first downbeat), barsToNextPhrase, phrases {8:{pos,toNext}, 16:{...}, 32:{...}}, energy (short-term RMS in dB, before the fader),
+  //         levelPeakDb, section (from t.phrases = [{pos (seconds), kind}] on the track, when the library has rekordbox phrase data; else null)}
+  //     a.log({sinceMs, types, limit}) -> [{n, t (ms, as Date.now()), type, ..., snap}]   oldest first; the last 400 events or 30 minutes.
+  //         snap = {decks:[{deck, playing, audible, bar, beatInBar, phrasePos, bpm, tempoPercent, key}], crossfader, masterPeakDb} at that moment.
+  //         types: load {deck,id,title,bpm,key}  unload  play  pause {deck}  cue {deck,action,pos}  hotcue {deck,index,action:"jump"|"set"|"clear",pos}
+  //           loop {deck,on,beats,start,end}  sync {deck,on}  master {deck}  mode {deck, keylock|reverse|slip|quantise|vinyl}  key {deck,shift,key,camelot,why}
+  //           tempo {deck,fromPercent,toPercent,bpm,ms,bySync} (once the fader has settled)   nudge {deck,count,direction,forward,back,ms}   scratch {deck,ms,moves}
+  //           gesture {control ("fader","eq.low","eq.mid","eq.high","filter","trim","crossfader","master","cue",...),ch,from,to,ms,moves,at:[{deck,bar,beatInBar,phrasePos}]}
+  //           fx  record  trackEnd  dropout
+  //           transitionStart {decks,outgoing,incoming,keyCompatible,incomingStartedOnPhrase,mixInOffPhraseBeats,phraseOffsetBeats}
+  //           transition {decks,outgoing,incoming,start,end,seconds,bars,controls:[...],maxAbsPhaseMs,meanAbsPhaseMs,meanBpmDiffPercent,maxBpmDiffPercent,
+  //             keyOutgoing,keyIncoming,keyCompatible,lowsOverlapSeconds,lowsOverlapBars,incomingStartedOnPhrase (within one beat of an 8-bar boundary of
+  //             the outgoing deck when the incoming one was started),mixInOffPhraseBeats,phraseOffsetBeats,barOffsetBeats,peakDb,clippingSeconds,clipped,
+  //             trainwrecks,synced,endState:"incoming"|"outgoing"|"both"|"none"}    two decks both audible for a second or more, until one is not for 1.5 s
+  //           trainwreck {decks,phaseMs,maxAbsPhaseMs,bars,bpmDiffPercent,ended}   beats more than 40 ms apart for over two bars while both are audible
+  //           deadAir {seconds,ended}   the master silent for over 2 s        redline {where:["master","ch1",...],seconds,peakDb,ended}   at the top for over 1 s
+  //     a.current() -> [transition records still open]   a.now()   a.reset()   a.limits
   // ---------------------------------------------------------------------------
   // ---- DJ: the audio-thread player (runs inside an AudioWorklet) ----
   // One processor plays every deck, so the decks share one sample clock and
@@ -15464,10 +15526,14 @@
   // The function is turned into text and loaded from a Blob URL.
   function djWorkletMain(){
     var FADE = 128;                        // frames of crossfade on every jump
+    // A jump to a cue point (hot cue, CUE, the whole-track strip) lets the new place in within half a millisecond while the
+    // old one fades over the usual 128 frames: a hot cue set on a kick drum plays the kick's attack, not a faded-in copy of it.
+    // Loop joins, beat jumps and sync keep the even crossfade.
+    var FIN = Math.max(8, Math.round(0.0005 * sampleRate));
     // key lock: sizes in frames, from milliseconds
     var KMS = sampleRate / 1000;
     var K_B = Math.max(8, Math.round(1.33 * KMS)), K_M = 24;       // transient search: block length, blocks of history (32 ms)
-    var K_S2 = 2.0, K_S1 = 1.4;                                    // a clear hit, and a likely one: so many times the loudest of the history
+    var K_S2 = 2.0, K_S1 = 1.25;                                    // a clear hit, and a likely one: so many times the loudest of the history
     var K_FF = K_B * 2 * 32768 * 0.004, K_FH = K_B * 2 * 32768 * 0.002;
     var K_AL = 1 - Math.exp(-2 * Math.PI * 150 / sampleRate), K_AH = 1 - Math.exp(-2 * Math.PI * 3000 / sampleRate);      // the three bands: under 150 Hz, between, over 3 kHz
     var K_REFR = Math.round(10 * KMS);                             // two hits are at least this far apart
@@ -15475,9 +15541,10 @@
     var K_GUARD = Math.round(1 * KMS) + K_B, K_HOLD = Math.round(20 * KMS), K_BODY = Math.round(8 * KMS);
     var K_TRIG = Math.round(8 * KMS), K_SPAN = Math.round(20 * KMS), K_BACK = Math.round(2 * KMS), K_MINJ = Math.round(3 * KMS);
     var K_NEAR = Math.round(40 * KMS), K_LOOK = Math.round(46 * KMS), K_CHK = 32, K_CLOSE = Math.round(30 * KMS);
-    var K_TOL = Math.round(0.3 * KMS), K_TOLC = Math.round(1.5 * KMS), K_TW = Math.round(0.25 * KMS), K_TW1 = Math.round(1.5 * KMS), K_LOOPMIN = Math.round(60 * KMS);
+    var K_TOL = Math.round(0.3 * KMS), K_TOLC = Math.round(1.5 * KMS), K_TW = Math.round(0.25 * KMS), K_TW1 = Math.round(0.5 * KMS), K_LOOPMIN = Math.round(60 * KMS);
     var K_HARD = Math.round(60 * KMS), K_DEC = 4, K_WF = 256, K_WIN = Math.round(10 * KMS);
     var K_A = new Float32Array(1024), K_Bf = new Float32Array(4096);
+    var K_QMIN = 0.6, K_TRIG2 = Math.round(15 * KMS);
     function rd(a, len, p){
       var i = Math.floor(p), f = p - i;
       if(i < 1 || i >= len - 2){
@@ -15496,7 +15563,7 @@
       this.rate = 1; this.cur = 1; this.bend = 0; this.slowK = 0;
       this.held = false; this.pend = 0; this.npend = 0; this.scr = false; this.vel = 0;
       this.loopOn = false; this.loopIn = 0; this.loopOut = 0;
-      this.fpos = 0; this.fleft = 0;
+      this.fpos = 0; this.fleft = 0; this.fin = FADE;
       this.beatLen = 0; this.first = 0;
       this.sync = false; this.align = false; this.quant = false;
       this.slip = false; this.slipHold = false; this.slipping = false; this.spos = 0;
@@ -15511,11 +15578,12 @@
       this.hl0 = 0; this.hl1 = 0; this.hl2 = 0; this.hl3 = 0; this.hr0 = 0; this.hr1 = 0; this.hr2 = 0; this.hr3 = 0;
       this.kQ = new Float64Array(16); this.kQs = new Uint8Array(16); this.kQn = 0;      // hits ahead: where, and how clear
       this.kSp = -1; this.kE = new Float64Array(K_M * 3); this.kEi = 0; this.kEn = 0; this.kF1 = 0; this.kF2 = 0; this.kF3 = 0;
-      this.kLo = -1e12; this.kTl = -1e12; this.kAl = -1; this.kns = 0;
+      this.kLo = -1e12; this.kTl = -1e12; this.kAl = -1; this.kns = 0; this.kqual = 1;
     }
-    Deck.prototype.jump = function(np){
+    Deck.prototype.jump = function(np, quick){
       if(np < 0) np = 0;
       if(np > this.len) np = this.len;
+      this.fin = quick ? FIN : FADE;
       if(this.gate > 0.001){
         if(this.kOn){ this.fpos = this.xn * 2 > this.xl ? this.xr : this.kr; this.fk = this.kp; }
         else { this.fpos = this.pos; this.fk = 0; }
@@ -15614,7 +15682,8 @@
       m = ((hi - lo) / D) | 0;
       if(n > A.length) n = A.length;
       if(m + n > Bf.length) m = Bf.length - n;
-      for(i = 0, p = r; i < n; i++){ s = 0; for(k = 0; k < D; k++, p++) s += L[p] + R[p]; A[i] = s; }
+      var ea = 1;
+      for(i = 0, p = r; i < n; i++){ s = 0; for(k = 0; k < D; k++, p++) s += L[p] + R[p]; A[i] = s; ea += s * s; }
       for(i = 0, p = lo; i < m + n; i++){ s = 0; for(k = 0; k < D; k++, p++) s += L[p] + R[p]; Bf[i] = s; }
       if(pref >= lo && pref <= hi) jp = Math.round((pref - lo) / D);
       en = 1; for(i = 0; i < n; i++) en += Bf[i] * Bf[i];
@@ -15626,7 +15695,8 @@
         if(j < m) en += Bf[j + n] * Bf[j + n] - Bf[j] * Bf[j];
         if(en < 1) en = 1;
       }
-      if(jp >= 0 && jp <= m && sp >= best - Math.abs(best) * 0.03) bj = jp;      // nothing clearly better than the place asked for
+      if(jp >= 0 && jp <= m && sp >= best - Math.abs(best) * 0.03){ bj = jp; best = sp; }      // nothing clearly better than the place asked for
+      this.kqual = best / Math.sqrt(ea);         // how alike the two stretches are: 1 is the same waveform (or both silent)
       p = lo + bj * D;
       if(D > 1){
         // close up: every frame, a few either side
@@ -15690,7 +15760,11 @@
       }
       if(hi - lo < 8) return;
       np = this.kBest(r, lo, hi, this.kq ? K_WIN >> 1 : K_WIN, this.kq ? K_DEC * 2 : K_DEC, np);      // the lighter setting looks at half as much
-      if(np >= 0) this.kSplice(np, K_OVF);
+      if(np < 0) return;
+      // A poor match means the sound is changing right here (often a hit the look-ahead did not catch): wait a few
+      // milliseconds for a better place, as long as the drift allows.
+      if(this.kqual < K_QMIN && (dl < 0 ? -dl : dl) < K_TRIG2){ this.kchk = K_CHK * 3; return; }
+      this.kSplice(np, K_OVF);
     };
     Deck.prototype.kNext = function(){           // one frame of the stretched sound, into o0 and o1
       var L = this.L, R = this.R, len = this.len, r, a, b, w, x;
@@ -15775,7 +15849,7 @@
           np = m.pos;
           if(m.q && d.quant && d.playing) np = d.nearBeat(np) + (d.pos - d.nearGrid(d.pos));
           if(m.stop && d.gate > 0.001){ d.playing = false; d.stopTo = np; }     // fade out first, then stand on the new place
-          else { d.jump(np); if(m.stop) d.playing = false; d.stopTo = -1; }
+          else { d.jump(np, true); if(m.stop) d.playing = false; d.stopTo = -1; }
           if(d.slipping && !m.slip) d.spos = d.pos;
           break;
         case "beatjump":
@@ -15890,7 +15964,7 @@
         }
         var mD = this.master >= 0 ? this.d[this.master] : null;
         var SC = 1 / 32768;
-        var gk = 1 / (0.002 * sampleRate), fastK = 1 / (0.004 * sampleRate), slowK = 1 / (0.03 * sampleRate);
+        var gk = 1 / (0.002 * sampleRate), ga = 1 / (0.0004 * sampleRate), fastK = 1 / (0.004 * sampleRate), slowK = 1 / (0.03 * sampleRate);
         var sA = 1 / (0.012 * sampleRate), nA = 1 / (0.08 * sampleRate);
         // first every deck that follows the master takes its tempo and, when asked,
         // its place in the beat, all from the same instant; only then is sound made
@@ -15967,7 +16041,8 @@
               v = (d.playing || gate > 0) ? cur : 0;
               if(d.npend !== 0){ w = d.npend * nA; d.npend -= w; if(Math.abs(d.npend) < 0.01) d.npend = 0; v += w; }
             }
-            gate += (gt - gate) * gk;
+            // pressing play or CUE on a drum hit must give the hit: the sound opens in about a millisecond (it closes in 2 ms; a scratch keeps both slow)
+            gate += (gt - gate) * (gt === 1 && !scrOn ? ga : gk);
             if(gt === 1 && gate > 0.9995) gate = 1;
             else if(gt === 0 && gate < 0.0005) gate = 0;
             if(gate > 0){
@@ -15990,8 +16065,9 @@
               } else { s0 = rd(L, len, pos); s1 = R === L ? s0 : rd(R, len, pos); }
               if(d.fleft > 0){
                 w = d.fleft / FADE;
-                s0 = s0 * (1 - w) + rd(L, len, d.fpos) * w;
-                s1 = s1 * (1 - w) + (R === L ? rd(L, len, d.fpos) : rd(R, len, d.fpos)) * w;
+                gt = (FADE - d.fleft) / d.fin; if(gt > 1) gt = 1;      // the new place coming in (the same line as the old one going out, unless the jump was a quick one)
+                s0 = s0 * gt + rd(L, len, d.fpos) * w;
+                s1 = s1 * gt + (R === L ? rd(L, len, d.fpos) : rd(R, len, d.fpos)) * w;
                 d.fpos += d.fk > 0 ? d.fk : v; d.fleft--;
               }
               oL[i] = s0 * SC * gate; oR[i] = s1 * SC * gate;
@@ -19261,6 +19337,7 @@
       var o = { a:a ? a.n : null, b:b ? b.n : null, loaded:!!(a && b), bpmA:a ? anR2(a.bpm) : null, bpmB:b ? anR2(b.bpm) : null, bpmDiffPercent:null,
                 phaseMs:null, phaseBeats:null, barOffsetBeats:null, phraseOffsetBeats:null,
                 keyA:a ? a.keyNow : "", keyB:b ? b.keyNow : "", camelotA:a ? camelot(a.keyNow) : "", camelotB:b ? camelot(b.keyNow) : "", keyCompatible:null,
+                centsA:a ? a.cents : null, centsB:b ? b.cents : null,
                 audibleA:anAudible(a), audibleB:anAudible(b), bothAudible:false, lowEndClash:false,
                 levelPeakDb:{ a:a ? anDb(anPk(R, a.n - 1)) : null, b:b ? anDb(anPk(R, b.n - 1)) : null, master:anDb(anPk(R, 4)) },
                 clipping:false, limiting:R.master.peak >= 0.79 };
@@ -19409,7 +19486,8 @@
       case "loop":
         if(k >= 0 && !!d.active !== AN.loopOn[k]){
           AN.loopOn[k] = !!d.active;
-          anNote("loop", { deck:d.deck, on:!!d.active, beats:D && D.beatLen > 0 && d.end > d.start ? Math.round((d.end - d.start) * D.sr / D.beatLen * 1000) / 1000 : null, start:d.start, end:d.end });
+          g = AN.R && AN.R.decks[k] && AN.R.decks[k].beatLen > 0 ? AN.R.decks[k] : (D && D.beatLen > 0 ? D : null);
+          anNote("loop", { deck:d.deck, on:!!d.active, beats:g && d.end > d.start ? Math.round((d.end - d.start) * g.sr / g.beatLen * 1000) / 1000 : null, start:d.start, end:d.end });
           anUsed("loop " + d.deck);
         }
         break;
@@ -19918,9 +19996,11 @@
         if(four){
           u.panel.insertBefore(u.head, u.panel.firstChild);
           [u.rows.loop, u.rows.jump, u.rows.mode, u.rows.key, u.rows.mem, u.rows.track, u.right].forEach(function(n){ u.more.appendChild(n); });
+          u.rows.mode.appendChild(u.revB);                 // a small deck has no room for it beside Sync and Master: it goes in the strip, after Key lock
         } else {
           UI.heads.appendChild(u.head);
           ["loop", "auto", "jump", "beat", "mode", "key", "mem", "track"].forEach(function(k){ u.mid.appendChild(u.rows[k]); });
+          u.rows.beat.appendChild(u.revB);
           u.panel.insertBefore(u.right, u.more);
         }
       });
@@ -20178,6 +20258,7 @@
         p.appendChild(ol);
         p.appendChild(el("p", "", "To hear a track before it goes out, choose Split cue or 4 channels under Output, then press the headphone button of that deck."));
         p.appendChild(el("p", "", "Decks 2 | 4 in the top row switches between two decks and four. Two are enough to learn on. With four, decks 1 and 3 are on the left and decks 2 and 4 on the right, every waveform is stacked at the top, and the mixer has a channel for each in the order 3 1 2 4, as on a four-channel controller. Each deck shows its main controls; clicking a deck puts the rest of its controls (loop In and Out, jump, modes, memory cues, tempo) in the strip under the decks."));
+        p.appendChild(el("p", "", "Key lock keeps a track in its key while the tempo fader changes its speed (Pioneer calls it Master Tempo). The Key row moves a track up or down by semitones, and Key sync moves it to the nearest key that goes with the master deck. Rev plays backwards. Settings in the top row has the choices a DJ expects to find: how hot cues behave on a paused deck, what Quantize snaps to, the end-of-track warning, the recording format, and the audio latency with a count of dropouts."));
         p.appendChild(el("p", "", "Tempo, beat grid and key are worked out by analysis. They are usually right and sometimes not: the Grid button on a deck opens the tools to correct them, and the key is labelled as a suggestion."));
         p.appendChild(el("p", "", "Searching free music contacts archive.org directly from your browser. A track you add is downloaded from there to this device."));
       });
@@ -23518,7 +23599,8 @@
         // event(name, data) is an event of the DJ area as the analysis hears it, end() goes back to live
         an:{ AN:AN, begin:function(t0){ anReset(); AN.sim = { t:t0 || 1000000 }; }, end:function(){ anFlush(anNow(), true); AN.sim = null; anReset(); },
              step:function(R, ms){ AN.sim.t += ms === undefined ? 50 : ms; R.t = AN.sim.t; anTick(R); }, event:function(ev, d){ anEvent(d, ev); },
-             set:function(R){ R.t = AN.sim.t; AN.R = R; }, flush:function(){ anFlush(anNow(), true); }, read:anRead, pair:anPair, deck:anDeck },
+             set:function(R){ R.t = AN.sim.t; AN.R = R; }, flush:function(){ anFlush(anNow(), true); }, read:anRead, pair:anPair, deck:anDeck,
+             nudge:anNudge, scratch:anScratch, note:anNote, clock:function(ms){ AN.sim.t += ms; return AN.sim.t; } },
         workletURL:workletURL, prepare:prepare, runWorker:runWorker, aq:aq, busy:busy,
         fm:{ CFG:FM_CFG, FM:FM, FMU:FMU, net:fmNet, licence:fmLicence, parseItem:fmParseItem, query:fmQuery, searchURL:fmSearchURL, row:fmRow, secs:fmSecs, creditLine:fmCreditLine, cratePick:fmCratePick, libId:fmLibId, go:fmGo, add:fmAdd, addMany:fmAddMany, preview:fmPreview, text:fmText },
         drawCost:function(n){

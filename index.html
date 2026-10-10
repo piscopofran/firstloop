@@ -1450,6 +1450,13 @@
   .dj-row .dj-b.fix{flex:none;}
   .dj-row .dj-beats{flex:none;}
   .dj-loopb[data-on="true"]{background:var(--good);border-color:var(--good);color:var(--on-accent);}
+  .dj-b[data-rest="true"]{background:transparent;color:var(--accent);border-style:dashed;}
+  /* four or five buttons in a narrow deck: each as wide as its word needs */
+  .dj-mid > .dj-row.r-mode .dj-b,.dj-mid > .dj-row.r-mem .dj-b{flex:1 1 auto;padding:0 2px;letter-spacing:-.015em;}
+  .dj-row.r-key > .dj-memo{font-size:10px;}
+  .dj-reclv{display:inline-block;width:44px;height:6px;border:1px solid var(--line-2);border-radius:2px;background:var(--bg);overflow:hidden;flex:none;}
+  .dj-reclv i{display:block;height:100%;width:0;background:var(--good);}
+  .dj-reclv[data-clip="true"] i{background:var(--danger);}
   .dj-right{display:flex;flex-direction:column;align-items:center;gap:4px;width:44px;}
   .dj-vf{position:relative;width:26px;flex:1 1 auto;min-height:96px;cursor:ns-resize;touch-action:none;}
   .dj-vf::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--raised);}
@@ -15457,6 +15464,20 @@
   // The function is turned into text and loaded from a Blob URL.
   function djWorkletMain(){
     var FADE = 128;                        // frames of crossfade on every jump
+    // key lock: sizes in frames, from milliseconds
+    var KMS = sampleRate / 1000;
+    var K_B = Math.max(8, Math.round(1.33 * KMS)), K_M = 24;       // transient search: block length, blocks of history (32 ms)
+    var K_S2 = 2.0, K_S1 = 1.4;                                    // a clear hit, and a likely one: so many times the loudest of the history
+    var K_FF = K_B * 2 * 32768 * 0.004, K_FH = K_B * 2 * 32768 * 0.002;
+    var K_AL = 1 - Math.exp(-2 * Math.PI * 150 / sampleRate), K_AH = 1 - Math.exp(-2 * Math.PI * 3000 / sampleRate);      // the three bands: under 150 Hz, between, over 3 kHz
+    var K_REFR = Math.round(10 * KMS);                             // two hits are at least this far apart
+    var K_OVF = Math.round(8 * KMS), K_OVT = Math.round(3 * KMS);  // crossfade of a free splice, of one before a hit
+    var K_GUARD = Math.round(1 * KMS) + K_B, K_HOLD = Math.round(20 * KMS), K_BODY = Math.round(8 * KMS);
+    var K_TRIG = Math.round(8 * KMS), K_SPAN = Math.round(20 * KMS), K_BACK = Math.round(2 * KMS), K_MINJ = Math.round(3 * KMS);
+    var K_NEAR = Math.round(40 * KMS), K_LOOK = Math.round(46 * KMS), K_CHK = 32, K_CLOSE = Math.round(30 * KMS);
+    var K_TOL = Math.round(0.3 * KMS), K_TOLC = Math.round(1.5 * KMS), K_TW = Math.round(0.25 * KMS), K_TW1 = Math.round(1.5 * KMS), K_LOOPMIN = Math.round(60 * KMS);
+    var K_HARD = Math.round(60 * KMS), K_DEC = 4, K_WF = 256, K_WIN = Math.round(10 * KMS);
+    var K_A = new Float32Array(1024), K_Bf = new Float32Array(4096);
     function rd(a, len, p){
       var i = Math.floor(p), f = p - i;
       if(i < 1 || i >= len - 2){
@@ -15480,12 +15501,28 @@
       this.sync = false; this.align = false; this.quant = false;
       this.slip = false; this.slipHold = false; this.slipping = false; this.spos = 0;
       this.ended = false; this.seq = 0; this.stopTo = -1;
+      this.qu = 1;                           // quantise: the part of a beat things snap to (1, 1/2, 1/4, 1/8)
+      this.rev = false; this.slipRev = false;
+      this.arm = new Float64Array(16); this.armN = 0;     // "active loops" (start, end, ...): each goes on by itself when the track reaches its start
+      // key lock (see "key lock" below)
+      this.kl = false; this.ksh = 0; this.kp = 1; this.kpl = 1; this.kOn = false; this.kWait = false; this.kx = 0; this.kq = 0;
+      this.kr = 0; this.kv = 1; this.kph = 0; this.kchk = 0; this.o0 = 0; this.o1 = 0;
+      this.xr = 0; this.xn = 0; this.xl = 1; this.fk = 0;
+      this.hl0 = 0; this.hl1 = 0; this.hl2 = 0; this.hl3 = 0; this.hr0 = 0; this.hr1 = 0; this.hr2 = 0; this.hr3 = 0;
+      this.kQ = new Float64Array(16); this.kQs = new Uint8Array(16); this.kQn = 0;      // hits ahead: where, and how clear
+      this.kSp = -1; this.kE = new Float64Array(K_M * 3); this.kEi = 0; this.kEn = 0; this.kF1 = 0; this.kF2 = 0; this.kF3 = 0;
+      this.kLo = -1e12; this.kTl = -1e12; this.kAl = -1; this.kns = 0;
     }
     Deck.prototype.jump = function(np){
       if(np < 0) np = 0;
       if(np > this.len) np = this.len;
-      if(this.gate > 0.001){ this.fpos = this.pos; this.fleft = FADE; }
+      if(this.gate > 0.001){
+        if(this.kOn){ this.fpos = this.xn * 2 > this.xl ? this.xr : this.kr; this.fk = this.kp; }
+        else { this.fpos = this.pos; this.fk = 0; }
+        this.fleft = FADE;
+      }
       this.pos = np; this.ended = false;
+      if(this.kOn) this.kReset(np);
     };
     Deck.prototype.nearBeat = function(p){
       if(!(this.beatLen > 0)) return p;
@@ -15494,6 +15531,178 @@
     Deck.prototype.phaseOff = function(p){     // distance from the nearest beat, signed
       if(!(this.beatLen > 0)) return 0;
       return p - this.nearBeat(p);
+    };
+    Deck.prototype.nearGrid = function(p){     // the nearest line of the quantise grid (a beat, or the chosen part of one)
+      if(!(this.beatLen > 0)) return p;
+      var u = this.beatLen * this.qu;
+      return this.first + Math.round((p - this.first) / u) * u;
+    };
+
+    // ---- key lock ("Master Tempo"): tempo changes, pitch stays ----
+    // Chosen: a time-domain stretcher (WSOLA: waveform-similarity overlap-add) that is anchored on
+    // transients, not a phase vocoder. Both were measured on a click track, a kick-hat-bass-pad-voice loop
+    // and a chord pad before choosing (numbers in the v33 report): the phase vocoder (4096-point, identity
+    // phase locking) was smoother on a sustained chord but smeared every kick over its window (pre-echo
+    // tens of ms before the hit, the click at a tenth of its height), collapsed the stereo image unless
+    // more work is done per channel pair, and delays the sound by a window. This one keeps a hit sample
+    // for sample and has no delay at all, because the whole track is in memory: it reads ahead instead of
+    // buffering, so there is nothing to compensate in the position, the waveform or sync.
+    // How it works: the deck's position (pos) moves at the tempo exactly as without key lock, so loops,
+    // cues, sync and the display are untouched. What is heard is read at normal speed from a second place
+    // (kr) that stays within a few ms of pos: it drifts because it reads at the wrong speed, and is put
+    // back by a short crossfaded splice. A free splice goes to the place nearby where the waveform matches
+    // best (found by cross-correlation on both channels summed, so left and right are always spliced
+    // alike). Just before a transient (found by looking ahead for a sudden rise in level or in
+    // brightness) a forced splice puts kr exactly on pos, so the hit itself is played once, untouched and
+    // on time; no splice is allowed across a hit or shortly after it. The end of a loop is treated like a
+    // hit, so a loop stays tight. Key shift is the same stream read faster or slower (pitch = kp) while
+    // the stretcher makes up the tempo. Scratching, reverse and the platter held bypass all of it.
+    Deck.prototype.kReset = function(np){
+      this.kr = Math.round(np); this.xn = 0; this.kQn = 0; this.kSp = -1;
+      this.kTl = -1e12; this.kAl = -1; this.kchk = 1; this.kph = 0;
+    };
+    // Look for hits up to this place. Both channels summed and split into three bands (bass, middle, top) by
+    // two simple filters; the level of each band is added up over blocks of 1.3 ms. A hit is a block several
+    // times above the LOUDEST block of the 32 ms before it, in any one band. Comparing with the loudest and
+    // not the average keeps the cycles of a bass note and steady noise from counting as hits; looking at the
+    // bands apart finds a kick drum under a loud voice or pad.
+    Deck.prototype.kScan = function(to){
+      var L = this.L, R = this.R, B = K_B, M3 = K_M * 3, sp = this.kSp, ring = this.kE, ri = this.kEi, f1 = this.kF1, f2 = this.kF2, f3 = this.kF3;
+      var aL = K_AL, aH = K_AH, i, x, y, e0, e1, e2, m0, m1, m2, st, n;
+      if(to > this.len - B) to = this.len - B;
+      if(sp < 0){
+        sp = this.kr - (K_M + 4) * B; if(sp < 0) sp = 0;
+        for(i = 0; i < M3; i++) ring[i] = 0;
+        ri = 0; f1 = 0; f2 = 0; f3 = 0; this.kEn = 0; this.kLo = -1e12;
+      }
+      while(sp < to){
+        e0 = 0; e1 = 0; e2 = 0;
+        for(i = sp; i < sp + B; i++){
+          x = L[i] + R[i];
+          f3 += (x - f3) * aH; y = x - f3; e2 += y < 0 ? -y : y;             // top
+          f1 += (f3 - f1) * aL; f2 += (f1 - f2) * aL; e0 += f2 < 0 ? -f2 : f2;    // bass
+          y = f3 - f2; e1 += y < 0 ? -y : y;                                 // middle
+        }
+        if(this.kEn >= K_M + 2){
+          m0 = 0; m1 = 0; m2 = 0;
+          for(i = 0; i < M3; i += 3){ if(ring[i] > m0) m0 = ring[i]; if(ring[i + 1] > m1) m1 = ring[i + 1]; if(ring[i + 2] > m2) m2 = ring[i + 2]; }
+          st = (e0 > K_S2 * m0 + K_FF || e1 > K_S2 * m1 + K_FF || e2 > K_S2 * m2 + K_FH) ? 2 :
+              ((e0 > K_S1 * m0 + K_FF || e1 > K_S1 * m1 + K_FF || e2 > K_S1 * m2 + K_FH) ? 1 : 0);
+          if(st){
+            n = this.kQn;
+            if(sp - this.kLo > K_REFR){
+              if(n < 16){ this.kQ[n] = sp; this.kQs[n] = st; this.kQn = n + 1; }
+              this.kLo = sp;
+            } else if(sp - this.kLo <= 2 * B && n > 0 && this.kQ[n - 1] === this.kLo && st > this.kQs[n - 1]) this.kQs[n - 1] = st;
+          }
+        }
+        ring[ri] = e0; ring[ri + 1] = e1; ring[ri + 2] = e2;
+        ri += 3; if(ri >= M3) ri = 0;
+        this.kEn++; sp += B;
+      }
+      this.kSp = sp; this.kEi = ri; this.kF1 = f1; this.kF2 = f2; this.kF3 = f3;
+    };
+    // The start, between lo and hi, of the stretch of audio most like the one at r (W frames of it).
+    // Both channels summed; D frames are averaged into one for the search, then the best is looked at closely.
+    // pref: a place that is taken unless another is clearly better.
+    Deck.prototype.kBest = function(r, lo, hi, W, D, pref){
+      var L = this.L, R = this.R, len = this.len, A = K_A, Bf = K_Bf, n = (W / D) | 0, m, i, j, k, s, c, en, sc, best = -2, bj = 0, p, jp = -1, sp = 0;
+      lo = Math.ceil(lo); hi = Math.floor(hi);
+      if(lo < 0) lo = 0;
+      if(hi + W + D * 2 >= len) hi = len - W - D * 2 - 1;
+      if(r < 0 || r + W + D >= len || hi <= lo) return -1;
+      m = ((hi - lo) / D) | 0;
+      if(n > A.length) n = A.length;
+      if(m + n > Bf.length) m = Bf.length - n;
+      for(i = 0, p = r; i < n; i++){ s = 0; for(k = 0; k < D; k++, p++) s += L[p] + R[p]; A[i] = s; }
+      for(i = 0, p = lo; i < m + n; i++){ s = 0; for(k = 0; k < D; k++, p++) s += L[p] + R[p]; Bf[i] = s; }
+      if(pref >= lo && pref <= hi) jp = Math.round((pref - lo) / D);
+      en = 1; for(i = 0; i < n; i++) en += Bf[i] * Bf[i];
+      for(j = 0; j <= m; j++){
+        c = 0; for(i = 0; i < n; i++) c += A[i] * Bf[j + i];
+        sc = c / Math.sqrt(en);
+        if(sc > best){ best = sc; bj = j; }
+        if(j === jp) sp = sc;
+        if(j < m) en += Bf[j + n] * Bf[j + n] - Bf[j] * Bf[j];
+        if(en < 1) en = 1;
+      }
+      if(jp >= 0 && jp <= m && sp >= best - Math.abs(best) * 0.03) bj = jp;      // nothing clearly better than the place asked for
+      p = lo + bj * D;
+      if(D > 1){
+        // close up: every frame, a few either side
+        var Wf = W > K_WF ? K_WF : W, b2 = -1e30, bp = p, q, a0;
+        for(q = p - D; q <= p + D; q++){
+          if(q < lo || q > hi) continue;
+          c = 0; en = 1;
+          for(i = 0; i < Wf; i += 2){ a0 = L[q + i] + R[q + i]; c += (L[r + i] + R[r + i]) * a0; en += a0 * a0; }
+          sc = c / Math.sqrt(en);
+          if(sc > b2){ b2 = sc; bp = q; }
+        }
+        p = bp;
+      }
+      return p;
+    };
+    Deck.prototype.kSplice = function(np, xl){
+      if(xl < 8) xl = 8;
+      this.xr = this.kr; this.kr = np; this.xl = xl; this.xn = xl; this.kns++;
+    };
+    Deck.prototype.kDecide = function(){
+      var r = this.kr, P = this.pos, sv = this.kv / this.kp, Q = this.kQ, Qs = this.kQs, n = this.kQn, i = 0, j, c, cs, np, need, lead, dl, lo, hi, xl, tw;
+      this.kchk = K_CHK;
+      if(this.xn > 0 || !(sv > 0.2)) return;
+      while(i < n && Q[i] < r){ this.kTl = Q[i]; i++; }
+      if(i){ for(j = i; j < n; j++){ Q[j - i] = Q[j]; Qs[j - i] = Qs[j]; } this.kQn = n - i; }
+      this.kScan(r + K_LOOK);
+      n = this.kQn;
+      c = n ? Q[0] : -1; cs = n ? Qs[0] : 0;
+      if(this.loopOn && this.loopOut - this.loopIn > K_LOOPMIN && this.loopOut >= r && (c < 0 || this.loopOut < c)){ c = this.loopOut; cs = 2; }
+      if(c >= 0){
+        need = (c - P) / sv;                   // frames of sound until the deck's position is on the hit
+        lead = c - r;                          // and until the audio now being read gets there
+        if(this.kAl !== c && (lead <= K_OVT + K_GUARD + K_CHK || need <= K_OVT + K_GUARD + K_CHK)){
+          this.kAl = c;
+          np = Math.round(c - need);
+          dl = np - r; if(dl < 0) dl = -dl;
+          // a hit close behind another one is left a little out of place rather than spliced inside the first
+          if(dl > (c - this.kTl < K_CLOSE ? K_TOLC : K_TOL)){
+            xl = K_OVT;
+            if(lead - K_GUARD < xl) xl = lead - K_GUARD;
+            if(c - np - K_GUARD < xl) xl = c - np - K_GUARD;
+            tw = cs >= 2 ? K_TW : K_TW1;       // a clear hit is put exactly in place; a doubtful one where the waveform joins best nearby
+            lo = this.kBest(r, np - tw, np + tw, xl < 32 ? 32 : xl, 1, np);
+            this.kSplice(lo < 0 ? np : lo, xl);
+          }
+          return;
+        }
+        if(lead < K_NEAR || need < K_NEAR) return;
+      }
+      if(r - this.kTl < K_HOLD) return;
+      dl = r - P;
+      if(sv > 1){
+        if(dl > -K_TRIG) return;
+        lo = P - K_BACK; hi = P + K_SPAN; np = P + (K_TRIG >> 1);
+        if(lo < r + K_MINJ) lo = r + K_MINJ;
+      } else {
+        if(dl < K_TRIG) return;
+        hi = P + K_BACK; lo = P - K_SPAN; np = P - (K_TRIG >> 1);
+        if(hi > r - K_MINJ) hi = r - K_MINJ;
+        if(lo < this.kTl + K_BODY) lo = this.kTl + K_BODY;
+      }
+      if(hi - lo < 8) return;
+      np = this.kBest(r, lo, hi, this.kq ? K_WIN >> 1 : K_WIN, this.kq ? K_DEC * 2 : K_DEC, np);      // the lighter setting looks at half as much
+      if(np >= 0) this.kSplice(np, K_OVF);
+    };
+    Deck.prototype.kNext = function(){           // one frame of the stretched sound, into o0 and o1
+      var L = this.L, R = this.R, len = this.len, r, a, b, w, x;
+      if(--this.kchk <= 0) this.kDecide();
+      r = this.kr;
+      if(r >= 0 && r < len){ a = L[r]; b = R[r]; } else { a = 0; b = 0; }
+      if(this.xn > 0){
+        x = this.xr; w = this.xn / this.xl;
+        if(x >= 0 && x < len){ a += (L[x] - a) * w; b += (R[x] - b) * w; } else { a -= a * w; b -= b * w; }
+        this.xr = x + 1; this.xn--;
+      }
+      this.kr = r + 1; this.o0 = a; this.o1 = b;
     };
     Deck.prototype.wrapLoop = function(){
       var ll = this.loopOut - this.loopIn;
@@ -15512,6 +15721,10 @@
         this.tick = 0;
         this.every = po.every || 6;
         this.prof = !!po.prof; this.pt = 0; this.pn = 0;      // testing only: time spent in process(), in ms, and how many times
+        // dropouts: the sound card asks for audio in bursts; when a burst comes later than the audio it carries, the
+        // output has run dry for that long. lag = wall clock minus audio clock; a jump of it is a dropout.
+        this.w0 = -1; this.f0 = 0; this.lw = 0; this.lref = 0; this.bg = 0; this.warm = 0; this.xn = 0; this.xms = 0;
+        this.ct = 0; this.cn = 0; this.cpu = 0; this.cmax = 0; this.burn = 0; this.kq = 0;
         this.q = [];                         // messages waiting for their frame
         var self = this;
         this.port.onmessage = function(e){ self.take(e.data); };
@@ -15526,6 +15739,9 @@
         if(m.t === "master"){ this.master = m.i; return; }
         if(m.t === "every"){ this.every = m.v; return; }
         if(m.t === "prof"){ this.prof = !!m.on; this.pt = 0; this.pn = 0; return; }
+        if(m.t === "burn"){ this.burn = +m.ms || 0; return; }          // testing only: hold the audio thread up for so long
+        if(m.t === "xreset"){ this.xn = 0; this.xms = 0; return; }
+        if(m.t === "kq"){ this.kq = m.v ? 1 : 0; for(var qi = 0; qi < this.n; qi++) this.d[qi].kq = this.kq; return; }
         var d = this.d[m.k];
         if(!d) return;
         var bl = d.beatLen, np;
@@ -15537,25 +15753,27 @@
           d.loopOn = false; d.loopIn = 0; d.loopOut = 0; d.fleft = 0;
           d.beatLen = m.beatLen || 0; d.first = m.first || 0;
           d.slipping = false; d.slipHold = false; d.ended = false; d.align = false; d.stopTo = -1;
+          d.kOn = false; d.kWait = false; d.kx = 0; d.rev = false; d.slipRev = false; d.kns = 0; d.armN = 0;
+          d.kl = !!m.kl; d.ksh = +m.ksh || 0; d.kp = Math.pow(2, d.ksh / 12);
           d.seq++;
           break;
         case "unload":
           d.L = null; d.R = null; d.len = 0; d.pos = 0; d.playing = false; d.gate = 0;
           d.loopOn = false; d.fleft = 0; d.beatLen = 0; d.pend = 0; d.npend = 0; d.held = false; d.scr = false;
-          d.slipping = false; d.seq++;
+          d.slipping = false; d.kOn = false; d.rev = false; d.slipRev = false; d.armN = 0; d.seq++;
           break;
         case "grid": d.beatLen = m.beatLen || 0; d.first = m.first || 0; break;
         case "play":
           if(!d.len) break;
-          if(d.stopTo >= 0){ d.pos = d.stopTo; d.stopTo = -1; d.gate = 0; d.fleft = 0; }
-          if(d.pos >= d.len - 1) d.pos = 0;
-          d.playing = true; d.ended = false; d.cur = d.rate * (1 + d.bend);
+          if(d.stopTo >= 0){ d.pos = d.stopTo; d.stopTo = -1; d.gate = 0; d.fleft = 0; d.kOn = false; }
+          if(d.pos >= d.len - 1 && !d.rev) d.pos = 0;
+          d.playing = true; d.ended = false; d.cur = d.rate * (1 + d.bend) * (d.rev ? -1 : 1);
           if(d.sync) d.align = true;
           break;
         case "pause": d.playing = false; break;
         case "seek":                         // absolute, in frames
           np = m.pos;
-          if(m.q && d.quant && d.playing) np = d.nearBeat(np) + d.phaseOff(d.pos);
+          if(m.q && d.quant && d.playing) np = d.nearBeat(np) + (d.pos - d.nearGrid(d.pos));
           if(m.stop && d.gate > 0.001){ d.playing = false; d.stopTo = np; }     // fade out first, then stand on the new place
           else { d.jump(np); if(m.stop) d.playing = false; d.stopTo = -1; }
           if(d.slipping && !m.slip) d.spos = d.pos;
@@ -15582,20 +15800,20 @@
           if(d.loopOn && m.jump) d.jump(d.loopIn);
           break;
         case "loopin":
-          d.loopIn = (d.quant && bl > 0) ? d.nearBeat(d.pos) : d.pos;
+          d.loopIn = (d.quant && bl > 0) ? d.nearGrid(d.pos) : d.pos;
           if(d.loopIn < 0) d.loopIn = 0;
           d.loopOn = false; d.loopOut = 0;
           break;
         case "loopout":
-          np = (d.quant && bl > 0) ? d.nearBeat(d.pos) : d.pos;
-          if(d.quant && bl > 0 && np <= d.loopIn) np = d.loopIn + bl;
+          np = (d.quant && bl > 0) ? d.nearGrid(d.pos) : d.pos;
+          if(d.quant && bl > 0 && np <= d.loopIn) np = d.loopIn + bl * d.qu;
           if(np > d.loopIn + 16){ d.loopOut = np; d.loopOn = true; d.wrapLoop(); }
           break;
         case "autoloop":
           if(bl > 0){
             np = d.pos;
             if(d.quant){
-              var un = m.beats < 1 ? bl * m.beats : bl;
+              var un = m.beats < d.qu ? bl * m.beats : bl * d.qu;
               np = d.first + Math.round((d.pos - d.first) / un) * un;
             }
             if(np < 0) np = 0;
@@ -15606,7 +15824,7 @@
         case "loopscale":
           if(d.loopOut > d.loopIn){
             np = (d.loopOut - d.loopIn) * m.f;
-            if(bl > 0){ if(np < bl / 32) np = bl / 32; if(np > bl * 64) np = bl * 64; }
+            if(bl > 0){ if(np < bl / 64) np = bl / 64; if(np > bl * 512) np = bl * 512; }
             if(np < 64) np = 64;
             d.loopOut = Math.min(d.len, d.loopIn + np);
             if(d.loopOn) d.wrapLoop();
@@ -15627,13 +15845,37 @@
         case "loopoff": d.loopOn = false; break;
         case "sync": d.sync = !!m.on; if(d.sync) d.align = true; break;
         case "align": d.align = true; break;
-        case "quant": d.quant = !!m.on; break;
+        case "quant": d.quant = !!m.on; if(m.u > 0) d.qu = m.u; break;
         case "slip": d.slip = !!m.on; break;
         case "sliphold": d.slipHold = !!m.on; break;
+        case "rev":                          // play backwards; with slip, the track carries on underneath until it is let go
+          d.rev = !!m.on; d.slipRev = d.rev && !!m.slip;
+          d.kWait = true;
+          break;
+        case "keylock": d.kl = !!m.on; break;
+        case "keyshift": d.ksh = +m.v || 0; d.kp = Math.pow(2, d.ksh / 12); break;
+        case "arm":
+          d.armN = 0;
+          if(m.l) for(np = 0; np + 1 < m.l.length && np < 16; np += 2) if(m.l[np + 1] > m.l[np] + 64){ d.arm[d.armN++] = Math.max(0, m.l[np]); d.arm[d.armN++] = Math.min(d.len, m.l[np + 1]); }
+          break;
         }
       }
       process(inputs, outputs){
         var q = this.q, i, k, d, pt0 = this.prof ? Date.now() : 0;
+        var now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now(), lag, thr;
+        if(this.burn > 0){ lag = now + this.burn; this.burn = 0; while((typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) < lag){} }
+        if(this.w0 < 0 || now - this.lw > 3000 || now < this.lw){ this.w0 = now; this.f0 = currentFrame; this.lref = 0; this.warm = 0; }      // the start, or back from a pause of the whole context
+        else {
+          lag = (now - this.w0) - (currentFrame - this.f0) * 1000 / sampleRate;
+          thr = now - this.lw;
+          if(thr > 1.5 && thr < 200) this.bg += (thr - this.bg) * 0.05;          // the usual time between two bursts
+          thr = this.bg * 0.75; if(thr < 5) thr = 5;
+          if(this.warm < 400){ this.warm++; if(lag > this.lref || this.warm === 1) this.lref = lag; }
+          else if(lag > this.lref + thr){ this.xn++; this.xms += lag - this.lref; this.lref = lag; }
+          else if(lag > this.lref) this.lref = lag;
+          else this.lref -= 0.0005;                                               // the two clocks may drift apart slowly
+        }
+        this.lw = now;
         if(q.length){
           var end = currentFrame + 128, rest = [];
           for(i = 0; i < q.length; i++){ if(q[i].at < end) this.run(q[i]); else rest.push(q[i]); }
@@ -15676,7 +15918,7 @@
           var oL = out[0], oR = out[1] || out[0];
           // slip: the track carries on underneath a loop, a scratch or a held cue
           var scrOn = d.held || d.scr;
-          var wantSlip = d.slip && (scrOn || d.loopOn || d.slipHold);
+          var wantSlip = (d.slip && (scrOn || d.loopOn || d.slipHold || d.rev)) || d.slipRev;
           if(wantSlip && !d.slipping){ d.slipping = true; d.spos = d.pos; }
           else if(!wantSlip && d.slipping){ d.slipping = false; d.loopOn = false; d.jump(d.spos); }
           if(d.slipping && d.playing){ d.spos += d.rate * (1 + d.bend) * 128; if(d.spos > d.len) d.spos = d.len; }
@@ -15684,6 +15926,29 @@
           var L = d.L, R = d.R, len = d.len, pos = d.pos, gate = d.gate, cur = d.cur;
           var tgt = d.rate * (1 + d.bend), kk = d.slowK > 0 ? slowK : fastK, v = 0, s0, s1, w, gt;
           if(d.slowK > 0) d.slowK--;
+          if(d.rev) tgt = -tgt;
+          var p0 = pos;
+          // key lock: does the stretcher make this block? Not while the platter is held, in reverse, or while
+          // the speed is still coming back after either; not within 0.05% of the track's own tempo with no key
+          // shift (then the plain player is exact); not beyond about half or double speed.
+          var kp = d.kl ? d.kp : d.kp * (tgt > 0 ? tgt : 1), kOn = false, kp1 = kp > 0.999999999 && kp < 1.000000001, kph = d.kph, ca, cb, cc;
+          if(scrOn || d.rev) d.kWait = true;
+          else if(d.kWait && Math.abs(cur - tgt) <= 0.004 * Math.abs(tgt)) d.kWait = false;
+          d.kx = 0;
+          if((d.kl || d.ksh !== 0) && !scrOn && !d.kWait && tgt > 0 && (d.playing || gate > 0)){
+            w = tgt / kp;
+            if(kp1 && w >= 0.9995 && w <= 1.0005) kOn = false;
+            else if(w < 0.45 || w > 2.2) d.kx = 1;
+            else kOn = true;
+          }
+          if(kOn && !d.kOn){
+            if(gate > 0.001){ d.fpos = pos; d.fk = 0; d.fleft = FADE; }
+            d.kReset(pos); d.kOn = true; kph = 0;
+          } else if(!kOn && d.kOn){
+            if(gate > 0.001){ d.fpos = d.xn * 2 > d.xl ? d.xr : d.kr; d.fk = d.kpl || 1; d.fleft = FADE; }
+            d.kOn = false;
+          } else if(kOn && Math.abs(d.kr - pos) > K_HARD && d.xn <= 0){ d.kSplice(Math.round(pos), K_OVF); d.kAl = -1; }
+          d.kpl = kp;
           for(i = 0; i < 128; i++){
             if(scrOn){
               v = d.pend * sA; d.pend -= v;
@@ -15698,23 +15963,50 @@
             if(gt === 1 && gate > 0.9995) gate = 1;
             else if(gt === 0 && gate < 0.0005) gate = 0;
             if(gate > 0){
-              s0 = rd(L, len, pos); s1 = R === L ? s0 : rd(R, len, pos);
+              if(kOn){
+                d.pos = pos; d.kv = v;
+                if(kp1){ d.kNext(); s0 = d.o0; s1 = d.o1; }
+                else {
+                  // key shift: the stretched stream read at another speed (four-point interpolation, as rd does)
+                  kph += kp;
+                  while(kph >= 1){
+                    kph -= 1; d.kNext();
+                    d.hl0 = d.hl1; d.hl1 = d.hl2; d.hl2 = d.hl3; d.hl3 = d.o0;
+                    d.hr0 = d.hr1; d.hr1 = d.hr2; d.hr2 = d.hr3; d.hr3 = d.o1;
+                  }
+                  cc = (d.hl2 - d.hl0) * 0.5; w = d.hl1 - d.hl2; ca = cc + w; cb = ca + w + (d.hl3 - d.hl1) * 0.5;
+                  s0 = ((cb * kph - (ca + cb)) * kph + cc) * kph + d.hl1;
+                  cc = (d.hr2 - d.hr0) * 0.5; w = d.hr1 - d.hr2; ca = cc + w; cb = ca + w + (d.hr3 - d.hr1) * 0.5;
+                  s1 = ((cb * kph - (ca + cb)) * kph + cc) * kph + d.hr1;
+                }
+              } else { s0 = rd(L, len, pos); s1 = R === L ? s0 : rd(R, len, pos); }
               if(d.fleft > 0){
                 w = d.fleft / FADE;
                 s0 = s0 * (1 - w) + rd(L, len, d.fpos) * w;
                 s1 = s1 * (1 - w) + (R === L ? rd(L, len, d.fpos) : rd(R, len, d.fpos)) * w;
-                d.fpos += v; d.fleft--;
+                d.fpos += d.fk > 0 ? d.fk : v; d.fleft--;
               }
               oL[i] = s0 * SC * gate; oR[i] = s1 * SC * gate;
             } else if(d.fleft > 0) d.fleft = 0;
             pos += v;
             if(d.loopOn && v > 0 && pos >= d.loopOut){
               d.pos = pos; d.gate = gate; d.wrapLoop(); pos = d.pos;
+            } else if(d.rev && d.loopOn && v < 0 && !scrOn && pos <= d.loopIn && d.loopOut > d.loopIn){
+              d.pos = pos; d.gate = gate; d.jump(d.loopOut - ((d.loopIn - pos) % (d.loopOut - d.loopIn))); pos = d.pos;
             }
             if(pos >= len){
               pos = len;
-              if(d.playing && !scrOn){ d.playing = false; d.ended = true; gate = 0; }
-            } else if(pos < 0){ pos = 0; if(scrOn) d.pend = 0; }
+              if(d.playing && !scrOn && !d.rev){ d.playing = false; d.ended = true; gate = 0; }
+            } else if(pos < 0){
+              pos = 0;
+              if(scrOn) d.pend = 0;
+              else if(d.rev && d.playing){ d.playing = false; d.ended = true; gate = 0; }     // backwards, and at the start
+            }
+          }
+          d.kph = kph;
+          // an active loop: the playing position has just passed its start, so the loop goes on
+          if(d.armN && d.playing && !d.loopOn && !scrOn && !d.rev && pos > p0 && pos - p0 < 2048){
+            for(i = 0; i < d.armN; i += 2) if(p0 < d.arm[i] && pos >= d.arm[i] && pos < d.arm[i + 1] - 256){ d.loopIn = d.arm[i]; d.loopOut = d.arm[i + 1]; d.loopOn = true; break; }
           }
           if(d.scr && !d.held && Math.abs(d.pend) < 0.5){ d.scr = false; d.pend = 0; d.slowK = 50; }
           if(d.stopTo >= 0 && gate === 0){ pos = d.stopTo; d.stopTo = -1; }
@@ -15727,44 +16019,57 @@
             d = this.d[k];
             st.push(d.len ? { pos:d.stopTo >= 0 ? d.stopTo : d.pos, v:(d.playing || d.held || d.scr) ? d.vel : 0, playing:d.playing, rate:d.rate,
               loopOn:d.loopOn, loopIn:d.loopIn, loopOut:d.loopOut, slipping:d.slipping, spos:d.spos,
-              ended:d.ended, seq:d.seq, len:d.len } : { len:0, seq:d.seq });
+              ended:d.ended, seq:d.seq, len:d.len, kon:d.kOn, kx:d.kx, rev:d.rev, ko:d.kOn ? d.kr - d.pos : 0 } : { len:0, seq:d.seq });
           }
-          this.port.postMessage(this.prof ? { t:"s", f:currentFrame + 128, ct:currentTime + 128 / sampleRate, d:st, pt:this.pt, pn:this.pn }
-                                          : { t:"s", f:currentFrame + 128, ct:currentTime + 128 / sampleRate, d:st });
+          this.port.postMessage(this.prof ? { t:"s", f:currentFrame + 128, ct:currentTime + 128 / sampleRate, d:st, xn:this.xn, xms:this.xms, cpu:this.cpu, cmax:this.cmax, pt:this.pt, pn:this.pn }
+                                          : { t:"s", f:currentFrame + 128, ct:currentTime + 128 / sampleRate, d:st, xn:this.xn, xms:this.xms, cpu:this.cpu, cmax:this.cmax });
         }
         if(this.prof){ this.pt += Date.now() - pt0; this.pn++; }
+        // how much of a quantum the player takes: ms per call, averaged over about a second (the clock may only count whole ms)
+        lag = (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) - now;
+        this.ct += lag; if(lag > this.cmax) this.cmax = lag;
+        if(++this.cn >= 375){ this.cpu = this.ct / this.cn; this.ct = 0; this.cn = 0; this.cmax = 0; }
         return true;
       }
     }
     registerProcessor("fl-decks", FLDecks);
 
-    // Records what it is given, in Int16 blocks, until told to stop.
+    // Records what it is given until told to stop: blocks of 8192 frames (left, right, left, ...) as they are,
+    // so the page can write 16 or 24 bits. Every frame between start and stop is sent, in order, counted on the
+    // audio clock itself, so a recording cannot drift. 2 ms of fade at each end keeps the file free of clicks.
+    // Blocks come back from the page to be used again, so nothing is allocated while recording.
     class FLRec extends AudioWorkletProcessor {
       constructor(){
         super();
-        this.on = false; this.buf = new Int16Array(16384); this.n = 0;
+        this.on = false; this.buf = new Float32Array(16384); this.n = 0; this.pool = []; this.fin = 0; this.ending = false; this.frames = 0;
         var self = this;
         this.port.onmessage = function(e){
-          if(e.data === "start"){ self.on = true; self.n = 0; }
-          else if(e.data === "stop"){ self.flush(); self.on = false; self.port.postMessage({ t:"done" }); }
+          var m = e.data;
+          if(m === "start"){ self.on = true; self.n = 0; self.frames = 0; self.fin = 96; self.ending = false; }
+          else if(m === "stop"){ if(self.on) self.ending = true; else self.port.postMessage({ t:"done", frames:self.frames }); }
+          else if(m && m.t === "back" && m.b && self.pool.length < 8) self.pool.push(m.b);
         };
       }
       flush(){
         if(!this.n) return;
-        var out = this.buf.slice(0, this.n);
-        this.port.postMessage({ t:"pcm", b:out }, [out.buffer]);
+        var out = this.buf, n = this.n;
+        this.buf = this.pool.length ? this.pool.pop() : new Float32Array(16384);
         this.n = 0;
+        this.port.postMessage({ t:"pcm", b:out, n:n }, [out.buffer]);
       }
       process(inputs){
         if(!this.on) return true;
         var inp = inputs[0], L = inp && inp[0], R = inp && (inp[1] || inp[0]);
-        var b = this.buf, n = this.n, i, x;
+        var b = this.buf, n = this.n, i, g = 1, end = this.ending;
         for(i = 0; i < 128; i++){
-          x = L ? L[i] : 0; x = x > 1 ? 1 : (x < -1 ? -1 : x); b[n++] = x < 0 ? x * 32768 : x * 32767;
-          x = R ? R[i] : 0; x = x > 1 ? 1 : (x < -1 ? -1 : x); b[n++] = x < 0 ? x * 32768 : x * 32767;
+          if(this.fin > 0){ g = 1 - this.fin / 96; this.fin--; } else g = 1;
+          if(end) g *= (127 - i) / 127;
+          b[n++] = L ? L[i] * g : 0;
+          b[n++] = R ? R[i] * g : 0;
         }
-        this.n = n;
-        if(n >= b.length) this.flush();
+        this.n = n; this.frames += 128;
+        if(n >= b.length || end) this.flush();
+        if(end){ this.on = false; this.ending = false; this.port.postMessage({ t:"done", frames:this.frames }); }
         return true;
       }
     }
@@ -16117,7 +16422,13 @@
     // ---------- settings (small, per browser) ----------
     var SET = { routing:"speakers", sinkId:"", xfCurve:"smooth", zoom:6, autoAnalyse:true, info:false,
                 range:[0.1, 0.1, 0.1, 0.1], quant:[true, true, true, true], vinyl:[true, true, true, true],
-                sort:"added", sortDir:-1, treeW:168, hideEmpty:false, deckN:0 };      // deckN: 0 = not chosen (two, or four with a four-channel controller), 2, 4
+                sort:"added", sortDir:-1, treeW:168, hideEmpty:false, deckN:0,       // deckN: 0 = not chosen (two, or four with a four-channel controller), 2, 4
+                // v33, the deck engine: key lock per deck and for newly loaded tracks; the part of a beat Quantize snaps to;
+                // a hot cue pressed on a paused deck plays only while held (rekordbox: "During Pause, GATE playback is applied");
+                // the whole-track strip moves the position only while paused (CDJ rule); seconds of warning before the end (0 = none);
+                // level matching on load; audio latency ("interactive", "balanced", "safe"); recording word length (16 or 24)
+                keylock:[false, false, false, false], keylockNew:false, qunit:1, hotGate:true, needleLock:false, endWarn:30,
+                autoGain:true, latency:"interactive", recBits:16 };
     (function(){
       try {
         var raw = JSON.parse(window.localStorage.getItem("firstloop.dj") || "null");
@@ -16154,6 +16465,26 @@
       return k ? (k.minor ? CAM_MIN[k.pc] + "A" : CAM_MAJ[k.pc] + "B") : "";
     }
     function camNum(str){ var c = camelot(str); return c ? parseInt(c, 10) * 2 + (/B$/.test(c) ? 1 : 0) : 99; }
+    // a key moved by so many semitones ("Am" + 2 -> "Bm"); "" if the key is not known
+    function shiftKey(str, semis){
+      var k = parseKey(str);
+      if(!k) return "";
+      return keyName({ pc:(((k.pc + Math.round(semis || 0)) % 12) + 12) % 12, minor:k.minor });
+    }
+    // The smallest key shift (within lim semitones either way) that makes key a go with key b: the same key,
+    // one step either way on the Camelot wheel, or the relative major or minor. null if there is none.
+    function keySyncShift(a, b, lim){
+      if(!parseKey(a) || !parseKey(b)) return null;
+      var n, s, best = null;
+      for(n = 0; n <= lim && best === null; n++){
+        for(s = 1; s >= -1; s -= 2){
+          if(n === 0 && s < 0) continue;
+          if(camelot(shiftKey(a, n * s)) === camelot(b)) return n * s;                      // the very same key
+          if(best === null && keysCompatible(shiftKey(a, n * s), b)) best = n * s;
+        }
+      }
+      return best;
+    }
     function keysCompatible(a, b){
       var ka = camelot(a), kb = camelot(b);
       if(!ka || !kb) return null;
@@ -17674,10 +18005,11 @@
         engineP = Promise.resolve(ENG);
         return engineP;
       }
-      var ctx, opts = { latencyHint:"interactive" };
+      var ctx, opts = { latencyHint:latencyHint() };
       if(SET.sinkId) opts.sinkId = SET.sinkId;
       try { ctx = new Ctx(opts); } catch(e){ ctx = new Ctx({ latencyHint:"interactive" }); SET.sinkId = ""; saveSet(); }
-      ENG = { ctx:ctx, mode:null, M:null, node:null, fb:null, rec:null, failed:null, sinkId:SET.sinkId || "" };
+      ENG = { ctx:ctx, mode:null, M:null, node:null, fb:null, rec:null, failed:null, sinkId:SET.sinkId || "", latency:SET.latency, cpu:0, cpuMax:0, quality:"full", hot:0 };
+      DROPS.n = 0; DROPS.ms = 0; DROPS.seen = 0; DROPS.times = []; DROPS.since = Date.now();
       engineP = measureMakeup().then(function(mk){
         ENG.M = buildMixer(ctx, MAXDECKS, mk, false);        // four channels always; with two decks the other two stay silent
         ENG.M.route(SET.routing);
@@ -17689,7 +18021,7 @@
           var node = new AudioWorkletNode(ctx, "fl-decks", { numberOfInputs:0, numberOfOutputs:MAXDECKS, outputChannelCount:outs,
             processorOptions:{ decks:MAXDECKS } });
           for(i = 0; i < MAXDECKS; i++) node.connect(ENG.M.ch[i].input, i, 0);
-          node.port.onmessage = function(e){ if(e.data && e.data.t === "s"){ if(e.data.pn !== undefined) ENG.prof = { ms:e.data.pt, n:e.data.pn }; onEngineState(e.data); } };
+          node.port.onmessage = function(e){ if(e.data && e.data.t === "s"){ if(e.data.pn !== undefined) ENG.prof = { ms:e.data.pt, n:e.data.pn }; if(e.data.xn !== undefined) onEngineHealth(e.data); onEngineState(e.data); } };
           node.onprocessorerror = function(){ note("The audio player stopped unexpectedly. Reload the page to start it again."); };
           ENG.node = node;
           return true;
@@ -17701,12 +18033,92 @@
           ENG.fb = makeFallback(ctx, ENG.M.ch.map(function(c){ return c.input; }));
         }
         decks.forEach(function(D){ D.pushSettings(); });
+        anStart();
         emit("engine", { mode:ENG.mode });
         return ENG;
       });
       return engineP;
     }
     function resumeCtx(){ try { if(ENG && ENG.ctx && ENG.ctx.state === "suspended") ENG.ctx.resume(); } catch(e){} }
+    // ---- latency, dropouts, load on the audio thread ----
+    // The Latency setting is the hint the browser is given for the size of its audio buffer: "interactive" is the
+    // smallest it offers (the tightest feel, the first to crackle on a slow machine), "safe" the largest.
+    function latencyHint(){ return SET.latency === "safe" ? "playback" : (SET.latency === "balanced" ? "balanced" : "interactive"); }
+    var DROPS = { n:0, ms:0, seen:0, times:[], since:Date.now() };
+    function onEngineHealth(m){
+      if(!ENG) return;
+      if(m.xn > DROPS.seen){
+        var k = m.xn - DROPS.seen, at = Date.now();
+        DROPS.n += k; DROPS.ms = m.xms;
+        while(k-- > 0 && DROPS.times.length < 2000) DROPS.times.push(at);
+        emit("dropout", { count:DROPS.n, ms:Math.round(DROPS.ms) });
+        if(typeof anNote === "function") anNote("dropout", { count:DROPS.n });
+      }
+      DROPS.seen = m.xn;
+      if(m.cpu !== ENG.cpu){
+        // a new one-second average of the time the player takes per block of 128 frames
+        ENG.cpu = m.cpu; ENG.cpuMax = m.cmax;
+        var part = m.cpu / (128000 / ENG.ctx.sampleRate);
+        ENG.hot = part > 0.35 ? ENG.hot + 1 : 0;
+        if(ENG.hot >= 3 && ENG.quality === "full"){
+          // key lock is taking more than about a third of the audio thread's time: use its lighter setting from here on
+          ENG.quality = "light"; send({ t:"kq", v:1 });
+          emit("engine", { mode:ENG.mode, quality:"light" });
+        }
+      }
+    }
+    function dropouts(minutes){
+      var from = Date.now() - (minutes > 0 ? minutes : 30) * 60000, n = 0, i;
+      for(i = DROPS.times.length - 1; i >= 0 && DROPS.times[i] >= from; i--) n++;
+      return { total:DROPS.n, inWindow:n, windowMinutes:minutes > 0 ? minutes : 30, lostMs:Math.round(DROPS.ms),
+               minutesWatched:Math.round((Date.now() - DROPS.since) / 6000) / 10 };
+    }
+    function dropoutsReset(){ DROPS.n = 0; DROPS.ms = 0; DROPS.times = []; DROPS.since = Date.now(); send({ t:"xreset" }); DROPS.seen = 0; }
+    function latencyMs(){
+      var c = ENG && ENG.ctx;
+      return c ? Math.round(((c.baseLatency || 0) + (c.outputLatency || 0)) * 10000) / 10 : null;
+    }
+    // A different latency needs a new audio context, and a context cannot be swapped under a playing deck:
+    // refused while anything plays or a recording runs. The tracks on the decks are loaded again at their places.
+    function setLatency(mode){
+      if(["interactive", "balanced", "safe"].indexOf(mode) < 0) return Promise.resolve(SET.latency);
+      if(mode === SET.latency && (!ENG || ENG.latency === mode)) return Promise.resolve(mode);
+      if(ENG && ENG.ctx){
+        if(allDecks.some(function(D){ return D.playing; })){ note("The latency setting can change only while no deck is playing. Pause the decks and choose again."); return Promise.resolve(ENG.latency || SET.latency); }
+        if(REC.on){ note("The latency setting cannot change during a recording."); return Promise.resolve(ENG.latency || SET.latency); }
+      }
+      SET.latency = mode; saveSet();
+      if(!ENG || !ENG.ctx){ emit("engine", { mode:ENG ? ENG.mode : null, latency:mode }); return Promise.resolve(mode); }
+      var keep = allDecks.map(function(D){ return D.track ? { id:D.track.id, pos:D.pos(), cue:D.cue / D.sr, kl:D.keylock } : null; });
+      var old = ENG, v = old.M ? JSON.parse(JSON.stringify(old.M.v)) : null, fx = old.M ? { type:old.M.fx.type, on:old.M.fx.on, depth:old.M.fx.depth, beats:old.M.fx.beats, target:old.M.fx.target } : null;
+      allDecks.forEach(function(D){ if(D.track) D.unload(); });
+      try { if(old.fb) old.fb.stop(); if(old.node) old.node.disconnect(); } catch(e){}
+      try { old.ctx.close(); } catch(e2){}
+      ENG = null; engineP = null; REC.node = null;
+      return ensureEngine().then(function(){
+        var M = ENG.M, k;
+        if(M && v){
+          for(k = 0; k < M.n; k++){
+            M.setTrim(k, v.trim[k]); M.setEq(k, 0, v.eq[k][0]); M.setEq(k, 1, v.eq[k][1]); M.setEq(k, 2, v.eq[k][2]);
+            M.setFilter(k, v.filter[k]); M.setFader(k, v.fader[k]); M.setCue(k, v.cue[k]); M.setAssign(k, v.assign[k]);
+          }
+          M.setXf(v.xf); M.setCurve(v.curve); M.setMaster(v.master); M.setHpMix(v.hpMix); M.setHpLevel(v.hpLevel);
+          if(fx){ M.fx.type = fx.type; M.fx.on = fx.on; M.fx.depth = fx.depth; M.fx.beats = fx.beats; M.fx.place(fx.target); M.fx.apply(); }
+        }
+        resumeCtx();
+        var p = Promise.resolve();
+        keep.forEach(function(kp, i){
+          if(!kp || !T.by[kp.id]) return;
+          p = p.then(function(){ return allDecks[i].load(kp.id, { force:true, big:true }); }).then(function(ok){
+            if(ok === false) return;
+            var D = allDecks[i];
+            if(kp.kl !== D.keylock) D.setKeylock(kp.kl);
+            D.cue = kp.cue * D.sr; D.seek(kp.pos);
+          });
+        });
+        return p;
+      }).then(function(){ emit("engine", { mode:ENG.mode, latency:mode }); return mode; });
+    }
     function send(msg, transfer){
       if(!ENG) return;
       if(ENG.node) ENG.node.port.postMessage(msg, transfer || []);
@@ -17799,7 +18211,7 @@
         case "loopscale":
           if(d.loopOut > d.loopIn){
             np = posOf(d); var ll = (d.loopOut - d.loopIn) * m.f;
-            if(bl > 0) ll = clamp(ll, bl / 32, bl * 64);
+            if(bl > 0) ll = clamp(ll, bl / 64, bl * 512);
             d.p0 = np; d.t0 = ctx.currentTime; d.loopOut = d.loopIn + ll; jump(d, k, posOf(d));
           }
           break;
@@ -17999,7 +18411,8 @@
         sync:false, quant:SET.quant[i] !== false, slip:false, vinyl:SET.vinyl[i] !== false,
         cue:0, loopOn:false, loopIn:0, loopOut:0, autoBeats:4, jumpBeats:4,
         beatLen:0, first:0, wave:null, cueHeld:false, hotHeld:-1, touched:false, bendDir:0,
-        played:0, counted:false, warn:false, lastBeat:-1, mem:0, bufs:null, dirty:true };
+        played:0, counted:false, warn:false, lastBeat:-1, mem:0, bufs:null, dirty:true,
+        keylock:SET.keylock[i] === true, keyShift:0, rev:false, slipRev:false, kon:false, kx:false };
       function fr(sec){ return sec * D.sr; }
       function sec(frames){ return frames / D.sr; }
       D.posFrames = function(comp){
@@ -18021,12 +18434,70 @@
         D.dirty = true;
       };
       D.pushSettings = function(){
-        send({ t:"quant", k:i, on:D.quant }); send({ t:"slip", k:i, on:D.slip }); send({ t:"sync", k:i, on:D.sync });
+        send({ t:"quant", k:i, on:D.quant, u:SET.qunit }); send({ t:"slip", k:i, on:D.slip }); send({ t:"sync", k:i, on:D.sync });
+        send({ t:"keylock", k:i, on:D.keylock }); send({ t:"keyshift", k:i, v:D.keyShift });
         if(!D.sync || masterIdx === i) send({ t:"rate", k:i, v:1 + D.tempoN * D.range });
       };
       D.snap = function(frames){
         if(!D.quant || !(D.beatLen > 0)) return frames;
-        return Math.max(0, D.first + Math.round((frames - D.first) / D.beatLen) * D.beatLen);
+        var un = D.beatLen * (SET.qunit > 0 ? SET.qunit : 1);
+        return Math.max(0, D.first + Math.round((frames - D.first) / un) * un);
+      };
+      // ---- key: key lock, key shift, key sync ----
+      // What the deck sounds in now: the track's key, moved by the key shift and, without key lock, by the tempo
+      // (6% faster is one semitone up). cents: how far off that key the pitch is (0 with key lock on).
+      D.pitchSemis = function(){ return D.keyShift + (D.keylock || !(D.rate > 0) ? 0 : 12 * Math.log(D.rate) / Math.LN2); };
+      D.keyNow = function(){ return D.track && D.track.key ? shiftKey(D.track.key, Math.round(D.pitchSemis())) : ""; };
+      D.setKeylock = function(on){
+        on = on === undefined ? !D.keylock : !!on;
+        if(on && ENG && ENG.mode === "fallback"){ note("Key lock needs the full audio engine, which this browser did not load."); return false; }
+        D.keylock = on; SET.keylock[i] = on; saveSet();
+        send({ t:"keylock", k:i, on:on });
+        D.dirty = true;
+        emit("mode", { deck:D.n, keylock:on });
+        return on;
+      };
+      D.setKeyShift = function(n, why){
+        n = clamp(Math.round(+n || 0), -12, 12);
+        if(n !== 0 && ENG && ENG.mode === "fallback"){ note("Key shift needs the full audio engine, which this browser did not load."); return D.keyShift; }
+        if(n === D.keyShift) return n;
+        D.keyShift = n;
+        send({ t:"keyshift", k:i, v:n });
+        D.dirty = true;
+        emit("key", { deck:D.n, shift:n, key:D.keyNow(), camelot:camelot(D.keyNow()), why:why || "shift" });
+        return n;
+      };
+      // Key sync: move this deck's key to the nearest one that goes with the master deck's, by at most two semitones.
+      // Returns {ok, shift, key, with} or {ok:false, why}.
+      D.keySync = function(){
+        var M2 = decks[masterIdx], why = "";
+        if(!D.track) return { ok:false, why:"no track" };
+        if(ENG && ENG.mode === "fallback") why = "Key sync needs the full audio engine, which this browser did not load.";
+        else if(!M2 || M2 === D || !M2.track) why = "Key sync follows the master deck, and deck " + D.n + " is the master (or no other deck is loaded).";
+        else if(!parseKey(D.track.key)) why = "The key of “" + D.track.title + "” is not known, so it cannot be matched. Set it under Info.";
+        else if(!parseKey(M2.track.key)) why = "The key of the master deck's track is not known, so there is nothing to match.";
+        if(why){ note(why); return { ok:false, why:why }; }
+        var target = M2.keyNow(), n = keySyncShift(D.track.key, target, 2);
+        if(n === null){
+          why = "Key sync moves a track by two semitones at most, and no key that goes with " + target + " (" + camelot(target) + ") is that close to " + D.track.key + " (" + camelot(D.track.key) + ").";
+          note(why);
+          return { ok:false, why:why };
+        }
+        // the key on the label only holds with key lock on: without it the tempo fader would move the pitch again
+        if(!D.keylock) D.setKeylock(true);
+        D.setKeyShift(n, "sync");
+        return { ok:true, shift:n, key:D.keyNow(), "with":target };
+      };
+      // ---- reverse ----
+      D.setReverse = function(on, slip){
+        if(!D.track) return false;
+        on = on === undefined ? !D.rev : !!on;
+        if(on && ENG && ENG.mode === "fallback"){ note("Reverse needs the full audio engine, which this browser did not load."); return false; }
+        D.rev = on; D.slipRev = on && !!slip;
+        send({ t:"rev", k:i, on:on, slip:!!slip });
+        D.dirty = true;
+        emit("mode", { deck:D.n, reverse:on, slipReverse:D.slipRev });
+        return on;
       };
 
       // ---- loading ----
@@ -18071,17 +18542,22 @@
             D.cue = D.first > 0 && D.first < fr(30) ? D.first : 0;
             D.playing = false; D.loopOn = false; D.loopIn = 0; D.loopOut = 0; D.played = 0; D.counted = false; D.warn = false; D.lastBeat = -1;
             D.st = { pos:D.cue, v:0, playing:false, rate:D.rate, loopOn:false, loopIn:0, loopOut:0, len:D.len }; D.stAt = nowMs();
+            // a new track starts in its own key, forwards; key lock stays as the deck had it, or goes on if that is the preference
+            D.keyShift = 0; D.rev = false; D.slipRev = false; D.kon = false; D.kx = false;
+            if(SET.keylockNew && worklet) D.keylock = true;
+            if(!worklet) D.keylock = false;
             if(worklet){
               var tr = [pr.L.buffer]; if(pr.R) tr.push(pr.R.buffer);
               D.mem = pr.L.byteLength + (pr.R ? pr.R.byteLength : 0);
               D.bufs = tr.slice();
-              send({ t:"load", k:i, L:pr.L, R:pr.R, beatLen:D.beatLen, first:D.first, pos:D.cue }, tr);
+              send({ t:"load", k:i, L:pr.L, R:pr.R, beatLen:D.beatLen, first:D.first, pos:D.cue, kl:D.keylock, ksh:0 }, tr);
             } else {
               D.mem = buf.length * buf.numberOfChannels * 4; D.bufs = null;
               send({ t:"load", k:i, buf:buf, beatLen:D.beatLen, first:D.first, pos:D.cue });
             }
             D.pushSettings();
-            ENG.M.setAuto(i, t.gain || 0);
+            ENG.M.setAuto(i, SET.autoGain ? t.gain || 0 : 0);
+            D.armLoops();
             lastLoaded = i; D.loading = ""; D.wave = null; D.dirty = true;
             pickMaster();
             emit("load", { deck:D.n, id:t.id, title:t.title, artist:t.artist, bpm:t.bpm, key:t.key });
@@ -18102,7 +18578,7 @@
                 D.wave = { id:t.id, det:wave.det, detRate:wave.detRate, ov:wave.ov, ovCols:wave.ovCols };
                 var atStart = !D.playing && Math.abs(D.posFrames() - D.cue) < 2;
                 D.setGrid();
-                ENG.M.setAuto(i, t.gain || 0);
+                ENG.M.setAuto(i, SET.autoGain ? t.gain || 0 : 0);
                 if(atStart){
                   D.cue = D.first > 0 && D.first < fr(30) ? D.first : 0;
                   send({ t:"seek", k:i, pos:D.cue });
@@ -18128,6 +18604,7 @@
         send({ t:"unload", k:i });
         D.track = null; D.len = 0; D.playing = false; D.st = null; D.wave = null; D.loopOn = false; D.mem = 0; D.cue = 0;
         D.cueHeld = false; D.hotHeld = -1; D.warn = false; D.pending = null; D.err = ""; D.dirty = true; D.beatLen = 0;
+        D.keyShift = 0; D.rev = false; D.slipRev = false; D.kon = false; D.kx = false;
         if(ENG && ENG.M) ENG.M.setAuto(i, 0);
         pickMaster();
       };
@@ -18220,13 +18697,15 @@
           if(D.slip) send({ t:"sliphold", k:i, on:true });
           send({ t:"seek", k:i, pos:fr(c.pos), q:true, slip:true });
         } else {
-          D.hotHeld = k; D.cmdAt = nowMs();
+          // paused: with the gate setting (the default, as in rekordbox) it plays while the pad is held and goes
+          // back when it is let go; without it the track starts from the hot cue and keeps playing, as on a CDJ
+          D.hotHeld = SET.hotGate ? k : -1; D.cmdAt = nowMs();
           send({ t:"seek", k:i, pos:fr(c.pos) });
           try { if(playing) stop(); } catch(e){}
           send({ t:"play", k:i });
           D.setPlaying(true);
         }
-        emit("hotcue", { deck:D.n, index:k, jump:true, pos:c.pos });
+        emit("hotcue", { deck:D.n, index:k, jump:true, pos:c.pos, gate:D.hotHeld === k });
       };
       D.seek = function(seconds){
         if(!D.track) return;
@@ -18234,6 +18713,14 @@
         send({ t:"seek", k:i, pos:p });
         if(!D.playing){ D.st = D.st || {}; D.st.pos = p; D.st.v = 0; D.stAt = nowMs(); }
         D.dirty = true;
+      };
+      // The whole-track strip ("needle search"). With the needle lock setting it only moves the position while
+      // the deck is paused or the platter is held, as on a CDJ; without it, always (as clicking the waveform in rekordbox).
+      D.needle = function(seconds){
+        if(!D.track) return false;
+        if(SET.needleLock && D.playing && !D.touched) return false;
+        D.seek(seconds);
+        return true;
       };
       D.seekBy = function(beats){
         if(!D.track) return;
@@ -18260,6 +18747,8 @@
       D.tempoRange = function(r){
         if(r === undefined) return D.range;
         if(r === "next"){ r = RANGES[(RANGES.indexOf(D.range) + 1) % RANGES.length]; }
+        if(r === 6 || r === 10 || r === 16) r = r / 100;
+        if(r === "wide") r = 1;
         if(RANGES.indexOf(r) < 0) return D.range;
         // keep the speed where it is when the range changes, as far as the new range allows
         var cur2 = D.rate - 1;
@@ -18271,6 +18760,7 @@
       D.nudge = function(dir){
         dir = dir > 0 ? 1 : (dir < 0 ? -1 : 0);
         D.bendDir = dir;
+        if(dir && D.track) anNudge(D.n, dir);
         send({ t:"bend", k:i, v:dir * 0.04 });
         D.dirty = true;
       };
@@ -18285,8 +18775,9 @@
         if(!D.track || !delta) return;
         if(!D.playing || (viaPlatter && D.vinyl)){
           send({ t:"scr", k:i, d:fr(delta) });
+          if(D.playing) anScratch(D.n);
           if(!D.playing && D.st && ENG && ENG.mode !== "worklet"){ D.st.pos = clamp(D.st.pos + fr(delta), 0, D.len); }
-        } else send({ t:"nudge", k:i, d:fr(delta) * 0.25 });
+        } else { anNudge(D.n, delta > 0 ? 1 : -1); send({ t:"nudge", k:i, d:fr(delta) * 0.25 }); }
       };
 
       // ---- loops ----
@@ -18304,15 +18795,21 @@
       };
       D.loopHalve = function(){
         if(D.loopOn || D.loopOut > D.loopIn) send({ t:"loopscale", k:i, f:0.5 });
-        if(D.autoBeats > 1 / 32) D.autoBeats /= 2;
+        if(D.autoBeats > 1 / 64) D.autoBeats /= 2;
         D.dirty = true;
       };
       D.loopDouble = function(){
         if(D.loopOn || D.loopOut > D.loopIn) send({ t:"loopscale", k:i, f:2 });
-        if(D.autoBeats < 64) D.autoBeats *= 2;
+        if(D.autoBeats < 512) D.autoBeats *= 2;
         D.dirty = true;
       };
       D.reloop = function(){ if(D.track) send({ t:"reloop", k:i }); };
+      // saved loops marked active go on by themselves when the track reaches them (rekordbox: "active loop")
+      D.armLoops = function(){
+        var t = D.track, l = [];
+        if(t && t.loops) t.loops.forEach(function(x){ if(x.active && l.length < 16){ l.push(fr(x.a)); l.push(fr(x.b)); } });
+        send({ t:"arm", k:i, l:l });
+      };
       D.loopMove = function(beats){ if(D.track) send({ t:"loopmove", k:i, beats:beats }); };
 
       // ---- sync, modes ----
@@ -18354,6 +18851,7 @@
             t.loops = t.loops.filter(function(l){ return Math.abs(l.a - a) > 0.02; });
             t.loops.push({ a:Math.round(a * 100000) / 100000, b:Math.round(b * 100000) / 100000, name:"" });
             t.loops.sort(function(x, y){ return x.a - y.a; });
+            D.armLoops();
           } else {
             var pos = sec(D.snap(D.posFrames()));
             t.mem = t.mem.filter(function(m){ return Math.abs(m.pos - pos) > 0.02; });
@@ -18364,13 +18862,23 @@
           emit("memory", { deck:D.n, action:"set", cues:t.mem.length, loops:t.loops.length });
           return true;
         }
+        if(action === "active"){
+          // the saved loop that is on, or the one the deck is standing in: make it an active loop, or an ordinary one again
+          var la = null;
+          t.loops.forEach(function(l){ if(!la && ((D.loopOn && Math.abs(l.a - sec(D.loopIn)) < 0.02) || (here >= l.a - 0.3 && here <= l.b))) la = l; });
+          if(!la){ note("Save a loop first (Set while a loop is on), then go to it and make it active."); return false; }
+          la.active = !la.active;
+          saveTrack(t); D.armLoops(); D.dirty = true;
+          emit("memory", { deck:D.n, action:"active", active:la.active, start:la.a, end:la.b });
+          return la.active;
+        }
         pts = t.mem.map(function(m){ return { pos:m.pos, m:m }; }).concat(t.loops.map(function(l){ return { pos:l.a, loop:l }; }));
         pts.sort(function(x, y){ return x.pos - y.pos; });
         if(action === "delete"){
           for(k = 0; k < pts.length; k++) if(Math.abs(pts[k].pos - here) < 0.3 && (best < 0 || Math.abs(pts[k].pos - here) < Math.abs(pts[best].pos - here))) best = k;
           if(best < 0){ note("Go to a memory cue first (the arrows beside Set), then delete it."); return false; }
           if(pts[best].loop) t.loops.splice(t.loops.indexOf(pts[best].loop), 1); else t.mem.splice(t.mem.indexOf(pts[best].m), 1);
-          saveTrack(t); D.dirty = true;
+          saveTrack(t); D.armLoops(); D.dirty = true;
           emit("memory", { deck:D.n, action:"delete", cues:t.mem.length, loops:t.loops.length });
           return true;
         }
@@ -18387,7 +18895,7 @@
         emit("cue", { deck:D.n, pos:pt.pos, action:"call" });
         return true;
       };
-      D.setQuantise = function(on){ D.quant = on === undefined ? !D.quant : !!on; SET.quant[i] = D.quant; saveSet(); send({ t:"quant", k:i, on:D.quant }); D.dirty = true; emit("mode", { deck:D.n, quantise:D.quant }); };
+      D.setQuantise = function(on){ D.quant = on === undefined ? !D.quant : !!on; SET.quant[i] = D.quant; saveSet(); send({ t:"quant", k:i, on:D.quant, u:SET.qunit }); D.dirty = true; emit("mode", { deck:D.n, quantise:D.quant, quantiseBeats:SET.qunit }); };
       D.setSlip = function(on){ D.slip = on === undefined ? !D.slip : !!on; send({ t:"slip", k:i, on:D.slip }); D.dirty = true; emit("mode", { deck:D.n, slip:D.slip }); };
       D.setVinyl = function(on){ D.vinyl = on === undefined ? !D.vinyl : !!on; SET.vinyl[i] = D.vinyl; saveSet(); D.dirty = true; emit("mode", { deck:D.n, vinyl:D.vinyl }); };
 
@@ -18401,12 +18909,15 @@
           remaining:Math.round(Math.max(0, dur - pos) / (D.rate || 1) * 10) / 10,
           bar:beat === null ? null : Math.floor(beat / bpb) + 1, beatInBar:beat === null ? null : (((Math.floor(beat) % bpb) + bpb) % bpb) + 1,
           tempo:Math.round(D.tempoN * 10000) / 10000, tempoPercent:Math.round((D.rate - 1) * 10000) / 100, tempoRange:D.range,
-          sync:D.sync, master:masterIdx === i, quantise:D.quant, slip:D.slip, vinyl:D.vinyl,
+          sync:D.sync, master:masterIdx === i, quantise:D.quant, quantiseBeats:SET.qunit, slip:D.slip, vinyl:D.vinyl,
+          keylock:D.keylock, keylockActive:!!D.kon, keylockBypassed:!!D.kx, keyShift:D.keyShift,
+          keyNow:D.keyNow(), camelotNow:camelot(D.keyNow()), reverse:D.rev, slipReverse:D.slipRev,
           cue:Math.round(sec(D.cue) * 1000) / 1000,
           hotcues:t ? t.cues.map(function(c){ return c ? Math.round(c.pos * 1000) / 1000 : null; }) : [],
           loop:{ active:D.loopOn, start:Math.round(sec(D.loopIn) * 1000) / 1000, end:Math.round(sec(D.loopOut) * 1000) / 1000,
                  beats:D.beatLen > 0 && D.loopOut > D.loopIn ? Math.round((D.loopOut - D.loopIn) / D.beatLen * 1000) / 1000 : null },
           memoryCues:t ? (t.mem || []).map(function(m){ return m.pos; }) : [], savedLoops:t ? (t.loops || []).map(function(l){ return [l.a, l.b]; }) : [],
+          activeLoops:t ? (t.loops || []).filter(function(l){ return l.active; }).map(function(l){ return [l.a, l.b]; }) : [],
           autoLoopBeats:D.autoBeats, endWarning:D.warn, analysed:!!D.wave,
           asking:D.pending ? (D.pendWhy === "mem" ? "memory" : "replace") : null
         };
@@ -18420,9 +18931,11 @@
         if(!s || !D.track || !s.len) continue;
         if(s.len !== D.len) continue;                        // a state from before this track was loaded
         D.st = s; D.stAt = at; D.stCt = m.ct;
+        if(!!s.kon !== D.kon || !!s.kx !== D.kx){ D.kon = !!s.kon; D.kx = !!s.kx; D.dirty = true; }
         if(D.playing && !s.playing && s.ended && at - (D.cmdAt || 0) > 200){
-          // ran off the end of the track
-          D.cueHeld = false; D.hotHeld = -1; D.setPlaying(false); emit("end", { deck:D.n });
+          // ran off the end of the track (or, backwards, reached its start: then the deck plays forwards again)
+          D.cueHeld = false; D.hotHeld = -1; D.setPlaying(false); emit("end", { deck:D.n, reverse:D.rev });
+          if(D.rev) D.setReverse(false);
         }
         if(s.loopOn !== D.loopOn || s.loopIn !== D.loopIn || s.loopOut !== D.loopOut){
           D.loopOn = s.loopOn; D.loopIn = s.loopIn; D.loopOut = s.loopOut; D.dirty = true;
@@ -18486,51 +18999,547 @@
       emit("routing", { mode:got, maxChannels:ENG.M.maxCh() });
       return got;
     }
-    var REC = { on:false, chunks:[], frames:0, node:null, started:0 };
+    // Recording the master mix to a WAV file, 16 or 24 bits. The sound is never kept in memory: it is written as
+    // it comes to a file in the browser's own storage for this site (the File System Access API: createWritable),
+    // or, where that is missing, in pieces of a megabyte to the DJ database; only without either is it held in
+    // memory. Two hours is the limit. When recording stops the header is written and the file is offered for saving.
+    var REC = { on:false, frames:0, node:null, started:0, bits:16, sr:48000, ses:null, peak:0, kind:"" };
+    var REC_STAGE = 1048576, REC_MAX_SECS = 7200;
+    function wavHeader(frames, sr, bits){
+      var bps = bits / 8, bytes = frames * 2 * bps, h = new ArrayBuffer(44), v = new DataView(h);
+      function str(o, s2){ for(var i = 0; i < s2.length; i++) v.setUint8(o + i, s2.charCodeAt(i)); }
+      str(0, "RIFF"); v.setUint32(4, 36 + bytes, true); str(8, "WAVE"); str(12, "fmt "); v.setUint32(16, 16, true);
+      v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2 * bps, true);
+      v.setUint16(32, 2 * bps, true); v.setUint16(34, bits, true); str(36, "data"); v.setUint32(40, bytes, true);
+      return new Uint8Array(h);
+    }
+    function recName(d){
+      function two(n){ return ("0" + n).slice(-2); }
+      return "First Loop mix " + d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate()) + " " + two(d.getHours()) + "." + two(d.getMinutes()) + ".wav";
+    }
+    // where the bytes go: {kind, write(Uint8Array) -> Promise, finish(header) -> Promise<Blob>}
+    function recSink(force){
+      var stamp = Date.now();
+      function memory(){
+        var parts = [];
+        return { kind:"memory", write:function(u8){ parts.push(u8); return Promise.resolve(); },
+                 finish:function(h){ return Promise.resolve(new Blob([h].concat(parts), { type:"audio/wav" })); } };
+      }
+      function database(){
+        var n = 0, tag = "rec:" + stamp + ":";
+        // what an earlier recording left behind goes first (its file has long been handed over)
+        return dbReq("blobs", "readonly", function(s2){ return s2.getAllKeys(); }).then(function(keys){
+          (keys || []).forEach(function(id){ if(typeof id === "string" && id.indexOf("rec:") === 0) dbDel("blobs", id); });
+        }, function(){}).then(function(){
+          return { kind:"database", write:function(u8){ return dbPut("blobs", { id:tag + (n++), blob:new Blob([u8]) }).then(function(ok){ if(!ok) throw new Error("the browser's storage for this site is full"); }); },
+            finish:function(h){
+              var parts = [h], k = 0;
+              function next(){
+                if(k >= n) return Promise.resolve(new Blob(parts, { type:"audio/wav" }));
+                return dbGet("blobs", tag + (k++)).then(function(r){ if(r && r.blob) parts.push(r.blob); return next(); });
+              }
+              return next();
+            } };
+        });
+      }
+      function file(){
+        return navigator.storage.getDirectory().then(function(dir){
+          // older recordings kept here are removed once they are an hour old
+          var clean = Promise.resolve();
+          try {
+            if(dir.keys) clean = (function(){
+              var it = dir.keys(), drop = [];
+              function step(){ return it.next().then(function(r){ if(r.done) return; var m = /^fl-rec-(\d+)\.wav/.exec(r.value); if(m && stamp - (+m[1]) > 3600000) drop.push(r.value); return step(); }); }
+              return step().then(function(){ return Promise.all(drop.map(function(nm){ return dir.removeEntry(nm).catch(function(){}); })); });
+            })().catch(function(){});
+          } catch(e){}
+          return clean.then(function(){ return dir.getFileHandle("fl-rec-" + stamp + ".wav", { create:true }); }).then(function(h){
+            return h.createWritable().then(function(w){
+              return w.write(new Uint8Array(44)).then(function(){
+                return { kind:"file", write:function(u8){ return w.write(u8); },
+                  finish:function(hd){ return w.write({ type:"write", position:0, data:hd }).then(function(){ return w.close(); }).then(function(){ return h.getFile(); }); } };
+              });
+            });
+          });
+        });
+      }
+      if(force === "memory") return Promise.resolve(memory());
+      if(force === "database") return db ? database() : Promise.resolve(memory());
+      var p;
+      try { p = navigator.storage && navigator.storage.getDirectory && window.FileSystemFileHandle && FileSystemFileHandle.prototype.createWritable ? file() : Promise.reject(new Error("none")); }
+      catch(e){ p = Promise.reject(e); }
+      return p.catch(function(){ return db ? database() : memory(); }).catch(function(){ return memory(); });
+    }
+    // One recording: feed(Float32Array of left/right pairs, how many values) turns sound into bytes and passes them on in
+    // megabyte pieces, one write at a time; end() writes the header and gives {blob, seconds, bits, name, kind}.
+    function recSession(sink, sr, bits){
+      var S = { sink:sink, sr:sr, bits:bits, frames:0, stage:new Uint8Array(REC_STAGE), n:0, chain:Promise.resolve(), waiting:0, failed:null, peak:0, at:new Date() };
+      function push(){
+        if(!S.n) return;
+        var u8 = S.stage.slice(0, S.n); S.n = 0; S.waiting += u8.length;
+        S.chain = S.chain.then(function(){ return sink.write(u8); }).then(function(){ S.waiting -= u8.length; }, function(err){ S.waiting -= u8.length; S.failed = S.failed || String(err && err.message || err); });
+      }
+      S.feed = function(f, n){
+        var st = S.stage, o = S.n, i, x, v, pk = 0;
+        if(bits === 24){
+          for(i = 0; i < n; i++){
+            if(o + 3 > REC_STAGE){ S.n = o; push(); o = 0; }
+            x = f[i]; if(x !== x) x = 0; v = x < 0 ? -x : x; if(v > pk) pk = v;
+            v = Math.round((x > 1 ? 1 : (x < -1 ? -1 : x)) * 8388607);
+            st[o++] = v & 255; st[o++] = (v >> 8) & 255; st[o++] = (v >> 16) & 255;
+          }
+        } else {
+          for(i = 0; i < n; i++){
+            if(o + 2 > REC_STAGE){ S.n = o; push(); o = 0; }
+            x = f[i]; if(x !== x) x = 0; v = x < 0 ? -x : x; if(v > pk) pk = v;
+            v = Math.round((x > 1 ? 1 : (x < -1 ? -1 : x)) * 32767);
+            st[o++] = v & 255; st[o++] = (v >> 8) & 255;
+          }
+        }
+        S.n = o; S.frames += n / 2; S.peak = pk;
+      };
+      S.end = function(){
+        push();
+        return S.chain.then(function(){ return sink.finish(wavHeader(S.frames, sr, bits)); }).then(function(blob){
+          return { blob:blob, seconds:S.frames / sr, frames:S.frames, bits:bits, sampleRate:sr, name:recName(S.at), kind:sink.kind, error:S.failed };
+        });
+      };
+      return S;
+    }
     function recStart(){
       return ensureEngine().then(function(){
         if(ENG.mode !== "worklet"){ note("Recording the mix needs the full audio engine, which this browser did not load."); return false; }
-        if(REC.on) return true;
+        if(REC.on || REC.starting) return true;
         resumeCtx();
-        if(!REC.node){
-          var n = new AudioWorkletNode(ENG.ctx, "fl-rec", { numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2], channelCount:2, channelCountMode:"explicit" });
-          var z = ENG.ctx.createGain(); z.gain.value = 0;
-          ENG.M.masterOut.connect(n); n.connect(z); z.connect(ENG.ctx.destination);
-          n.port.onmessage = function(e){
-            var m = e.data;
-            if(m.t === "pcm" && REC.on){
-              REC.chunks.push(m.b); REC.frames += m.b.length / 2;
-              if(REC.frames > ENG.ctx.sampleRate * 7200) recStop();           // two hours is the limit
-            } else if(m.t === "done" && REC.done){ var f = REC.done; REC.done = null; f(); }
-          };
-          REC.node = n;
-        }
-        REC.chunks = []; REC.frames = 0; REC.on = true; REC.started = Date.now();
-        REC.node.port.postMessage("start");
-        emit("record", { on:true });
-        return true;
+        REC.starting = true;
+        return recSink().then(function(sink){
+          REC.starting = false;
+          if(!REC.node){
+            var n = new AudioWorkletNode(ENG.ctx, "fl-rec", { numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2], channelCount:2, channelCountMode:"explicit" });
+            var z = ENG.ctx.createGain(); z.gain.value = 0;
+            ENG.M.masterOut.connect(n); n.connect(z); z.connect(ENG.ctx.destination);
+            n.port.onmessage = function(e){
+              var m = e.data, S = REC.ses;
+              if(m.t === "pcm"){
+                if(S){
+                  S.feed(m.b, m.n); REC.frames = S.frames; REC.peak = S.peak;
+                  if(S.failed || S.waiting > 67108864){ note(S.failed ? "The recording could not be written (" + S.failed + "). It stops here." : "The recording is not being written fast enough. It stops here."); recStop(); }
+                  else if(S.frames > S.sr * REC_MAX_SECS){ note("A recording is two hours at most. It stops here."); recStop(); }
+                }
+                try { n.port.postMessage({ t:"back", b:m.b }, [m.b.buffer]); } catch(x){}
+              } else if(m.t === "done" && REC.done){ var f = REC.done; REC.done = null; f(); }
+            };
+            REC.node = n;
+          }
+          REC.bits = SET.recBits === 24 ? 24 : 16; REC.sr = ENG.ctx.sampleRate; REC.kind = sink.kind;
+          REC.ses = recSession(sink, REC.sr, REC.bits);
+          REC.frames = 0; REC.peak = 0; REC.on = true; REC.started = Date.now();
+          REC.node.port.postMessage("start");
+          emit("record", { on:true, bits:REC.bits, to:sink.kind });
+          return true;
+        }, function(){ REC.starting = false; note("The recording could not be started."); return false; });
       });
     }
     function recStop(){
       if(!REC.on || !REC.node) return Promise.resolve(null);
-      return new Promise(function(res){
+      if(REC.stopping) return REC.stopping;
+      REC.stopping = new Promise(function(res){
         REC.done = function(){
-          REC.on = false;
-          var sr = ENG.ctx.sampleRate, bytes = REC.frames * 4, h = new ArrayBuffer(44), v = new DataView(h);
-          function str(o, s){ for(var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
-          str(0, "RIFF"); v.setUint32(4, 36 + bytes, true); str(8, "WAVE"); str(12, "fmt "); v.setUint32(16, 16, true);
-          v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 4, true);
-          v.setUint16(32, 4, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, bytes, true);
-          var blob = new Blob([h].concat(REC.chunks), { type:"audio/wav" });
-          var secs = REC.frames / sr;
-          REC.chunks = [];
-          emit("record", { on:false, seconds:secs, bytes:blob.size });
-          res({ blob:blob, seconds:secs });
+          var S = REC.ses;
+          REC.on = false; REC.ses = null; REC.stopping = null;
+          if(!S){ res(null); return; }
+          S.end().then(function(r){
+            REC.last = r;
+            emit("record", { on:false, seconds:r.seconds, bytes:r.blob.size, bits:r.bits, name:r.name });
+            res(r);
+          }, function(){ note("The recording could not be finished."); emit("record", { on:false, seconds:0, bytes:0 }); res(null); });
         };
         REC.node.port.postMessage("stop");
         setTimeout(function(){ if(REC.done){ var f = REC.done; REC.done = null; f(); } }, 1500);
       });
+      return REC.stopping;
     }
+
+    // ---------- mix analysis: measurements for a coach ----------
+    // Cheap, exact numbers about what the DJ is doing, for the Assistant (or anything else) to reason about.
+    // Nothing here runs in the audio thread: about twenty times a second the page reads the positions the
+    // player last reported (all decks from the same instant), the mixer's controls and the level meters,
+    // and keeps count. Described with the interface at the top ("DJ.analysis").
+    var AN = { log:[], seq:0, sim:null, timer:0, last:0, R:null, shadow:{}, gest:{}, tempo:{}, nud:{}, scr:{}, pairs:{}, audSince:[0, 0, 0, 0],
+               startCtx:[null, null, null, null], loopOn:[false, false, false, false], en:[0, 0, 0, 0], heard:false, quiet:0, dead:null, hot:0, hotAgo:1e9, red:null,
+               buf:null, hold:[0, 0, 0, 0, 0], MAXN:400, MAXAGE:1800000 };       // hold: the highest recent peak of channels 1 to 4 and of the master
+    var AN_WRECK_MS = 40, AN_WRECK_BARS = 2, AN_AUD = 0.01, AN_LOWG = 0.1;
+    function anNow(){ return AN.sim ? AN.sim.t : Date.now(); }
+    function anDb(x){ return x > 1e-6 ? Math.round(200 * Math.log(x) / Math.LN10) / 10 : -120; }
+    function anR2(x){ return Math.round(x * 100) / 100; }
+    // how much of a deck reaches the master output, as a plain factor: trim, channel fader, crossfader, master
+    function anGain(i, v){
+      var g = xfLaw(v.xf, v.curve), a = v.assign[i];
+      return trimLaw(v.trim[i]) * v.fader[i] * v.fader[i] * (a === "A" ? g[0] : (a === "B" ? g[1] : 1)) * levelLaw(v.master);
+    }
+    function anLowOpen(i, v){
+      // the bass of this channel gets through: Low not turned down past half (-6 dB) and the filter not cutting below 150 Hz
+      return eqLaw(v.eq[i][0]) >= 0.5 && !(v.filter[i] > 0.678);
+    }
+    // What the analysis looks at: every deck's place and tempo, the mixer, the levels. A test can hand in its own.
+    function anRead(){
+      var v = ENG && ENG.M ? ENG.M.v : null, R = { t:anNow(), decks:[], master:{ peak:0, rms:0 }, ch:[], xf:v ? v.xf : 0.5 }, k, D, t, g, l;
+      if(!AN.buf) AN.buf = new Float32Array(1024);
+      for(k = 0; k < allDecks.length; k++){
+        D = allDecks[k]; t = D.track;
+        l = ENG && ENG.M && ENG.M.ch[k].an ? levelOf(ENG.M.ch[k].an, AN.buf) : [0, 0];
+        R.ch.push({ peak:l[0], rms:l[1] });
+        if(!t || !D.st){ R.decks.push(null); continue; }
+        g = v ? anGain(k, v) : 1;
+        R.decks.push({ n:D.n, id:t.id, title:t.title, playing:D.playing, moving:D.playing || !!(D.st && D.st.v), pos:D.posFrames(), sr:D.sr, len:D.len,
+          beatLen:D.beatLen, first:D.first, bpb:(t.grid && t.grid.bpb) || 4, rate:D.rate || 1, bpm:D.bpmNow(), tempoPercent:(D.rate - 1) * 100,
+          key:t.key || "", keyNow:D.keyNow(), cents:Math.round((D.pitchSemis() - Math.round(D.pitchSemis())) * 100), keylock:D.keylock, keyShift:D.keyShift,
+          sync:D.sync, master:masterIdx === k, loop:D.loopOn, gain:g, eqKill:v ? (v.eq[k][0] <= 0.02 && v.eq[k][1] <= 0.02 && v.eq[k][2] <= 0.02) : false,
+          lowOpen:v ? anLowOpen(k, v) : true, phrases:t.phrases || null });
+      }
+      l = ENG && ENG.M && ENG.M.an ? levelOf(ENG.M.an, AN.buf) : [0, 0];
+      R.master.peak = l[0]; R.master.rms = l[1];
+      R.hold = AN.hold;
+      return R;
+    }
+    function anAudible(d){ return !!d && d.moving && d.gain >= AN_AUD && !d.eqKill; }
+    function anPk(R, k){ var now = k === 4 ? R.master.peak : (R.ch[k] ? R.ch[k].peak : 0), h = R.hold ? R.hold[k] : 0; return h > now ? h : now; }
+    function anBeats(d){ return d && d.beatLen > 0 ? (d.pos - d.first) / d.beatLen : null; }
+    // The beat of b nearest to a's last beat: {ms, beats, ia, ib}. ms is positive when b's beat falls later than a's.
+    function anPhase(a, b){
+      if(!a || !b || !(a.beatLen > 0) || !(b.beatLen > 0)) return null;
+      var TA = a.beatLen / a.sr / a.rate * 1000, TB = b.beatLen / b.sr / b.rate * 1000;
+      var ba = (a.pos - a.first) / a.beatLen, bb = (b.pos - b.first) / b.beatLen, ia = Math.floor(ba), ib = Math.floor(bb);
+      var tA = -(ba - ia) * TA, tB = -(bb - ib) * TB, k = Math.round((tA - tB) / TB);
+      return { ms:tB + k * TB - tA, TA:TA, ia:ia, ib:ib + k };
+    }
+    function anWrap(x, m){ x = ((x % m) + m) % m; return x > m / 2 ? x - m : x; }
+    function anPair(a, b, R){
+      var o = { a:a ? a.n : null, b:b ? b.n : null, loaded:!!(a && b), bpmA:a ? anR2(a.bpm) : null, bpmB:b ? anR2(b.bpm) : null, bpmDiffPercent:null,
+                phaseMs:null, phaseBeats:null, barOffsetBeats:null, phraseOffsetBeats:null,
+                keyA:a ? a.keyNow : "", keyB:b ? b.keyNow : "", camelotA:a ? camelot(a.keyNow) : "", camelotB:b ? camelot(b.keyNow) : "", keyCompatible:null,
+                audibleA:anAudible(a), audibleB:anAudible(b), bothAudible:false, lowEndClash:false,
+                levelPeakDb:{ a:a ? anDb(anPk(R, a.n - 1)) : null, b:b ? anDb(anPk(R, b.n - 1)) : null, master:anDb(anPk(R, 4)) },
+                clipping:false, limiting:R.master.peak >= 0.79 };
+      if(!a || !b) return o;
+      if(a.bpm > 0 && b.bpm > 0) o.bpmDiffPercent = Math.round((b.bpm / a.bpm - 1) * 100000) / 1000;
+      var ph = anPhase(a, b);
+      if(ph){
+        o.phaseMs = Math.round(ph.ms * 100) / 100; o.phaseBeats = Math.round(ph.ms / ph.TA * 10000) / 10000;
+        o.barOffsetBeats = anWrap(anWrap(ph.ib, b.bpb) - anWrap(ph.ia, a.bpb), a.bpb);
+        o.phraseOffsetBeats = anWrap(ph.ib - ph.ia, 8 * a.bpb);
+      }
+      o.keyCompatible = a.keyNow && b.keyNow ? keysCompatible(a.keyNow, b.keyNow) : null;
+      o.bothAudible = o.audibleA && o.audibleB;
+      o.lowEndClash = o.bothAudible && a.lowOpen && b.lowOpen && a.gain >= AN_LOWG && b.gain >= AN_LOWG;
+      o.clipping = R.master.peak >= 0.98 || (R.ch[a.n - 1] && R.ch[a.n - 1].peak >= 0.999) || (R.ch[b.n - 1] && R.ch[b.n - 1].peak >= 0.999) || false;
+      return o;
+    }
+    function anPhraseOf(d, L){
+      var bars = anBeats(d) / d.bpb, pos = bars < 0 ? bars : bars % L;
+      return { pos:Math.floor(pos * 100 + 1e-6) / 100, toNext:Math.round((bars < 0 ? -bars : L - pos) * 100) / 100 };
+    }
+    function anDeck(d, R){
+      if(!d) return { loaded:false };
+      var o = { deck:d.n, loaded:true, playing:d.playing, audible:anAudible(d), bpm:anR2(d.bpm), tempoPercent:anR2(d.tempoPercent), key:d.keyNow, camelot:camelot(d.keyNow),
+                bar:null, beatInBar:null, phraseBars:16, phrasePos:null, barsToNextPhrase:null, phrases:null, energy:AN.en[d.n - 1] > 1e-12 ? anDb(Math.sqrt(AN.en[d.n - 1])) : -120,
+                levelPeakDb:anDb(anPk(R, d.n - 1)), section:null };
+      var beats = anBeats(d);
+      if(beats !== null){
+        var b0 = Math.floor(beats + 1e-6), p8 = anPhraseOf(d, 8), p16 = anPhraseOf(d, 16), p32 = anPhraseOf(d, 32);
+        o.bar = Math.floor(b0 / d.bpb) + 1; o.beatInBar = anWrap(b0, d.bpb) < 0 ? anWrap(b0, d.bpb) + d.bpb + 1 : (((b0 % d.bpb) + d.bpb) % d.bpb) + 1;
+        o.phrases = { 8:p8, 16:p16, 32:p32 };
+        o.phrasePos = p16.pos; o.barsToNextPhrase = p16.toNext;
+      }
+      // phrase data from rekordbox, if the library has put it on the track: [{pos (seconds), kind}] in order
+      if(d.phrases && d.phrases.length){
+        var sec = d.pos / d.sr, k, cur2 = null, nx = null;
+        for(k = 0; k < d.phrases.length; k++){ var ps = +(d.phrases[k].pos !== undefined ? d.phrases[k].pos : d.phrases[k].start); if(ps <= sec + 1e-6) cur2 = d.phrases[k]; else { nx = ps; break; } }
+        if(cur2){
+          var st = +(cur2.pos !== undefined ? cur2.pos : cur2.start);
+          o.section = String(cur2.kind || cur2.label || cur2.name || "");
+          if(d.beatLen > 0){
+            var bl = d.beatLen / d.sr * d.bpb;
+            o.phrasePos = Math.floor((sec - st) / bl * 100 + 1e-6) / 100;
+            if(nx !== null){ o.barsToNextPhrase = Math.round((nx - sec) / bl * 100) / 100; o.phraseBars = Math.round((nx - st) / bl); }
+          }
+        }
+      }
+      return o;
+    }
+    function anSnap(){
+      var R = AN.R && (AN.sim || anNow() - AN.R.t < 120) ? AN.R : (AN.sim ? AN.R : anRead()), out = { decks:[], crossfader:R ? anR2(R.xf) : null, masterPeakDb:R ? anDb(R.master.peak) : null };
+      if(!R) return out;
+      R.decks.forEach(function(d){
+        if(!d) return;
+        var x = anDeck(d, R);
+        out.decks.push({ deck:d.n, playing:d.playing, audible:x.audible, bar:x.bar, beatInBar:x.beatInBar, phrasePos:x.phrasePos, bpm:x.bpm, tempoPercent:x.tempoPercent, key:x.key });
+      });
+      return out;
+    }
+    function anNote(type, data){
+      var ev = { n:++AN.seq, t:anNow(), type:type }, k, t0;
+      if(data) for(k in data) if(data.hasOwnProperty(k)) ev[k] = data[k];
+      ev.snap = anSnap();
+      AN.log.push(ev);
+      t0 = ev.t - AN.MAXAGE;
+      while(AN.log.length > AN.MAXN || (AN.log.length && AN.log[0].t < t0)) AN.log.shift();
+      emit("mixevent", ev);
+      return ev;
+    }
+    function anUsed(name){ var k; for(k in AN.pairs) if(AN.pairs[k].tr && AN.pairs[k].tr.controls.indexOf(name) < 0) AN.pairs[k].tr.controls.push(name); }
+    // ---- what the DJ's hands do, gathered into gestures ----
+    function anMixer(d){
+      var key = d.control + (d.band ? "." + d.band : "") + (d.ch ? " " + d.ch : ""), g = AN.gest[key], t = anNow(), val = typeof d.value === "number" ? d.value : (d.value === true ? 1 : (d.value === false ? 0 : d.value));
+      if(typeof val !== "number"){ anNote("mixer", { control:d.control, ch:d.ch || null, value:d.value }); anUsed(key); AN.shadow[key] = val; return; }
+      if(!g){
+        var from = AN.shadow[key];
+        if(from === undefined) from = d.control === "fader" ? 1 : (d.control === "master" || d.control === "hpLevel" ? 0.8 : (d.control === "cue" ? 0 : 0.5));
+        g = AN.gest[key] = { control:d.control + (d.band ? "." + d.band : ""), ch:d.ch || null, from:from, to:val, t0:t, t1:t, n:0, at:anSnap().decks.filter(function(x){ return x.playing; }).map(function(x){ return { deck:x.deck, bar:x.bar, beatInBar:x.beatInBar, phrasePos:x.phrasePos }; }) };
+        anUsed(key);
+      }
+      g.to = val; g.t1 = t; g.n++;
+      AN.shadow[key] = val;
+    }
+    function anFlush(t, all){
+      var k, g;
+      for(k in AN.gest){
+        g = AN.gest[k];
+        if(all || t - g.t1 >= 700){
+          delete AN.gest[k];
+          if(Math.abs(g.to - g.from) >= 0.005 || g.control === "cue") anNote("gesture", { control:g.control, ch:g.ch, from:anR2(g.from), to:anR2(g.to), ms:Math.round(g.t1 - g.t0), moves:g.n, at:g.at });
+        }
+      }
+      for(k in AN.tempo){
+        g = AN.tempo[k];
+        if(all || t - g.t1 >= 700){
+          delete AN.tempo[k];
+          if(Math.abs(g.to - g.from) >= 0.005) anNote("tempo", { deck:g.deck, fromPercent:anR2(g.from), toPercent:anR2(g.to), bpm:anR2(g.bpm), ms:Math.round(g.t1 - g.t0), bySync:g.sync });
+        }
+      }
+      for(k in AN.nud){
+        g = AN.nud[k];
+        if(all || t - g.t1 >= 2000){
+          delete AN.nud[k];
+          anNote("nudge", { deck:g.deck, count:g.n, direction:g.fwd && g.back ? "both" : (g.fwd ? "forward" : "back"), forward:g.fwd, back:g.back, ms:Math.round(g.t1 - g.t0) });
+        }
+      }
+      for(k in AN.scr){
+        g = AN.scr[k];
+        if(all || t - g.t1 >= 600){ delete AN.scr[k]; anNote("scratch", { deck:g.deck, ms:Math.round(g.t1 - g.t0), moves:g.n }); }
+      }
+    }
+    function anNudge(deck, dir){
+      var g = AN.nud[deck], t = anNow();
+      if(!g){ g = AN.nud[deck] = { deck:deck, n:0, fwd:0, back:0, t0:t, t1:t, lastDir:0, lastAt:0 }; anUsed("nudge " + deck); }
+      if(dir !== g.lastDir || t - g.lastAt > 300){ g.n++; if(dir > 0) g.fwd++; else g.back++; }      // a turn of the platter sends many small moves: together they are one nudge
+      g.lastDir = dir; g.lastAt = t; g.t1 = t;
+    }
+    function anScratch(deck){
+      var g = AN.scr[deck], t = anNow();
+      if(!g){ g = AN.scr[deck] = { deck:deck, n:0, t0:t, t1:t }; anUsed("scratch " + deck); }
+      g.n++; g.t1 = t;
+    }
+    // every event the DJ area sends out passes here; the ones that say something about the mix are kept
+    function anEvent(d, ev){
+      if(!d || ev === "mixevent" || ev === "levels" || ev === "beat") return;
+      var k = d.deck ? d.deck - 1 : -1, D = k >= 0 ? allDecks[k] : null, g, t = anNow();
+      switch(ev){
+      case "load": if(!d.analysed) anNote("load", { deck:d.deck, id:d.id, title:d.title, bpm:d.bpm || 0, key:d.key || "" }); break;
+      case "unload": anNote("unload", { deck:d.deck }); break;
+      case "play":
+        if(d.playing){
+          // where the other playing decks stood in their phrases when this one was started
+          var R = AN.sim ? AN.R : anRead(), others = [];
+          if(R) R.decks.forEach(function(o){
+            if(!o || o.n === d.deck || !o.playing || !(o.beatLen > 0)) return;
+            var b = anBeats(o), L = 8 * o.bpb;
+            others.push({ deck:o.n, audible:anAudible(o), offPhrase8Beats:Math.round(anWrap(b, L) * 100) / 100, offPhrase16Beats:Math.round(anWrap(b, 2 * L) * 100) / 100, bar:Math.floor(b / o.bpb) + 1 });
+          });
+          AN.startCtx[k] = { t:t, others:others };
+          AN.R = R;
+        }
+        anNote(d.playing ? "play" : "pause", { deck:d.deck }); anUsed((d.playing ? "play " : "pause ") + d.deck);
+        break;
+      case "cue": anNote("cue", { deck:d.deck, action:d.action, pos:d.pos }); anUsed("cue " + d.deck); break;
+      case "hotcue": if(d.jump || d.set !== undefined){ anNote("hotcue", { deck:d.deck, index:d.index, action:d.jump ? "jump" : (d.set ? "set" : "clear"), pos:d.pos }); if(d.jump) anUsed("hotcue " + d.deck); } break;
+      case "loop":
+        if(k >= 0 && !!d.active !== AN.loopOn[k]){
+          AN.loopOn[k] = !!d.active;
+          anNote("loop", { deck:d.deck, on:!!d.active, beats:D && D.beatLen > 0 && d.end > d.start ? Math.round((d.end - d.start) * D.sr / D.beatLen * 1000) / 1000 : null, start:d.start, end:d.end });
+          anUsed("loop " + d.deck);
+        }
+        break;
+      case "sync": anNote("sync", { deck:d.deck, on:!!d.on }); anUsed("sync " + d.deck); break;
+      case "master": if(d.deck) anNote("master", { deck:d.deck }); break;
+      case "tempo":
+        if(k < 0) break;
+        g = AN.tempo[k];
+        if(!g){
+          var from = AN.shadow["tempo" + k]; if(from === undefined) from = 0;
+          if(Math.abs(d.percent - from) < 0.005) break;
+          g = AN.tempo[k] = { deck:d.deck, from:from, to:d.percent, bpm:d.bpm, t0:t, t1:t, sync:!!(D && D.sync && masterIdx !== k) };
+          if(!g.sync) anUsed("tempo " + d.deck);
+        }
+        g.to = d.percent; g.bpm = d.bpm; g.t1 = t; AN.shadow["tempo" + k] = d.percent;
+        break;
+      case "mode":
+        g = { deck:d.deck };
+        ["quantise", "slip", "vinyl", "keylock", "reverse", "slipReverse"].forEach(function(x){ if(d[x] !== undefined) g[x] = d[x]; });
+        anNote("mode", g);
+        if(d.reverse !== undefined) anUsed("reverse " + d.deck);
+        break;
+      case "key": anNote("key", { deck:d.deck, shift:d.shift, key:d.key, camelot:d.camelot, why:d.why }); anUsed("key " + d.deck); break;
+      case "end": anNote("trackEnd", { deck:d.deck }); break;
+      case "mixer": anMixer(d); break;
+      case "fx": anNote("fx", { on:!!d.on, effect:d.type, target:d.target, beats:d.beats }); if(d.on) anUsed("fx"); break;
+      case "record": anNote("record", { on:!!d.on, seconds:d.seconds || 0 }); break;
+      }
+    }
+    function anOpen(P, a, b, R, t){
+      var ia = a.n - 1, ib = b.n - 1, inc = AN.audSince[ia] > AN.audSince[ib] ? a : b, out = inc === a ? b : a, pc = anPair(out, inc, R), sc = AN.startCtx[inc.n - 1], off = null, k;
+      if(sc) for(k = 0; k < sc.others.length; k++) if(sc.others[k].deck === out.n) off = sc.others[k];
+      P.tr = { decks:[a.n, b.n], outgoing:out.n, incoming:inc.n, start:t - P.streak, end:null, seconds:0, bars:0, controls:[],
+        maxAbsPhaseMs:0, meanAbsPhaseMs:null, meanBpmDiffPercent:null, maxBpmDiffPercent:0, keyOutgoing:out.keyNow, keyIncoming:inc.keyNow, keyCompatible:pc.keyCompatible,
+        lowsOverlapSeconds:0, lowsOverlapBars:0, incomingStartedOnPhrase:off ? Math.abs(off.offPhrase8Beats) <= 1 : null, mixInOffPhraseBeats:off ? off.offPhrase8Beats : null,
+        phraseOffsetBeats:pc.phraseOffsetBeats, barOffsetBeats:pc.barOffsetBeats, peakDb:-120, clippingSeconds:0, clipped:false, trainwrecks:0, synced:!!(inc.sync || out.sync), endState:null,
+        _n:0, _ph:0, _bd:0, _bpm:out.bpm || inc.bpm || 0, _bpb:out.bpb || 4 };
+      anNote("transitionStart", { decks:P.tr.decks, outgoing:out.n, incoming:inc.n, keyCompatible:pc.keyCompatible, incomingStartedOnPhrase:P.tr.incomingStartedOnPhrase, mixInOffPhraseBeats:P.tr.mixInOffPhraseBeats, phraseOffsetBeats:pc.phraseOffsetBeats });
+    }
+    function anClose(P, R, t){
+      var tr = P.tr, a = R.decks[tr.decks[0] - 1], b = R.decks[tr.decks[1] - 1], inc = R.decks[tr.incoming - 1], out = R.decks[tr.outgoing - 1], k, o = {};
+      P.tr = null;
+      tr.end = t - P.gap; tr.seconds = Math.round((tr.end - tr.start) / 100) / 10;
+      var barS = tr._bpm > 0 ? 60 / tr._bpm * tr._bpb : 0;
+      tr.bars = barS ? Math.round(tr.seconds / barS * 10) / 10 : null;
+      tr.lowsOverlapSeconds = Math.round(tr.lowsOverlapSeconds * 10) / 10;
+      tr.lowsOverlapBars = barS ? Math.round(tr.lowsOverlapSeconds / barS * 10) / 10 : null;
+      tr.clippingSeconds = Math.round(tr.clippingSeconds * 10) / 10; tr.clipped = tr.clippingSeconds > 0;
+      if(tr._n){ tr.meanAbsPhaseMs = Math.round(tr._ph / tr._n * 10) / 10; tr.meanBpmDiffPercent = Math.round(tr._bd / tr._n * 1000) / 1000; }
+      else { tr.maxAbsPhaseMs = null; tr.maxBpmDiffPercent = null; }
+      if(tr.maxAbsPhaseMs !== null){ tr.maxAbsPhaseMs = Math.round(tr.maxAbsPhaseMs * 10) / 10; tr.maxBpmDiffPercent = Math.round(tr.maxBpmDiffPercent * 1000) / 1000; }
+      // how it ended: which of the two can still be heard
+      var ai = anAudible(inc), ao = anAudible(out);
+      tr.endState = ai && !ao ? "incoming" : (ao && !ai ? "outgoing" : (ai && ao ? "both" : "none"));
+      for(k in tr) if(tr.hasOwnProperty(k) && k.charAt(0) !== "_") o[k] = tr[k];
+      anNote("transition", o);
+    }
+    function anTick(R){
+      var t = R.t, dt = AN.last ? Math.min(1000, Math.max(0, t - AN.last)) : 50, i, j, a, b, P, both, pc, key, x;
+      AN.last = t; AN.R = R; R.hold = AN.hold;
+      x = Math.pow(0.1, dt / 1000);                // a held peak falls 20 dB in a second
+      for(i = 0; i < 5; i++){ a = i === 4 ? R.master.peak : (R.ch[i] ? R.ch[i].peak : 0); AN.hold[i] = a > AN.hold[i] * x ? a : AN.hold[i] * x; }
+      for(i = 0; i < R.decks.length; i++){
+        a = R.decks[i];
+        // short-term loudness of each deck before its fader: about 400 ms
+        x = R.ch[i] ? R.ch[i].rms * R.ch[i].rms : 0;
+        AN.en[i] += (x - AN.en[i]) * Math.min(1, dt / 400);
+        if(anAudible(a) && a.playing){ if(!AN.audSince[i]) AN.audSince[i] = t; } else AN.audSince[i] = 0;
+      }
+      for(i = 0; i < R.decks.length; i++) for(j = i + 1; j < R.decks.length; j++){
+        a = R.decks[i]; b = R.decks[j]; key = i + "-" + j; P = AN.pairs[key];
+        if(!a || !b){ if(P && P.tr){ P.gap += dt; anClose(P, R, t); } if(P){ P.streak = 0; P.wr = 0; P.wrEv = null; } continue; }
+        if(!P) P = AN.pairs[key] = { streak:0, gap:0, tr:null, wr:0, wrMax:0, wrEv:null };
+        both = anAudible(a) && anAudible(b) && a.playing && b.playing;
+        pc = both ? anPair(P.tr && P.tr.outgoing === b.n ? b : a, P.tr && P.tr.outgoing === b.n ? a : b, R) : null;
+        if(both){
+          P.gap = 0; P.streak += dt;
+          if(!P.tr && P.streak >= 1000){ anOpen(P, a, b, R, t); pc = anPair(R.decks[P.tr.outgoing - 1], R.decks[P.tr.incoming - 1], R); }
+        } else {
+          P.streak = 0;
+          if(P.tr){ P.gap += dt; if(P.gap >= 1500 || !a.playing || !b.playing) anClose(P, R, t); }
+        }
+        if(P.tr && pc){
+          var tr = P.tr;
+          if(pc.phaseMs !== null){ x = Math.abs(pc.phaseMs); if(x > tr.maxAbsPhaseMs) tr.maxAbsPhaseMs = x; tr._ph += x; }
+          if(pc.bpmDiffPercent !== null){ x = Math.abs(pc.bpmDiffPercent); if(x > tr.maxBpmDiffPercent) tr.maxBpmDiffPercent = x; tr._bd += x; }
+          tr._n++;
+          if(pc.lowEndClash) tr.lowsOverlapSeconds += dt / 1000;
+          if(pc.clipping) tr.clippingSeconds += dt / 1000;
+          if(anDb(R.master.peak) > tr.peakDb) tr.peakDb = anDb(R.master.peak);
+          if(a.sync || b.sync) tr.synced = true;
+        }
+        // beats apart for longer than two bars while both are heard
+        if(both && pc && pc.phaseMs !== null && Math.abs(pc.phaseMs) > AN_WRECK_MS){
+          P.wr += dt; if(Math.abs(pc.phaseMs) > P.wrMax) P.wrMax = Math.abs(pc.phaseMs);
+          var barMs = 60000 / (a.bpm || 120) * a.bpb;
+          if(!P.wrEv && P.wr > AN_WRECK_BARS * barMs){
+            P.wrEv = anNote("trainwreck", { decks:[a.n, b.n], phaseMs:Math.round(pc.phaseMs * 10) / 10, maxAbsPhaseMs:Math.round(P.wrMax * 10) / 10, bars:Math.round(P.wr / barMs * 10) / 10, bpmDiffPercent:pc.bpmDiffPercent, ended:false });
+            if(P.tr) P.tr.trainwrecks++;
+          } else if(P.wrEv){ P.wrEv.bars = Math.round(P.wr / barMs * 10) / 10; P.wrEv.maxAbsPhaseMs = Math.round(P.wrMax * 10) / 10; }
+        } else if(!both || !pc || pc.phaseMs === null || Math.abs(pc.phaseMs) < AN_WRECK_MS * 0.75){
+          if(P.wrEv) P.wrEv.ended = true;
+          P.wr = 0; P.wrMax = 0; P.wrEv = null;
+        }
+      }
+      // dead air: the master silent for more than two seconds, once something has been heard and a deck is still loaded
+      var loaded = R.decks.some(function(d){ return !!d; });
+      if(R.master.rms >= 0.001){
+        AN.heard = true; AN.quiet = 0;
+        if(AN.dead){ AN.dead.ended = true; AN.dead = null; }
+      } else if(AN.heard && loaded){
+        AN.quiet += dt;
+        if(!AN.dead && AN.quiet > 2000) AN.dead = anNote("deadAir", { seconds:Math.round(AN.quiet / 100) / 10, ended:false });
+        else if(AN.dead) AN.dead.seconds = Math.round(AN.quiet / 100) / 10;
+      }
+      // redlining: at the top of the scale for more than a second (a meter reading can miss single peaks, so a quarter of a second without one is allowed)
+      var where = [];
+      if(R.master.peak >= 0.98) where.push("master");
+      for(i = 0; i < R.ch.length; i++) if(R.ch[i] && R.ch[i].peak >= 0.999) where.push("ch" + (i + 1));
+      if(where.length){ AN.hotAgo = 0; AN.hotWhere = where; } else AN.hotAgo += dt;
+      if(AN.hotAgo <= 250){
+        AN.hot += dt;
+        if(!AN.red && AN.hot > 1000) AN.red = anNote("redline", { where:AN.hotWhere.slice(), seconds:Math.round(AN.hot / 100) / 10, peakDb:anDb(R.master.peak), ended:false });
+        else if(AN.red){ AN.red.seconds = Math.round(AN.hot / 100) / 10; where.forEach(function(w){ if(AN.red.where.indexOf(w) < 0) AN.red.where.push(w); }); }
+      } else { if(AN.red) AN.red.ended = true; AN.red = null; AN.hot = 0; }
+      anFlush(t, false);
+    }
+    function anStart(){
+      if(AN.timer) return;
+      AN.timer = setInterval(function(){
+        if(AN.sim || !ENG || !ENG.M) return;
+        // nothing loaded and nothing waiting to be written down: nothing to measure
+        if(!allDecks.some(function(D){ return !!D.track; }) && !AN.dead && !AN.red){ anFlush(anNow(), false); AN.last = 0; return; }
+        anTick(anRead());
+      }, 50);
+    }
+    function anReset(){
+      AN.log = []; AN.pairs = {}; AN.gest = {}; AN.tempo = {}; AN.nud = {}; AN.scr = {}; AN.shadow = {}; AN.audSince = [0, 0, 0, 0]; AN.startCtx = [null, null, null, null];
+      AN.loopOn = [false, false, false, false]; AN.en = [0, 0, 0, 0]; AN.heard = false; AN.quiet = 0; AN.dead = null; AN.hot = 0; AN.hotAgo = 1e9; AN.red = null; AN.last = 0; AN.R = null; AN.hold = [0, 0, 0, 0, 0];
+    }
+    on("*", anEvent);
+    var anAPI = {
+      // the two decks against each other, a the reference: see the interface description
+      pair:function(a, b){
+        var R = AN.sim ? AN.R : anRead();
+        if(!R) return { loaded:false };
+        return anPair(R.decks[(+a || 1) - 1] || null, R.decks[(+b || 2) - 1] || null, R);
+      },
+      deck:function(n){
+        var R = AN.sim ? AN.R : anRead();
+        return R ? anDeck(R.decks[(+n || 1) - 1] || null, R) : { loaded:false };
+      },
+      // events, oldest first: {sinceMs (a time as Date.now() gives it), types:[...], limit}
+      log:function(o){
+        o = o || {};
+        var since = +o.sinceMs || 0, types = o.types || null, out = AN.log.filter(function(e){ return e.t >= since && (!types || types.indexOf(e.type) >= 0); });
+        if(o.limit > 0 && out.length > o.limit) out = out.slice(out.length - o.limit);
+        return JSON.parse(JSON.stringify(out));
+      },
+      // transitions under way right now, with what has been counted so far
+      current:function(){
+        var out = [], k, tr, o, x;
+        for(k in AN.pairs) if((tr = AN.pairs[k].tr)){
+          o = {}; for(x in tr) if(tr.hasOwnProperty(x) && x.charAt(0) !== "_") o[x] = tr[x];
+          o.seconds = Math.round((anNow() - tr.start) / 100) / 10;
+          out.push(JSON.parse(JSON.stringify(o)));
+        }
+        return out;
+      },
+      now:function(){ return anNow(); },
+      reset:function(){ anReset(); },
+      limits:{ events:400, minutes:30, trainwreckMs:AN_WRECK_MS, trainwreckBars:AN_WRECK_BARS, audibleGain:AN_AUD, clashGain:AN_LOWG }
+    };
 
     // ---------- on screen ----------
     var UI = { deck:[], knobs:{}, meters:[], pops:[], rowsPool:[], colset:"full", frameN:0, raf:0, listDirty:false, treeDirty:false, infoDirty:false };
@@ -18685,13 +19694,13 @@
       return K;
     }
     function beatsLabel(b){ return b >= 1 ? String(b) : "1/" + Math.round(1 / b); }
-    function stepper(get, set, title){
+    function stepper(get, set, title, fmt){
       var w = el("span", "dj-beats"), a = el("button", "", "◀"), s = el("span", "dj-num"), b = el("button", "", "▶");
       a.type = b.type = "button"; a.setAttribute("aria-label", title + ": smaller"); b.setAttribute("aria-label", title + ": larger");
       w.title = title;
       a.addEventListener("click", function(){ set(-1); paint(); });
       b.addEventListener("click", function(){ set(1); paint(); });
-      function paint(){ s.textContent = beatsLabel(get()); }
+      function paint(){ s.textContent = (fmt || beatsLabel)(get()); }
       w.appendChild(a); w.appendChild(s); w.appendChild(b);
       w.paint = paint; paint();
       return w;
@@ -18865,10 +19874,10 @@
         if(!u.panel) return;
         if(four){
           u.panel.insertBefore(u.head, u.panel.firstChild);
-          [u.rows.loop, u.rows.jump, u.rows.mode, u.rows.mem, u.rows.track, u.right].forEach(function(n){ u.more.appendChild(n); });
+          [u.rows.loop, u.rows.jump, u.rows.mode, u.rows.key, u.rows.mem, u.rows.track, u.right].forEach(function(n){ u.more.appendChild(n); });
         } else {
           UI.heads.appendChild(u.head);
-          ["loop", "auto", "jump", "beat", "mode", "mem", "track"].forEach(function(k){ u.mid.appendChild(u.rows[k]); });
+          ["loop", "auto", "jump", "beat", "mode", "key", "mem", "track"].forEach(function(k){ u.mid.appendChild(u.rows[k]); });
           u.panel.insertBefore(u.right, u.more);
         }
       });
@@ -18940,14 +19949,16 @@
       rec.addEventListener("click", function(){
         if(REC.on) recStop().then(function(r){
           if(!r) return;
-          var d = new Date(), nm = "First Loop mix " + d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + ".wav";
-          offerFile(r.blob, nm);
-          note("The recording is " + fmtTime(r.seconds) + " long and was saved as a WAV file.");
+          offerFile(r.blob, r.name);
+          note("The recording is " + fmtTime(r.seconds) + " long and was saved as “" + r.name + "” (WAV, " + r.bits + " bits).");
         });
         else recStart();
       });
       UI.rec = rec; UI.recT = rec.lastChild;
-      g.appendChild(rec); bar.appendChild(g);
+      var rlv = el("span", "dj-reclv"); rlv.appendChild(el("i")); rlv.hidden = true;
+      rlv.setAttribute("role", "img"); rlv.setAttribute("aria-label", "Recording level"); rlv.title = "The level going into the recording. Red: the loudest moments are at the top of the scale.";
+      UI.recLv = rlv;
+      g.appendChild(rec); g.appendChild(rlv); bar.appendChild(g);
       bar.appendChild(el("span", "sep"));
       // two decks or four
       g = el("div", "grp");
@@ -18967,6 +19978,9 @@
       g = el("div", "grp");
       var out = btn("", "Output", "Speakers, split cue or four channels; output device"); out.id = "djout"; out.setAttribute("aria-haspopup", "dialog");
       out.addEventListener("click", function(){ openOutput(out); });
+      var stb = btn("", "Settings", "Deck behaviour, key lock, latency, recording format"); stb.id = "djset"; stb.setAttribute("aria-haspopup", "dialog");
+      stb.addEventListener("click", function(){ openSettings(stb); });
+      UI.setBtn = stb; g.appendChild(stb);
       var sc = btn("", "Shortcuts", "Keyboard shortcuts for the DJ area (?)"); sc.id = "djkeys"; sc.setAttribute("aria-haspopup", "dialog");
       sc.addEventListener("click", function(){ openShortcuts(sc); });
       var hp = el("button", "help", "?"); hp.type = "button"; hp.id = "djhelp"; hp.setAttribute("aria-label", "How the DJ area works"); hp.setAttribute("aria-haspopup", "dialog");
@@ -18980,10 +19994,11 @@
       if(!UI.stat) return;
       var t = "", warn = false;
       if(ENG && ENG.failed){ t = ENG.failed; warn = true; }
-      else if(ENG && ENG.mode === "fallback"){ t = "Reduced player: this browser did not load the full audio engine, so there is no scratching, reverse, slip or recording."; warn = true; }
+      else if(ENG && ENG.mode === "fallback"){ t = "Reduced player: this browser did not load the full audio engine, so there is no scratching, reverse, slip, key lock or recording."; warn = true; }
       else if(ENG && ENG.ctx){
         var lat = ((ENG.ctx.baseLatency || 0) + (ENG.ctx.outputLatency || 0)) * 1000;
         t = Math.round(ENG.ctx.sampleRate / 100) / 10 + " kHz" + (lat > 0 ? "   " + Math.round(lat) + " ms" : "");
+        if(DROPS.n > 0){ t += "   " + DROPS.n + (DROPS.n === 1 ? " dropout" : " dropouts"); warn = true; }
       }
       UI.stat.textContent = t; UI.stat.dataset.warn = warn ? "true" : "false"; UI.stat.title = t;
       if(UI.outBtn) UI.outBtn.textContent = "Output: " + routingName(ENG && ENG.M ? ENG.M.mode : SET.routing);
@@ -19041,6 +20056,69 @@
           t1.addEventListener("click", function(){ API.mixer.testTone("master", 1); }); t2.addEventListener("click", function(){ API.mixer.testTone("phones", 1); });
           tr.appendChild(t1); tr.appendChild(t2); p.appendChild(tr);
         });
+      });
+    }
+    function openSettings(anchor){
+      openPop(anchor, "dj-pop", function(p){
+        p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Deck settings"); p.id = "djsetpop";
+        p.appendChild(el("h3", "", "Settings"));
+        var secA = el("div"), secD = el("div"), secR = el("div"), host = secD;
+        p.appendChild(secA); p.appendChild(secD); p.appendChild(secR);
+        function check(id, label, small, get, set){
+          var l = el("label", "opt"), c = el("input"); c.type = "checkbox"; c.id = id; c.checked = !!get();
+          c.addEventListener("change", function(){ set(c.checked); });
+          l.appendChild(c); l.appendChild(el("span", "", label)); if(small) l.appendChild(el("small", "", small));
+          host.appendChild(l); return c;
+        }
+        function choice(id, label, opts, get, set, small){
+          var r = el("div", "rowx"); r.appendChild(el("span", "dj-l", label)); r.firstChild.style.cssText = "flex:0 0 118px;width:auto;";
+          var sg = el("span", "dj-seg"); sg.id = id; sg.setAttribute("role", "group"); sg.setAttribute("aria-label", label);
+          var bs = [];
+          function paint(){ var cur2 = get(); bs.forEach(function(x){ x[1].setAttribute("aria-pressed", x[0] === cur2 ? "true" : "false"); }); }
+          opts.forEach(function(o){
+            var b = el("button", "", o[1]); b.type = "button"; b.dataset.v = String(o[0]);
+            b.addEventListener("click", function(){ var r2 = set(o[0]); if(r2 && r2.then) r2.then(paint); paint(); });
+            bs.push([o[0], b]); sg.appendChild(b);
+          });
+          paint(); r.appendChild(sg); host.appendChild(r);
+          if(small){ var sm = el("p", "", small); sm.style.cssText = "margin:2px 0 6px;font-size:11px;color:var(--ink-3);"; host.appendChild(sm); }
+          return paint;
+        }
+        host = secD; host.appendChild(el("h4", "", "Decks"));
+        check("djs-klnew", "Key lock on for new tracks", "Every track that is loaded starts with key lock on: the tempo fader changes the speed and leaves the pitch alone (Master Tempo).",
+          function(){ return SET.keylockNew; }, function(v){ API.settings({ keylockNew:v }); });
+        check("djs-gate", "A hot cue on a paused deck plays only while held", "As rekordbox does by default (“During Pause, GATE playback is applied”). Off: the track starts from the hot cue and keeps playing, as on a CDJ.",
+          function(){ return SET.hotGate; }, function(v){ API.settings({ hotGate:v }); });
+        check("djs-needle", "Needle lock", "The whole-track strip moves the position only while the deck is paused or the platter is held, so a slip of the hand cannot throw a playing track.",
+          function(){ return SET.needleLock; }, function(v){ API.settings({ needleLock:v }); });
+        check("djs-gain", "Auto gain", "Tracks are loaded at a similar loudness, from the level worked out by analysis. Trim still works on top of it.",
+          function(){ return SET.autoGain; }, function(v){ API.settings({ autoGain:v }); });
+        choice("djs-qunit", "Quantize snaps to", [[1, "1 beat"], [0.5, "1/2"], [0.25, "1/4"], [0.125, "1/8"]], function(){ return SET.qunit; }, function(v){ API.settings({ quantiseBeats:v }); });
+        choice("djs-endwarn", "End of track warning", [[0, "Off"], [30, "30 s"], [60, "60 s"]], function(){ return SET.endWarn; }, function(v){ API.settings({ endWarning:v }); });
+        host = secR; host.appendChild(el("h4", "", "Recording"));
+        choice("djs-bits", "WAV file", [[16, "16 bit"], [24, "24 bit"]], function(){ return SET.recBits; }, function(v){ API.settings({ recordBits:v }); },
+          "The recording is written to this device while it runs, so two hours fit. 24 bit keeps more of quiet passages and makes a file half as large again.");
+        host = secA; host.appendChild(el("h4", "", "Audio")); host.firstChild.style.marginTop = "0";
+        var facts = el("div", "facts"); facts.id = "djs-facts"; facts.style.margin = "0 0 6px";
+        function paintFacts(){
+          var a = API.audioInfo(), d = a.dropouts, lines = [];
+          if(!a.started) lines.push("The audio engine starts with the first track that is loaded.");
+          else {
+            lines.push("Latency " + (a.latencyMs === null ? "–" : a.latencyMs.toFixed(1)) + " ms (browser " + (a.baseLatency * 1000).toFixed(1) + " + output " + (a.outputLatency * 1000).toFixed(1) + ")");
+            lines.push("Dropouts " + d.total + " in " + d.minutesWatched + " min" + (d.total ? " (" + d.inWindow + " in the last " + d.windowMinutes + " min, " + d.lostMs + " ms lost)" : ""));
+            lines.push("Audio thread " + (a.cpuPercent === null ? "–" : a.cpuPercent.toFixed(1)) + "% of its time" + (a.engine === "worklet" ? ", key lock quality " + a.keylockQuality : ""));
+          }
+          facts.textContent = lines.join("\n");
+        }
+        choice("djs-latency", "Latency", [["interactive", "Interactive"], ["balanced", "Balanced"], ["safe", "Safe"]], function(){ return ENG && ENG.latency ? ENG.latency : SET.latency; },
+          function(v){ return setLatency(v).then(function(){ paintFacts(); paintStat(); }); },
+          "Interactive is the tightest. If the sound crackles, try Balanced or Safe. It changes only while no deck is playing; loaded tracks are loaded again.");
+        host.insertBefore(facts, host.children[1]);
+        var rs = btn("", "Reset count", "Start counting dropouts from now");
+        rs.id = "djs-xreset"; rs.addEventListener("click", function(){ dropoutsReset(); paintFacts(); paintStat(); });
+        host.children[2].appendChild(rs);
+        paintFacts();
+        var tm = setInterval(function(){ if(!p.parentNode){ clearInterval(tm); return; } paintFacts(); }, 1000);
       });
     }
     function openHelp(anchor){
@@ -19218,7 +20296,7 @@
       var jb1 = btn("", "◀◀", "Jump back by this many beats. While a loop is on, the loop moves too."), jf1 = btn("", "▶▶", "Jump forward by this many beats. While a loop is on, the loop moves too.");
       jb1.setAttribute("aria-label", "Deck " + D.n + " jump back"); jf1.setAttribute("aria-label", "Deck " + D.n + " jump forward");
       jb1.addEventListener("click", function(){ D.seekBy(-D.jumpBeats); }); jf1.addEventListener("click", function(){ D.seekBy(D.jumpBeats); });
-      var JB = [0.5, 1, 2, 4, 8, 16, 32];
+      var JB = [0.5, 1, 2, 4, 8, 16, 32, 64];
       u.jumpLen = stepper(function(){ return D.jumpBeats; }, function(dir){ var k = JB.indexOf(D.jumpBeats); D.jumpBeats = JB[clamp(k + dir, 0, JB.length - 1)]; }, "Jump size in beats");
       row.appendChild(jb1); row.appendChild(u.jumpLen); row.appendChild(jf1);
       mid.appendChild(row);
@@ -19227,14 +20305,32 @@
       var ms = btn("", "Master", "Make this the deck the others follow");
       sy.setAttribute("aria-label", "Deck " + D.n + " beat sync"); ms.setAttribute("aria-label", "Deck " + D.n + " master");
       sy.addEventListener("click", function(){ D.setSync(); }); ms.addEventListener("click", function(){ D.setMaster(); });
-      row.appendChild(sy); row.appendChild(ms);
+      var rv = btn("", "Rev", "Reverse: the track plays backwards until this is pressed again. With Slip on it plays backwards only while held, and the track carries on underneath.");
+      rv.setAttribute("aria-label", "Deck " + D.n + " reverse"); rv.setAttribute("aria-pressed", "false");
+      var rvSlip = false;
+      hold(rv, function(){ rvSlip = D.slip; if(rvSlip) D.setReverse(true, true); else D.setReverse(); }, function(){ if(rvSlip){ rvSlip = false; D.setReverse(false); } });
+      u.revB = rv;
+      row.appendChild(sy); row.appendChild(ms); row.appendChild(rv);
       mid.appendChild(row);
       row = el("div", "dj-row r-mode"); u.rows.mode = row; row.appendChild(el("span", "dj-l", "Mode"));
       var qz = btn("", "Quantize", "Snap cues, loops and jumps to the beat grid"), sl = btn("", "Slip", "The track carries on underneath a loop, a scratch or a held hot cue");
       var vn = btn("", "Vinyl", "On: dragging the platter or the waveform scratches. Off: it nudges.");
       qz.addEventListener("click", function(){ D.setQuantise(); }); sl.addEventListener("click", function(){ D.setSlip(); }); vn.addEventListener("click", function(){ D.setVinyl(); });
-      u.syncB = sy; u.masterB = ms; u.quantB = qz; u.slipB = sl; u.vinylB = vn;
-      row.appendChild(qz); row.appendChild(sl); row.appendChild(vn);
+      var kl = btn("", "Key lock", "Key lock (Master Tempo): the tempo fader changes the speed and the pitch stays where it is");
+      kl.setAttribute("aria-label", "Deck " + D.n + " key lock"); kl.setAttribute("aria-pressed", "false");
+      kl.addEventListener("click", function(){ D.setKeylock(); });
+      u.syncB = sy; u.masterB = ms; u.quantB = qz; u.slipB = sl; u.vinylB = vn; u.klB = kl;
+      row.appendChild(qz); row.appendChild(sl); row.appendChild(vn); row.appendChild(kl);
+      mid.appendChild(row);
+      row = el("div", "dj-row r-key"); u.rows.key = row; row.appendChild(el("span", "dj-l", "Key"));
+      u.keyStep = stepper(function(){ return D.keyShift; }, function(dir){ D.setKeyShift(D.keyShift + dir); }, "Key shift in semitones",
+        function(n){ return n === 0 ? "0" : (n > 0 ? "+" + n : "−" + (-n)); });
+      var k0 = btn("fix", "0", "Back to the track's own key"), ks = btn("", "Key sync", "Shift this deck to the nearest key that goes with the master deck: the same key, a neighbour on the Camelot wheel, or the relative major or minor. Two semitones at most.");
+      k0.setAttribute("aria-label", "Deck " + D.n + " key shift reset"); ks.setAttribute("aria-label", "Deck " + D.n + " key sync");
+      k0.addEventListener("click", function(){ D.setKeyShift(0); }); ks.addEventListener("click", function(){ D.keySync(); });
+      u.keyOut = el("span", "dj-l dj-memo", ""); u.keySyncB = ks; u.key0B = k0;
+      k0.style.minWidth = "22px"; ks.classList.add("fix"); ks.style.padding = "0 6px"; u.keyOut.style.whiteSpace = "nowrap";
+      row.appendChild(u.keyStep); row.appendChild(k0); row.appendChild(ks); row.appendChild(u.keyOut);
       mid.appendChild(row);
       row = el("div", "dj-row r-mem"); u.rows.mem = row; row.appendChild(el("span", "dj-l", "Mem"));
       var mset = btn("", "Set", "Memory cue: keep this place with the track. While a loop is on, keeps the loop instead.");
@@ -19243,7 +20339,11 @@
       mset.setAttribute("aria-label", "Deck " + D.n + " set memory cue"); mp.setAttribute("aria-label", "Deck " + D.n + " previous memory cue"); mn.setAttribute("aria-label", "Deck " + D.n + " next memory cue"); mdel.setAttribute("aria-label", "Deck " + D.n + " delete memory cue");
       mset.addEventListener("click", function(){ D.memory("set"); }); mp.addEventListener("click", function(){ D.memory("prev"); });
       mn.addEventListener("click", function(){ D.memory("next"); }); mdel.addEventListener("click", function(){ D.memory("delete"); });
-      row.appendChild(mset); row.appendChild(mp); row.appendChild(mn); row.appendChild(mdel);
+      var mact = btn("", "Active", "Active loop: the saved loop the deck is in starts by itself every time the track reaches it. Press again to make it an ordinary saved loop.");
+      mact.setAttribute("aria-label", "Deck " + D.n + " active loop"); mact.setAttribute("aria-pressed", "false");
+      mact.addEventListener("click", function(){ D.memory("active"); });
+      u.activeB = mact;
+      row.appendChild(mset); row.appendChild(mp); row.appendChild(mn); row.appendChild(mdel); row.appendChild(mact);
       mid.appendChild(row);
       row = el("div", "dj-row r-track"); u.rows.track = row; row.appendChild(el("span", "dj-l", "Track"));
       var gr = btn("", "Grid", "Beat grid: tempo, first beat, tap"), ej = btn("", "Unload", "Take the track off the deck and free its memory");
@@ -19268,9 +20368,13 @@
         onInput:function(v){ D.setTempo(v * 2 - 1); } });
       u.tempoH.el.classList.add("dj-tempoh");
       right.appendChild(u.tempoH.el);
-      var rg = btn("", "±10%", "Tempo range: 6, 10, 16 per cent or wide");
+      var rg = btn("", "±10%", "Tempo range: 6, 10, 16 per cent or wide (the whole way: stopped to double speed)");
       rg.addEventListener("click", function(){ D.tempoRange("next"); });
       u.rangeB = rg; right.appendChild(rg);
+      var t0 = btn("", "Reset", "Tempo reset: back to the track's own speed");
+      t0.setAttribute("aria-label", "Deck " + D.n + " tempo reset");
+      t0.addEventListener("click", function(){ API.deck(D.n).tempoReset(); });
+      u.tempo0B = t0; right.appendChild(t0);
       var bend = el("div", "dj-bend"), bm = btn("", "−", "Hold to slow down a little"), bp = btn("", "+", "Hold to speed up a little");
       bm.setAttribute("aria-label", "Deck " + D.n + " pitch bend down"); bp.setAttribute("aria-label", "Deck " + D.n + " pitch bend up");
       hold(bm, function(){ D.nudge(-1); }, function(){ D.nudge(0); }); hold(bp, function(){ D.nudge(1); }, function(){ D.nudge(0); });
@@ -19289,7 +20393,7 @@
       function go(e){
         if(!D.track) return;
         var r = cv.getBoundingClientRect();
-        D.seek(clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1) * D.dur());
+        if(!D.needle(clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1) * D.dur()) && e.type === "pointerdown") note("Needle lock is on: the strip moves the position only while the deck is paused. It can be switched off under Settings.");
       }
       cv.addEventListener("pointerdown", function(e){ if(e.button !== 0 && e.pointerType === "mouse") return; e.preventDefault(); on = true; try { cv.setPointerCapture(e.pointerId); } catch(x){} go(e); });
       cv.addEventListener("pointermove", function(e){ if(on) go(e); });
@@ -19407,10 +20511,12 @@
         if(t) (function(id){ artFor(t).then(function(url){ if(url && D.track && D.track.id === id){ u.cover.src = url; u.cover.hidden = false; } }); })(t.id);
       }
       u.artist.textContent = t ? (t.artist || "") : emptyHint(D);
-      var cam = t ? camelot(t.key) : "";
+      // the key the deck sounds in now: the track's own, moved by the key shift and, without key lock, by the tempo
+      var kn = t ? (D.keyNow() || t.key || "") : "", cam = camelot(kn), moved = t && t.key && kn !== t.key;
       u.keyBig.textContent = cam || "–";
-      u.keySm.textContent = t && t.key ? t.key + (t.keySrc === "suggested" ? (UI.mode === "4" ? " ?" : " suggested") : "") : "key";
-      u.keySm.title = t && t.keySrc === "suggested" ? "Worked out by analysis. It is a suggestion; correct it under Info if it sounds wrong." : "";
+      u.keySm.textContent = t && t.key ? kn + (moved ? " (" + t.key + ")" : (t.keySrc === "suggested" ? (UI.mode === "4" ? " ?" : " suggested") : "")) : "key";
+      u.keySm.title = moved ? "The track is in " + t.key + " (" + camelot(t.key) + "). " + (D.keyShift ? "The key shift is " + (D.keyShift > 0 ? "+" : "−") + Math.abs(D.keyShift) + " semitones. " : "") + (!D.keylock && Math.abs(D.rate - 1) > 0.028 ? "Key lock is off, so the tempo moves the pitch as well." : "")
+        : (t && t.keySrc === "suggested" ? "Worked out by analysis. It is a suggestion; correct it under Info if it sounds wrong." : "");
       // overlay line: confirm, loading, error
       var ov = u.over;
       ov.textContent = ""; ov.dataset.why = "";
@@ -19461,11 +20567,24 @@
       u.vinylB.setAttribute("aria-pressed", D.vinyl ? "true" : "false");
       var noFull = ENG && ENG.mode === "fallback";
       u.slipB.disabled = !!noFull; u.vinylB.disabled = !!noFull;
+      // key lock, key shift, reverse: the reduced player has none of them, so they are not shown there (the line at the top says why)
+      u.klB.hidden = !!noFull; u.rows.key.hidden = !!noFull; u.revB.hidden = !!noFull;
+      u.klB.setAttribute("aria-pressed", D.keylock ? "true" : "false");
+      u.klB.dataset.rest = D.keylock && D.kx ? "true" : "false";
+      u.klB.title = D.keylock && D.kx ? "Key lock is on but resting: beyond 50% faster or slower it cannot keep the sound clean, so the pitch follows the tempo until the tempo comes back."
+        : "Key lock (Master Tempo): the tempo fader changes the speed and the pitch stays where it is";
+      u.revB.setAttribute("aria-pressed", D.rev ? "true" : "false");
+      u.keyStep.paint();
+      u.key0B.disabled = !D.keyShift;
+      u.keyOut.textContent = t && t.key ? (D.keyShift ? t.key + " → " + D.keyNow() + " " + camelot(D.keyNow()) : "") : "";
+      var inLoop = false, hereS = D.posFrames() / D.sr;
+      if(t && t.loops) t.loops.forEach(function(l){ if(l.active && ((D.loopOn && Math.abs(l.a - D.loopIn / D.sr) < 0.02) || (hereS >= l.a - 0.3 && hereS <= l.b))) inLoop = true; });
+      u.activeB.setAttribute("aria-pressed", inLoop ? "true" : "false");
       u.rangeB.textContent = D.range >= 1 ? "Wide" : "±" + Math.round(D.range * 100) + "%";
       u.tempo.set((D.tempoN + 1) / 2); u.tempoH.set((D.tempoN + 1) / 2);
       u.tempoH.el.dataset.locked = D.sync && masterIdx !== D.i && masterIdx >= 0 ? "true" : "false";
       u.tempo.el.dataset.locked = D.sync && masterIdx !== D.i && masterIdx >= 0 ? "true" : "false";
-      u.memo.textContent = t && D.analysing ? "Analysing" : "";
+      u.memo.textContent = t && D.analysing ? "Analysing" : (t && D.keylock && D.kx ? "Key lock rests beyond ±50%" : "");
       u.ejectB.title = "Take the track off the deck and free its memory" + (t && D.mem ? " (" + fmtBytes(D.mem) + ")" : "");
       paintReadout(D, true);
       UI.listDirty = true;
@@ -19486,7 +20605,7 @@
       var a = fmtTime(pos, true), b = "−" + fmtTime(rem, true);
       if(u._ta !== a){ u._ta = a; u.timeBig.textContent = a; }
       if(u._tb !== b){ u._tb = b; u.timeSm.textContent = b; }
-      var warn = D.playing && rem < 30 && dur > 45;
+      var warn = SET.endWarn > 0 && D.playing && !D.rev && rem < SET.endWarn && dur > SET.endWarn + 15;
       if(warn !== D.warn){ D.warn = warn; u.time.dataset.warn = warn ? "true" : "false"; emit("warning", { deck:D.n, endOfTrack:warn }); }
       if(D.beatLen > 0){
         var beat = Math.floor((D.posFrames() - D.first) / D.beatLen + 1e-6), bpb = (t.grid && t.grid.bpb) || 4;
@@ -19576,7 +20695,7 @@
       var cx = xOf(D.cue / sr);
       if(cx > -8 && cx < W + 8){ g.fillStyle = COL.accent; g.beginPath(); g.moveTo(cx - 5 * dpr, H); g.lineTo(cx + 5 * dpr, H); g.lineTo(cx, H - 8 * dpr); g.fill(); }
       (t.mem || []).forEach(function(m){ var mx2 = xOf(m.pos); if(mx2 > -8 && mx2 < W + 8){ g.fillStyle = COL.danger; g.beginPath(); g.moveTo(mx2 - 4 * dpr, 0); g.lineTo(mx2 + 4 * dpr, 0); g.lineTo(mx2, 7 * dpr); g.fill(); } });
-      (t.loops || []).forEach(function(l){ var a = xOf(l.a), b2 = xOf(l.b); if(b2 > 0 && a < W){ g.fillStyle = COL.good; g.globalAlpha = 0.8; g.fillRect(a, 0, b2 - a, 2 * dpr); g.fillRect(a, 0, dpr, 7 * dpr); g.globalAlpha = 1; } });
+      (t.loops || []).forEach(function(l){ var a = xOf(l.a), b2 = xOf(l.b); if(b2 > 0 && a < W){ g.fillStyle = l.active ? COL.danger : COL.good; g.globalAlpha = 0.8; g.fillRect(a, 0, b2 - a, 2 * dpr); g.fillRect(a, 0, dpr, 7 * dpr); g.globalAlpha = 1; } });
       g.font = "bold " + (9 * dpr) + "px system-ui,sans-serif"; g.textBaseline = "top";
       for(i = 0; i < 8; i++){
         var c = t.cues[i]; if(!c) continue;
@@ -19695,7 +20814,11 @@
       }
       for(i = 0; i < UI.widgets.length; i++) if(UI.widgets[i].dirty) UI.widgets[i].paint();
       if(!phone) paintMeters(now);
-      if(REC.on && n % 15 === 0 && ENG) UI.recT.textContent = fmtTime(REC.frames / ENG.ctx.sampleRate);
+      if(REC.on && n % 6 === 0 && ENG){
+        UI.recT.textContent = fmtTime(REC.frames / ENG.ctx.sampleRate);
+        UI.recLv.firstChild.style.width = (meterPos(REC.peak) * 100).toFixed(0) + "%";
+        UI.recLv.dataset.clip = REC.peak >= 0.985 ? "true" : "false";
+      }
       if(UI.listDirty && n % 4 === 0){ UI.listDirty = false; refreshList(); }
       if(UI.infoDirty){ UI.infoDirty = false; paintInfo(); }
       if(n % 120 === 0) paintStat();
@@ -22065,7 +23188,8 @@
       });
       on("engine", function(){ paintMixer(); paintStat(); decks.forEach(function(D){ D.dirty = true; }); });
       on("routing", paintStat);
-      on("record", function(d){ UI.rec.setAttribute("aria-pressed", d.on ? "true" : "false"); if(!d.on) UI.recT.textContent = "Rec"; });
+      on("record", function(d){ UI.rec.setAttribute("aria-pressed", d.on ? "true" : "false"); UI.recLv.hidden = !d.on; if(!d.on) UI.recT.textContent = "Rec"; else UI.recT.textContent = "00:00"; });
+      on("dropout", paintStat);
       on("master", function(){ decks.forEach(function(D){ D.dirty = true; }); });
       return initP;
     }
@@ -22137,6 +23261,12 @@
           setSlip:function(on2){ D.setSlip(on2); return D.slip; },
           memory:function(action){ return D.memory(action || "set"); },
           setVinyl:function(on2){ D.setVinyl(on2); return D.vinyl; },
+          setKeylock:function(on2){ D.setKeylock(on2); return D.keylock; },
+          setKeyShift:function(n){ return D.setKeyShift(n); },
+          keySync:function(){ return D.keySync(); },
+          reverse:function(on2){ return D.setReverse(on2, false); },
+          slipReverse:function(on2){ return D.setReverse(!!on2, true); },
+          needle:function(seconds){ return D.needle(+seconds || 0); },
           jumpSize:function(b){ if(b > 0){ D.jumpBeats = b; D.dirty = true; } return D.jumpBeats; },
           state:function(){ return D.state(); }
         };
@@ -22187,6 +23317,7 @@
         maxChannels:function(){ return ENG && ENG.M ? ENG.M.maxCh() : null; },
         outputs:listOutputs, setOutput:setOutput,
         record:function(on2){ return on2 ? recStart() : recStop(); },
+        recordState:function(){ return { on:REC.on, seconds:REC.on && REC.sr ? Math.round(REC.frames / REC.sr * 10) / 10 : 0, bits:REC.on ? REC.bits : SET.recBits, to:REC.on ? REC.kind : "", peakDb:REC.on ? anDb(REC.peak) : null }; },
         // a short beep straight to the master output or to the headphone output, to find out what comes out where
         testTone:function(where, seconds){
           mix(function(M){
@@ -22261,8 +23392,38 @@
         return { started:!!c, engine:ENG ? (ENG.failed ? "none" : ENG.mode) : "not started", state:c ? c.state : null, sampleRate:c ? c.sampleRate : null,
                  baseLatency:c ? c.baseLatency || 0 : null, outputLatency:c ? c.outputLatency || 0 : null,
                  maxChannels:ENG && ENG.M ? ENG.M.maxCh() : null, routing:ENG && ENG.M ? ENG.M.mode : SET.routing, sinkId:ENG ? ENG.sinkId || "" : SET.sinkId,
-                 canChooseOutput:canPickOutput() };
+                 canChooseOutput:canPickOutput(),
+                 latencyMs:latencyMs(), latencyMode:ENG && ENG.latency ? ENG.latency : SET.latency, dropouts:dropouts(30),
+                 cpuPercent:c && ENG.mode === "worklet" ? Math.round(ENG.cpu / (128000 / c.sampleRate) * 1000) / 10 : null,
+                 keylock:ENG ? ENG.mode === "worklet" : null, keylockQuality:ENG && ENG.quality ? ENG.quality : "full", keylockDelayMs:0 };
       },
+      // Settings of the deck engine. No argument reads them; an object changes the ones it names.
+      settings:function(o){
+        if(o && typeof o === "object"){
+          if(o.keylockNew !== undefined) SET.keylockNew = !!o.keylockNew;
+          if(o.hotGate !== undefined) SET.hotGate = !!o.hotGate;
+          if(o.needleLock !== undefined) SET.needleLock = !!o.needleLock;
+          if(o.endWarning !== undefined) SET.endWarn = [0, 30, 60].indexOf(+o.endWarning) >= 0 ? +o.endWarning : SET.endWarn;
+          if(o.recordBits !== undefined) SET.recBits = +o.recordBits === 24 ? 24 : 16;
+          if(o.quantiseBeats !== undefined && [1, 0.5, 0.25, 0.125].indexOf(+o.quantiseBeats) >= 0){
+            SET.qunit = +o.quantiseBeats;
+            allDecks.forEach(function(D){ send({ t:"quant", k:D.i, on:D.quant, u:SET.qunit }); });
+          }
+          if(o.autoGain !== undefined){
+            SET.autoGain = !!o.autoGain;
+            if(ENG && ENG.M) allDecks.forEach(function(D){ if(D.track) ENG.M.setAuto(D.i, SET.autoGain ? D.track.gain || 0 : 0); });
+          }
+          saveSet();
+          if(o.latency !== undefined) setLatency(String(o.latency));
+          emit("settings", API.settings());
+        }
+        return { keylockNew:SET.keylockNew, hotGate:SET.hotGate, needleLock:SET.needleLock, endWarning:SET.endWarn, recordBits:SET.recBits,
+                 quantiseBeats:SET.qunit, autoGain:SET.autoGain, latency:SET.latency };
+      },
+      setLatency:function(mode){ return setLatency(mode); },
+      dropouts:function(minutes){ return dropouts(minutes); },
+      dropoutsReset:function(){ dropoutsReset(); return dropouts(30); },
+      analysis:anAPI,
       // channels: how many mixer channels the controller has. Four of them brings up four decks, unless two or four was chosen by hand.
       setController:function(c){
         controller = { active:!!(c && c.active), name:String(c && c.name || ""), channels:c && c.active ? (c.channels | 0) : 0 };
@@ -22277,6 +23438,7 @@
           return { deck:s.deck, loaded:s.loaded, title:s.title, artist:s.artist, bpm:s.bpm, bpmNow:s.bpmNow, key:s.key, camelot:s.camelot, playing:s.playing,
                    bar:s.bar, beatInBar:s.beatInBar, position:Math.round(s.position), remaining:Math.round(s.remaining), tempoPercent:s.tempoPercent, tempoRange:s.tempoRange,
                    sync:s.sync, master:s.master, loop:s.loop.active ? s.loop.beats : null, quantise:s.quantise, slip:s.slip,
+                   keylock:s.keylock, keyShift:s.keyShift, keyNow:s.keyNow, camelotNow:s.camelotNow, reverse:s.reverse,
                    hotcues:s.hotcues.filter(function(x){ return x !== null; }).length, endWarning:s.endWarning };
         });
         var sel = LV.selId && T.by[LV.selId], mine = 0, an = 0;
@@ -22307,6 +23469,13 @@
         eng:function(){ return ENG; }, decks:function(){ return decks; }, allDecks:function(){ return allDecks; }, ensureEngine:ensureEngine, UI:UI,
         prof:function(on2){ send({ t:"prof", on:!!on2 }); return ENG && ENG.prof; },
         forceFallback:function(on2){ forceFallback = !!on2; },
+        send:send, burn:function(ms){ send({ t:"burn", ms:+ms || 0 }); }, drops:DROPS, rec:REC, recSink:recSink, recSession:recSession, wavHeader:wavHeader, recName:recName,
+        keySyncShift:keySyncShift, shiftKey:shiftKey,
+        // the mix analysis fed by hand: begin() stops the live reading, step(state, ms) hands in one reading and moves its clock on,
+        // event(name, data) is an event of the DJ area as the analysis hears it, end() goes back to live
+        an:{ AN:AN, begin:function(t0){ anReset(); AN.sim = { t:t0 || 1000000 }; }, end:function(){ anFlush(anNow(), true); AN.sim = null; anReset(); },
+             step:function(R, ms){ AN.sim.t += ms === undefined ? 50 : ms; R.t = AN.sim.t; anTick(R); }, event:function(ev, d){ anEvent(d, ev); },
+             set:function(R){ R.t = AN.sim.t; AN.R = R; }, flush:function(){ anFlush(anNow(), true); }, read:anRead, pair:anPair, deck:anDeck },
         workletURL:workletURL, prepare:prepare, runWorker:runWorker, aq:aq, busy:busy,
         fm:{ CFG:FM_CFG, FM:FM, FMU:FMU, net:fmNet, licence:fmLicence, parseItem:fmParseItem, query:fmQuery, searchURL:fmSearchURL, row:fmRow, secs:fmSecs, creditLine:fmCreditLine, cratePick:fmCratePick, libId:fmLibId, go:fmGo, add:fmAdd, addMany:fmAddMany, preview:fmPreview, text:fmText },
         drawCost:function(n){

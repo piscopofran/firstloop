@@ -11,6 +11,9 @@ anybody's browser.
 - It also keeps the **invite codes**: who may use the Assistant and how much,
   and it serves the **owner page**, where you make codes, set limits and see
   how the Assistant is used.
+- People can **create a tester account for themselves** on the site (you can
+  switch that off), and there is one **Feedback** button in the app; what
+  people send arrives on the owner page, where you can reply.
 
 There are no secrets in this folder or anywhere in the repository. The key
 lives only in `/etc/firstloop-chat.env` on the server, readable by root only.
@@ -33,14 +36,17 @@ where things stand.
 Running it again is safe: it keeps the key file it already has and does not
 add a second nginx block (it says "nginx already had it that way"). Run the
 same line again after an update to this folder to get the new version of the
-service; the key, your limits, the invite codes, the counts and the owner link
+service; the key, your limits, the invite codes, the tester accounts, the
+feedback, the counts and the owner link
 all stay as they are. It prints a short fingerprint (the first 12
 characters of the sha256) of the program it installed, so two installs can be
 compared. If a new version does not start, the previous one is put back.
 
 The last thing it prints the first time is your **owner link**. Bookmark it
 then: it is shown once and is not kept anywhere on the server in a form that
-can be read back. After that it says whether people need an invite code.
+can be read back. After that it says whether people need an invite code, and
+its last lines say whether people can create their own tester account (they
+can, unless you have switched it off) and where feedback arrives.
 
 How it treats nginx, since nginx also serves other things on this server:
 
@@ -76,9 +82,11 @@ It does not touch the firewall, the wish service, cron, or certificates.
 
 ## Invite codes and the owner page
 
-From this version on, **people need an invite code to use the AI**, unless you
-decide otherwise. An invite code is the whole account: there is no email, no
-password, and nothing about the person is kept except the label you type.
+**People need an invite code to use the AI**, unless you decide otherwise. An
+invite code is the whole account: there is no password, and for a code you
+make, nothing about the person is kept except the label you type. A code is
+either made by you on the owner page, or made by the person themselves with
+"Create a tester account" (next section).
 
 **The owner page** is at `https://<your site>/api/chat?admin`, and it only
 opens with the owner link the installer printed:
@@ -100,13 +108,21 @@ else is changed and the service is not restarted.
 
 On the owner page:
 
+- **Feedback**: what people sent with the Feedback button, newest first. When
+  something is unread this tab comes first, with the number on it. See
+  "Feedback" below.
 - **Overview**: messages and estimated cost today, in the last 7 and the last
-  30 days; a chart of messages per day; whether the service is running and
+  30 days; how much feedback is new and how many accounts were created today;
+  the box "Tester accounts people create themselves" with its on/off switch;
+  a chart of messages per day; whether the service is running and
   with which model; and the limits (below), which you can change there.
 - **Invite codes**: make a code (who it is for, how many messages, counted in
   total, per month or per day), copy it or a ready-made invite sentence,
   switch it off and on, change it, set its used count back to 0, delete it.
-  Clicking a code shows how it has been used. Codes look like
+  Clicking a code shows how it has been used, and the feedback that person
+  sent. Accounts people created themselves are in the same list, tagged
+  "self sign-up" ("Show" above the list shows only those, or only yours).
+  Codes look like
   `LOOP-7K3M-QX9T`; capitals or not, and spaces, do not matter when typing
   one in. Months and days are counted in UTC.
 - **What people do**: which topics come up, which kinds of change the
@@ -126,6 +142,93 @@ messages a day without a code", starts at 0: no code, no Assistant. Set it to,
 say, 5 and every visitor gets five messages a day (counted per internet
 address; that count starts again if the service restarts). The rest of the app
 works for everyone either way.
+
+## Tester accounts people create themselves
+
+Where the Assistant used to say "Invite code needed" it now offers two ways
+in, side by side: **I have an invite code** and **Create a tester account**.
+Creating an account asks for a name (required), an email address (optional,
+and the form says why: only so you can reply to their feedback), what they do
+(DJ, producer, learning an instrument, just curious), and a tick for "I am 16
+or older". The service then makes an ordinary invite code labelled with the
+name, the page saves it like a typed code and shows it once ("keep it if you
+want to use First Loop on another device"), and the Assistant answers at
+once. You are not asked.
+
+**This is switched on when you install this version**, because testers
+could not get in without you otherwise. It is controlled from the box
+"Tester accounts people create themselves" on the Overview page:
+
+- **The switch.** Off pauses sign-up at once. Accounts that exist keep
+  working. (`FL_SIGNUP=0` in the settings file makes off the starting value
+  on a server where you have never touched the switch.)
+- **Messages each account gets**: 150 in total, unless you change it. It
+  applies to accounts created from then on; change an existing one under
+  Invite codes like any other code.
+- **New accounts a day, at most**: 30, everyone together. Deleting an account
+  does not make room for another one the same day.
+- **From one address a day**: 2 (an IPv6 home counts as one address; this
+  count starts again if the service restarts).
+- **Sign-up word**: empty at first. If you set a word, only people who type
+  it can create an account, so you can give the word to the people you
+  invite and keep everyone else out. Capitals and spacing do not matter. Ten
+  wrong words from one address in ten minutes and that address has to wait.
+
+What a self-made account can cost is covered by the limits you already have:
+its own allowance (150 messages is at most about $5.50 at the worst-case
+figure below, and about $1.50 in ordinary use), the per-address limits, and
+above all "Most messages a day, everyone together". **Sign-up does not raise
+the worst possible day**: that is still the daily limit times the worst-case
+message (600 x 3.7 cents, about $22, with the settings as installed). What it
+changes is who can reach that limit: with sign-up on and no sign-up word,
+anybody who finds the site can, not only people you gave a code. If that
+worries you, set a sign-up word, lower the daily limit, or pause sign-up.
+
+The service keeps 200 places in its list of codes for you (it holds 2,000 in
+all), so sign-ups can never stop you making a code. Accounts nobody uses can
+be deleted under Invite codes.
+
+A person can see what is kept about their account in the app (the "My
+account" button in the Assistant: name, what they do, whether an email is
+kept, when it was created, messages used, feedback sent), remove the code
+from that device, or **delete the account**. Deleting removes the row with
+the name and email and the feedback they sent; their message counts are
+added to "Codes you have deleted", as when you delete a code.
+
+## Feedback
+
+The app has one **Feedback** button: in the top bar on a computer, at the end
+of the row of areas on a phone. (It replaces "Request a feature" and the
+Feedback box that were in Learn.) The panel asks "What happened, what did you
+expect, what is missing?" (2,000 characters at most), what kind it is
+(something is broken, something is missing, other), optionally how usable
+First Loop was that day from 1 to 5, and has a tick "Include technical
+details" with "Show what is sent" beside it, which lists exactly what goes
+along: app version, browser and system, screen size, the area that was open,
+names of connected equipment, the DJ output settings (decks in use, output
+mode, sample rate, latency) and the last five error messages the page caught.
+Nothing else. It works with or without an account; without one the person
+can add a name. If there is no connection it is kept on their device and
+sent later.
+
+On the owner page, the **Feedback** tab lists it newest first: who it is from
+(with their role, and their email as a link if they gave one), the kind, the
+1 to 5 answer, the text, and the technical details folded away. You can mark
+a piece as read or done, filter by kind, status or person, and **reply**: the
+reply is shown to that person inside the app, in the same Feedback panel (the
+button there gets a dot when a reply is waiting). If they gave an email
+address there is also "Reply by email", which opens your own mail program.
+"Copy all as text" copies what is listed, without email addresses, for
+pasting to whoever develops the app. The page title shows the number of
+unread pieces, so a pinned browser tab works as a notifier.
+
+Limits: 10 pieces a day from one account, 3 a day from one address without an
+account, 300 a day in all. The newest 5,000 are kept.
+
+If the page is newer than the service (the site was updated but the installer
+has not been run again), the Feedback panel sends through the older
+`/api/wish` service instead, as the old boxes did. Once this version of the
+service is installed it is no longer used for that.
 
 ## What it costs
 
@@ -205,6 +308,11 @@ and in ordinary use $2 to $3.
 
 - An invite code answers only as many messages as you gave it. Without a
   code nothing is answered, unless you have allowed free messages.
+- Accounts people create themselves: 30 new ones a day, 2 a day from one
+  address, 150 messages each (all three can be changed, and sign-up can be
+  paused or put behind a word, on the owner page). Feedback: 10 pieces a day
+  from an account, 3 a day from an address without one, 300 a day in all,
+  2,000 characters each, with at most 4 KB of technical details.
 - The per-address and whole-day limits can be changed on the owner page;
   what is set there wins over the settings file.
 - Ten wrong invite codes from one address in ten minutes and that address has
@@ -214,7 +322,12 @@ and in ordinary use $2 to $3.
 **This is a limited lock, not a perfect one.** With a code required, somebody
 without one cannot make the AI answer at all. Somebody WITH a code is who
 they say only in the sense that they have the code: codes can be passed on,
-so give each person their own and switch off any that goes astray. A person
+so give each person their own and switch off any that goes astray. With
+"Create a tester account" switched on and no sign-up word, anybody can make
+themselves a code: the name and the "16 or older" tick are what the person
+says, nothing checks them, and somebody who changes address can make more
+than two accounts a day, up to the day's 30. What holds then is each
+account's allowance and the limit for everyone together. A person
 with a code gets what a visitor gets: the same instructions, the same size
 limits, their code's allowance and the per-address and daily limits. If you
 allow free messages, anyone can write a small program that sends requests
@@ -236,14 +349,30 @@ short scrambled form of the caller's address (it cannot be turned back into
 the address, and changes every time the service restarts), the result, and
 how many tokens Anthropic counted. When Anthropic refuses a request, the line
 also has its status number and the one-word type of the error, and nothing
-else of what it said. **What people type, the songs, and the answers are never
+else of what it said. A sign-up, a deleted account and a piece of feedback
+each leave such a line too, with no name, address or text in it. **What
+people type to the Assistant, the songs, and the answers are never
 written anywhere on the server.** When the log reaches 5 MB it is renamed
 `chat.log.1` (replacing the previous one) and a new one is started, so the two
 together never take more than about 10 MB.
 
-`/var/lib/firstloop-chat/state.db` holds, as counts only:
+`/var/lib/firstloop-chat/state.db` holds:
 
-- for each invite code: the label and note you typed, its allowance and
+- for an account a person created themselves: the name they gave, what they
+  said they do, and their email address if they chose to give one (the form
+  tells them it is asked only so you can reply to their feedback). The
+  address is never sent back to any browser except your owner page;
+- **feedback: the one place where words a person wrote are kept.** It is text
+  they chose to send to you with the Feedback button: the text, its kind, the
+  1 to 5 answer if given, the account or name it came from, your reply, and
+  (if they left the box ticked) the short list of technical details they
+  could read before sending. For feedback sent without an account the
+  service also keeps a scrambled form of a receipt the person's device holds,
+  so that device, and no other, can be shown your reply. At most 5,000
+  pieces are kept. A person who deletes their account deletes their feedback
+  with it; when you delete a code, feedback already sent stays under the
+  name it came with;
+- for each invite code, as counts only: the label and note you typed, its allowance and
   whether it is on; how many messages it has sent (in total, and per day for
   the last 90 days) and when it was last used; the tokens Anthropic counted
   and the cost estimated from them; how often each topic came up; which kinds
@@ -257,8 +386,8 @@ together never take more than about 10 MB.
 
 The topic, equipment and "not possible" labels are short tags the AI attaches
 to its own answer. The service cuts them to a few words and to plain letters
-and digits before keeping them. It never keeps what the person typed, what
-the Assistant said, a song, or an internet address.
+and digits before keeping them. It never keeps what the person typed to the
+Assistant, what the Assistant said, a song, or an internet address.
 
 The owner token is kept only as a sha256 scramble
 (`/var/lib/firstloop-chat/admin.hash`).
@@ -285,6 +414,7 @@ sudo systemctl restart firstloop-chat
 | `FL_MODEL=` | Which model answers. A larger one such as `claude-sonnet-5-5` is better at changing songs and costs more per message. | `claude-haiku-4-5-20251001` |
 | `FL_DAILY_CAP=` | Most messages answered per day, everyone together (the owner page can override it) | `600` |
 | `FL_OPEN=` | Free messages a day for a visitor without an invite code (the owner page can override it) | `0` |
+| `FL_SIGNUP=` | `1`: people may create their own tester account; `0`: they may not (the switch on the owner page overrides it) | `1` |
 | `FL_MAX_TOKENS=` | Longest reply (the service never allows more than 4096) | `1200` |
 | `FL_IP_BURST=` | Messages one address may send in 10 minutes (the owner page can override it) | `20` |
 | `FL_IP_DAILY=` | Messages one address may send in a day (the owner page can override it) | `120` |
@@ -362,7 +492,8 @@ cd ~ && sudo bash install-chat.sh --remove
 (Download the installer again first if `install-chat.sh` is gone.) This takes
 the `/api/chat` block out of nginx (testing nginx and putting the file back if
 the test fails), stops the service, and deletes the program, the key file,
-the log and the service user. **It also deletes the invite codes, the usage
+the log and the service user. **It also deletes the invite codes, the tester
+accounts people created, the feedback they sent, the usage
 counts and the owner link, and makes no backup of them.** If you want to keep
 them, copy `/var/lib/firstloop-chat/state.db` somewhere first. It only removes a block that still looks the
 way the installer wrote it, between its two marker lines; if the block has
@@ -381,9 +512,15 @@ If you are finished with the key, delete it in the Anthropic Console as well.
   `python3 server/check-prompt.py` compares them and exits 1 if they differ;
   `python3 server/check-prompt.py --write` copies the page's prompt into the
   service. After changing the prompt, run the installer on the server again.
-- Protocol, all on `/api/chat`. `GET` returns `{ok, model, open, v}`, with
+- Protocol, all on `/api/chat`. `GET` returns `{ok, model, open, v, signup,
+  signup_word}`, with
   `ok: false` and a `reason` (`no_key`, `bad_key`, `config`) when it cannot
-  answer; `open` is the free messages a day without a code (0 = code needed).
+  answer; `open` is the free messages a day without a code (0 = code needed);
+  `signup` says whether people may create their own account and
+  `signup_word` whether that needs the owner's word. The page offers sign-up,
+  "My account" and the new feedback path only to a service that says `v` 4
+  or more (and sign-up only when `signup` is true); to an older one it sends
+  none of the operations marked "v4" below, and feedback goes to `/api/wish`.
   `v` (`WIRE_VERSION`, 2 since v29) says which description of the app the
   service understands. The page reads it: to a service that says `v` 2 or
   more it sends `dj`, `equipment` and the fuller `midi` lists; to an older
@@ -407,10 +544,39 @@ If you are finished with the key, delete it in the Anthropic Console as well.
     `{"error": "bad_code" | "code_off"}` with HTTP 200.
   - `usage`: `{"code"?, "counts": {name: int}}` -> `{ok}`. Names not in
     `FEATURES` are dropped; a value adds at most 10,000.
+  - `signup` (v4): `{"name", "email"?, "role", "age_ok": true, "word"?}` ->
+    `{ok, code, label, limit, left, period}`. `role` is `dj`, `producer`,
+    `instrument` or `curious`. Errors: `signup_off` (403), `signup_word`
+    (403), `signup_limit` (429, this address today), `signup_full` (429,
+    everyone today, or no room), `bad_name`, `bad_email`, `bad_request`
+    (400). A name is letters and digits of any script with spaces, full
+    stops, dashes and apostrophes, 1 to 40 after tidying the spaces; an email
+    is only checked for shape and length (120) and stored as given.
+  - `account` (v4): `{"code"}` -> `{ok, label, role, email: true|false, self,
+    created, enabled, period, limit, used, left, messages, feedback}`; never
+    the address itself. `account.delete` (v4): `{"code"}` -> `{ok}`. Both
+    answer `{"error": "bad_code"}` with HTTP 200 for a code that is not
+    there, and count towards the ten wrong codes.
+  - `feedback` (v4): `{"code"?, "name"?, "kind", "text", "rating"?,
+    "details"?}` -> `{ok, id, time, account, receipt}`. `kind` is `broken`,
+    `missing` or `other`; `text` 1 to 2,000 characters; `rating` 1 to 5;
+    `details` is cut to `DETAILS_SHAPE` (`app`, `ua`, `screen`, `area`,
+    `equipment`, `dj`, `errors`) and to 4 KB. `receipt` is a random token
+    given once; only its sha256 is stored. `feedback_limit` (429) when a
+    day's limit is reached.
+  - `feedback.mine` (v4): `{"code"?, "receipts"?: [...]}` -> `{ok, items}`:
+    for a code, that account's pieces (`id, time, kind, rating, text, status,
+    reply, reply_time`); for each receipt that matches, `id, time, kind,
+    status, reply, reply_time`. Nothing else can be read with it.
   - `admin.overview`, `admin.codes`, `admin.create`, `admin.update`,
-    `admin.delete`, `admin.settings`: need `Authorization: Bearer <token>`;
+    `admin.delete`, `admin.settings`, and (v4) `admin.feedback`,
+    `admin.feedback.update` `{id, status?, reply?}`, `admin.feedback.delete`
+    `{id}`, `admin.badge`: need `Authorization: Bearer <token>`;
     401 `auth` otherwise, 429 after five failures from an address in ten
-    minutes, 404 `bad_code` for a code that does not exist.
+    minutes, 404 `bad_code` for a code that does not exist and 404
+    `not_found` for a piece of feedback that does not. `admin.settings` also
+    takes `signup` (0 or 1), `signup_limit`, `signup_day`, `signup_ip_day`
+    and `signup_word` (text, 40 characters at most, empty for none).
   - `selftest`: the installer's test message. Accepted only from the machine
     itself, with no `X-Real-IP`/`X-Forwarded-*` header (nginx always adds
     `X-Real-IP`, so it cannot come through the website), and with a one-time
@@ -425,6 +591,15 @@ If you are finished with the key, delete it in the Anthropic Console as well.
   schema is the same (version 1) and the new topics, actions and counts are
   new names in the tables that are already there. The installer leaves the
   database, the key file, the owner link and nginx as they are.
+- Updating to v33 adds to the database when the service first starts: three
+  columns on `codes` (`email`, `role`, `self`, each with a default, added
+  with `ALTER TABLE` only where missing) and two tables (`feedback`,
+  `tally`: per-day counts of sign-ups and feedback, which is why deleting an
+  account does not free a place the same day). `PRAGMA user_version` stays 1
+  on purpose: the service from before names the columns it reads, so if the
+  installer has to put the previous version back it still opens the file
+  (tested in both directions). `signup_word` is the one setting stored as
+  text; the older service skips it.
 - The database is `state.db` beside `FL_STATE` (`FL_DB` to move it), schema
   version in `PRAGMA user_version`. One connection under one lock. An
   allowance is taken before the AI is called and given back if no text

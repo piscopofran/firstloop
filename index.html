@@ -2152,6 +2152,152 @@
   #ctrlhint[hidden]{display:none;}
   @media (prefers-reduced-motion:reduce){ .gearmap .gm-flash .gm-s{animation:none;} }
   /* ===== /controllers + diagrams (css) ===== */
+  /* ===== accounts + feedback (css) ===== */
+  /* The two feedback boxes that lived in Learn are replaced by the one
+     Feedback panel. Their markup stays for the code that still names it. */
+  #wishopen,#sec-wish,#sec-report{display:none !important;}
+  .acct-gate{flex:none;display:flex;flex-direction:column;gap:7px;padding:9px 10px;border-bottom:1px solid var(--line);
+    background:var(--surface-2);}
+  .acct-gate p{margin:0;font-size:12px;line-height:1.45;color:var(--ink);}
+  .acct-two{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .acct-two .tinybtn{white-space:normal;min-height:34px;line-height:1.25;padding:4px 8px;}
+  .acct-two .tinybtn[aria-expanded="true"]{border-color:var(--ink-2);background:var(--raised);}
+  .acct-gate[data-open="true"] p{display:none;}
+  /* a panel gives way to the rest of the Assistant on a short screen, and scrolls inside itself */
+  .acct-panel{flex:0 1 auto;min-height:140px;display:flex;flex-direction:column;gap:9px;padding:10px;border-bottom:1px solid var(--line);
+    background:var(--surface-2);overflow-y:auto;max-height:min(70vh, 540px);}
+  .acct-panel > *{flex:none;}
+  .acct-gate[hidden],.acct-panel[hidden],.acct-msg[hidden],.acct-f[hidden]{display:none;}
+  .acct-panel h3,.fb-panel h3{margin:0;font-size:13px;font-weight:600;color:var(--ink);}
+  .acct-f{display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:500;color:var(--ink-2);min-width:0;}
+  .acct-f input,.acct-f select,.fb-panel textarea{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);
+    border:1px solid var(--line-2);border-radius:var(--r);padding:0 8px;height:28px;min-width:0;width:100%;}
+  .fb-panel textarea{height:auto;min-height:96px;padding:7px 8px;line-height:1.45;resize:vertical;}
+  .acct-f input:focus,.acct-f select:focus,.fb-panel textarea:focus{outline:none;border-color:var(--ink-2);}
+  .acct-hint{font-size:11px;font-weight:400;line-height:1.4;color:var(--ink-3);}
+  .acct-tick{display:flex;gap:7px;align-items:flex-start;font-size:12px;line-height:1.35;color:var(--ink);cursor:pointer;}
+  .acct-tick input{flex:none;margin:1px 0 0;width:14px;height:14px;accent-color:var(--accent);}
+  .acct-priv{margin:0;font-size:11px;line-height:1.45;color:var(--ink-2);}
+  .acct-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .acct-panel [aria-disabled="true"],.fb-panel [aria-disabled="true"]{opacity:.5;cursor:default;}
+  .acct-msg{margin:0;font-size:11.5px;line-height:1.45;color:var(--ink-2);}
+  .acct-msg:empty{display:none;}
+  .acct-msg[data-kind="bad"]{color:var(--danger);}
+  .acct-note{flex:none;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);}
+  .acct-code{font-family:var(--mono);font-size:15px;letter-spacing:.05em;color:var(--ink);background:var(--bg);
+    border:1px solid var(--line-2);border-radius:var(--r);padding:5px 10px;user-select:all;-webkit-user-select:all;}
+  .acct-facts{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:12px;line-height:1.4;}
+  .acct-facts dt{color:var(--ink-3);}
+  .acct-facts dd{margin:0;color:var(--ink);overflow-wrap:anywhere;}
+  .acct-confirm{display:flex;flex-direction:column;gap:7px;padding:8px;border:1px solid var(--danger);border-radius:var(--r);}
+  .acct-confirm p{margin:0;font-size:12px;line-height:1.45;color:var(--ink);}
+  body[data-view="assistant"] #assistant .acct-gate,
+  body[data-view="assistant"] #assistant .acct-note,
+  body[data-view="assistant"] #assistant .acct-panel{padding-inline:max(10px, calc((100% - 760px) / 2));}
+  .fbbtn[data-unread="true"]::after,.fb-intabs[data-unread="true"]::after{content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--good);flex:none;display:inline-block;margin-left:5px;vertical-align:middle;}
+  .fbbtn[aria-expanded="true"]{color:var(--ink);border-color:var(--ink-3);}
+  .fb-intabs{flex:0 0 auto;appearance:none;cursor:pointer;font:inherit;font-weight:500;font-size:12.5px;border:0;
+    border-bottom:2px solid transparent;border-top:2px solid transparent;background:transparent;color:var(--ink-2);
+    border-radius:0;padding:0 12px;min-height:44px;white-space:nowrap;}
+  .fb-intabs:hover,.fb-intabs[aria-expanded="true"]{color:var(--ink);background:var(--surface-2);}
+  .fb-panel{position:fixed;z-index:60;top:48px;right:12px;width:min(400px, calc(100vw - 16px));overflow-y:auto;
+    display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--surface);color:var(--ink);
+    border:1px solid var(--line-2);border-radius:var(--r);box-shadow:0 14px 44px rgba(0,0,0,.5);}
+  .fb-panel[hidden],.fb-shown[hidden],.fb-sentwrap[hidden]{display:none;}
+  .fb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .fb-head h2{margin:0;font-size:14px;font-weight:600;}
+  .fb-lead{margin:0;font-size:12px;line-height:1.45;color:var(--ink-2);}
+  .fb-panel p{margin:0;}
+  .fb-panel > *,.fb-form > *{flex:none;}
+  .fb-form{display:flex;flex-direction:column;gap:10px;min-width:0;}
+  .fb-q{font-size:12px;font-weight:600;color:var(--ink);}
+  .fb-count{align-self:flex-end;margin-top:-7px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);}
+  .fb-kinds{margin:0;padding:0;border:0;display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .fb-kinds legend{padding:0;margin-bottom:5px;font-size:12px;font-weight:600;color:var(--ink);}
+  .fb-rate{display:flex;flex-direction:column;gap:5px;}
+  .fb-rate .tinybtn{min-width:30px;padding:0 6px;}
+  .fb-show{font-size:11.5px;font-weight:500;color:var(--ink-2);margin-left:auto;}
+  .fb-shown{display:flex;flex-direction:column;gap:7px;padding:8px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);}
+  .fb-shown .acct-facts{font-size:11.5px;}
+  .fb-shown .acct-facts dd{font-family:var(--mono);font-size:11px;}
+  .fb-sentwrap{display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--line-2);padding-top:10px;}
+  .fb-sent{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
+  .fb-sent li{display:flex;flex-direction:column;gap:2px;font-size:12px;line-height:1.45;min-width:0;}
+  .fb-meta{font-size:11px;color:var(--ink-3);}
+  .fb-text{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink);}
+  .fb-reply{display:flex;flex-direction:column;gap:2px;margin-top:4px;padding:6px 8px;border-left:2px solid var(--good);background:var(--surface-2);}
+  @media (max-width:879.98px){
+    .fb-panel{left:8px;right:8px;width:auto;}
+  }
+  /* The sign-up form is long: while it is open it takes the whole of the Assistant, so "Create account" is never
+     below a fold. Where the Assistant is an area of its own (narrow screens) the two short panels do the same. */
+  #assistant #acctform{position:absolute;left:0;right:0;top:0;bottom:0;max-height:none;z-index:3;border-bottom:0;background:var(--surface);}
+  @media (max-width:1099.98px){
+    #assistant .acct-panel{position:absolute;left:0;right:0;top:0;bottom:0;max-height:none;z-index:3;border-bottom:0;background:var(--surface);}
+  }
+  /* The Feedback button takes about 80px of the top bar. Where the bar has
+     that room it sits with the tools; where it does not (below 880px, and in
+     the first 60px after the Assistant docks) it is the last item in the row
+     of areas, which scrolls. So that the tools keep their place, each point
+     at which the bar becomes one row moves up by 120px. Same rules as in
+     "feature: assistant (css)", at other widths; the row of areas keeps the
+     width it had without the button where the button is in it. */
+  @media (min-width:540.02px) and (max-width:879.98px){
+    .dock .viewbar{flex:1 1 417px;}
+  }
+  @media (min-width:1100px) and (max-width:1159.98px){
+    body.has-assistant .dock .viewbar{flex:1 1 347px;}
+  }
+  @media (min-width:1000px) and (max-width:1099.98px){
+    .dock{flex-wrap:wrap;gap:0 12px;}
+    .dock::before{content:"";order:4;flex:0 0 calc(100% + 20px);height:0;margin:0 -10px;border-top:1px solid var(--line);}
+    .dock .viewbar{flex:1 1 auto;gap:10px;}
+    .dock .tools{order:3;margin-left:auto;}
+    .dock .transport{order:5;margin-left:0;padding-block:6px;}
+    .dock .tempo{order:6;flex:0 1 340px;}
+    .dock .tempo .lbl{display:inline;}
+    .dock .tempo input[type=range]{width:120px;flex:1 1 60px;}
+  }
+  @media (min-width:1100px) and (max-width:1219.98px){
+    body:not(.has-assistant) .dock::before{content:"";order:4;flex:0 0 calc(100% + 20px);height:0;margin:0 -10px;border-top:1px solid var(--line);}
+    body:not(.has-assistant) .dock .viewbar{flex:1 1 auto;}
+    body:not(.has-assistant) .dock .tools{order:3;margin-left:auto;}
+    body:not(.has-assistant) .dock .transport{order:5;margin-left:0;padding-block:6px;}
+    body:not(.has-assistant) .dock .tempo{order:6;flex:0 1 340px;}
+  }
+  @media (min-width:1220px) and (max-width:1339.98px){
+    body:not(.has-assistant) .dock{flex-wrap:nowrap;gap:0 8px;}
+    body:not(.has-assistant) .dock .viewbar{gap:6px;flex:0 1 auto;}
+    body:not(.has-assistant) .dock .tempo .lbl{display:none;}
+    body:not(.has-assistant) .dock .tempo input[type=range]{width:64px;flex:0 1 64px;}
+    body:not(.has-assistant) .dock .tools{margin-left:auto;}
+  }
+  @media (min-width:1260px) and (max-width:1379.98px){
+    body.has-assistant .dock{flex-wrap:wrap;gap:0 12px;}
+    body.has-assistant .dock::before{content:"";order:4;flex:0 0 calc(100% + 20px);height:0;margin:0 -10px;border-top:1px solid var(--line);}
+    body.has-assistant .dock .viewbar{flex:1 1 auto;gap:10px;}
+    body.has-assistant .dock .tools{order:3;margin-left:auto;}
+    body.has-assistant .dock .transport{order:5;margin-left:0;padding-block:6px;}
+    body.has-assistant .dock .tempo{order:6;flex:0 1 340px;}
+    body.has-assistant .dock .tempo .lbl{display:inline;}
+    body.has-assistant .dock .tempo input[type=range]{width:120px;flex:1 1 60px;}
+  }
+  @media (min-width:1420px) and (max-width:1539.98px){
+    body.has-assistant .dock{flex-wrap:nowrap;gap:0 8px;}
+    body.has-assistant .dock .viewbar{gap:6px;flex:0 1 auto;}
+    body.has-assistant .dock .tempo .lbl{display:none;}
+    body.has-assistant .dock .tempo input[type=range]{width:64px;flex:0 1 64px;}
+    body.has-assistant .dock .tools{margin-left:auto;}
+  }
+  @media (pointer:coarse){
+    .acct-f input,.acct-f select,.fb-panel textarea{font-size:16px;height:36px;}
+    .fb-panel textarea{height:auto;}
+    .acct-tick input{width:18px;height:18px;}
+    .fb-rate .tinybtn{min-width:40px;min-height:36px;}
+    .acct-panel .tinybtn,.acct-panel .ghost,.acct-panel .sendbtn,.fb-panel .sendbtn,.fb-panel .tinybtn{min-height:34px;}
+  }
+  /* ===== /accounts + feedback (css) ===== */
 </style>
 </head>
 <body>
@@ -12764,7 +12910,9 @@
   // From v32 the server says "v": 3: its instructions know about four decks, so
   // decks 3 and 4, their mixer channels and how many decks are in use are sent
   // too. A v2 server is told about decks 1 and 2 only, in the shape it knows.
-  var ASST_WIRE = 3;
+  // From v33 the server says "v": 4: it also takes sign-up, account and feedback
+  // requests (see "accounts + feedback"); what is sent with a message is as for 3.
+  var ASST_WIRE = 4;
   function asstWire(){
     if(asstMode === "claude") return ASST_WIRE;
     var v = asstInfo && asstInfo.ok ? asstInfo.v : 0;
@@ -14601,6 +14749,7 @@
                                : "Messages are processed by Anthropic’s AI through the site owner’s account. " +
                                  (counts ? counts + ", and for each message short labels such as its topic and any equipment named, never the text." : ""));
     asstAcctPaint();
+    if(typeof acctPaint === "function") acctPaint();     // accounts + feedback: its part of the account row
     asstMidiPaint();
     asstDjPaint();
     equipPaint();
@@ -30145,6 +30294,752 @@
     });
   }
   // ===== /controllers + diagrams =====
+
+  // ===== accounts + feedback =====
+  // Two things that talk to this site's own server at /api/chat, and to
+  // nothing else:
+  //   - "Create a tester account": a person makes their own invite code
+  //     (op "signup"), sees what is kept about it (op "account") and can
+  //     delete it (op "account.delete"). The code is kept exactly where a
+  //     typed invite code is kept.
+  //   - Feedback: the one place in the app to write to the site owner
+  //     (op "feedback"), and to read the owner's reply (op "feedback.mine").
+  // All of it needs a server that says "v": 4 or more. An older server is
+  // never sent any of these, and no sign-up is offered; feedback then goes to
+  // the small /api/wish service the site had before, and only then.
+  var acctReady = false, acctOpen = "", acctBusy = false, acctMsg = "", acctMsgBad = false,
+      acctFacts = null, acctNew = null, acctAsk = false, acctE = null;
+  var ACCT_WORDS = { local:ASST_LOCAL_CODE, need:ASST_ERRS.need_code, free:ASST_FREE_DONE };
+  var ACCT_ROLES = [["dj", "DJ"], ["producer", "Producer"], ["instrument", "Learning an instrument"], ["curious", "Just curious"]];
+  var ACCT_ERRS = {
+    signup_off:"Creating an account is switched off on this site at the moment. An invite code from the site owner still works.",
+    signup_full:"No more accounts can be created on this site today. Try again tomorrow.",
+    signup_limit:"No more accounts can be created from this internet connection today. Try again tomorrow.",
+    signup_word:"The sign-up word is not right. It is the word the site owner gave you.",
+    bad_name:"The name needs 1 to 40 letters or digits. Spaces, full stops, dashes and apostrophes are fine.",
+    bad_email:"That does not look like an email address. Leave the field empty to go without one.",
+    rate_limited:"That was a lot of requests in a short time. Wait a few minutes and try again.",
+    forbidden:"The server refused the request because it did not come from this site."
+  };
+  function acctEl(tag, cls, text){
+    var n = document.createElement(tag);
+    if(cls) n.className = cls;
+    if(text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+  function acctBtn(cls, text, id, fn){
+    var b = acctEl("button", cls, text);
+    b.type = "button"; if(id) b.id = id;
+    if(fn) b.addEventListener("click", fn);
+    return b;
+  }
+  function acctDay(sec){
+    if(!sec) return "";
+    var d = new Date(sec * 1000);
+    return d.getDate() + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + " " + d.getFullYear();
+  }
+  // the server's wire version when it is one that knows accounts and feedback, else 0
+  function acctV(){
+    var v = asstInfo && typeof asstInfo.v === "number" && isFinite(asstInfo.v) ? asstInfo.v : 0;
+    return (asstWeb && asstMode !== "claude" && v >= 4) ? v : 0;
+  }
+  function acctCanSignup(){ return !!(asstUse && acctV() && asstSrvCodes() && asstInfo.signup === true); }
+  function acctNeedsWord(){ return !!(asstInfo && asstInfo.signup_word === true); }
+  function acctSay(text, bad){ acctMsg = text || ""; acctMsgBad = !!bad; }
+  function acctShow(which){
+    acctOpen = which || ""; acctAsk = false;
+    if(acctOpen) asstCodeOpen = false;
+    if(acctOpen !== "ready") acctNew = null;
+    asstPaint();
+    if(!acctE) return;
+    try {
+      if(acctOpen === "signup") acctE.name.focus({ preventScroll:true });
+      else if(acctOpen === "ready") acctE.copy.focus({ preventScroll:true });
+      else if(acctOpen === "mine") acctE.mineClose.focus({ preventScroll:true });
+    } catch(e){}
+  }
+  function acctBuild(){
+    if(acctE || !asstEl || !asstAcctEl || !asstCodeForm) return;
+    var E = acctE = {};
+    // in the account row
+    E.newBtn = acctBtn("tinybtn", "Create account", "acctnewbtn", function(){ acctSay(""); acctShow(acctOpen === "signup" ? "" : "signup"); });
+    E.newBtn.setAttribute("aria-controls", "acctform"); E.newBtn.hidden = true;
+    E.mineBtn = acctBtn("tinybtn", "My account", "acctminebtn", function(){
+      acctSay("");
+      if(acctOpen === "mine"){ acctShow(""); return; }
+      acctShow("mine"); acctLoad();
+    });
+    E.mineBtn.setAttribute("aria-controls", "acctmine"); E.mineBtn.hidden = true;
+    asstAcctEl.appendChild(E.newBtn); asstAcctEl.appendChild(E.mineBtn);
+
+    // "Invite code needed": the two ways in, side by side
+    E.gate = acctEl("div", "acct-gate"); E.gate.id = "acctgate"; E.gate.hidden = true;
+    E.gate.setAttribute("role", "group"); E.gate.setAttribute("aria-label", "Ways to use the AI on this site");
+    E.gate.appendChild(acctEl("p", "", "The AI on this site answers people with an account or an invite code. Everything else in the app works without one."));
+    var two = acctEl("div", "acct-two");
+    E.gateCode = acctBtn("tinybtn", "I have an invite code", "acctgatecode", function(){ acctSay(""); acctOpen = ""; asstCodeMsg = ""; asstCodeShow(!asstCodeOpen); });
+    E.gateCode.setAttribute("aria-controls", "asstcodeform");
+    E.gateNew = acctBtn("tinybtn", "Create a tester account", "acctgatenew", function(){ acctSay(""); acctShow(acctOpen === "signup" ? "" : "signup"); });
+    E.gateNew.setAttribute("aria-controls", "acctform");
+    two.appendChild(E.gateCode); two.appendChild(E.gateNew);
+    E.gate.appendChild(two);
+    E.note = acctEl("p", "acct-msg acct-note"); E.note.id = "acctnote"; E.note.setAttribute("role", "status"); E.note.hidden = true;
+
+    // create a tester account
+    var f = E.form = acctEl("form", "acct-panel"); f.id = "acctform"; f.hidden = true; f.noValidate = true;
+    f.setAttribute("autocomplete", "off"); f.setAttribute("aria-labelledby", "acctformh");
+    var h = acctEl("h3", "", "Create a tester account"); h.id = "acctformh"; f.appendChild(h);
+    function field(label, input, hint, id){
+      var w = acctEl("label", "acct-f"); w.appendChild(acctEl("span", "", label));
+      input.id = id; w.appendChild(input);
+      if(hint){ var p = acctEl("span", "acct-hint", hint); p.id = id + "hint"; input.setAttribute("aria-describedby", p.id); w.appendChild(p); }
+      return w;
+    }
+    E.name = acctEl("input"); E.name.type = "text"; E.name.maxLength = 40; E.name.required = true;
+    E.name.setAttribute("autocomplete", "off"); E.name.setAttribute("autocapitalize", "words"); E.name.setAttribute("spellcheck", "false");
+    f.appendChild(field("Name", E.name, "Up to 40 characters. The site owner sees it.", "acctname"));
+    E.email = acctEl("input"); E.email.type = "email"; E.email.maxLength = 120;
+    E.email.setAttribute("autocomplete", "off"); E.email.setAttribute("autocapitalize", "off"); E.email.setAttribute("spellcheck", "false");
+    f.appendChild(field("Email (optional)", E.email, "Asked only so the owner can reply to your feedback.", "acctemail"));
+    E.role = acctEl("select"); E.role.required = true;
+    var o0 = acctEl("option", "", "Choose one"); o0.value = ""; E.role.appendChild(o0);
+    ACCT_ROLES.forEach(function(r){ var o = acctEl("option", "", r[1]); o.value = r[0]; E.role.appendChild(o); });
+    f.appendChild(field("What you do", E.role, "", "acctrole"));
+    E.wordIn = acctEl("input"); E.wordIn.type = "text"; E.wordIn.maxLength = 40;
+    E.wordIn.setAttribute("autocomplete", "off"); E.wordIn.setAttribute("autocapitalize", "off"); E.wordIn.setAttribute("spellcheck", "false");
+    E.word = field("Sign-up word", E.wordIn, "The word the site owner gave you. Capitals do not matter.", "acctword"); E.word.hidden = true;
+    f.appendChild(E.word);
+    var tick = acctEl("label", "acct-tick");
+    E.age = acctEl("input"); E.age.type = "checkbox"; E.age.id = "acctage"; E.age.required = true;
+    tick.appendChild(E.age); tick.appendChild(acctEl("span", "", "I am 16 or older"));
+    f.appendChild(tick);
+    var priv = acctEl("p", "acct-priv",
+      "What the site keeps for an account: your name, your email address if you give one, what you say you do, counts of how the app and the Assistant are used, and any feedback you send. " +
+      "Not kept: your music, your recordings, or what you type to the Assistant. To remove it all, open My account and press Delete my account.");
+    priv.id = "acctpriv"; f.appendChild(priv);
+    var row = acctEl("div", "acct-row");
+    E.go = acctEl("button", "sendbtn", "Create account"); E.go.type = "submit"; E.go.id = "acctgo";
+    row.appendChild(E.go);
+    row.appendChild(acctBtn("ghost", "Cancel", "acctcancel", function(){ acctSay(""); acctShow(""); try { (E.gate.hidden ? E.newBtn : E.gateNew).focus(); } catch(e){} }));
+    f.appendChild(row);
+    E.formMsg = acctEl("p", "acct-msg"); E.formMsg.id = "acctformmsg"; E.formMsg.setAttribute("role", "status");
+    f.appendChild(E.formMsg);
+    f.addEventListener("submit", function(e){ e.preventDefault(); acctSubmit(); });
+
+    // the account is ready
+    var r = E.ready = acctEl("div", "acct-panel"); r.id = "acctready"; r.hidden = true;
+    r.setAttribute("role", "group"); r.setAttribute("aria-labelledby", "acctreadyh");
+    h = acctEl("h3", "", "Your account is ready"); h.id = "acctreadyh"; r.appendChild(h);
+    E.readyLine = acctEl("p", "acct-priv"); r.appendChild(E.readyLine);
+    row = acctEl("div", "acct-row");
+    E.code = acctEl("code", "acct-code"); E.code.id = "acctcode"; E.code.setAttribute("aria-label", "Your invite code");
+    E.copy = acctBtn("tinybtn", "Copy", "acctcopy", function(){
+      var text = E.code.textContent || "";
+      function done(ok){ E.readyMsg.textContent = ok ? "Copied." : "It could not be copied from here. Select the code and copy it by hand."; }
+      try {
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); }); return; }
+      } catch(e){}
+      done(false);
+    });
+    row.appendChild(E.code); row.appendChild(E.copy); r.appendChild(row);
+    r.appendChild(acctEl("p", "acct-priv", "This is your invite code. It is saved on this device, and it is shown here once: keep it if you want to use First Loop on another device."));
+    E.readyMsg = acctEl("p", "acct-msg"); E.readyMsg.setAttribute("role", "status"); r.appendChild(E.readyMsg);
+    row = acctEl("div", "acct-row");
+    row.appendChild(acctBtn("sendbtn", "Done", "acctdone", function(){ acctShow(""); try { asstInput.focus({ preventScroll:true }); } catch(e){} }));
+    r.appendChild(row);
+
+    // my account
+    var m = E.mine = acctEl("div", "acct-panel"); m.id = "acctmine"; m.hidden = true;
+    m.setAttribute("role", "group"); m.setAttribute("aria-labelledby", "acctmineh");
+    h = acctEl("h3", "", "My account"); h.id = "acctmineh"; m.appendChild(h);
+    E.facts = acctEl("dl", "acct-facts"); m.appendChild(E.facts);
+    E.mineNote = acctEl("p", "acct-priv",
+      "Also kept: counts of how the app and the Assistant are used, and the feedback you sent. Not kept: your music, your recordings, or what you type to the Assistant.");
+    m.appendChild(E.mineNote);
+    E.mineActs = acctEl("div", "acct-row"); m.appendChild(E.mineActs);
+    E.mineClose = acctBtn("ghost", "Close", "acctmineclose", function(){ acctShow(""); try { E.mineBtn.focus(); } catch(e){} });
+    E.mineMsg = acctEl("p", "acct-msg"); E.mineMsg.setAttribute("role", "status"); m.appendChild(E.mineMsg);
+
+    asstEl.insertBefore(E.gate, asstCodeForm);
+    var after = asstCodeForm.nextSibling;
+    [E.note, f, r, m].forEach(function(n){ asstEl.insertBefore(n, after); });
+    // Keys pressed inside these stay inside: the page's own shortcuts (Space
+    // plays, 1 to 8 jump to a section) must not fire under a button here.
+    [E.gate, f, r, m].forEach(function(n){
+      n.addEventListener("keydown", function(e){
+        e.stopPropagation();
+        if(n === E.gate) return;
+        if(e.key === "Escape" && !e.defaultPrevented && !acctBusy){ e.preventDefault(); var was = acctOpen; acctSay(""); acctShow("");
+          try { (was === "mine" ? E.mineBtn : (E.gate.hidden ? (E.newBtn.hidden ? asstInput : E.newBtn) : E.gateNew)).focus(); } catch(err){} }
+      });
+    });
+  }
+  function acctMineActs(){
+    var E = acctE, box = E.mineActs, key = acctAsk ? "ask" : "plain";
+    if(box.dataset.key === key){            // the same buttons: leave them, and the focus on them, alone
+      var y = document.getElementById("acctdelyes");
+      if(y) y.setAttribute("aria-disabled", acctBusy ? "true" : "false");
+      return;
+    }
+    box.dataset.key = key;
+    while(box.firstChild) box.removeChild(box.firstChild);
+    if(acctAsk){
+      var c = acctEl("div", "acct-confirm"); c.setAttribute("role", "alertdialog"); c.setAttribute("aria-label", "Delete my account");
+      c.appendChild(acctEl("p", "", "Delete this account? The name, the email address, the counts and the feedback you sent are removed from the server, and the invite code stops working. This cannot be undone."));
+      var row = acctEl("div", "acct-row");
+      // busy buttons are marked, not disabled: a disabled button drops the keyboard focus onto the page
+      var yes = acctBtn("tinybtn danger", "Delete it", "acctdelyes", acctDelete); yes.setAttribute("aria-disabled", acctBusy ? "true" : "false");
+      row.appendChild(yes);
+      row.appendChild(acctBtn("ghost", "Keep it", "acctdelno", function(){ acctAsk = false; acctPaint(); try { document.getElementById("acctdel").focus(); } catch(e){} }));
+      c.appendChild(row); box.appendChild(c);
+      return;
+    }
+    box.appendChild(acctBtn("tinybtn", "Remove the code from this device", "acctforget", function(){
+      asstDropCode(); acctSay("The code is removed from this device. The account itself is unchanged; the code still works if you kept it."); acctShow("");
+    }));
+    box.appendChild(acctBtn("tinybtn danger", "Delete my account", "acctdel", function(){ acctAsk = true; acctPaint(); try { document.getElementById("acctdelno").focus(); } catch(e){} }));
+    box.appendChild(acctBtn("tinybtn", "Send feedback", "acctfb", function(){ fbOpen(); }));
+    box.appendChild(E.mineClose);
+  }
+  function acctFactsPaint(){
+    var E = acctE, dl = E.facts, a = acctFacts;
+    while(dl.firstChild) dl.removeChild(dl.firstChild);
+    function add(k, v){ dl.appendChild(acctEl("dt", "", k)); dl.appendChild(acctEl("dd", "", v)); }
+    if(!a){ E.mineMsg.textContent = E.mineMsg.textContent || "Checking…"; return; }
+    var role = "";
+    ACCT_ROLES.forEach(function(r){ if(r[0] === a.role) role = r[1]; });
+    add("Name", a.label || "(none)");
+    if(role) add("What you do", role);
+    add("Email", a.email ? "One is kept, so the owner can reply to feedback" : "None kept");
+    if(a.created) add("Created", acctDay(a.created) + (a.self ? "" : ", by the site owner"));
+    add("Messages", a.used + " of " + a.limit + " used" + (a.period === "month" ? " this month" : (a.period === "day" ? " today" : "")));
+    add("Feedback sent", String(a.feedback));
+    if(!a.enabled) add("State", "Switched off by the site owner");
+  }
+  function acctLoad(){
+    if(!asstCode || !acctV()) return;
+    var code = asstCode;
+    acctFacts = null; acctE.mineMsg.textContent = "Checking…"; acctPaint();
+    asstOp({ op:"account", code:code }).then(function(j){
+      if(code !== asstCode || acctOpen !== "mine") return;
+      if(j && j.ok === true){
+        acctFacts = { label:asstCut(String(j.label || ""), 40), role:String(j.role || ""), email:j.email === true, self:j.self === true,
+          created:+j.created || 0, enabled:j.enabled !== false, period:j.period, limit:Math.max(0, Math.floor(+j.limit) || 0),
+          used:Math.max(0, Math.floor(+j.used) || 0), feedback:Math.max(0, Math.floor(+j.feedback) || 0) };
+        acctE.mineMsg.textContent = "";
+      } else if(j && (j.error === "bad_code" || j.error === "code_off")){
+        acctE.mineMsg.textContent = ASST_ERRS[j.error];
+      } else acctE.mineMsg.textContent = "The account could not be read just now. Check the connection and open this again.";
+      acctPaint();
+    });
+  }
+  function acctDelete(){
+    if(acctBusy || !asstCode) return;
+    var code = asstCode;
+    acctBusy = true; acctE.mineMsg.textContent = "Deleting…"; acctPaint();
+    asstOp({ op:"account.delete", code:code }).then(function(j){
+      acctBusy = false;
+      if(j && (j.ok === true || j.error === "bad_code")){
+        // what was sent with the account is gone from the server; its list here goes too
+        fbStore.sent = fbStore.sent.filter(function(s){ return !s.account; }); fbSave(); fbPaint();
+        if(code === asstCode) asstDropCode();
+        acctSay(j.ok === true ? "Your account is deleted, and the code is removed from this device." : "That account no longer exists on the site. The code is removed from this device.");
+        acctShow("");
+        try { asstInput.focus({ preventScroll:true }); } catch(e){}
+        return;
+      }
+      acctAsk = false;
+      acctE.mineMsg.textContent = (j && j.error === "rate_limited") ? ACCT_ERRS.rate_limited : "The account could not be deleted just now. Check the connection and try again.";
+      acctPaint();
+    });
+  }
+  function acctSubmit(){
+    var E = acctE;
+    if(acctBusy || !E) return;
+    function stop(text, at){ E.formMsg.textContent = text; E.formMsg.dataset.kind = "bad"; try { at.focus(); } catch(e){} }
+    var name = E.name.value.replace(/\s+/g, " ").trim(), email = E.email.value.trim(), role = E.role.value, word = E.wordIn.value.replace(/\s+/g, " ").trim();
+    if(!name) return stop("Type a name first. Any name will do; it is what the site owner sees.", E.name);
+    if(name.length > 40) return stop("The name can be 40 characters at most.", E.name);
+    if(email && (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return stop(ACCT_ERRS.bad_email, E.email);
+    if(!role) return stop("Choose what you do. It helps the owner understand the feedback.", E.role);
+    if(acctNeedsWord() && !word) return stop("Type the sign-up word the site owner gave you.", E.wordIn);
+    if(!E.age.checked) return stop("An account is for people aged 16 or older. Tick the box if that is you.", E.age);
+    if(!acctCanSignup()) return stop(ACCT_ERRS.signup_off, E.name);
+    var body = { op:"signup", name:name, role:role, age_ok:true };
+    if(email) body.email = email;
+    if(acctNeedsWord()) body.word = word;
+    acctBusy = true; E.formMsg.textContent = "Creating the account…"; E.formMsg.dataset.kind = ""; acctPaint();
+    asstOp(body).then(function(j){
+      acctBusy = false;
+      var code = j && j.ok === true ? asstCodeShape(j.code) : "";
+      if(code){
+        var lim = Math.max(0, Math.floor(+j.limit) || 0), left = Math.max(0, Math.floor(+j.left) || 0);
+        // kept exactly as a typed invite code is kept
+        asstCode = code;
+        asstCodeInfo = { label:asstCut(String(j.label === undefined || j.label === null ? "" : j.label).replace(/\s+/g, " ").trim(), 40),
+          limit:lim, left:left, period:(j.period === "month" || j.period === "day") ? j.period : "total" };
+        asstLeft = left; asstCodeBad = ""; asstSpent = left <= 0; asstFreeDone = false; asstCodeMsg = ""; asstCodeOpen = false;
+        try { window.localStorage.setItem(ASST_CODE_KEY, code); } catch(e){}
+        if(asstCodeIn) asstCodeIn.value = code;
+        acctNew = { code:code, line:(asstCodeInfo.label ? asstCodeInfo.label + ": " : "") + asstAllowance() + ". The Assistant answers from now." };
+        E.name.value = ""; E.email.value = ""; E.role.value = ""; E.wordIn.value = ""; E.age.checked = false; E.formMsg.textContent = ""; E.readyMsg.textContent = "";
+        acctOpen = "ready"; acctAsk = false; acctSay("");
+        asstBackendChanged();
+        try { E.copy.focus({ preventScroll:true }); } catch(e){}
+        return;
+      }
+      var err = j && typeof j.error === "string" ? j.error : "";
+      if(err === "signup_off" && asstInfo) asstInfo.signup = false;
+      if(err === "signup_word" && asstInfo) asstInfo.signup_word = true;
+      E.formMsg.textContent = ACCT_ERRS[err] || (j ? "The server did not accept that. Check the fields and try again." : "The site could not be reached. Check the connection and try again.");
+      E.formMsg.dataset.kind = "bad";
+      acctPaint();
+      if(err === "signup_off"){ acctSay(ACCT_ERRS.signup_off, true); acctShow(""); }
+      else if(err === "signup_word"){ try { E.wordIn.focus(); } catch(e){} }
+    });
+  }
+  // called at the end of asstAcctPaint(), so after every change of state
+  function acctPaint(){
+    if(!acctReady || !acctE) return;
+    var E = acctE, can = acctCanSignup(), shown = asstAcctShown(), v4 = !!(acctV() && asstUse && asstSrvCodes());
+    // what the Assistant says about needing a code names both ways in, where both exist
+    ASST_LOCAL_CODE = can ? "The AI on this site needs an account or an invite code, and none that works is saved here. I can still do simple things." : ACCT_WORDS.local;
+    ASST_ERRS.need_code = can ? "The AI on this site needs an account or an invite code. Create a tester account, or enter the code you were given, at the top of the Assistant. Without one I can still do simple things." : ACCT_WORDS.need;
+    ASST_FREE_DONE = can ? "The free messages for today are used up. With a tester account or an invite code the AI answers again; both are at the top of the Assistant. Without one I can still do simple things." : ACCT_WORDS.free;
+    if(acctOpen === "signup" && !can) acctOpen = "";
+    if(acctOpen === "mine" && !(v4 && asstCode)) acctOpen = "";
+    if(acctOpen === "ready" && !acctNew) acctOpen = "";
+    if(acctOpen && asstCodeOpen) acctOpen = acctOpen === "ready" ? acctOpen : "";
+    var gate = shown && can && asstMode === "local" && asstWhyLocal() === "code" && acctOpen !== "ready";
+    E.gate.hidden = !gate;
+    E.gate.dataset.open = (acctOpen === "signup" || (asstCodeOpen && !asstCodeForm.hidden)) ? "true" : "false";
+    E.gateCode.setAttribute("aria-expanded", asstCodeOpen && !asstCodeForm.hidden ? "true" : "false");
+    E.gateNew.setAttribute("aria-expanded", acctOpen === "signup" ? "true" : "false");
+    E.newBtn.hidden = !(shown && can && !asstCode && !gate);
+    E.newBtn.setAttribute("aria-expanded", acctOpen === "signup" ? "true" : "false");
+    E.mineBtn.hidden = !(shown && v4 && asstCode);
+    E.mineBtn.setAttribute("aria-expanded", acctOpen === "mine" ? "true" : "false");
+    // with the two ways in on show, the row's own "Invite code" button would be a third
+    if(gate && asstCodeBtn && !asstCode) asstCodeBtn.hidden = true;
+    E.form.hidden = !(shown && acctOpen === "signup");
+    E.word.hidden = !acctNeedsWord();
+    E.go.setAttribute("aria-disabled", acctBusy ? "true" : "false");
+    E.ready.hidden = !(shown && acctOpen === "ready");
+    if(acctNew){ E.code.textContent = acctNew.code; E.readyLine.textContent = acctNew.line; }
+    E.mine.hidden = !(shown && acctOpen === "mine");
+    if(acctOpen === "mine"){ acctFactsPaint(); acctMineActs(); }
+    E.note.textContent = acctMsg; E.note.hidden = !(shown && acctMsg); E.note.dataset.kind = acctMsgBad ? "bad" : "";
+    if(gate && asstStateEl) asstStateEl.textContent = "Account or invite code needed";
+    fbServerSeen();
+  }
+
+  // ---- feedback: one place ----
+  // What may go with a piece of feedback, and nothing else: the list under
+  // "Show what is sent" is made from the same object that is sent.
+  var FB_KEY = "firstloop.feedback", FB_MAX = 2000, FB_KEEP = 20, FB_QMAX = 10;
+  var FB_KINDS = [["broken", "Something is broken"], ["missing", "Something is missing"], ["other", "Other"]];
+  var fbStore = { sent:[], queue:[], name:"" }, fbE = null, fbShown = false, fbBusy = false, fbFlushing = false,
+      fbInfo = null, fbInfoAt = 0, fbRating = 0, fbBack = null, fbChecked = false, fbNarrow = false, fbErrs = [];
+  try {
+    var fbOld = JSON.parse(window.localStorage.getItem(FB_KEY) || "null");
+    if(fbOld && typeof fbOld === "object"){
+      if(Array.isArray(fbOld.sent)) fbStore.sent = fbOld.sent.filter(function(s){ return s && typeof s === "object" && typeof s.text === "string"; }).slice(0, FB_KEEP);
+      if(Array.isArray(fbOld.queue)) fbStore.queue = fbOld.queue.filter(function(q){ return q && typeof q === "object" && typeof q.text === "string" && q.text; }).slice(0, FB_QMAX);
+      if(typeof fbOld.name === "string") fbStore.name = fbOld.name.slice(0, 40);
+    }
+  } catch(e){}
+  function fbSave(){ try { window.localStorage.setItem(FB_KEY, JSON.stringify(fbStore)); } catch(e){} }
+  // The last five errors the page caught: the message and where in the page's
+  // own code it happened. Kept in memory only, and sent only with feedback
+  // whose "Include technical details" is ticked. Anything quoted inside a
+  // message is cut out, since a quoted piece could be something typed.
+  function fbErrNote(msg, src, line){
+    msg = String(msg === undefined || msg === null ? "" : msg).replace(/"[^"]*"?/g, "…").replace(/\s+/g, " ").trim().slice(0, 140);
+    if(!msg) return;
+    var file = String(src || "").split(/[?#]/)[0].split("/").pop().slice(0, 30);
+    var s = msg + ((file || line) ? " (" + (file || "page") + (line ? ":" + (line | 0) : "") + ")" : "");
+    if(fbErrs.length && fbErrs[fbErrs.length - 1] === s) return;
+    fbErrs.push(s);
+    if(fbErrs.length > 5) fbErrs.shift();
+  }
+  window.addEventListener("error", function(e){
+    if(e && typeof e.message === "string" && e.message) fbErrNote(e.message, e.filename, e.lineno);
+  });
+  window.addEventListener("unhandledrejection", function(e){
+    var r = e ? e.reason : null, line = 0, m;
+    if(r && typeof r === "object" && typeof r.stack === "string" && (m = /:(\d+):\d+\)?\s*(\n|$)/.exec(r.stack))) line = +m[1];
+    fbErrNote((r && typeof r === "object" && typeof r.message === "string") ? (r.name || "Error") + ": " + r.message : "A promise was rejected", "", line);
+  });
+  function fbDetails(){
+    var d = { app:String(LOG.build || "").slice(0, 20), ua:String(navigator.userAgent || "").slice(0, 300),
+              screen:(window.innerWidth | 0) + "x" + (window.innerHeight | 0), area:String(view || "").slice(0, 20), equipment:[], errors:fbErrs.slice(-5) };
+    try {
+      if(typeof equipDevices === "function") equipDevices().slice(0, 8).forEach(function(x){ if(x && x.name) d.equipment.push(String(x.name).slice(0, 60)); });
+    } catch(e){}
+    try {
+      if(typeof DJ !== "undefined" && DJ && typeof DJ.audioInfo === "function"){
+        var a = DJ.audioInfo() || {};
+        d.dj = { decks:DJ.deckCount() | 0, routing:String(a.routing || "").slice(0, 12) };
+        if(a.started && a.sampleRate){
+          d.dj.sample_rate = Math.round(a.sampleRate);
+          d.dj.latency_ms = Math.round(((+a.baseLatency || 0) + (+a.outputLatency || 0)) * 1000);
+        }
+      }
+    } catch(e){}
+    return d;
+  }
+  function fbDetailRows(d){
+    var rows = [["App version", d.app || "unknown"], ["Browser and system", d.ua], ["Screen size", d.screen], ["Area open", d.area],
+      ["Connected equipment", d.equipment.length ? d.equipment.join(", ") : "none"]];
+    if(d.dj) rows.push(["DJ engine", d.dj.decks + " decks in use, output " + (d.dj.routing || "not set") +
+      (d.dj.sample_rate ? ", " + d.dj.sample_rate + " Hz, " + d.dj.latency_ms + " ms latency" : ", not started")]);
+    rows.push(["Last errors caught", d.errors.length ? d.errors.join(" | ") : "none"]);
+    return rows;
+  }
+  // which server is there: resolves with its answer to GET, or null
+  function fbServer(){
+    if(!asstWeb) return Promise.resolve(null);
+    if(asstInfo && typeof asstInfo.ok === "boolean") return Promise.resolve(asstInfo);
+    if(fbInfo && Date.now() - fbInfoAt < 60000) return Promise.resolve(fbInfo);
+    var ctl = null, timer = null;
+    try { ctl = new AbortController(); timer = setTimeout(function(){ try { ctl.abort(); } catch(e){} }, 5000); } catch(e){ ctl = null; }
+    try {
+      return fetch(ASST_URL, { method:"GET", headers:{ "Accept":"application/json" }, cache:"no-store", signal:ctl ? ctl.signal : undefined })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ clearTimeout(timer); fbInfo = (j && typeof j.ok === "boolean") ? j : null; fbInfoAt = Date.now(); return fbInfo; })
+        .catch(function(){ clearTimeout(timer); return null; });
+    } catch(e){ return Promise.resolve(null); }
+  }
+  function fbKeep(item){
+    fbStore.sent.unshift(item);
+    fbStore.sent.sort(function(a, b){ return (b.t || 0) - (a.t || 0); });
+    if(fbStore.sent.length > FB_KEEP) fbStore.sent.length = FB_KEEP;
+  }
+  // The service this site had before /api/chat knew about feedback. Used only
+  // when the chat server is an older one, or is not there.
+  function fbWish(q){
+    var label = "Other";
+    FB_KINDS.forEach(function(k){ if(k[0] === q.kind) label = k[1]; });
+    try {
+      return fetch(WISH_URL, { method:"POST", headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({ wish:"[" + label + "] " + q.text, kind:"report",
+            context:{ build:LOG.build, type:q.kind, rating:q.rating || null, name:q.name || null, details:q.details || null } }) })
+        .then(function(r){
+          if(!r.ok) return "queued";
+          fbKeep({ id:0, receipt:"", t:Math.floor(Date.now() / 1000), kind:q.kind, text:q.text.slice(0, 300), account:false, status:"new", reply:"", reply_time:0, seen:true });
+          return "sent";
+        }, function(){ return "queued"; });
+    } catch(e){ return Promise.resolve("queued"); }
+  }
+  // resolves with "sent", "queued" (try again later), "limit" (try again tomorrow) or "refused"
+  function fbDeliver(q){
+    return fbServer().then(function(info){
+      var v = info && typeof info.v === "number" ? info.v : 0;
+      if(v < 4) return fbWish(q);
+      var body = { op:"feedback", kind:q.kind, text:q.text };
+      if(q.rating) body.rating = q.rating;
+      if(q.details) body.details = q.details;
+      if(asstCode && !asstCodeBad) body.code = asstCode;
+      else if(q.name) body.name = q.name;
+      return asstOp(body).then(function(j){
+        if(j && j.ok === true){
+          fbKeep({ id:+j.id || 0, receipt:typeof j.receipt === "string" ? j.receipt.slice(0, 60) : "", t:+j.time || Math.floor(Date.now() / 1000),
+            kind:q.kind, text:q.text.slice(0, 300), account:j.account === true, status:"new", reply:"", reply_time:0, seen:true });
+          return "sent";
+        }
+        if(!j) return "queued";
+        return (j.error === "feedback_limit" || j.error === "rate_limited") ? "limit" : "refused";
+      });
+    });
+  }
+  function fbFlush(){
+    if(fbFlushing || !fbStore.queue.length || !asstWeb) return Promise.resolve();
+    fbFlushing = true;
+    var old = Date.now() - 14 * 86400000;
+    fbStore.queue = fbStore.queue.filter(function(q){ return !(q.t < old); });
+    var list = fbStore.queue.slice(), i = 0;
+    function next(){
+      if(i >= list.length){ fbFlushing = false; fbSave(); fbPaint(); return; }
+      var q = list[i++];
+      return fbDeliver(q).then(function(how){
+        if(how === "sent" || how === "refused") fbStore.queue = fbStore.queue.filter(function(x){ return x !== q; });
+        if(how === "queued" || how === "limit") i = list.length;      // no point trying the rest now
+        fbSave();
+        return next();
+      }, function(){ fbFlushing = false; });
+    }
+    return Promise.resolve(next());
+  }
+  // the state of what was sent, and the owner's replies
+  function fbRefresh(){
+    var rec = [];
+    fbStore.sent.forEach(function(s){ if(s.receipt && rec.length < 30) rec.push(s.receipt); });
+    var code = (asstCode && !asstCodeBad) ? asstCode : "";
+    if(!asstWeb || (!rec.length && !code)) return Promise.resolve();
+    return fbServer().then(function(info){
+      if(!(info && typeof info.v === "number" && info.v >= 4)) return;
+      var body = { op:"feedback.mine" };
+      if(code) body.code = code;
+      if(rec.length) body.receipts = rec;
+      return asstOp(body).then(function(j){
+        if(!j || j.ok !== true || !Array.isArray(j.items)) return;
+        j.items.forEach(function(it){
+          if(!it || typeof it !== "object" || !(+it.id > 0)) return;
+          var mine = null;
+          fbStore.sent.forEach(function(s){ if(s.id === +it.id) mine = s; });
+          if(!mine){
+            if(typeof it.text !== "string") return;
+            mine = { id:+it.id, receipt:"", t:+it.time || 0, kind:String(it.kind || "other"), text:it.text.slice(0, 300), account:true, status:"new", reply:"", reply_time:0, seen:true };
+            fbStore.sent.push(mine);
+          }
+          var reply = typeof it.reply === "string" ? it.reply.slice(0, 1000) : "";
+          if(reply !== mine.reply){ mine.reply = reply; mine.reply_time = +it.reply_time || 0; mine.seen = !reply || fbShown; }
+          if(it.status === "new" || it.status === "read" || it.status === "done") mine.status = it.status;
+        });
+        fbStore.sent.sort(function(a, b){ return (b.t || 0) - (a.t || 0); });
+        if(fbStore.sent.length > FB_KEEP) fbStore.sent.length = FB_KEEP;
+        fbSave(); fbPaint();
+      });
+    });
+  }
+  // the first time this page learns which server is there: send what is waiting, ask for replies
+  function fbServerSeen(){
+    if(fbChecked || !asstInfo || typeof asstInfo.ok !== "boolean") return;
+    fbChecked = true;
+    setTimeout(function(){ fbFlush(); fbRefresh(); }, 1500);
+  }
+  function fbUnread(){ return fbStore.sent.some(function(s){ return s.reply && !s.seen; }); }
+  function fbCount(){ fbE.count.textContent = fbE.text.value.length.toLocaleString("en-GB") + " / 2,000"; }
+  function fbDetailsPaint(){
+    var dl = fbE.list;
+    while(dl.firstChild) dl.removeChild(dl.firstChild);
+    fbDetailRows(fbDetails()).forEach(function(r){ dl.appendChild(acctEl("dt", "", r[0])); dl.appendChild(acctEl("dd", "", r[1])); });
+  }
+  function fbPaint(){
+    if(!fbE) return;
+    var E = fbE, un = fbUnread();
+    E.btn.dataset.unread = un ? "true" : "false";
+    E.btn.setAttribute("aria-label", un ? "Feedback. The site owner has replied." : "Feedback");
+    E.btn.setAttribute("aria-expanded", fbShown ? "true" : "false");
+    if(!E.panel) return;
+    var has = !!(asstCode && !asstCodeBad && asstCodeInfo);
+    E.nameWrap.hidden = has;
+    E.who.textContent = has ? "Sent with your account" + (asstCodeInfo.label ? ", " + asstCodeInfo.label : "") + "." : "";
+    E.who.hidden = !has;
+    for(var i = 0; i < E.rate.length; i++) E.rate[i].setAttribute("aria-pressed", fbRating === i + 1 ? "true" : "false");
+    E.send.setAttribute("aria-disabled", fbBusy ? "true" : "false");
+    E.showBtn.setAttribute("aria-expanded", E.shown.hidden ? "false" : "true");
+    E.showBtn.textContent = E.shown.hidden ? "Show what is sent" : "Hide what is sent";
+    if(!E.shown.hidden) fbDetailsPaint();
+    var ul = E.sent;
+    while(ul.firstChild) ul.removeChild(ul.firstChild);
+    function kindWords(k){ var w = "Other"; FB_KINDS.forEach(function(x){ if(x[0] === k) w = x[1]; }); return w; }
+    fbStore.queue.forEach(function(q){
+      var li = acctEl("li");
+      li.appendChild(acctEl("span", "fb-meta", "Not sent yet · " + kindWords(q.kind)));
+      li.appendChild(acctEl("span", "fb-text", q.text.length > 160 ? q.text.slice(0, 160) + "…" : q.text));
+      ul.appendChild(li);
+    });
+    fbStore.sent.forEach(function(s){
+      var li = acctEl("li");
+      li.appendChild(acctEl("span", "fb-meta", acctDay(s.t) + " · " + kindWords(s.kind) + " · " +
+        (s.status === "done" ? "Done" : (s.status === "read" ? "Read by the owner" : "Sent"))));
+      li.appendChild(acctEl("span", "fb-text", s.text.length > 160 ? s.text.slice(0, 160) + "…" : s.text));
+      if(s.reply){
+        var rp = acctEl("div", "fb-reply");
+        rp.appendChild(acctEl("span", "fb-meta", "Reply from the site owner" + (s.reply_time ? ", " + acctDay(s.reply_time) : "")));
+        rp.appendChild(acctEl("span", "fb-text", s.reply));
+        li.appendChild(rp);
+      }
+      ul.appendChild(li);
+    });
+    E.sentWrap.hidden = !(fbStore.queue.length || fbStore.sent.length);
+  }
+  function fbPlace(){
+    if(!fbE || !fbE.panel || !fbShown) return;
+    var p = fbE.panel, dock = document.querySelector(".dock"), top = 8;
+    try { if(dock) top = Math.max(8, Math.round(dock.getBoundingClientRect().bottom + 6)); } catch(e){}
+    p.style.top = top + "px";
+    p.style.maxHeight = Math.max(160, window.innerHeight - top - 8) + "px";
+    if(fbNarrow){ p.style.left = "8px"; p.style.right = "8px"; }
+    else {
+      var r = fbE.btn.getBoundingClientRect();
+      p.style.left = "auto";
+      p.style.right = Math.max(8, Math.min(window.innerWidth - 340, Math.round(window.innerWidth - r.right))) + "px";
+    }
+  }
+  function fbBuildPanel(){
+    var E = fbE;
+    if(E.panel) return;
+    var p = E.panel = acctEl("div", "fb-panel"); p.id = "fbpanel"; p.hidden = true;
+    p.setAttribute("role", "dialog"); p.setAttribute("aria-labelledby", "fbpanelh");
+    var head = acctEl("div", "fb-head");
+    var h = acctEl("h2", "", "Feedback"); h.id = "fbpanelh";
+    head.appendChild(h);
+    head.appendChild(acctBtn("tinybtn", "Close", "fbclose", function(){ fbClose(true); }));
+    p.appendChild(head);
+    p.appendChild(acctEl("p", "fb-lead", "This goes to the person who runs this site, and to nobody else."));
+    var form = acctEl("form", "fb-form"); form.id = "fbform"; form.noValidate = true; form.setAttribute("autocomplete", "off");
+    var lab = acctEl("label", "acct-f"); lab.setAttribute("for", "fbwrite");
+    lab.appendChild(acctEl("span", "fb-q", "What happened, what did you expect, what is missing?"));
+    E.text = acctEl("textarea"); E.text.id = "fbwrite"; E.text.maxLength = FB_MAX; E.text.rows = 5;
+    E.text.setAttribute("aria-describedby", "fbcount");
+    E.text.addEventListener("input", fbCount);
+    E.count = acctEl("span", "fb-count", "0 / 2,000"); E.count.id = "fbcount";
+    form.appendChild(lab); form.appendChild(E.text); form.appendChild(E.count);
+    var kinds = acctEl("fieldset", "fb-kinds"); kinds.appendChild(acctEl("legend", "", "What kind of feedback is it?"));
+    E.kinds = [];
+    FB_KINDS.forEach(function(k){
+      var l = acctEl("label", "acct-tick"), r = acctEl("input");
+      r.type = "radio"; r.name = "fbkind"; r.value = k[0]; r.id = "fbkind-" + k[0]; r.checked = k[0] === "other";
+      l.appendChild(r); l.appendChild(acctEl("span", "", k[1])); kinds.appendChild(l); E.kinds.push(r);
+    });
+    form.appendChild(kinds);
+    var rate = acctEl("div", "fb-rate"); rate.setAttribute("role", "group"); rate.setAttribute("aria-labelledby", "fbrateq");
+    var rq = acctEl("span", "fb-q", "How usable was First Loop today? (optional)"); rq.id = "fbrateq";
+    rate.appendChild(rq);
+    var rrow = acctEl("div", "acct-row");
+    rrow.appendChild(acctEl("span", "acct-hint", "Not at all"));
+    E.rate = [];
+    [1, 2, 3, 4, 5].forEach(function(n){
+      var b = acctBtn("tinybtn", String(n), "fbrate" + n, function(){ fbRating = fbRating === n ? 0 : n; fbPaint(); });
+      b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", n + " of 5");
+      rrow.appendChild(b); E.rate.push(b);
+    });
+    rrow.appendChild(acctEl("span", "acct-hint", "Very"));
+    rate.appendChild(rrow); form.appendChild(rate);
+    E.nameWrap = acctEl("label", "acct-f"); E.nameWrap.appendChild(acctEl("span", "", "Your name (optional)"));
+    E.name = acctEl("input"); E.name.type = "text"; E.name.id = "fbname"; E.name.maxLength = 40; E.name.value = fbStore.name || "";
+    E.name.setAttribute("autocomplete", "off"); E.name.setAttribute("spellcheck", "false");
+    E.nameWrap.appendChild(E.name); form.appendChild(E.nameWrap);
+    E.who = acctEl("p", "acct-hint"); E.who.id = "fbwho"; form.appendChild(E.who);
+    var drow = acctEl("div", "acct-row");
+    var dl = acctEl("label", "acct-tick");
+    E.det = acctEl("input"); E.det.type = "checkbox"; E.det.id = "fbdetails"; E.det.checked = true;
+    dl.appendChild(E.det); dl.appendChild(acctEl("span", "", "Include technical details"));
+    E.showBtn = acctBtn("linkbtn fb-show", "Show what is sent", "fbshow2", function(){ E.shown.hidden = !E.shown.hidden; fbPaint(); });
+    E.showBtn.setAttribute("aria-controls", "fbshown"); E.showBtn.setAttribute("aria-expanded", "false");
+    drow.appendChild(dl); drow.appendChild(E.showBtn); form.appendChild(drow);
+    E.shown = acctEl("div", "fb-shown"); E.shown.id = "fbshown"; E.shown.hidden = true;
+    E.shown.appendChild(acctEl("p", "acct-hint", "Sent when you press Send: what you wrote above, its kind, the 1 to 5 answer if you gave one, your account or the name if there is one, and, while the box is ticked, exactly this list. Nothing else: no song, no recording, nothing you typed to the Assistant."));
+    E.list = acctEl("dl", "acct-facts"); E.shown.appendChild(E.list);
+    form.appendChild(E.shown);
+    var srow = acctEl("div", "acct-row");
+    E.send = acctEl("button", "sendbtn", "Send"); E.send.type = "submit"; E.send.id = "fbsend2";
+    srow.appendChild(E.send);
+    E.status = acctEl("p", "acct-msg"); E.status.id = "fbstatus2"; E.status.setAttribute("role", "status");
+    srow.appendChild(E.status); form.appendChild(srow);
+    form.addEventListener("submit", function(e){ e.preventDefault(); fbSubmit(); });
+    p.appendChild(form);
+    E.sentWrap = acctEl("div", "fb-sentwrap"); E.sentWrap.hidden = true;
+    var sh = acctEl("h3", "", "Sent from this device"); sh.id = "fbsenth"; E.sentWrap.appendChild(sh);
+    E.sent = acctEl("ul", "fb-sent"); E.sent.id = "fbsent"; E.sent.setAttribute("aria-labelledby", "fbsenth");
+    E.sentWrap.appendChild(E.sent); p.appendChild(E.sentWrap);
+    p.addEventListener("keydown", function(e){
+      e.stopPropagation();                 // the page's own shortcuts (Space, 1 to 8) stay out of this panel
+      if(e.key === "Escape" && !e.defaultPrevented){ e.preventDefault(); fbClose(true); }
+    });
+    document.body.appendChild(p);
+  }
+  function fbOpen(kind){
+    if(!fbE) return;
+    fbBuildPanel();
+    var E = fbE;
+    if(kind) E.kinds.forEach(function(r){ r.checked = r.value === kind; });
+    if(!fbShown){ fbBack = document.activeElement; E.status.textContent = ""; }
+    fbShown = true; E.panel.hidden = false;
+    fbStore.sent.forEach(function(s){ s.seen = true; });
+    fbSave(); fbCount(); fbPaint(); fbPlace();
+    try { E.text.focus({ preventScroll:true }); } catch(e){}
+    fbFlush(); fbRefresh();
+  }
+  function fbClose(refocus){
+    if(!fbE || !fbE.panel || !fbShown) return;
+    fbShown = false; fbE.panel.hidden = true;
+    fbPaint();
+    if(refocus){ try { ((fbBack && fbBack !== document.body && document.contains(fbBack)) ? fbBack : fbE.btn).focus(); } catch(e){} }
+    fbBack = null;
+  }
+  function fbSubmit(){
+    var E = fbE;
+    if(fbBusy) return;
+    var text = E.text.value.replace(/\r\n?/g, "\n").trim(), kind = "other";
+    E.kinds.forEach(function(r){ if(r.checked) kind = r.value; });
+    if(!text){ E.status.textContent = "Write something first."; E.status.dataset.kind = "bad"; try { E.text.focus(); } catch(e){} return; }
+    if(!asstWeb){
+      // opened as a file: there is no site behind this page to send to
+      E.status.textContent = "This copy of First Loop was opened as a file, so there is no site to send feedback to. Open First Loop on its website and send it from there.";
+      E.status.dataset.kind = "bad";
+      return;
+    }
+    var name = E.name.value.replace(/\s+/g, " ").trim().slice(0, 40);
+    fbStore.name = name;
+    var q = { t:Date.now(), kind:kind, text:text.slice(0, FB_MAX), rating:fbRating || 0, name:name, details:E.det.checked ? fbDetails() : null };
+    fbBusy = true; E.status.textContent = "Sending…"; E.status.dataset.kind = ""; fbPaint();
+    fbDeliver(q).then(function(how){ return how; }, function(){ return "queued"; }).then(function(how){
+      fbBusy = false;
+      if(how === "refused"){
+        E.status.textContent = "The server did not accept that, so nothing was sent. Try it shorter, or without the technical details.";
+        E.status.dataset.kind = "bad";
+      } else {
+        if(how !== "sent"){
+          fbStore.queue.push(q);
+          if(fbStore.queue.length > FB_QMAX) fbStore.queue.shift();
+        }
+        E.text.value = ""; fbRating = 0; fbCount();
+        E.status.dataset.kind = "";
+        E.status.textContent = how === "sent" ? "Sent. Thank you."
+          : how === "limit" ? "No more feedback can be taken from here today. This one is kept on this device and sent later."
+          : "Not sent yet: the site could not be reached. It is kept on this device and sent when the connection is back.";
+      }
+      fbSave(); fbPaint();
+    });
+  }
+  function fbHome(){
+    if(!fbE) return;
+    // with the tools where the top bar has room for it; otherwise the last item in the row of areas
+    var w = window.innerWidth || 0, docked = document.body.classList.contains("has-assistant") && w >= 1100;
+    var b = fbE.btn, narrow = w < 880 || (docked && w < 1160), tabs = document.querySelector(".viewtabs"), tools = document.querySelector(".dock .tools");
+    fbNarrow = w < 880;
+    if(narrow && tabs){ if(b.parentNode !== tabs) tabs.appendChild(b); b.className = "fb-intabs"; }
+    else if(tools){ if(b.parentNode !== tools) tools.appendChild(b); b.className = "lvl fbbtn"; }
+    fbPlace();
+  }
+  (function(){
+    fbE = {};
+    var b = fbE.btn = acctBtn("lvl fbbtn", "Feedback", "fbbtn", function(){ if(fbShown) fbClose(false); else fbOpen(); });
+    b.title = "Write to the person who runs this site";
+    b.setAttribute("aria-haspopup", "dialog"); b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-controls", "fbpanel");
+    fbHome(); fbPaint();
+    window.addEventListener("resize", fbHome);
+    // the Assistant docking or hiding changes the room in the top bar
+    try { new MutationObserver(fbHome).observe(document.body, { attributes:true, attributeFilter:["class"] }); } catch(e){}
+    // Escape closes the panel also when the focus has slipped out of it onto the page itself
+    document.addEventListener("keydown", function(e){
+      if(e.key === "Escape" && fbShown && !e.defaultPrevented && (document.activeElement === document.body || !document.activeElement)){ e.preventDefault(); fbClose(true); }
+    });
+    window.addEventListener("online", function(){ fbFlush(); });
+    setInterval(function(){
+      if(document.visibilityState === "hidden") return;
+      if(fbStore.queue.length) fbFlush();
+      // replies are looked for while something sent in the last 30 days has none, and the AI is not switched off
+      var since = Date.now() / 1000 - 30 * 86400;
+      if(asstUse && fbStore.sent.some(function(s){ return !s.reply && (s.receipt || s.account) && s.t > since; })) fbRefresh();
+    }, 300000);       // every five minutes (the usage counts have the ten-minute timer to themselves)
+    // the two boxes this replaces lived in Learn; Find now opens the one panel
+    var w = PAL_BY_ID.wish, r = PAL_BY_ID.report;
+    if(w){ w.kind = "do"; w.a = "top"; w.s = ["#fbbtn"]; w.r = "Feedback"; w.run = function(){ fbOpen("missing"); }; }
+    if(r){ r.kind = "do"; r.a = "top"; r.s = ["#fbbtn"]; r.run = function(){ fbOpen(); }; }
+    acctBuild();
+    acctReady = true;
+    asstPaint();
+    // for the test suites only (the address has ?fltest in it)
+    if(/[?&]fltest/.test(window.location.search)){
+      window.__flAcct = { details:fbDetails, errors:function(){ return fbErrs.slice(); }, store:function(){ return fbStore; },
+        flush:fbFlush, refresh:fbRefresh, open:fbOpen, close:fbClose, v:acctV, canSignup:acctCanSignup };
+    }
+  })();
+  // ===== /accounts + feedback =====
 
   // ---------- interaction ----------
   drumGrid.addEventListener("click", function(e){

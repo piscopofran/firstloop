@@ -5,7 +5,8 @@
 #   cd ~ && curl -fsSL https://raw.githubusercontent.com/piscopofran/firstloop/main/server/install-chat.sh -o install-chat.sh && sudo bash install-chat.sh
 #
 # Running the same line again later updates the service to the newest version
-# and keeps the key, the settings, the invite codes and the owner link.
+# and keeps the key, the settings, the invite codes, the tester accounts, the
+# feedback people sent and the owner link.
 #
 # To get a new owner link (the old one stops working):
 #   cd ~ && sudo bash install-chat.sh --new-admin-link
@@ -658,7 +659,8 @@ remove_all() {
   local -a marked=()
   local f
   say "Removing the First Loop chat service"
-  note "This also deletes the invite codes, the usage counts and the owner link ($STATE_DIR)."
+  note "This also deletes the invite codes, the tester accounts people created, the feedback"
+  note "they sent, the usage counts and the owner link ($STATE_DIR)."
   note "No backup of them is made."
   WHERE="Nothing has been removed yet."
   while IFS= read -r f; do
@@ -682,7 +684,8 @@ remove_all() {
   if id "$SVC_USER" >/dev/null 2>&1; then userdel "$SVC_USER" >/dev/null 2>&1 || note "The user $SVC_USER could not be deleted; it has no login and no rights, so it is harmless."; fi
   say "Removed."
   note "The API key file ($ENV_FILE) was deleted. Copies of the nginx files from before are still in $BACKUP_DIR."
-  note "The invite codes, the usage counts and the owner link were deleted with it; they cannot be brought back."
+  note "The invite codes, the tester accounts, the feedback, the usage counts and the owner link were"
+  note "deleted with it; they cannot be brought back."
   note "If you no longer need the key at all, also delete it in the Anthropic Console."
 }
 
@@ -700,7 +703,7 @@ put_back_previous() {
 # ---------------------------------------------------------------------------
 install_all() {
   local -a SITE_FILES=()
-  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog ST_SECRET test_ok=1 free codes
+  local f TMP KEY attempt PROBE REPLY had_old=0 sum_py sum_unit tlog ST_SECRET test_ok=1 free codes signup=0
 
   say "Step 1 of 6: finding the First Loop site in nginx"
   tlog="$(mktemp)" || die "Could not create a temporary file. Nothing has been changed."
@@ -746,7 +749,8 @@ install_all() {
   install -d -m 750 -o "$SVC_USER" -g "$SVC_USER" "$STATE_DIR" || die "Could not create $STATE_DIR. $WHERE"
   note "Program: $APP_DIR/firstloop-chat.py"
   note "Log:     $LOG_FILE (times and counts only, never what anyone typed)"
-  note "Invite codes and counts: $STATE_DIR/state.db (kept when you update; never what anyone typed)"
+  note "Invite codes, accounts, feedback and counts: $STATE_DIR/state.db (kept when you update;"
+  note "         never what anyone typed to the Assistant)"
 
   say "Step 4 of 6: the API key"
   if [ -f "$ENV_FILE" ]; then
@@ -887,7 +891,7 @@ install_all() {
   # -------------------------------------------------------------------------
   say "Your owner page"
   WHERE="Everything is installed. Only the owner link could not be made; run:  cd ~ && sudo bash install-chat.sh --new-admin-link"
-  note "The owner page is where you make invite codes, set limits and see how the Assistant is used."
+  note "The owner page is where you make invite codes, set limits, read feedback and see how the Assistant is used."
   if admin_hash_ok; then
     note "Your owner link is the same as before; it was not changed and is not shown again."
     note "If you have lost it:  cd ~ && sudo bash install-chat.sh --new-admin-link"
@@ -898,7 +902,18 @@ install_all() {
   printf '\n'
   codes="$(code_count)"
   case "$codes" in ''|*[!0-9]*) codes=0 ;; esac
-  if [ "${free:-0}" = "0" ] && [ "$codes" -gt 0 ]; then
+  case "$PROBE" in *'"signup": true'*|*'"signup":true'*) signup=1 ;; esac
+  if [ "$signup" -eq 1 ] && [ "${free:-0}" = "0" ] && [ "$codes" -gt 0 ]; then
+    if [ "$codes" -eq 1 ]; then
+      note "Your invite code is kept and works as it did."
+    else
+      note "Your $codes invite codes are kept and work as they did."
+    fi
+    note "The owner page is where you make more, or change one."
+  elif [ "$signup" -eq 1 ] && [ "${free:-0}" = "0" ]; then
+    note "To use the AI yourself: open your owner link, press 'Create your first invite code', and"
+    note "type that code into the Assistant on your site (Invite code, at the top of the Assistant)."
+  elif [ "${free:-0}" = "0" ] && [ "$codes" -gt 0 ]; then
     if [ "$codes" -eq 1 ]; then
       note "As before, people need an invite code to use the AI. Your invite code is kept and works as it did."
     else
@@ -912,6 +927,26 @@ install_all() {
   else
     note "People without an invite code get $free free messages a day. You can change that on the owner page."
   fi
+
+  say "New in this version: tester accounts and feedback"
+  if [ "$signup" -eq 1 ]; then
+    note "PEOPLE CAN NOW CREATE THEIR OWN TESTER ACCOUNT on your site, without asking you first."
+    note "This is switched ON. In the Assistant they press 'Create a tester account', give a name,"
+    note "and get an account with a fixed number of messages (150 in total unless you change it)."
+    note "All accounts together still stop at the daily limit on your owner page (Limits,"
+    note "'Most messages a day, everyone together'), so the most a day can cost is what it was."
+    note "To switch it off, or to set a sign-up word so that only people you have told the word"
+    note "can do it: open your owner page; on Overview it is the box called"
+    note "'Tester accounts people create themselves'. The switch there works at once."
+  else
+    note "Creating a tester account is switched OFF on your site, as you set it: people need an"
+    note "invite code from you. To let people create their own account, open your owner page;"
+    note "on Overview it is the box called 'Tester accounts people create themselves'."
+  fi
+  note "FEEDBACK: First Loop now has one Feedback button, at the top of the screen. What people"
+  note "send appears on your owner page under the Feedback tab. You can reply there, and the"
+  note "person sees your reply inside the app. Keep the owner page open in a pinned browser"
+  note "tab: its title shows the number of unread pieces of feedback."
   if [ "$test_ok" -ne 0 ]; then
     printf '\nThe AI is NOT connected yet (see "Not connected yet" above). The owner page works all the same.\n' >&2
     exit 1

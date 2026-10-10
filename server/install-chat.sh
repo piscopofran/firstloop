@@ -934,7 +934,7 @@ install_all() {
     note "This is switched ON. In the Assistant they press 'Create a tester account', give a name,"
     note "and get an account with a fixed number of messages (150 in total unless you change it)."
     note "All accounts together still stop at the daily limit on your owner page (Limits,"
-    note "'Most messages a day, everyone together'), so this cannot run the bill past that."
+    note "'Most messages a day, everyone together'), so the most a day can cost is what it was."
     note "To switch it off, or to set a sign-up word so that only people you have told the word"
     note "can do it: open your owner page; on Overview it is the box called"
     note "'Tester accounts people create themselves'. The switch there works at once."
@@ -943,7 +943,7 @@ install_all() {
     note "invite code from you. To let people create their own account, open your owner page;"
     note "on Overview it is the box called 'Tester accounts people create themselves'."
   fi
-  note "FEEDBACK: the site now has one Feedback button, at the top of every screen. What people"
+  note "FEEDBACK: First Loop now has one Feedback button, at the top of the screen. What people"
   note "send appears on your owner page under the Feedback tab. You can reply there, and the"
   note "person sees your reply inside the app. Keep the owner page open in a pinned browser"
   note "tab: its title shows the number of unread pieces of feedback."

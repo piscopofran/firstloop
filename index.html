@@ -2098,7 +2098,9 @@
   @media (max-width:879.98px){
     .fb-panel{left:8px;right:8px;width:auto;}
   }
-  /* where the Assistant is an area of its own, an account panel takes the whole of it while it is open */
+  /* The sign-up form is long: while it is open it takes the whole of the Assistant, so "Create account" is never
+     below a fold. Where the Assistant is an area of its own (narrow screens) the two short panels do the same. */
+  #assistant #acctform{position:absolute;left:0;right:0;top:0;bottom:0;max-height:none;z-index:3;border-bottom:0;background:var(--surface);}
   @media (max-width:1099.98px){
     #assistant .acct-panel{position:absolute;left:0;right:0;top:0;bottom:0;max-height:none;z-index:3;border-bottom:0;background:var(--surface);}
   }
@@ -25756,7 +25758,7 @@
       // replies are looked for while something sent in the last 30 days has none, and the AI is not switched off
       var since = Date.now() / 1000 - 30 * 86400;
       if(asstUse && fbStore.sent.some(function(s){ return !s.reply && (s.receipt || s.account) && s.t > since; })) fbRefresh();
-    }, 600000);
+    }, 300000);       // every five minutes (the usage counts have the ten-minute timer to themselves)
     // the two boxes this replaces lived in Learn; Find now opens the one panel
     var w = PAL_BY_ID.wish, r = PAL_BY_ID.report;
     if(w){ w.kind = "do"; w.a = "top"; w.s = ["#fbbtn"]; w.r = "Feedback"; w.run = function(){ fbOpen("missing"); }; }

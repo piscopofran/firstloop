@@ -32638,7 +32638,8 @@
   function fbServerSeen(){
     if(fbChecked || !asstInfo || typeof asstInfo.ok !== "boolean") return;
     fbChecked = true;
-    setTimeout(function(){ fbFlush(); fbRefresh(); }, 1500);
+    // looking for replies is not something the person asked for just now: with "Use the AI" off nothing is sent by itself
+    setTimeout(function(){ fbFlush(); if(asstUse) fbRefresh(); }, 1500);
   }
   function fbUnread(){ return fbStore.sent.some(function(s){ return s.reply && !s.seen; }); }
   function fbCount(){ fbE.count.textContent = fbE.text.value.length.toLocaleString("en-GB") + " / 2,000"; }

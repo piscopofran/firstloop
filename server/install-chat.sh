@@ -947,6 +947,15 @@ install_all() {
   note "send appears on your owner page under the Feedback tab. You can reply there, and the"
   note "person sees your reply inside the app. Keep the owner page open in a pinned browser"
   note "tab: its title shows the number of unread pieces of feedback."
+  local dj_base
+  dj_base="$(site_address ${SITE_FILES[@]+"${SITE_FILES[@]}"} 2>/dev/null)" || dj_base=""
+  if [ -n "$dj_base" ]; then
+    note "FOR A DJ WHO TESTS IT, give them this link:  $dj_base/#dj"
+  else
+    note "FOR A DJ WHO TESTS IT, give them your site's address with /#dj on the end."
+  fi
+  note "It opens the DJ side only: the decks, their library, the Assistant, Equipment and"
+  note "Feedback. The Workspace button at the top brings everything else back."
   if [ "$test_ok" -ne 0 ]; then
     printf '\nThe AI is NOT connected yet (see "Not connected yet" above). The owner page works all the same.\n' >&2
     exit 1

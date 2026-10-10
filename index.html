@@ -16531,9 +16531,10 @@
       djcAnswerCoach(m[1] === "off" ? "off" : (/after/.test(m[1]) ? "after" : "live"));
       return null;
     }
-    if(/\b(review|how was|feedback|pointers)\b.*\b(mix|mixing|transition|blend)\b|\b(mix|transition) review\b/.test(q) && asstDJ()){
+    // "review my mix" is about the decks where the decks are, or when a mix has just been measured; elsewhere "mix" is the song's own mix
+    last = djcS ? djcS.journal[djcS.journal.length - 1] : null;
+    if(/\b(review|how was|feedback|pointers)\b.*\b(mix|mixing|transition|blend)\b|\b(mix|transition) review\b/.test(q) && asstDJ() && (view === "dj" || last)){
       if(dry) return { t:"" };
-      last = djcS ? djcS.journal[djcS.journal.length - 1] : null;
       if(last){ djcLocalReview(last, djcS.finds, ""); return null; }
       return { t:djcOn() ? "No mix has been measured in this session yet. Play from one deck into another and the review appears here."
                          : "Coaching is off, so nothing about your mixing has been followed. Switch it on under Coach, above, and play a mix." };

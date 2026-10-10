@@ -2722,7 +2722,7 @@ ADMIN_PAGE = r"""<!doctype html>
       rows.push(["Controller", ct.join(", ")]);
     }
     if(d.library && typeof d.library.tracks === "number")
-      rows.push(["DJ library", d.library.tracks + " tracks, " + (d.library.playlists || 0) + " playlists, " + (d.library.rekordbox || 0) + " rekordbox sources, " + (d.library.missing || 0) + " missing"]);
+      rows.push(["DJ library", d.library.tracks + " tracks, " + (d.library.playlists || 0) + " playlists, " + (d.library.rekordbox || 0) + (d.library.rekordbox === 1 ? " rekordbox source, " : " rekordbox sources, ") + (d.library.missing || 0) + " missing"]);
     if(d.workspace) rows.push(["Workspace", d.workspace]);
     (d.errors || []).forEach(function(e, i){ rows.push(["Error " + (i + 1), e]); });
     return rows;

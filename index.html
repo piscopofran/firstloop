@@ -2344,6 +2344,23 @@
     .acct-panel .tinybtn,.acct-panel .ghost,.acct-panel .sendbtn,.fb-panel .sendbtn,.fb-panel .tinybtn{min-height:34px;}
   }
   /* ===== /accounts + feedback (css) ===== */
+  /* ===== controller photo (css) ===== */
+  .gp{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .gp .eq-check{font-weight:400;}
+  .gp-stage{display:flex;flex-direction:column;gap:6px;}
+  .gp-stage[hidden]{display:none;}
+  .gp-ask{margin:0;font-size:13px;font-weight:600;color:var(--ink);}
+  #gppick{flex:1 1 160px;min-width:0;height:26px;font:inherit;font-size:12px;color:var(--ink);background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r);padding:0 6px;}
+  .gp-img{position:relative;width:100%;line-height:0;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden;cursor:crosshair;background:var(--bg);touch-action:manipulation;}
+  .gp-img img{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;pointer-events:none;}
+  .gp-dots{position:absolute;inset:0;}
+  .gp-dot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;border-radius:50%;border:2px solid var(--accent);background:rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(0,0,0,.7);cursor:pointer;}
+  .gp-dot.gp-cur{background:var(--accent);width:20px;height:20px;margin:-10px 0 0 -10px;}
+  .gearmap[data-photo="1"]{background:#000;border-radius:var(--r);}
+  .gearmap[data-photo="1"] .gm-ph{fill:transparent;stroke:#fff;stroke-opacity:.55;stroke-width:1px;vector-effect:non-scaling-stroke;}
+  .gearmap[data-photo="1"] .gm-ring{fill:color-mix(in srgb, var(--accent) 22%, transparent);stroke-width:2.5px;filter:drop-shadow(0 0 1.2px #000) drop-shadow(0 0 1.2px #000);}
+  .gearmap[data-photo="1"].gm-dim .gm-c:not(.gm-hi){opacity:.5;}
+  /* ===== /controller photo (css) ===== */
   /* ===== workspace (css) ===== */
   /* A layer above the areas: "dj" shows what a DJ needs, "make" the production
      side, "all" everything (the default). Nothing is removed, only not shown. */
@@ -12703,6 +12720,7 @@
     var added = now.filter(function(d){ return was.indexOf(d.name) < 0; });
     var gone = was.filter(function(n){ return names.indexOf(n) < 0; });
     equipKnown = names;
+    if(typeof gpSync === "function") setTimeout(gpSync, 0);
     gone.slice(0, 4).forEach(function(n){ asstPush({ r:"e", t:"Disconnected: " + n, ev:"off", dn:n }); });
     if(gone.length) say(gone.length === 1 ? gone[0] + " is no longer connected." : "Equipment was disconnected.");
     if(added.length) equipArrived(added.slice(0, 4));
@@ -12727,6 +12745,7 @@
     // a DJ controller First Loop has a mapping for: what to do first is said at once
     var cw = fresh.length === 1 && typeof ctrlArrivedWords === "function" ? ctrlArrivedWords(fresh[0]) : "";
     if(cw) t += " " + cw;
+    else if(wsIs("dj")) t += " First Loop has no table for it. Open Equipment, then Controller: Teach your controller names one control of the decks at a time and you press the one you want for it, and what you teach is kept for this device.";
     else t += " Its buttons, pads, knobs and faders can be tied to this app with MIDI learn, in Make under Pads" +
       (equipAnyKeys() ? ", and its keys or pads play the layer selected under Notes." : ".");
     var note = asstPush({ r:"a", t:t, loc:true, eqn:true });
@@ -13688,7 +13707,7 @@
     if(!svg) return plain("The diagram that went with this message cannot be drawn here.");
     var head = document.createElement("div"); head.className = "asst-gm-head";
     var ttl = document.createElement("span"); ttl.className = "lbl";
-    ttl.textContent = (g.t ? g.t + " · " : "") + inf.title + (inf.exact ? "" : " (typical layout)");
+    ttl.textContent = (g.t ? g.t + " · " : "") + (svg._gm && svg._gm.photo ? (svg._gm.title || inf.title) + " (your photo)" : inf.title + (inf.exact ? "" : " (typical layout)"));
     head.appendChild(ttl);
     var bigB = document.createElement("button"); bigB.type = "button"; bigB.className = "tinybtn asst-gm-big"; bigB.textContent = "Enlarge";
     bigB.setAttribute("aria-label", "Show this diagram larger");
@@ -29168,8 +29187,28 @@
       return best;
     }
     function info(key){
-      var m = M(key);
-      return m ? { key:m.key, title:m.title, exact:m.exact, note:m.note } : null;
+      var m = M(key), o = m ? { key:m.key, title:m.title, exact:m.exact, note:m.note } : null, p = o && photoOf(key);
+      // a photo of the person's own unit with at least one control marked on it is there for this drawing
+      if(p && p.on && Object.keys(p.pos).length) o.photo = true;
+      return o;
+    }
+    // ---------- a photo of the person's own controller in place of the drawing ----------
+    function photoOf(key){ try { return typeof gearPhotoFor === "function" ? gearPhotoFor(key) : null; } catch(e){ return null; } }
+    // The drawing's model with the photo as its picture: the same controls under the same ids, each a small circle where
+    // the person marked it. all: every marked control (the whole-screen view, the marking); otherwise only the ones asked
+    // for, and only if every one of them has a mark and the photo is switched on. null: draw the drawing.
+    function photoModel(m, hi, all){
+      var p = photoOf(m.key);
+      if(!p || !p.url) return null;
+      if(!all && (!p.on || !hi.length || !hi.every(function(id){ return !!p.pos[id]; }))) return null;
+      var pm = { key:m.key, title:p.name || m.title, exact:true, note:"Your own photo. The marks are where you put them.", w:p.w, h:p.h, fs:Math.max(p.w, p.h) / 150, c:[], by:{}, deco:[], rg:{}, photo:p }, r = Math.max(p.w, p.h) * 0.016;
+      m.c.forEach(function(c){
+        var q = p.pos[c.id];
+        if(!q || (!all && hi.indexOf(c.id) < 0)) return;
+        var cc = { id:c.id, t:"ph", x:q[0] * p.w, y:q[1] * p.h, w:r, h:0, cap:"", s:c.s, label:c.label, section:c.section, rg:"", does:c.does, o:{} };
+        pm.c.push(cc); pm.by[cc.id] = cc;
+      });
+      return pm.c.length ? pm : null;
     }
     function controls(key){
       var m = M(key);
@@ -29222,6 +29261,9 @@
         add("rect", { x:x, y:y, width:w, height:ht, rx:t === "p" ? 2.4 : 1.4 }, t === "p" ? "gm-s gm-pad" : "gm-s");
         if(t === "d") add("rect", { x:x + 3, y:y + 3, width:w - 6, height:ht - 6, rx:1 }, "gm-x");
         box = { cx:x + w / 2, cy:y + ht / 2, rx:w / 2, ry:ht / 2, rect:1 };
+      } else if(t === "ph"){
+        add("circle", { cx:x, cy:y, r:w }, "gm-s gm-ph");
+        box = { cx:x, cy:y, rx:w, ry:w };
       } else if(t === "r" || t === "k" || t === "e" || t === "pt" || t === "j"){
         add("circle", { cx:x, cy:y, r:w });
         if(t === "k") add("line", { x1:x, y1:y - w, x2:x, y2:y - w * 0.3 }, "gm-x");
@@ -29339,6 +29381,9 @@
         v = +opts.numbers[k];
         if(v === v && v >= 0 && v < 1000){ nums[k] = Math.round(v); if(hi.indexOf(k) < 0) hi.push(k); }
       }
+      // her own photo, when it can show what is asked for
+      var pm = opts.photo === false ? null : photoModel(m, hi, opts.photo === true);
+      if(pm) m = pm;
       var vb = cropFor(m, hi, opts.crop), pad = Math.max(m.w, m.h) * 0.012, top = vb.part ? m.fs * 3.4 : 0;
       var box = { x:vb.x - pad, y:vb.y - pad - top, w:vb.w + pad * 2, h:vb.h + pad * 2 + top };
       var svg = sv("svg", { "class":"gearmap" + (opts.dim ? " gm-dim" : ""), viewBox:[box.x, box.y, box.w, box.h].join(" "), role:"group",
@@ -29360,6 +29405,12 @@
         svg.appendChild(cp);
         inside = sv("g", { "clip-path":"url(#" + cid + ")" });
         svg.appendChild(inside);
+      }
+      if(m.photo){
+        svg.setAttribute("data-photo", "1");
+        var im = sv("image", { x:0, y:0, width:m.w, height:m.h, preserveAspectRatio:"none", "class":"gm-photo", "aria-hidden":"true" });
+        im.setAttribute("href", m.photo.url);
+        inside.appendChild(im);
       }
       inside.appendChild(deco);
       m.c.forEach(function(c){
@@ -29385,7 +29436,7 @@
         var lt = sv("text", { x:lx + lw + 4, y:ly + lh / 2 + m.fs * 0.5, "font-size":m.fs * 1.5, "class":"gm-sec gm-loc-t" }); lt.textContent = vb.words;
         loc.appendChild(lt); svg.appendChild(loc);
       }
-      svg._gm = { key:key, vb:box, full:{ x:-pad, y:-pad, w:m.w + pad * 2, h:m.h + pad * 2 }, u:box.w / 320, fs:m.fs, labels:labels, hi:hi, nums:nums, items:items, marks:marks, touches:touches, part:vb.part };
+      svg._gm = { key:key, vb:box, full:{ x:-pad, y:-pad, w:m.w + pad * 2, h:m.h + pad * 2 }, u:box.w / 320, fs:m.fs, labels:labels, hi:hi, nums:nums, items:items, marks:marks, touches:touches, part:vb.part, photo:!!m.photo, title:m.title };
       placeMarks(svg);
       watch(svg);
       return svg;
@@ -29489,7 +29540,11 @@
       zin.type = zout.type = zall.type = "button"; zin.setAttribute("aria-label", "Zoom in"); zout.setAttribute("aria-label", "Zoom out");
       zin.id = "gearmapzin"; zout.id = "gearmapzout"; zall.id = "gearmapall";
       head.appendChild(ttl); head.appendChild(zout); head.appendChild(zin); head.appendChild(zall); head.appendChild(close);
-      var svg = render(key, { highlight:opts.highlight, numbers:opts.numbers, labels:true, crop:false });
+      var hi0 = idList(m, opts.highlight);
+      if(opts.numbers && typeof opts.numbers === "object") Object.keys(opts.numbers).forEach(function(k){ if(m.by.hasOwnProperty(k) && hi0.indexOf(k) < 0) hi0.push(k); });
+      var usePhoto = opts.photo === true || (opts.photo !== false && !!photoModel(m, hi0, false));
+      if(usePhoto){ var pmAll = photoModel(m, hi0, true); if(pmAll) m = pmAll; else usePhoto = false; }
+      var svg = render(key, { highlight:opts.highlight, numbers:opts.numbers, labels:true, crop:false, photo:usePhoto });
       var g = svg._gm, vb = { x:g.vb.x, y:g.vb.y, w:g.vb.w, h:g.vb.h }, home = { x:vb.x, y:vb.y, w:vb.w, h:vb.h };
       stage.appendChild(svg); stage.tabIndex = 0; stage.setAttribute("aria-label", "The diagram. Drag to move, scroll or pinch to zoom, arrow keys to move, plus and minus to zoom.");
       var info = h("p", "gm-info"), note = h("p", "gm-cap", m.note), read = h("p", "gm-read"), list = h("ul", "gm-list");
@@ -31454,6 +31509,8 @@
       u.pick.addEventListener("change", function(){ refPick = u.pick.value; paintDiagram(true); });
       row.appendChild(lab); row.appendChild(u.pick); s.appendChild(row);
       u.diaHost = el("div", "eq-wide"); u.diaHost.id = "ctrldiagram"; s.appendChild(u.diaHost);
+      u.photoHost = el("div", "eq-wide"); u.photoHost.id = "ctrlphoto"; s.appendChild(u.photoHost);
+      if(typeof gearPhotoPanel === "function") gearPhotoPanel(u.photoHost);
       s = sec("diagram", "What each control does");
       u.ref = el("ul", "eq-ref"); u.ref.id = "ctrlref"; s.appendChild(u.ref);
 
@@ -31556,6 +31613,7 @@
     }
     function paintDiagram(force){
       var u = UI, cur = GEARMAP.current(), key = refPick || cur || "generic-dj2", inf = GEARMAP.info(key), d = currentDev();
+      if(typeof gearPhotoPaint === "function") gearPhotoPaint();
       if(!inf){ key = "generic-dj2"; inf = GEARMAP.info(key); }
       if(!u.pick.options.length || u.pick.dataset.cur !== cur){
         u.pick.textContent = ""; u.pick.dataset.cur = cur;
@@ -31827,6 +31885,219 @@
     });
   }
   // ===== /controllers + diagrams =====
+
+  // ===== controller photo =====
+  // A photo of the person's own controller in place of a drawing, for any controller at all. She takes or chooses
+  // a picture from straight above; it is made smaller (1,600 pixels at most) and kept in this browser's storage on
+  // this device, with the places she marks for its controls. It is never uploaded, and nothing of it goes to the
+  // Assistant: the Assistant goes on naming controls by the same ids, and the picture that is drawn for them is
+  // this photo with rings and numbers where she put the marks (GEARMAP.render asks gearPhotoFor). A control she has
+  // not marked yet is shown on the drawing as before.
+  var GP = { db:null, rec:null, url:"", dev:"", key:"", ui:null, cur:"", last:"", placing:false, off:null, loading:"" };
+  function gpOpen(){
+    if(GP.db) return Promise.resolve(GP.db);
+    return new Promise(function(res){
+      try {
+        var rq = window.indexedDB.open("firstloop-gearphoto", 1);
+        rq.onupgradeneeded = function(){ try { rq.result.createObjectStore("p", { keyPath:"dev" }); } catch(e){} };
+        rq.onsuccess = function(){ GP.db = rq.result; res(GP.db); };
+        rq.onerror = function(){ res(null); };
+      } catch(e){ res(null); }
+    });
+  }
+  function gpGet(dev){
+    return gpOpen().then(function(db){
+      if(!db) return null;
+      return new Promise(function(res){ try { var rq = db.transaction("p").objectStore("p").get(dev); rq.onsuccess = function(){ res(rq.result || null); }; rq.onerror = function(){ res(null); }; } catch(e){ res(null); } });
+    });
+  }
+  function gpPut(rec){
+    return gpOpen().then(function(db){
+      if(!db) return false;
+      return new Promise(function(res){ try { var tx = db.transaction("p", "readwrite"); tx.objectStore("p").put(rec); tx.oncomplete = function(){ res(true); }; tx.onerror = tx.onabort = function(){ res(false); }; } catch(e){ res(false); } });
+    });
+  }
+  function gpDel(dev){
+    return gpOpen().then(function(db){
+      if(!db) return false;
+      return new Promise(function(res){ try { var tx = db.transaction("p", "readwrite"); tx.objectStore("p")["delete"](dev); tx.oncomplete = function(){ res(true); }; tx.onerror = function(){ res(false); }; } catch(e){ res(false); } });
+    });
+  }
+  // the device the drawing on show belongs to: { name, key } or null
+  function gpDevice(){
+    var key = "", devs = [], i;
+    try { key = GEARMAP.current(); devs = equipDevices(); } catch(e){ return null; }
+    if(!key) return null;
+    for(i = 0; i < devs.length; i++) if(GEARMAP.keyFor(devs[i].name, devs[i].maker) === key) return { name:devs[i].name, key:key };
+    return null;
+  }
+  // brings the photo of the connected controller into memory (or lets go of another device's)
+  function gpSync(){
+    var d = gpDevice(), dev = d ? d.name : "";
+    if(dev === GP.dev && (GP.rec || !dev) && GP.key === (d ? d.key : "")) return Promise.resolve(GP.rec);
+    if(GP.loading === dev) return Promise.resolve(GP.rec);
+    GP.loading = dev;
+    return (dev ? gpGet(dev) : Promise.resolve(null)).then(function(rec){
+      GP.loading = "";
+      if(GP.url){ try { URL.revokeObjectURL(GP.url); } catch(e){} GP.url = ""; }
+      GP.dev = dev; GP.key = d ? d.key : ""; GP.rec = null;
+      if(rec && rec.blob && rec.w > 0 && rec.h > 0){
+        if(!rec.pos || typeof rec.pos !== "object") rec.pos = {};
+        GP.rec = rec;
+        try { GP.url = URL.createObjectURL(rec.blob); } catch(e){ GP.rec = null; }
+      }
+      gearPhotoPaint();
+      // pictures already in the conversation were drawn before the photo was read: draw them again on it
+      try { if(GP.rec && typeof asstMsgs !== "undefined" && asstMsgs.some(function(m){ return m && m.gm; }) && !asstBusy) asstRenderAll(); } catch(e){}
+      return GP.rec;
+    });
+  }
+  // asked by GEARMAP: the photo for this drawing, when it belongs to the controller that is connected
+  function gearPhotoFor(key){
+    if(!GP.rec || !GP.url || key !== GP.key) return null;
+    return { url:GP.url, w:GP.rec.w, h:GP.rec.h, pos:GP.rec.pos, on:GP.rec.on !== false, name:GP.dev };
+  }
+  function gpSave(){ if(GP.rec) return gpPut(GP.rec); return Promise.resolve(false); }
+  // a picture file -> a JPEG of at most 1,600 pixels a side
+  function gpShrink(file){
+    return new Promise(function(res, rej){
+      var img = new Image(), u = "";
+      try { u = URL.createObjectURL(file); } catch(e){ rej(e); return; }
+      img.onload = function(){
+        try {
+          var w = img.naturalWidth, h2 = img.naturalHeight, k = Math.min(1, 1600 / Math.max(w, h2)), cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h2 * k));
+          var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+          cv.getContext("2d").drawImage(img, 0, 0, cw, ch);
+          cv.toBlob(function(b){ try { URL.revokeObjectURL(u); } catch(e){} if(b) res({ blob:b, w:cw, h:ch }); else rej(new Error("no picture")); }, "image/jpeg", 0.86);
+        } catch(e){ rej(e); }
+      };
+      img.onerror = function(){ try { URL.revokeObjectURL(u); } catch(e){} rej(new Error("not a picture")); };
+      img.src = u;
+    });
+  }
+  function gpControls(){ try { return GP.key ? GEARMAP.controls(GP.key) : []; } catch(e){ return []; } }
+  function gpLabel(id){ var c = gpControls().filter(function(x){ return x.id === id; })[0]; return c ? c.label + (c.section && c.label.indexOf("(") < 0 ? " (" + c.section + ")" : "") : id; }
+  function gpPlaced(){ return GP.rec ? Object.keys(GP.rec.pos).length : 0; }
+  // the part of the Diagram tab this block owns
+  function gearPhotoPanel(host){
+    if(GP.ui || !host) return;
+    function mk(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text) n.textContent = text; return n; }
+    function b(cls, text, id, fn){ var x = mk("button", cls, text); x.type = "button"; x.id = id; x.addEventListener("click", fn); return x; }
+    var u = GP.ui = {}, box = mk("div", "gp"); box.id = "gpbox";
+    box.appendChild(mk("span", "lbl", "A photo of your own controller"));
+    u.words = mk("p", "eq-state"); u.words.id = "gpwords"; box.appendChild(u.words);
+    u.file = mk("input"); u.file.type = "file"; u.file.accept = "image/*"; u.file.hidden = true; u.file.id = "gpfile";
+    u.file.addEventListener("change", function(){
+      var f = u.file.files && u.file.files[0]; u.file.value = "";
+      var d = gpDevice();
+      if(!f || !d) return;
+      u.note.textContent = "Making the picture smaller…";
+      gpShrink(f).then(function(p){
+        var rec = { dev:d.name, key:d.key, blob:p.blob, w:p.w, h:p.h, pos:{}, on:true, at:Date.now() };
+        return gpPut(rec).then(function(ok){
+          GP.dev = ""; GP.rec = null;                      // read back from the store, as on the next visit
+          return gpSync().then(function(){
+            u.note.textContent = ok ? "The photo is kept on this device (" + Math.round(p.blob.size / 1024) + " KB, " + p.w + " × " + p.h + "). Now mark its controls." : "The photo is in use until the page is closed: this browser did not let it be kept (private browsing does that).";
+            if(!ok && !GP.rec){ GP.dev = d.name; GP.key = d.key; GP.rec = rec; try { GP.url = URL.createObjectURL(rec.blob); } catch(e){} }
+            gpPlace(true);
+          });
+        });
+      }, function(){ u.note.textContent = "That file could not be read as a picture. A JPEG or PNG from a phone or a camera works."; });
+    });
+    var row = mk("div", "eq-row");
+    u.take = b("sendbtn", "Use a photo of my controller", "gptake", function(){ u.file.click(); });
+    u.place = b("tinybtn", "Mark the controls", "gpplace", function(){ gpPlace(!GP.placing); });
+    u.drop = b("tinybtn", "Remove the photo", "gpdrop", function(){
+      var dev = GP.dev; if(!dev) return;
+      gpPlace(false);
+      gpDel(dev).then(function(){ GP.dev = ""; GP.rec = null; return gpSync(); }).then(function(){ u.note.textContent = "The photo and its marks were removed from this device."; if(typeof ctrlPanelPaint === "function") ctrlPanelPaint(); });
+    });
+    row.appendChild(u.take); row.appendChild(u.place); row.appendChild(u.drop); row.appendChild(u.file); box.appendChild(row);
+    u.onL = mk("label", "eq-check"); u.on = mk("input"); u.on.type = "checkbox"; u.on.id = "gpon";
+    u.on.addEventListener("change", function(){ if(GP.rec){ GP.rec.on = u.on.checked; gpSave(); } });
+    u.onL.appendChild(u.on); u.onL.appendChild(mk("span", "", "Use the photo when the Assistant shows a control that is marked on it")); box.appendChild(u.onL);
+    u.note = mk("p", "eq-note"); u.note.id = "gpnote"; u.note.setAttribute("role", "status"); box.appendChild(u.note);
+    // marking
+    u.stage = mk("div", "gp-stage"); u.stage.id = "gpstage"; u.stage.hidden = true;
+    u.ask = mk("p", "gp-ask"); u.ask.id = "gpask"; u.ask.setAttribute("role", "status"); u.stage.appendChild(u.ask);
+    var prow = mk("div", "eq-row"), pl = mk("label", "lbl", "Control "); pl.setAttribute("for", "gppick");
+    u.pick = mk("select"); u.pick.id = "gppick";
+    u.pick.addEventListener("change", function(){ GP.cur = u.pick.value; gearPhotoPaint(); });
+    u.unmark = b("tinybtn", "Take its mark away", "gpunmark", function(){ if(GP.rec && GP.cur && GP.rec.pos[GP.cur]){ delete GP.rec.pos[GP.cur]; gpSave(); gearPhotoPaint(); } });
+    u.done = b("sendbtn", "Done", "gpdone", function(){ gpPlace(false); });
+    prow.appendChild(pl); prow.appendChild(u.pick); prow.appendChild(u.unmark); prow.appendChild(u.done); u.stage.appendChild(prow);
+    u.img = mk("div", "gp-img"); u.img.id = "gpimg";
+    u.pic = mk("img"); u.pic.alt = "Your photo of the controller"; u.pic.draggable = false; u.img.appendChild(u.pic);
+    u.dots = mk("div", "gp-dots"); u.img.appendChild(u.dots);
+    u.img.addEventListener("click", function(e){
+      if(!GP.rec || !GP.placing) return;
+      var dot = e.target.closest ? e.target.closest(".gp-dot") : null;
+      if(dot){ GP.cur = dot.dataset.id; gearPhotoPaint(); return; }
+      if(!GP.cur){ u.ask.textContent = "First press or move the control on your controller, or choose it under Control. Then tap where it is in the photo."; return; }
+      var r = u.pic.getBoundingClientRect();
+      if(!(r.width > 0 && r.height > 0)) return;
+      var x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      GP.rec.pos[GP.cur] = [Math.round(x * 10000) / 10000, Math.round(y * 10000) / 10000];
+      var was = GP.cur;
+      gpSave();
+      // on to the next control in the list that has no mark yet
+      var cs = gpControls(), i = cs.map(function(c){ return c.id; }).indexOf(was), k, nx = "";
+      for(k = 1; k <= cs.length && !nx; k++){ var c2 = cs[(i + k) % cs.length]; if(!GP.rec.pos[c2.id]) nx = c2.id; }
+      GP.cur = nx; GP.last = was;
+      gearPhotoPaint();
+    });
+    u.stage.appendChild(u.img);
+    box.appendChild(u.stage);
+    host.appendChild(box);
+    gpSync();
+  }
+  function gpPlace(on){
+    GP.placing = !!on && !!GP.rec;
+    if(GP.off){ try { GP.off(); } catch(e){} GP.off = null; }
+    if(GP.placing){
+      // a control she presses or moves on the controller becomes the one to mark
+      try { GP.off = GEARMAP.onTouch(function(ev){ if(GP.placing && ev && ev.id && (!ev.key || ev.key === GP.key) && gpControls().some(function(c){ return c.id === ev.id; }) && GP.cur !== ev.id){ GP.cur = ev.id; gearPhotoPaint(); } }); } catch(e){}
+      if(!GP.cur){ var cs = gpControls().filter(function(c){ return !GP.rec.pos[c.id]; }); GP.cur = cs.length ? cs[0].id : ""; }
+    }
+    gearPhotoPaint();
+    if(GP.placing && GP.ui){ try { GP.ui.stage.scrollIntoView({ block:"nearest" }); } catch(e){} }
+  }
+  function gearPhotoPaint(){
+    var u = GP.ui; if(!u) return;
+    var d = gpDevice(), n = gpPlaced(), all = gpControls().length;
+    if(d && d.name !== GP.dev && !GP.loading){ gpSync(); }
+    u.words.textContent = !d ? "Connect the controller first: a photo is kept for the controller it shows."
+      : !GP.rec ? "The drawing above is a typical layout. With a photo of your own " + d.name + ", taken from straight above with the whole unit in the picture, the Assistant shows you its controls on your own controller. The photo stays on this device, in this browser’s storage: it is not uploaded and the Assistant is never sent it. It is made smaller first (1,600 pixels at most)."
+      : "A photo of your " + d.name + " is kept on this device, with " + n + " of " + all + " controls marked on it. It is not uploaded and the Assistant is never sent it. A control that has no mark yet is shown on the drawing instead.";
+    u.take.disabled = !d; u.take.textContent = GP.rec ? "Use another photo" : "Use a photo of my controller"; u.take.className = GP.rec ? "tinybtn" : "sendbtn";
+    u.place.hidden = u.drop.hidden = u.onL.hidden = !GP.rec;
+    u.place.textContent = GP.placing ? "Stop marking" : (n ? "Mark more controls" : "Mark the controls");
+    u.on.checked = !!(GP.rec && GP.rec.on !== false);
+    u.stage.hidden = !(GP.placing && GP.rec);
+    if(u.stage.hidden) return;
+    if(u.pic.getAttribute("src") !== GP.url) u.pic.src = GP.url;
+    var cs = gpControls();
+    if(u.pick.dataset.key !== GP.key + ":" + cs.length){
+      u.pick.dataset.key = GP.key + ":" + cs.length; u.pick.textContent = "";
+      var o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Press it on the controller, or choose it here"; u.pick.appendChild(o0);
+      cs.forEach(function(c){ var o = document.createElement("option"); o.value = c.id; u.pick.appendChild(o); });
+    }
+    Array.prototype.forEach.call(u.pick.options, function(o){ if(o.value) o.textContent = (GP.rec.pos[o.value] ? "● " : "○ ") + gpLabel(o.value); });
+    u.pick.value = GP.cur || "";
+    u.unmark.disabled = !(GP.cur && GP.rec.pos[GP.cur]);
+    u.ask.textContent = GP.cur ? (GP.rec.pos[GP.cur] ? gpLabel(GP.cur) + " is marked. Tap the photo to move its mark, or press another control." : "Tap where " + gpLabel(GP.cur) + " is in the photo.")
+      : (n >= all && all ? "Every control is marked." : "Press or move a control on your controller, or choose one under Control; then tap where it is in the photo.");
+    u.dots.textContent = "";
+    Object.keys(GP.rec.pos).forEach(function(id){
+      var p = GP.rec.pos[id], dt = document.createElement("button");
+      dt.type = "button"; dt.className = "gp-dot" + (id === GP.cur ? " gp-cur" : ""); dt.dataset.id = id; dt.title = gpLabel(id); dt.setAttribute("aria-label", gpLabel(id) + ", marked");
+      dt.style.left = (p[0] * 100) + "%"; dt.style.top = (p[1] * 100) + "%";
+      u.dots.appendChild(dt);
+    });
+  }
+  try { if(/[?&]fltest/.test(window.location.search)) window.__flGP = { state:function(){ return { dev:GP.dev, key:GP.key, has:!!GP.rec, w:GP.rec ? GP.rec.w : 0, h:GP.rec ? GP.rec.h : 0, pos:GP.rec ? JSON.parse(JSON.stringify(GP.rec.pos)) : {}, on:GP.rec ? GP.rec.on !== false : false, placing:GP.placing, cur:GP.cur }; }, sync:gpSync }; } catch(e){}
+  // ===== /controller photo =====
+
 
   // ===== accounts + feedback =====
   // Two things that talk to this site's own server at /api/chat, and to
@@ -33038,6 +33309,7 @@
   }
   // at the end of starting up
   function wsBoot(){
+    setTimeout(function(){ try { gpSync(); } catch(e){} }, 1200);       // a photo of the connected controller, if one is kept
     wsPalLate();
     wsBuild();
     wsPaint();

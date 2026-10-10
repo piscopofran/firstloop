@@ -2329,6 +2329,70 @@
     .acct-panel .tinybtn,.acct-panel .ghost,.acct-panel .sendbtn,.fb-panel .sendbtn,.fb-panel .tinybtn{min-height:34px;}
   }
   /* ===== /accounts + feedback (css) ===== */
+  /* ===== workspace (css) ===== */
+  /* A layer above the areas: "dj" shows what a DJ needs, "make" the production
+     side, "all" everything (the default). Nothing is removed, only not shown. */
+  body[data-ws="dj"] .viewtab[data-view="make"],body[data-ws="dj"] .viewtab[data-view="mix"],
+  body[data-ws="dj"] .viewtab[data-view="learn"],body[data-ws="dj"] .viewtab[data-view="songs"],
+  body[data-ws="dj"] .dock .transport,body[data-ws="dj"] .dock .tempo,body[data-ws="dj"] #savechip,
+  body[data-ws="dj"] #gearbtn,body[data-ws="dj"] #lvlchip,
+  body[data-ws="make"] .viewtab[data-view="dj"]{display:none !important;}
+  .wsbtn[aria-expanded="true"]{color:var(--ink);border-color:var(--ink-3);}
+  .wsbtn .ws-now{color:var(--ink);font-weight:600;margin-left:5px;}
+  .ws-menu{position:fixed;z-index:60;width:292px;max-width:calc(100vw - 16px);background:var(--surface);border:1px solid var(--line-2);
+    border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.35);padding:8px;display:flex;flex-direction:column;gap:2px;font-size:12px;}
+  .ws-menu[hidden]{display:none;}
+  .ws-menu h3{margin:0 0 4px;padding:0 6px;font-size:11px;font-weight:600;color:var(--ink-3);text-transform:none;letter-spacing:0;}
+  .ws-menu button{appearance:none;cursor:pointer;font:inherit;text-align:left;border:1px solid transparent;border-radius:var(--r);
+    background:transparent;color:var(--ink-2);padding:6px 8px 6px 26px;position:relative;line-height:1.35;}
+  .ws-menu button b{display:block;color:var(--ink);font-weight:600;}
+  .ws-menu button:hover{background:var(--surface-2);}
+  .ws-menu button:focus-visible{outline:1px solid var(--ink-2);outline-offset:-1px;}
+  .ws-menu button[aria-checked="true"]::before{content:"";position:absolute;left:9px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--accent);}
+  .ws-menu button[aria-checked="false"]::before{content:"";position:absolute;left:9px;top:11px;width:6px;height:6px;border-radius:50%;border:1px solid var(--ink-3);}
+  .ws-menu p{margin:4px 0 0;padding:6px 6px 0;border-top:1px solid var(--line);color:var(--ink-3);font-size:11px;line-height:1.4;}
+  .acct-ws{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-3);}
+  /* "Start here": three steps above the decks, each gone once it is done */
+  #wsstart{display:none;}
+  body[data-view="dj"] #wsstart:not([hidden]){display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap;padding:6px 10px;
+    background:var(--surface-2);border-bottom:1px solid var(--line-2);box-shadow:inset 3px 0 0 var(--accent);font-size:12px;line-height:1.3;color:var(--ink-2);}
+  #wsstart .ws-h{font-weight:600;color:var(--ink);white-space:nowrap;}
+  #wsstart .ws-step{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;}
+  #wsstart .ws-step[hidden]{display:none;}
+  #wsstart .ws-n{flex:none;width:17px;height:17px;border-radius:50%;border:1px solid var(--ink-3);color:var(--ink);font-size:10.5px;font-weight:600;
+    display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
+  #wsstart .ws-t{color:var(--ink);font-weight:500;}
+  #wsstart .ws-s{color:var(--ink-2);}
+  #wsstart .tinybtn{height:22px;min-height:0;padding:0 8px;font-size:11.5px;}
+  #wsstart .ws-x{margin-left:auto;appearance:none;border:0;background:transparent;color:var(--ink-3);cursor:pointer;font:inherit;font-size:14px;line-height:1;padding:2px 4px;}
+  #wsstart .ws-x:hover{color:var(--ink);}
+  @media (min-width:700px){
+    body[data-wsstart="on"] .dj{height:calc(100vh - var(--asst-top,96px) - 27px - var(--ws-strip,0px));height:calc(100dvh - var(--asst-top,96px) - 27px - var(--ws-strip,0px));}
+    body[data-wsstart="on"] .dj-empty{display:none;}
+  }
+  /* a phone has the library and one track to listen to: the note over the empty library says how to add music */
+  @media (max-width:699.98px){ body[data-view="dj"] #wsstart:not([hidden]){display:none;} }
+  /* the help page "Coming from rekordbox" and others like it */
+  .ws-page-back{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding:48px 12px 12px;}
+  .ws-page-back[hidden]{display:none;}
+  .ws-page{width:100%;max-width:760px;max-height:calc(100vh - 72px);max-height:calc(100dvh - 72px);overflow:auto;background:var(--surface);border:1px solid var(--line-2);
+    border-radius:var(--r);box-shadow:0 12px 40px rgba(0,0,0,.45);padding:14px 18px 18px;font-size:13px;line-height:1.5;color:var(--ink-2);}
+  .ws-page header{display:flex;align-items:baseline;gap:12px;position:sticky;top:-14px;background:var(--surface);padding:8px 0 6px;margin:-8px 0 4px;border-bottom:1px solid var(--line);}
+  .ws-page h2{margin:0;font-size:15px;font-weight:600;color:var(--ink);flex:1;}
+  .ws-page h3{margin:16px 0 4px;font-size:12px;font-weight:600;color:var(--ink);}
+  .ws-page p{margin:0 0 6px;max-width:78ch;}
+  .ws-page table{border-collapse:collapse;width:100%;font-size:12.5px;margin:2px 0 4px;}
+  .ws-page th,.ws-page td{text-align:left;vertical-align:top;padding:4px 10px 4px 0;border-bottom:1px solid var(--line);}
+  .ws-page th{font-weight:600;color:var(--ink-3);font-size:11px;}
+  .ws-page td:first-child{color:var(--ink);white-space:nowrap;}
+  .ws-page ul{margin:0 0 6px;padding-left:18px;}
+  .ws-page li{margin:2px 0;max-width:78ch;}
+  @media (max-width:699.98px){
+    .ws-page-back{padding:8px;}
+    .ws-page{max-height:calc(100dvh - 16px);padding:10px 12px 14px;}
+    .ws-page td:first-child{white-space:normal;}
+  }
+  /* ===== /workspace (css) ===== */
 </style>
 </head>
 <body>
@@ -6532,6 +6596,7 @@
   var view = "make";
   function setView(v, keepScroll){
     if(["make","mix","dj","learn","songs","assistant"].indexOf(v) < 0) v = "make";
+    if(typeof wsGate === "function") v = wsGate(v);
     var changed = v !== view;
     view = v;
     document.body.dataset.view = v;
@@ -6543,6 +6608,7 @@
     if(typeof mxWatch === "function") mxWatch();
     if(typeof asstOnView === "function") asstOnView(v);
     if(typeof djOnView === "function") djOnView(v);
+    if(typeof wsStartSize === "function") wsStartSize();
     if(changed && !keepScroll) window.scrollTo(0, 0);
     if(changed && !booting){ LOG.views = LOG.views || {}; LOG.views[v] = (LOG.views[v] || 0) + 1; saveLog(); }
   }
@@ -10959,7 +11025,7 @@
   function palPointer(term){
     for(var i = 0; i < term.h.length; i++){
       var a = PAL_BY_ID[term.h[i][0]];
-      if(a && palAvail(a)) return { a:a, text:term.h[i][1] };
+      if(a && palAvail(a) && wsPalOK(a)) return { a:a, text:term.h[i][1] };
     }
     return null;
   }
@@ -11058,7 +11124,7 @@
     return best;
   }
   function palPool(){
-    return PAL_ACTIONS.filter(palAvail).concat(palSections(), PAL_TERMS);
+    return PAL_ACTIONS.filter(palAvail).concat(palSections(), PAL_TERMS).filter(wsPalOK);
   }
   function palSearch(raw, pool){
     var q = palNorm(raw);
@@ -11110,6 +11176,8 @@
   var palPending = "", palMissTimer = null;
   var PAL_FIRST = ["play", "speed", "level", "sounds", "secadd", "record", "savewav", "versions"];
   var PAL_TRY = ["louder", "echo", "chorus", "save", "what is a bar"];
+  var PAL_FIRST_DJ = ["djctrl", "djrekordbox", "djfree", "djkeylock", "djphones", "djrec", "djfromrb", "djshort"];
+  var PAL_TRY_DJ = ["key lock", "headphones", "record", "rekordbox", "what is a memory cue"];
 
   function palBuild(){
     if(palBack) return;
@@ -11132,13 +11200,7 @@
     x.addEventListener("click", function(){ palClose(); });
     head.appendChild(palInput); head.appendChild(x);
     palHint = document.createElement("div"); palHint.className = "pal-hint"; palHint.id = "palhint";
-    var lead = document.createElement("span"); lead.textContent = "Try:"; palHint.appendChild(lead);
-    PAL_TRY.forEach(function(w){
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "tinybtn"; b.textContent = w;
-      b.addEventListener("click", function(){ palInput.value = w; palRender(); palInput.focus(); });
-      palHint.appendChild(b);
-    });
+    palTryFill();
     palNone = document.createElement("p"); palNone.className = "pal-none"; palNone.id = "palnone"; palNone.hidden = true;
     palList = document.createElement("div"); palList.className = "pal-list"; palList.id = "pallist";
     palList.setAttribute("role", "listbox"); palList.setAttribute("aria-label", "What was found");
@@ -11173,6 +11235,20 @@
     });
     if(window.visualViewport) window.visualViewport.addEventListener("resize", palFit);
   }
+  // the words offered under the box, for the workspace that is on
+  function palTryFill(){
+    var dj = wsIs("dj");
+    if(palHint.dataset.ws === (dj ? "dj" : "all")) return;
+    palHint.dataset.ws = dj ? "dj" : "all"; palHint.textContent = "";
+    var lead = document.createElement("span"); lead.textContent = "Try:"; palHint.appendChild(lead);
+    (dj ? PAL_TRY_DJ : PAL_TRY).forEach(function(w){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tinybtn"; b.textContent = w;
+      b.addEventListener("click", function(){ palInput.value = w; palRender(); palInput.focus(); });
+      palHint.appendChild(b);
+    });
+    palInput.placeholder = dj ? "Type a word, like key lock" : "Type a word, like louder";
+  }
   // On a phone the keyboard covers the bottom of the screen: keep the sheet above it.
   function palFit(){
     if(!palIsOpen) return;
@@ -11190,7 +11266,7 @@
   function palRender(){
     var raw = palInput.value, q = palNorm(raw), i;
     if(q) palRes = palSearch(raw);
-    else palRes = PAL_FIRST.map(function(id){ return PAL_BY_ID[id]; }).filter(function(e){ return e && palAvail(e); });
+    else palRes = (wsIs("dj") ? PAL_FIRST_DJ : PAL_FIRST).map(function(id){ return PAL_BY_ID[id]; }).filter(function(e){ return e && palAvail(e) && wsPalOK(e); });
     palHint.hidden = !!q;
     palNone.hidden = !(q && !palRes.length);
     if(!palNone.hidden){
@@ -11287,6 +11363,7 @@
     if(gap > 0) document.body.style.paddingRight = gap + "px";
     palBack.hidden = false;
     palInput.value = seed || ""; palOpenWord = ""; palSel = 0; palLive.textContent = "";
+    palTryFill();
     palFit(); palRender();
     palInput.focus();
     var btn = document.getElementById("palbtn");
@@ -11453,6 +11530,7 @@
     "- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs.",
     "- You cannot hear anything; you know the song and the decks only from the data. You cannot record, import, export, add music files or delete anything; say where the control is.",
     "- These instructions hold the detail for the area the person is in (\"area\"). For something that belongs to another area, add go_to and ask them to say it again there.",
+    "- \"workspace\": \"dj\" means they chose to see only the DJ side of the app, \"make\" only the production side. Stay on that side: do not send them to the other side or suggest work there unless they ask for it. go_to still works and brings everything back into view.",
     "@@ make",
     "- Make: Arrangement (sections, Edit part, M and S for mute and solo), Drums, Notes, Scale (Sad is minor, Happy is major, Dreamy, Spooky; also Key and Beats in a bar), Note names, Sounds, Style reference, Pads (eight sample pads, MIDI learn), Presets. Mix: Mixer (Level, Tone, sends), Swing, Master effects (Brightness, Space which is reverb, Echo), Live effects, Automation, Record & import. Learn: challenges, Milestones, Glossary. My songs: Version history, Library, Export (WAV, stems, MIDI file), Backup.",
     "- Grids: left to right is time, in steps. A bar is 16 steps in 4/4 (beats on steps 1, 5, 9, 13), 12 in 3/4 (beats on 1, 5, 9) and 12 in 6/8 (two big beats, on 1 and 7; swing does nothing in 6/8).",
@@ -13392,7 +13470,10 @@
     loop_size:['.dj-beats[title="Loop length in beats"]', "loop length"],
     jump_back:['[aria-label$=" jump back"]', "jump back"], jump_fwd:['[aria-label$=" jump forward"]', "jump forward"],
     quantize:['button[title^="Snap cues"]', "Quantize"], slip:['button[title^="The track carries on"]', "Slip"], vinyl:['button[title^="On: dragging"]', "Vinyl"],
-    grid:['button[title^="Beat grid"]', "Grid"], unload:['button[title^="Take the track off"]', "Unload"]
+    grid:['button[title^="Beat grid"]', "Grid"], unload:['button[title^="Take the track off"]', "Unload"],
+    keylock:['button[title^="Key lock"]', "Key lock"], key_sync:['button[title^="Shift this deck to the nearest key"]', "Key sync"],
+    rev:['button[title^="Reverse:"]', "Rev"], mem:['button[title^="Memory cue:"]', "memory Set"], active:['button[title^="Active loop:"]', "Active loop"],
+    reset:['button[title^="Tempo reset"]', "tempo Reset"]
   };
   var ASST_DJ_CH = {
     trim:['[aria-label$=" trim"]', "trim"], eq_hi:['[aria-label*=" high "]', "high EQ"], eq_mid:['[aria-label*=" mid "]', "mid EQ"],
@@ -13406,7 +13487,7 @@
     "fx.type":['.dj-bar select[aria-label="Effect"]', "Beat FX type"], "fx.target":['.dj-bar select[aria-label="Effect goes on"]', "Beat FX target"],
     "fx.beats":['.dj-beats[title="Effect time in beats"]', "Beat FX time"], "fx.depth":['[aria-label="Effect depth"]', "Beat FX depth"],
     "fx.on":['.dj-bar button[title^="Switch the effect"]', "Beat FX On"],
-    "rec":[".dj-rec", "Rec"], "out":["#djout", "Output"], "keys":["#djkeys", "Shortcuts"],
+    "rec":[".dj-rec", "Rec"], "out":["#djout", "Output"], "keys":["#djkeys", "Shortcuts"], "settings":["#djset", "Settings"], "decks":["#djdecks", "Decks 2 | 4"],
     "lib.search":["#djsearch", "library search"], "lib.list":["#djrows", "track list"], "lib.add":["#djaddfiles", "Add files"],
     "lib.folder":["#djaddfolder", "Add folder"], "lib.tree":[".dj-tree", "library sections and playlists"], "lib.bpm":[".dj-tools .bpmf", "BPM and key filter"],
     "lib.info":["#djinfobtn", "Info"], "lib.menu":["#djmore", "Library menu"],
@@ -13695,6 +13776,7 @@
     }
     st.playing = !!playing;
     st.area = view;
+    if(workspace !== "all") st.workspace = workspace;
     st.setup = { gear:(profile.gear || []).slice(0, 4),
       microphone: (LOG.voiceRecorded || mediaStream) ? "has been used to record here" : "not used here yet" };
     if(profile.goal) st.setup.goal = profile.goal;
@@ -14872,7 +14954,7 @@
     if(!asstEl) return;
     var hasUser = asstMsgs.some(function(m){ return m.r === "u"; });
     asstHintEl.hidden = hasUser || asstBusy || asstMode === "probing";
-    asstHintEl.textContent = asstMode === "local" ? ASST_HINT_LOCAL : ASST_HINT;
+    asstHintEl.textContent = wsHint(asstMode === "local") || (asstMode === "local" ? ASST_HINT_LOCAL : ASST_HINT);
     asstSendBtn.hidden = asstBusy; asstStopBtn.hidden = !asstBusy;
     var why = asstWhyLocal();
     var st = asstMode === "server" ? "AI connected" + (asstLeft !== null ? " · " + asstLeftWords(asstLeft) : "")
@@ -15390,6 +15472,7 @@
     }
   }
   function asstFirstRun(){
+    if(wsIs("dj")){ wsFirstRun(); return; }
     if(!asstMsgs.length) asstAskSetup(false);
     if(asstMQ && !asstMQ.matches && asstTab) asstTab.dataset.unread = "true";
     say("A starter beat is loaded. Press play, or tell the Assistant what you want to make.");
@@ -16613,7 +16696,7 @@
     if(dev && key){ var inf = asstGearInfo(key); if(inf.exact && inf.title) dev = inf.title; }
     return dev ? asstCut(String(dev), 40) : "";
   }
-  function djcIsDj(){ return !!djcDjGear() || (profile.gear || []).indexOf("controller") >= 0; }
+  function djcIsDj(){ return !!djcDjGear() || (profile.gear || []).indexOf("controller") >= 0 || wsIs("dj"); }
   function djcArrive(){
     if(djcSet.onb || !asstEl || asstBusy || !asstDJ() || !djcIsDj() || asstDjPhone()) return false;
     if(Date.now() - equipSentAt < 60000) return false;         // in the middle of a conversation: not now
@@ -16624,8 +16707,10 @@
       if(!profile.done){ profile.done = true; if(!(profile.gear || []).length) profile.gear = ["controller"]; saveProfile(); }
     }
     djcSet.onb = true; djcSave();
-    asstPush({ r:"a", loc:true, cq:"sw", t:(dev ? "You are on the " + dev + ": I can see it connected. " : "No controller is connected yet; the decks work from the screen and the keyboard too. ") +
-      "What do you mix with now: rekordbox, Serato, Traktor, something else, or nothing yet?",
+    var lead = dev ? "You are on the " + dev + ": I can see it connected. What do you mix with now"
+      : wsIs("dj") ? "Which controller or mixer do you play on? Plug it in by USB and press Connect, in step 1 above the decks: I name it when I see it. The decks work from the screen and the keyboard too. And what do you mix with now"
+      : "No controller is connected yet; the decks work from the screen and the keyboard too. What do you mix with now";
+    asstPush({ r:"a", loc:true, cq:"sw", t:lead + ": rekordbox, Serato, Traktor, something else, or nothing yet?",
       btn:Object.keys(DJC_SW).map(function(k){ return { k:"sw", v:k }; }) });
     asstRenderAll();
     return true;
@@ -18251,8 +18336,11 @@
     }
     function syncSongs(){
       var seen = {}, changed = false;
+      var flm = typeof wsFLMode === "function" ? wsFLMode() : "all";
       function take(id, src, title, artist, code, ver){
         seen[id] = true;
+        // the DJ workspace lists the person's own songs once there are some, and not the demo songs
+        if(!T.by[id] && (flm === "none" || (flm === "own" && src.kind === "demo"))) return;
         var sh = flShape(code); if(!sh) return;
         var t = T.by[id], fresh = !t;
         if(fresh){ t = blankTrack(id); t.added = Date.now(); }
@@ -18275,6 +18363,12 @@
       return changed;
     }
     function isFL(t){ return !!(t && t.src && (t.src.kind === "fl" || t.src.kind === "demo")); }
+    // is this track listed in the workspace that is on (the DJ workspace leaves the demo songs out)
+    function flShown(t){
+      if(!isFL(t)) return true;
+      var m = typeof wsFLMode === "function" ? wsFLMode() : "all";
+      return m === "all" || (m === "own" && t.src.kind === "fl");
+    }
 
     // ---------- reading tags, no libraries ----------
     var ID3_GENRES = ("Blues,Classic Rock,Country,Dance,Disco,Funk,Grunge,Hip-Hop,Jazz,Metal,New Age,Oldies,Other,Pop,R&B,Rap,Reggae,Rock,Techno,Industrial," +
@@ -19120,13 +19214,13 @@
     var LV = { node:"all", q:"", bpmLo:0, bpmHi:0, key:"", rows:[], sel:-1, selId:null, multi:{}, manual:true };
     function nodeTracks(node){
       var m;
-      if(node === "all") return T.list.slice();
+      if(node === "all") return T.list.filter(flShown);
       if(node === "free" || node === "credits") return [];
       if(node === "prepare") return prepTracks();
       if(node === "missing") return missList();
       if(node === "dups") return dupTracks();
       if(/^rb(pl|f|h)?:/.test(node)) return rbNodeTracks(node);
-      if(node === "fl") return T.list.filter(isFL);
+      if(node === "fl") return T.list.filter(function(t){ return isFL(t) && flShown(t); });
       if(node === "recent"){ var cut = Date.now() - 30 * 86400000; return T.list.filter(function(t){ return t.added >= cut && !isFL(t); }); }
       if(node === "related") return relatedTo(activeTrack());
       if((m = /^pl:(.+)$/.exec(node))){ var p = playlistById(m[1]); return p ? p.tracks.map(function(id){ return T.by[id]; }).filter(Boolean) : []; }
@@ -22866,8 +22960,9 @@
         tr.appendChild(h);
       }
       head("Collection");
-      node("all", "All tracks", T.list.length);
-      node("fl", "First Loop songs", nodeCount("fl"), { title:"Songs made in this app, and the demo songs. They are rendered when loaded; tempo and grid are exact." });
+      node("all", "All tracks", nodeCount("all"));
+      var flm = typeof wsFLMode === "function" ? wsFLMode() : "all";
+      if(flm !== "none") node("fl", "First Loop songs", nodeCount("fl"), { title:flm === "own" ? "Songs made in this app. They are rendered when loaded; tempo and grid are exact." : "Songs made in this app, and the demo songs. They are rendered when loaded; tempo and grid are exact." });
       node("recent", "Recently added", nodeCount("recent"));
       var at = activeTrack();
       node("related", "Related", at ? nodeCount("related") : 0, { title:at ? "Within 6% of the tempo of “" + at.title + "” and in a key that mixes with it" : "Tracks that mix with whatever is on the active deck" });
@@ -24716,7 +24811,7 @@
       p2.appendChild(el("strong", "", "Add folder"));
       p2.appendChild(document.createTextNode(window.showDirectoryPicker ? " reads your own music where it is; " : " is not available in this browser (Chrome and Edge on a computer have it); "));
       p2.appendChild(el("strong", "", "Add files"));
-      p2.appendChild(document.createTextNode(" (or dropping files on this list) copies them into this browser. The songs you make in First Loop are already below, with five demo songs."));
+      p2.appendChild(document.createTextNode(" (or dropping files on this list) copies them into this browser." + ((typeof wsFLMode === "function" ? wsFLMode() : "all") === "all" ? " The songs you make in First Loop are already below, with five demo songs." : "")));
       e.appendChild(p2);
       e.appendChild(el("p", "", "Your files stay on this device. Nothing is uploaded. Streaming services and shops with famous commercial catalogues (Spotify, Apple Music, TIDAL, Beatport) cannot be connected yet: that needs licence agreements."));
     }
@@ -27794,6 +27889,7 @@
         tracks:function(){ dupScan(); return T.list.map(rowOut); },
         track:function(id){ var t = T.by[id]; return t ? JSON.parse(JSON.stringify(cleanTrack(t))) : null; },
         count:function(){ return T.list.length; },
+        own:function(){ var n = 0; T.list.forEach(function(t){ if(!isFL(t)) n++; }); return n; },
         select:function(id){ selectId(id, true); return LV.selId; },
         selectMove:function(delta){ selectIndex((LV.sel < 0 ? (delta > 0 ? -1 : LV.rows.length) : LV.sel) + (delta | 0)); return LV.selId; },
         selected:function(){ return LV.selId && T.by[LV.selId] ? rowOut(T.by[LV.selId]) : null; },
@@ -31827,6 +31923,7 @@
         E.name.value = ""; E.email.value = ""; E.role.value = ""; E.wordIn.value = ""; E.age.checked = false; E.formMsg.textContent = ""; E.readyMsg.textContent = "";
         acctOpen = "ready"; acctAsk = false; acctSay("");
         asstBackendChanged();
+        wsFromRole(role);
         try { E.copy.focus({ preventScroll:true }); } catch(e){}
         return;
       }
@@ -32283,6 +32380,460 @@
   })();
   // ===== /accounts + feedback =====
 
+  // ===== workspace =====
+  // A layer above the areas. "dj": the top bar shows the DJ area, the
+  // Assistant, Equipment, Feedback and the theme, and nothing of the
+  // sequencer. "make": the production side without the DJ area. "all":
+  // everything, which is what anyone who was here before v33 has. The choice
+  // is kept in this browser. A link ending in #dj (or #produce, #everything)
+  // sets it, and so does creating a tester account as a DJ, once. Nothing is
+  // removed by a workspace: songs, settings and the library stay where they are,
+  // and anything that opens an area outside the workspace widens it to "all".
+  var WS_KEY = "firstloop.workspace", WS_START = "firstloop.wsstart";
+  var WS_NAMES = { dj:"DJ", make:"Produce", all:"Everything" };
+  var WS_SAYS = { dj:"The decks, the mixer, your library and the Assistant.", make:"Make, Mix, Learn and My songs.", all:"Both, side by side." };
+  var workspace = "all", wsChosen = false, wsE = null, wsStartEl = null, wsStartOff = false, wsStartTimer = null, wsLinked = false;
+  (function(){
+    try {
+      var v = window.localStorage.getItem(WS_KEY);
+      if(v && WS_NAMES.hasOwnProperty(v)){ workspace = v; wsChosen = true; }
+      wsStartOff = window.localStorage.getItem(WS_START) === "off";
+    } catch(e){}
+    // a link somebody was sent: .../#dj
+    var m = /^#(dj|produce|everything)$/i.exec(String(window.location.hash || ""));
+    if(m){
+      workspace = ({ dj:"dj", produce:"make", everything:"all" })[m[1].toLowerCase()]; wsChosen = true; wsLinked = true;
+      try { window.localStorage.setItem(WS_KEY, workspace); } catch(e2){}
+      try { window.history.replaceState(null, "", window.location.pathname + window.location.search); } catch(e3){}
+    }
+    document.body.dataset.ws = workspace;
+  })();
+  function wsIs(w){ return workspace === w; }
+  // has the person made anything in Make that is worth listing among the tracks to play
+  function wsHasSongs(){
+    try {
+      if(songs.length > 1) return true;
+      return songs.some(function(s){ return (versions[s.id] || []).length > 1; });
+    } catch(e){ return false; }
+  }
+  // which of the app's own songs the DJ library lists: "all" (songs and the demo songs), "own" or "none"
+  function wsFLMode(){ return workspace !== "dj" ? "all" : (wsHasSongs() ? "own" : "none"); }
+  // called by setView: the area that may be opened
+  function wsGate(v){
+    if(workspace === "all" || v === "assistant") return v;
+    if((workspace === "dj") === (v === "dj")) return v;
+    if(booting) return workspace === "dj" ? "dj" : "make";
+    var name = ({ make:"Make", mix:"Mix", learn:"Learn", songs:"My songs", dj:"The DJ area" })[v] || v, was = WS_NAMES[workspace];
+    wsSet("all", { quiet:true });
+    say(name + " is outside the " + was + " workspace, so the workspace is now Everything. Workspace, under Find, sets it back.");
+    return v;
+  }
+  function wsSet(w, o){
+    o = o || {};
+    if(!WS_NAMES.hasOwnProperty(w)) return;
+    var was = workspace;
+    workspace = w; wsChosen = true;
+    try { window.localStorage.setItem(WS_KEY, w); } catch(e){}
+    document.body.dataset.ws = w;
+    if(w === "dj" && playing){ try { stop(); } catch(e2){} }
+    if(w === "dj" && view !== "dj" && view !== "assistant") setView("dj");
+    else if(w === "make" && view === "dj") setView("make");
+    else if(view === "dj") djOnView("dj");            // the library lists the app's own songs, or not
+    wsPaint();
+    if(w === "dj") wsStartBuild();
+    if(typeof asstLayout === "function") setTimeout(asstLayout, 0);
+    if(was !== w){ LOG.ws = w; saveLog(); }
+    if(!o.quiet && was !== w) say(w === "dj" ? "DJ workspace: the top bar shows the decks, the library, the Assistant and Equipment. The Workspace button brings the rest back."
+      : w === "make" ? "Produce workspace: the DJ area is not shown. The Workspace button brings it back."
+      : "Everything is shown again.");
+  }
+  // a tester who says they are a DJ gets the DJ workspace, unless a workspace was chosen here before
+  function wsFromRole(role){
+    if(role !== "dj" || wsChosen) return;
+    wsSet("dj", { quiet:true });
+    say("DJ workspace: the top bar shows the decks, the library, the Assistant and Equipment. The Workspace button brings Make, Mix, Learn and My songs back.");
+  }
+  function wsMenuClose(back){
+    if(!wsE || wsE.menu.hidden) return;
+    wsE.menu.hidden = true; wsE.btn.setAttribute("aria-expanded", "false");
+    if(back){ try { wsE.btn.focus({ preventScroll:true }); } catch(e){} }
+  }
+  function wsMenuOpen(){
+    var E = wsE, r = E.btn.getBoundingClientRect(), w = Math.min(292, window.innerWidth - 16);
+    E.menu.hidden = false; E.btn.setAttribute("aria-expanded", "true");
+    E.menu.style.top = Math.round(r.bottom + 4) + "px";
+    E.menu.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, Math.round(r.right - w))) + "px";
+    try { (E.menu.querySelector('[aria-checked="true"]') || E.menu.querySelector("button")).focus({ preventScroll:true }); } catch(e){}
+  }
+  function wsBuild(){
+    if(wsE) return;
+    var E = wsE = { items:{}, seg:{} }, gear = document.getElementById("gearbtn");
+    function mk(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text) n.textContent = text; return n; }
+    E.btn = mk("button", "lvl wsbtn"); E.btn.type = "button"; E.btn.id = "wsbtn";
+    E.btn.setAttribute("aria-haspopup", "menu"); E.btn.setAttribute("aria-expanded", "false"); E.btn.setAttribute("aria-controls", "wsmenu");
+    E.btn.appendChild(mk("span", "ws-l", "Workspace")); E.now = mk("span", "ws-now"); E.btn.appendChild(E.now);
+    E.btn.addEventListener("click", function(){ if(E.menu.hidden) wsMenuOpen(); else wsMenuClose(true); });
+    if(gear && gear.parentNode) gear.parentNode.insertBefore(E.btn, gear.nextSibling);
+    E.menu = mk("div", "ws-menu"); E.menu.id = "wsmenu"; E.menu.hidden = true; E.menu.setAttribute("role", "menu"); E.menu.setAttribute("aria-label", "Workspace");
+    E.menu.appendChild(mk("h3", "", "Workspace: what the top bar shows"));
+    ["dj", "make", "all"].forEach(function(k){
+      var b = mk("button"); b.type = "button"; b.setAttribute("role", "menuitemradio"); b.dataset.ws = k; b.id = "wspick-" + k;
+      b.appendChild(mk("b", "", WS_NAMES[k])); b.appendChild(document.createTextNode(WS_SAYS[k]));
+      b.addEventListener("click", function(){ wsMenuClose(true); wsSet(k); });
+      E.items[k] = b; E.menu.appendChild(b);
+    });
+    E.menu.appendChild(mk("p", "", "Nothing is removed. Songs, settings and the library stay where they are."));
+    E.menu.addEventListener("keydown", function(e){
+      e.stopPropagation();
+      var list = ["dj", "make", "all"].map(function(k){ return E.items[k]; }), i = list.indexOf(document.activeElement);
+      if(e.key === "Escape"){ e.preventDefault(); wsMenuClose(true); }
+      else if(e.key === "ArrowDown" || e.key === "ArrowUp"){ e.preventDefault(); try { list[(i + (e.key === "ArrowDown" ? 1 : list.length - 1)) % list.length].focus(); } catch(err){} }
+      else if(e.key === "Tab") wsMenuClose(false);
+    });
+    document.body.appendChild(E.menu);
+    document.addEventListener("pointerdown", function(e){ if(!E.menu.hidden && !e.target.closest("#wsmenu, #wsbtn")) wsMenuClose(false); }, true);
+    window.addEventListener("resize", function(){ wsMenuClose(false); });
+    // the same choice in My account, for a workspace where the button is not in the top bar
+    if(typeof acctE !== "undefined" && acctE && acctE.mine && acctE.mineActs){
+      var row = mk("div", "acct-ws"); row.id = "acctws"; row.appendChild(mk("span", "", "Workspace"));
+      var seg = mk("div", "seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Workspace");
+      ["dj", "make", "all"].forEach(function(k){
+        var b = mk("button", "", WS_NAMES[k]); b.type = "button"; b.title = WS_SAYS[k];
+        b.addEventListener("click", function(){ wsSet(k); });
+        E.seg[k] = b; seg.appendChild(b);
+      });
+      row.appendChild(seg);
+      acctE.mine.insertBefore(row, acctE.mineActs);
+    }
+  }
+  function wsPaint(){
+    if(!wsE) return;
+    var E = wsE, k;
+    // in the top bar only where a workspace hides something; with Everything on show it is in Find and in My account
+    E.btn.hidden = workspace === "all";
+    E.now.textContent = WS_NAMES[workspace];
+    E.btn.title = "Workspace: " + WS_NAMES[workspace] + ". Choose what the top bar shows.";
+    for(k in E.items) if(E.items.hasOwnProperty(k)) E.items[k].setAttribute("aria-checked", k === workspace ? "true" : "false");
+    for(k in E.seg) if(E.seg.hasOwnProperty(k)) E.seg[k].setAttribute("aria-pressed", k === workspace ? "true" : "false");
+    if(typeof asstPaint === "function") asstPaint();
+    if(typeof fbHome === "function") fbHome();
+    wsStartPaint();
+  }
+
+  // ---- "Start here", above the decks, in the DJ workspace ----
+  // Three steps, each read from what is really there, each gone once it is done.
+  function wsStartFacts(){
+    var f = { midi:!!navigator.requestMIDIAccess, allowed:midiOK === true, devs:[], dj:"", mapped:false, own:0, loaded:0, skip:false };
+    try { f.skip = window.localStorage.getItem(WS_START) === "noctrl"; } catch(e){}
+    try { f.devs = equipDevices(); } catch(e1){}
+    try {
+      var s = CTRL ? CTRL.summary() : null;
+      f.devs.forEach(function(d){ if(!f.dj && (/^dj /.test(d.kind || "") || (CTRL && CTRL.isDJ(d.name, d.maker)))) f.dj = d.name; });
+      f.mapped = !!(s && s.profile && f.devs.some(function(d){ return d.name === s.device; }));
+      if(!f.mapped && CTRL) f.devs.forEach(function(d){ var p = CTRL.profileFor(d.name, d.maker); if(p && CTRL.settings().builtin){ f.mapped = true; f.dj = f.dj || d.name; } });
+    } catch(e2){}
+    try {
+      if(DJ && DJ.ready()){
+        f.own = DJ.library.own();
+        for(var n = 1; n <= DJ.deckCount(); n++) if(DJ.deck(n).state().loaded) f.loaded++;
+      }
+    } catch(e3){}
+    return f;
+  }
+  function wsCtrlTab(){
+    try { equipOpen(); var t = document.getElementById("equiptab-ctrl"); if(t) t.click(); } catch(e){}
+  }
+  function wsStartBuild(){
+    if(wsStartEl || wsStartOff || workspace !== "dj" || !DJ) return;
+    function mk(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text) n.textContent = text; return n; }
+    function b(text, id, title, fn){ var x = mk("button", "tinybtn", text); x.type = "button"; x.id = id; if(title) x.title = title; x.addEventListener("click", fn); return x; }
+    var E = wsStartEl = mk("div"); E.id = "wsstart"; E.setAttribute("role", "group"); E.setAttribute("aria-label", "Start here"); E.hidden = true;
+    E.appendChild(mk("span", "ws-h", "Start here"));
+    function step(k, n, title){
+      var s = mk("div", "ws-step"); s.dataset.k = k;
+      s.appendChild(mk("span", "ws-n", String(n))); s.appendChild(mk("span", "ws-t", title));
+      var w = mk("span", "ws-s"); s.appendChild(w); E.appendChild(s);
+      return { el:s, words:w };
+    }
+    var c = E._ctrl = step("ctrl", 1, "Connect your controller");
+    c.go = b("Connect", "wsstart-connect", "", function(){
+      var f = wsStartFacts();
+      if(f.midi && !f.allowed) equipConnect(); else wsCtrlTab();
+    });
+    c.skip = b("No controller", "wsstart-noctrl", "The decks work from the screen and the keyboard. Equipment, at the top, connects one later.", function(){
+      try { window.localStorage.setItem(WS_START, "noctrl"); } catch(e){}
+      wsStartPaint();
+    });
+    c.el.appendChild(c.go); c.el.appendChild(c.skip);
+    var m = E._music = step("music", 2, "Bring in your music");
+    m.el.appendChild(b("rekordbox USB", "wsstart-rb", "Read a rekordbox stick or a rekordbox.xml where it is: tracks, playlists, hot cues and beat grids. The stick is only read, never changed.", function(){
+      var e = PAL_BY_ID.djrekordbox; if(e && e.run) e.run();
+    }));
+    var fo = b("Folder", "wsstart-folder", "Point at a folder of music on this computer. It is read where it is; nothing is copied or uploaded.", function(){
+      try { if(window.showDirectoryPicker) DJ.library.addFolder(); else document.getElementById("djaddfiles").click(); } catch(e){}
+    });
+    if(!window.showDirectoryPicker){ fo.textContent = "Files"; fo.title = "Choose music files. They are copied into this browser; nothing is uploaded."; }
+    m.el.appendChild(fo);
+    m.el.appendChild(b("Free music", "wsstart-free", "A catalogue of tracks under licences that allow mixing and sharing, from archive.org", function(){
+      var e = PAL_BY_ID.djfree; if(e && e.run) e.run();
+    }));
+    var l = E._load = step("load", 3, "Load two tracks");
+    var x = mk("button", "ws-x", "×"); x.type = "button"; x.id = "wsstart-x"; x.title = "Hide these steps. Find has “Start here” to bring them back."; x.setAttribute("aria-label", "Hide these steps");
+    x.addEventListener("click", function(){ wsStartDone("off"); });
+    E.appendChild(x);
+    DJ.init().then(function(){
+      var root = document.getElementById("dj");
+      if(!root || !wsStartEl) return;
+      root.parentNode.insertBefore(E, root);
+      try { new ResizeObserver(wsStartSize).observe(E); } catch(e){}
+      ["library", "load", "unload", "controller", "ready"].forEach(function(ev){ try { DJ.on(ev, function(){ setTimeout(wsStartPaint, 0); }); } catch(e){} });
+      wsStartTimer = setInterval(wsStartPaint, 1500);
+      wsStartPaint();
+    });
+  }
+  function wsStartSize(){
+    var E = wsStartEl, on = !!(E && !E.hidden && workspace === "dj" && view === "dj"), h = on ? Math.round(E.getBoundingClientRect().height) : 0;
+    if(on) document.body.dataset.wsstart = "on"; else delete document.body.dataset.wsstart;
+    document.body.style.setProperty("--ws-strip", h + "px");
+  }
+  function wsStartDone(how){
+    wsStartOff = true;
+    try { window.localStorage.setItem(WS_START, "off"); } catch(e){}
+    if(wsStartTimer){ clearInterval(wsStartTimer); wsStartTimer = null; }
+    if(wsStartEl){ wsStartEl.hidden = true; wsStartSize(); if(wsStartEl.parentNode) wsStartEl.parentNode.removeChild(wsStartEl); wsStartEl = null; }
+    if(how === "all") say("That is the setup done. The decks are yours.");
+  }
+  function wsStartPaint(){
+    var E = wsStartEl;
+    if(!E || !E.parentNode) return;
+    if(workspace !== "dj"){ if(!E.hidden){ E.hidden = true; wsStartSize(); } return; }
+    var f = wsStartFacts(), c = E._ctrl, m = E._music, l = E._load, words, go, phone = false;
+    try { phone = window.matchMedia("(max-width:699.98px)").matches; } catch(e){}
+    var d1 = f.mapped || f.skip, d2 = f.own > 0, d3 = f.loaded >= 2;
+    if(phone){ wsStartSize(); return; }
+    if(d1 && d2 && d3){ wsStartDone("all"); return; }
+    if(!f.midi){ words = "This browser cannot see a controller; Chrome or Edge on a computer can. The decks work from the screen and the keyboard."; go = ""; }
+    else if(!f.allowed){ words = "Plug it in by USB, switch it on, then:"; go = "Connect"; }
+    else if(!f.devs.length){ words = "The browser sees no equipment yet. Plug it in by USB and switch it on; it shows up by itself."; go = "What to check"; }
+    else if(f.dj){ words = f.dj + " is connected. First Loop has no layout for it yet: choose the nearest one, or teach it its controls."; go = "Set it up"; }
+    else { words = f.devs[0].name + " is connected, and it is not a DJ controller First Loop knows. Its controls can be taught."; go = "Set it up"; }
+    if(c.words.textContent !== words) c.words.textContent = words;
+    c.go.hidden = !go; if(go && c.go.textContent !== go) c.go.textContent = go;
+    c.skip.textContent = f.midi ? "No controller" : "Carry on without";
+    c.el.hidden = d1; m.el.hidden = d2; l.el.hidden = d3;
+    words = d2 ? (f.loaded === 1 ? "One is loaded. Drag another onto the other deck, or select it and press Shift + an arrow key." : "Drag a track from the list onto each deck, or select it and press Shift + ← or →.")
+      : "Once there is music in the list: drag a track onto each deck.";
+    if(l.words.textContent !== words) l.words.textContent = words;
+    if(E.hidden){ E.hidden = false; }
+    wsStartSize();
+  }
+
+  // ---- a plain page of help over the app (used by "Coming from rekordbox") ----
+  var wsPageEl = null, wsPageBack = null;
+  function wsPageClose(){
+    if(!wsPageEl) return;
+    var b = wsPageBack; wsPageEl.parentNode.removeChild(wsPageEl); wsPageEl = null; wsPageBack = null;
+    try { if(b && b.focus) b.focus({ preventScroll:true }); } catch(e){}
+  }
+  // parts: ["h", text] | ["p", text] | ["ul", [text]] | ["table", [head], [[cell]]]
+  function wsPage(id, title, parts){
+    wsPageClose();
+    function mk(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text) n.textContent = text; return n; }
+    var back = mk("div", "ws-page-back"), pg = mk("div", "ws-page"), head = mk("header"), x = mk("button", "tinybtn", "Close");
+    pg.id = id; pg.setAttribute("role", "dialog"); pg.setAttribute("aria-modal", "true"); pg.setAttribute("aria-label", title); pg.tabIndex = -1;
+    x.type = "button"; x.id = id + "-close"; x.addEventListener("click", wsPageClose);
+    head.appendChild(mk("h2", "", title)); head.appendChild(x); pg.appendChild(head);
+    parts.forEach(function(p){
+      if(p[0] === "h") pg.appendChild(mk("h3", "", p[1]));
+      else if(p[0] === "p") pg.appendChild(mk("p", "", p[1]));
+      else if(p[0] === "ul"){ var ul = mk("ul"); p[1].forEach(function(t){ ul.appendChild(mk("li", "", t)); }); pg.appendChild(ul); }
+      else if(p[0] === "table"){
+        var tb = mk("table"), tr = mk("tr");
+        p[1].forEach(function(h){ tr.appendChild(mk("th", "", h)); }); tb.appendChild(tr);
+        p[2].forEach(function(r){ var row = mk("tr"); r.forEach(function(cell){ row.appendChild(mk("td", "", cell)); }); tb.appendChild(row); });
+        pg.appendChild(tb);
+      }
+    });
+    back.appendChild(pg);
+    back.addEventListener("pointerdown", function(e){ if(e.target === back) wsPageClose(); });
+    ["keydown", "keyup", "keypress"].forEach(function(type){
+      back.addEventListener(type, function(e){
+        e.stopPropagation();
+        if(type === "keydown" && e.key === "Escape"){ e.preventDefault(); wsPageClose(); }
+      });
+    });
+    wsPageBack = document.activeElement; wsPageEl = back;
+    document.body.appendChild(back);
+    try { x.focus({ preventScroll:true }); } catch(e){}
+    return pg;
+  }
+
+  // ---- Find, for the decks ----
+  // Shows a control of the DJ area with a ring round it, opening the area first.
+  function wsDjPoint(ids){
+    var f = function(){
+      if(view !== "dj") setView("dj");
+      DJ.init().then(function(){ setTimeout(function(){ asstPointShow(ids); }, 120); });
+    };
+    f.point = true;
+    return f;
+  }
+  function wsDjPress(sel){
+    return function(){
+      if(view !== "dj") setView("dj");
+      DJ.init().then(function(){ setTimeout(function(){ var b = document.querySelector(sel); if(b) b.click(); }, 120); });
+    };
+  }
+  var WS_PAL_DJ_OK = { theme:1, wish:1, report:1, godj:1, djfree:1, djrekordbox:1 };
+  var WS_PAL_WORDS = { beat:1, bar:1, tempo:1, bass:1, loop:1, key:1, level:1, effect:1, filter:1, lowpass:1, reverb:1, echo:1, quantise:1, waveform:1, midi:1, wav:1 };
+  // may this entry of Find be listed in the workspace that is on
+  function wsPalOK(e){
+    if(workspace === "all" || !e) return true;
+    var isDj = e.ws === "dj" || /^dj/.test(e.id || "") || e.id === "godj";
+    if(workspace === "make") return !isDj;
+    if(isDj || e.ws === "any" || WS_PAL_DJ_OK[e.id]) return true;
+    if(e.kind === "word") return !!WS_PAL_WORDS[String(e.id).replace(/^w-/, "")];
+    if(e.dyn && /^cmd-/.test(e.id || "")) return /^(Equipment|Coach|Start a new conversation)/.test(e.t);
+    return false;
+  }
+  (function(){
+    PAL_AREA.dj = "DJ";
+    // an entry that shows where a control is reads "Go to", one that opens something "Does it"
+    function dj(id, t, r, k, run, p){ palAdd(id, t, r, k, "dj", ["body"], { run:run, ws:"dj", p:p || 0 }); if(run && run.point) PAL_BY_ID[id].kind = "go"; }
+    dj("djkeylock", "Keep the key when the tempo changes", "Key lock (Master Tempo)", "key lock, keylock, master tempo, pitch lock, time stretch, chipmunk", wsDjPoint(["d1.keylock", "d2.keylock"]), 3);
+    dj("djkeysync", "Move a deck to a key that mixes", "Key sync, key shift", "key sync, key shift, semitone, transpose, harmonic, camelot, in key", wsDjPoint(["d1.key_sync", "d2.key_sync"]));
+    dj("djsync", "Match the tempo and the beat of the other deck", "Sync (Beat Sync)", "sync, beat sync, beatmatch, beat match, match tempo, master", wsDjPoint(["d1.sync", "d2.sync", "d1.master", "d2.master"]), 2);
+    dj("djtempo", "Make a deck faster or slower", "Tempo fader, range, Reset", "tempo, pitch, pitch fader, speed, faster, slower, range, wide, reset", wsDjPoint(["d1.tempo", "d2.tempo", "d1.range", "d2.range"]));
+    dj("djloop", "Loop a few beats", "Loop: In, Out, Reloop, auto Loop", "loop, auto loop, loop in, loop out, reloop, exit, halve, double, roll", wsDjPoint(["d1.loop", "d1.loop_in", "d1.loop_out", "d1.reloop"]), 1);
+    dj("djhot", "Jump to a marked place", "Hot cues A to H", "hot cue, hotcue, cue point, pads, marker, jump", wsDjPoint(["d1.hot", "d2.hot"]), 1);
+    dj("djmem", "Keep a place or a loop with the track", "Memory cue, saved loop, Active loop", "memory cue, memory point, mem, saved loop, active loop, call", wsDjPoint(["d1.mem", "d2.mem"]));
+    dj("djjump", "Skip forward or back by beats", "Beat Jump", "beat jump, jump, skip, forward, back", wsDjPoint(["d1.jump_back", "d1.jump_fwd"]));
+    dj("djquant", "Snap cues and loops to the beat", "Quantize", "quantize, quantise, snap, on the beat", wsDjPoint(["d1.quantize", "d2.quantize"]));
+    dj("djslip", "Scratch or loop while the track carries on underneath", "Slip", "slip, slip mode, roll", wsDjPoint(["d1.slip", "d2.slip"]));
+    dj("djrev", "Play a deck backwards", "Reverse", "reverse, rev, backwards, censor", wsDjPoint(["d1.rev", "d2.rev"]));
+    dj("djgrid", "Put the beat lines right", "Beat grid", "beat grid, beatgrid, grid, downbeat, bpm wrong, half, double, tap", wsDjPoint(["d1.grid", "d2.grid"]));
+    dj("djeq", "Cut or lift the lows, mids and highs", "EQ, Filter, Trim", "eq, low, mid, high, bass, treble, filter, trim, gain, kill, swap the bass", wsDjPoint(["mix.ch1.eq_hi", "mix.ch1.eq_mid", "mix.ch1.eq_low", "mix.ch1.filter", "mix.ch1.trim"]));
+    dj("djxfader", "Blend from one side to the other", "Crossfader and its curve", "crossfader, cross fader, fade, curve, cut, smooth, thru, assign", wsDjPoint(["mix.xfader", "mix.curve"]));
+    dj("djphones", "Listen to a deck in the headphones first", "Headphone cue, Cue/Mst, Output", "headphones, cue, pfl, prelisten, pre-listen, monitor, split cue, cue mix, phones, sound card, audio interface, four channels, routing, output",
+      wsDjPoint(["mix.ch1.cue", "mix.ch2.cue", "mix.hp_mix", "mix.hp_level", "out"]), 2);
+    dj("djrec", "Record the mix", "Rec (WAV)", "record, recording, rec, mix, set, wav, save the mix, download", wsDjPoint(["rec"]), 2);
+    dj("djfx", "Put echo, reverb or a filter sweep on a deck", "Beat FX", "effect, fx, beat fx, echo, reverb, flanger, filter sweep, delay", wsDjPoint(["fx.type", "fx.target", "fx.beats", "fx.depth", "fx.on"]));
+    dj("djdecks", "Use two decks or four", "Decks 2 | 4", "four decks, 4 decks, two decks, deck 3, deck 4", wsDjPoint(["decks"]));
+    dj("djsettings", "Deck behaviour, key lock quality, latency, recording", "DJ Settings", "settings, preferences, options, latency, buffer, dropouts, key lock, recording format, needle", wsDjPress("#djset"));
+    dj("djshort", "Keyboard shortcuts for the decks", "Shortcuts", "shortcuts, keyboard, keys, hotkeys", wsDjPress("#djkeys"));
+    dj("djaddfolder", "Add a folder of music", "Add folder", "add folder, music folder, import, my music, files, mp3, flac, wav, aiff", wsDjPoint(["lib.folder", "lib.add"]));
+    dj("djsearch", "Search the library", "Search, BPM and key filter", "search, find a track, filter, bpm, key, artist, genre", wsDjPoint(["lib.search", "lib.bpm"]));
+    dj("djlists", "Playlists, Prepare, History, Related", "Library sections", "playlist, playlists, prepare, tag list, history, related, crate, missing files, duplicates", wsDjPoint(["lib.tree"]));
+    dj("djctrl", "Set up a DJ controller", "Equipment: setup checklist and Quick check", "controller, setup, checklist, quick check, driver, firmware, mapping, midi, teach, ddj, connect", function(){ wsCtrlTab(); }, 2);
+    dj("djdiagram", "See a picture of the controller", "Equipment: Diagram", "diagram, picture, drawing, layout, controller, where is the button, photo", function(){
+      try { equipOpen(); var t = document.getElementById("equiptab-diagram"); if(t) t.click(); } catch(e){}
+    });
+    dj("djfromrb", "Coming from rekordbox", "What is the same, what is different, what is not here", "rekordbox, pioneer, cdj, master tempo, beat sync, memory cue, differences, compare, missing, serato, traktor", function(){ wsRekordboxPage(); }, 2);
+    dj("djstart", "Start here", "The three first steps in the DJ workspace", "start, start here, first steps, begin, getting started", function(){
+      wsStartOff = false; try { window.localStorage.removeItem(WS_START); } catch(e){}
+      if(workspace !== "dj") wsSet("dj"); else { if(view !== "dj") setView("dj"); wsStartBuild(); }
+    });
+    [["wsdj", "dj", "Show only the DJ side"], ["wsmake", "make", "Show only the production side"], ["wsall", "all", "Show everything"]].forEach(function(w){
+      palAdd(w[0], w[2], "Workspace: " + WS_NAMES[w[1]], "workspace, view, mode, layout, hide, show, dj only, produce, everything, simple, tabs", "top", ["body"], { run:function(){ wsSet(w[1]); }, ws:"any" });
+    });
+    // words a DJ looks up
+    function word(id, w, aka, k, x, why, ptr){ palWord(id, w, aka, k, x, why || "", ptr ? [ptr] : []); PAL_TERMS[PAL_TERMS.length - 1].ws = "dj"; PAL_BY_ID["w-" + id] = PAL_TERMS[PAL_TERMS.length - 1]; }
+    word("djwkeylock", "Key lock", "Master Tempo in rekordbox", "master tempo, keylock, pitch lock",
+      "With key lock on, the tempo fader changes how fast a track plays and its pitch stays where it was. Off, faster also means higher, like a record.",
+      "On for melodic music; many leave it off for small tempo changes because it is the cleanest sound.", ["djkeylock", "Key lock, in the Mode row of each deck."]);
+    word("djwsync", "Sync", "Beat Sync in rekordbox", "beat sync, beatmatch",
+      "Sets a deck to the tempo of the master deck and lines its beats up with it, using both tracks’ beat grids. It is only as good as the grids.",
+      "", ["djsync", "Sync and Master, in the Beat row of each deck."]);
+    word("djwcue", "Cue", "the place a deck goes back to", "cue point, cue button",
+      "The cue point is a place in the track that the CUE button returns to. While the deck is stopped, CUE sets it; held down, it plays from there until you let go.",
+      "", ["djhot", "CUE is beside play on each deck; hot cues A to H are above."]);
+    word("djwhot", "Hot cue", "", "hotcue, pad",
+      "A marked place in a track that a pad jumps to at once. There are eight on each track, A to H, kept with the track.",
+      "", ["djhot", "Hot cues A to H, above each deck."]);
+    word("djwmem", "Memory cue", "a memory point", "memory point, saved loop, active loop",
+      "A place, or a loop, kept with the track and shown as a mark on the waveform. An active loop starts by itself each time the track reaches it.",
+      "", ["djmem", "The Mem row of each deck: Set, the arrows, Delete, Active."]);
+    word("djwgrid", "Beat grid", "", "beatgrid, grid, downbeat",
+      "The lines that say where each beat of a track falls. Sync, quantize, loops and beat jump all count from it, so a grid that is off makes all of them off.",
+      "", ["djgrid", "Grid, in the Track row of each deck, and the grid buttons in the track list."]);
+    word("djwphrase", "Phrase", "", "phrasing, 16 bars, 32 beats",
+      "Dance music changes every 8, 16 or 32 bars. Starting the next track on the first beat of a phrase makes the two tracks change together.",
+      "", null);
+    word("djwcamelot", "Camelot", "key as a number and a letter", "camelot wheel, 8a, harmonic mixing, key notation",
+      "A way of writing keys so that keys which mix well sit next to each other: the same number, one number up or down, or the other letter of the same number.",
+      "", ["djkeysync", "The Key column of the library shows it; Key sync uses it."]);
+    word("djwxf", "Crossfader", "", "cross fader",
+      "The fader that lies on its side under the channel faders. At one end only side A is heard, at the other only side B.",
+      "", ["djxfader", "Under the mixer, with A, Thru and B for each deck and the Smooth or Cut curve."]);
+    word("djwtrim", "Trim", "also called gain", "gain, input level",
+      "The first level control of a channel. It is set once for each track so that all tracks arrive at the faders equally loud.",
+      "", ["djeq", "The top knob of each channel in the mixer."]);
+    word("djwpfl", "Headphone cue", "also called PFL or pre-listen", "pfl, prelisten, cue button, monitor",
+      "Sends a deck to the headphones whether or not its fader is up, so the next track can be lined up before anyone hears it.",
+      "", ["djphones", "The headphone button above each channel fader, with Cue/Mst and Phones beside it. Output decides where the headphone sound goes."]);
+    word("djwsplit", "Split cue", "", "split, mono split",
+      "For a computer with one sound output: the mix goes to the left ear and the cued deck to the right, both in mono.",
+      "", ["djphones", "Output, at the top right of the DJ area."]);
+    word("djwslip", "Slip", "", "slip mode",
+      "While slip is on, the track carries on silently underneath a loop, a scratch or a held hot cue, and comes back where it would have been.",
+      "", ["djslip", "Slip, in the Mode row of each deck."]);
+    word("djwjump", "Beat jump", "", "beatjump",
+      "Moves the deck forward or back by a number of beats without losing the beat.",
+      "", ["djjump", "The Jump row of each deck."]);
+    word("djwbend", "Pitch bend", "a nudge", "nudge, bend, jog",
+      "A short push or drag that moves one deck’s beats against the other’s without changing its tempo setting.",
+      "", ["djtempo", "The − and + buttons under the tempo fader, the side of the platter, or dragging the waveform with Vinyl off."]);
+    // words that were here already get a pointer into the decks as well
+    [["loop", "djloop", "Loop, on each deck."], ["tempo", "djtempo", "The tempo fader of each deck."], ["key", "djkeysync", "Key, on each deck, and the Key column of the library."],
+     ["filter", "djeq", "Filter, the bottom knob of each mixer channel."], ["echo", "djfx", "Beat FX, at the top left of the DJ area."], ["reverb", "djfx", "Beat FX, at the top left of the DJ area."],
+     ["effect", "djfx", "Beat FX, at the top left of the DJ area."], ["quantise", "djquant", "Quantize, in the Mode row of each deck."], ["level", "djeq", "Trim and the channel fader of each deck."],
+     ["bass", "djeq", "Low, in each mixer channel."], ["wav", "djrec", "Rec records the mix as a WAV file."]].forEach(function(w){
+      var t = PAL_BY_ID["w-" + w[0]]; if(t && t.h) t.h.push([w[1], w[2]]);
+    });
+  })();
+  // commands that features registered after Find was put together (Equipment, Coach, …)
+  function wsPalLate(){
+    CMDS.forEach(function(c, i){
+      if(!c || !c.name || typeof c.run !== "function" || PAL_BY_ID["cmd-" + i]) return;
+      var low = c.name.toLowerCase();
+      if(PAL_ACTIONS.some(function(a){ return a.t.toLowerCase() === low; })) return;
+      palAdd("cmd-" + i, c.name, c.help || "", String(c.keys || "").split(/\s+/).join(", "), c.a || "top", [], { run:c.run, dyn:true });
+    });
+  }
+  // what the Assistant's box suggests, by workspace
+  function wsHint(local){
+    if(workspace !== "dj") return "";
+    return local ? "Try: open the dj area · two decks · where is key lock" : "Try: set up my controller · where is Master Tempo here · load the next track from my playlist";
+  }
+  // the first run in the DJ workspace: no question about what to make
+  function wsFirstRun(){
+    if(!profile.done){ profile.done = true; if(!(profile.gear || []).length) profile.gear = ["controller"]; saveProfile(); }
+    if(asstMQ && !asstMQ.matches && asstTab) asstTab.dataset.unread = "true";
+    if(asstDjPhone() && !asstMsgs.length)
+      asstPush({ r:"a", loc:true, t:"On a phone the DJ area shows the library and one track to listen to. The two decks, the mixer and a controller need a computer: open this page there in Chrome or Edge." });
+    say(asstDjPhone() ? "The library is ready. The buttons under the search box add music." : "The decks are ready. Start here, above them, has the first three steps.");
+  }
+  // at the end of starting up
+  function wsBoot(){
+    wsPalLate();
+    wsBuild();
+    wsPaint();
+    if(workspace === "dj"){
+      setView("dj");
+      wsStartBuild();
+      // the arrival questions wait for a quiet moment; in this workspace the area is never opened a second time, so look again
+      var tries = 0, t = setInterval(function(){
+        if(++tries > 40 || workspace !== "dj" || (typeof djcSet !== "undefined" && djcSet.onb)){ clearInterval(t); return; }
+        if(view === "dj"){ try { if(djcArrive()) djcPaint(); } catch(e){} }
+      }, 3000);
+    }
+    if(/[?&]fltest/.test(window.location.search)) window.__flWs = { get:function(){ return workspace; }, set:wsSet, facts:wsStartFacts, page:wsPage };
+  }
+  function wsRekordboxPage(){ wsPage("wsrb", "Coming from rekordbox", WS_RB_PAGE()); }
+  function WS_RB_PAGE(){ return [["p", "…"]]; }
+  // ===== /workspace =====
+
+
   // ---------- interaction ----------
   drumGrid.addEventListener("click", function(e){
     var b = e.target.closest(".cell"); if(!b) return;
@@ -32589,6 +33140,7 @@
 
   document.addEventListener("keydown", function(e){
     if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if(wsIs("dj")) return;
     if(e.code === "Space" && !e.target.closest(".pad, .cliptap")){
       e.preventDefault(); playing ? stop() : start();
       return;
@@ -32640,8 +33192,9 @@
     if(!hadSong) saveNow();
     syncSongPanel(); renderSongs(); renderVersions(); paintSave();
     asstBoot();
-    if(profile.done){ setupGear(); firstWords(); }
+    if(profile.done){ setupGear(); if(!wsIs("dj")) firstWords(); }
     else asstFirstRun();
+    wsBoot();
   })();
 
   document.addEventListener("pointerdown", function onFirst(e){

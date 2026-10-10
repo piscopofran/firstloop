@@ -22477,9 +22477,9 @@
     // m in the mixer section, 0 none) and how many, tempo slider (r right of each platter, o on the outer side,
     // t lying along the top), loop buttons (t above the platter, b beside the transport, 0 none on the unit)
     var M = [
-      { k:"ddj-flx4", n:"DDJ-FLX4", re:"ddj-?flx-?4", b:"rb", a:"d -9n47 _play=9n0E.S loop_halve@call_prev=9n51 loop_double@call_next=9n53 _mode_hotcue=9n1B _mode_padfx=9n1E _mode_bjump=9n20 _mode_sampler=9n22 _mode_hotcue=9n69.S _mode_padfx=9n6B.S _mode_bjump=9n6D.S _mode_sampler=9n6F.S | g -B60D -B608 fx.on=9547.L", ch:2, jt:720, cf:"m", sx:"flx4",
+      { k:"ddj-flx4", n:"DDJ-FLX4", re:"ddj-?flx-?4", b:"rb", a:"d -9n47 _play=9n0E.S loop_halve@call_prev=9n51 loop_double@call_next=9n53 _mode_hotcue=9n1B _mode_padfx=9n1E _mode_bjump=9n20 _mode_sampler=9n22 _mode_hotcue=9n69.S _mode_padfx=9n6B.S _mode_bjump=9n6D.S _mode_sampler=9n6F.S _sync=9n60.S jump_fwd@call_next=9n3D.S jump_back@call_prev=9n3E.S | m _cue=9n68.S | g -B60D -B608 fx.on=9547.L fx.t1@fx.ch=9410 fx.t2@fx.ch=9511 _fx.beat_dn=944A _fx.beat_up=944B _fx.select=9463 _fx.select=9464.S _fx.on=9443.S _fx.on=9543.S", ch:2, jt:720, cf:"m", sx:"flx4",
         src:MX + "Pioneer-DDJ-FLX4.midi.xml and -script.js; AlphaTheta DDJ-FLX4 MIDI message list", draw:"ddj-flx4" },
-      { k:"ddj-400", n:"DDJ-400", re:"ddj-?400", b:"rb", a:"d loop_halve@call_prev=9n51 loop_double@call_next=9n53", ch:2, jt:720, cf:"m", sx:"400",
+      { k:"ddj-400", n:"DDJ-400", re:"ddj-?400", b:"rb", a:"d loop_halve@call_prev=9n51 loop_double@call_next=9n53 _sync=9n60.S jump_fwd@call_next=9n3D.S jump_back@call_prev=9n3E.S | m _cue=9n68.S | g fx.t1@fx.ch=9410 fx.t2@fx.ch=9411 fx.tm@fx.ch=9414 _fx.beat_dn=944A _fx.beat_up=944B _fx.select=9463 _fx.select=9464.S _fx.on=9443.S", ch:2, jt:720, cf:"m", sx:"400",
         src:MX + "Pioneer-DDJ-400.midi.xml and -script.js; Pioneer DJ DDJ-400 MIDI message list", draw:"ddj-400" },
       { k:"ddj-200", n:"DDJ-200", re:"ddj-?200", b:"rb", a:"d -9n10 -9n4C -9n11 -9n4E -9n4D -9n50 | m -Bn04 | g -B640 -9641 -9642 -9646 -9647 -B60C -B60D -B608 -9447 -B402", ch:2, jt:128, cf:"m",
         src:MX + "Pioneer DDJ-200.midi.xml and Pioneer-DDJ-200-scripts.js", lay:"2,b8,r,0" },
@@ -22692,6 +22692,12 @@
   //   GEARMAP.enlarge(key, opts)               the whole-screen view with pan, zoom and a list to search
   //
   // In a drawing every control is <g class="gm-c" data-id="..."> (focusable, with its name).
+  //
+  // Keys: "ddj-grv6" (the one drawing checked against the maker's picture: exact), "ddj-400" and "ddj-flx4" (each model's
+  // own controls in the places its family shares), "dj-<key>" for every other controller in CLIB and "dj-fam-<family>" for
+  // a family layout (both drawn from the model's description and its table), and the "generic-…" ones for anything else.
+  // Only "ddj-grv6" says exact:true; the model drawings carry the caption "Typical layout — positions may differ on your unit."
+  // The ids are the same everywhere (d1.play, d1.pad1, mix.ch1.fader, browse.knob …), so a lesson fits any controller.
   //
   // Where the DDJ-GRV6 drawing comes from (all read on 7 October 2026; text only, no image was copied):
   //   - AlphaTheta, DDJ-GRV6 Instruction Manual, "Part names" (top panel = browse section, deck sections,

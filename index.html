@@ -16748,7 +16748,7 @@
       if(f.controls.length) q.controls = f.controls.slice(0, 4);
       return q;
     });
-    if(s.recent.length) o.recent_actions = s.recent.slice(0, 12).map(function(r){ return r.id + (r.v !== null ? " " + r.v : ""); });
+    if(s.recent.length) o.recent_actions = s.recent.slice(0, 12).map(function(r){ return r.id + (r.v !== null ? " " + (typeof r.v === "number" ? Math.round(r.v * 100) / 100 : r.v) : ""); });
     // too long: what the model needs least goes first (it gives two pointers at most, and can word the next step itself)
     steps = [
       function(){ if(o.recent_actions) o.recent_actions = o.recent_actions.slice(0, 6); },

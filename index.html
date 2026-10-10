@@ -15797,7 +15797,10 @@
         case "nudge": d.npend += m.d; break;
         case "loop":
           d.loopIn = Math.max(0, m.a); d.loopOut = Math.min(d.len, m.b); d.loopOn = !!m.on && d.loopOut > d.loopIn;
-          if(d.loopOn && m.jump) d.jump(d.loopIn);
+          if(d.loopOn && m.jump){
+            if(d.slip && !d.slipping){ d.slipping = true; d.spos = d.pos; }
+            d.jump(d.loopIn);
+          }
           break;
         case "loopin":
           d.loopIn = (d.quant && bl > 0) ? d.nearGrid(d.pos) : d.pos;
@@ -15847,7 +15850,11 @@
         case "align": d.align = true; break;
         case "quant": d.quant = !!m.on; if(m.u > 0) d.qu = m.u; break;
         case "slip": d.slip = !!m.on; break;
-        case "sliphold": d.slipHold = !!m.on; break;
+        case "sliphold":
+          d.slipHold = !!m.on;
+          // the jump of the same press comes right behind this message: the place to come back to is where the deck is now
+          if(d.slipHold && d.slip && !d.slipping && d.len){ d.slipping = true; d.spos = d.pos; }
+          break;
         case "rev":                          // play backwards; with slip, the track carries on underneath until it is let go
           d.rev = !!m.on; d.slipRev = d.rev && !!m.slip;
           d.kWait = true;
@@ -15930,7 +15937,8 @@
           var p0 = pos;
           // key lock: does the stretcher make this block? Not while the platter is held, in reverse, or while
           // the speed is still coming back after either; not within 0.05% of the track's own tempo with no key
-          // shift (then the plain player is exact); not beyond about half or double speed.
+          // shift (then the plain player is exact); not with the tempo more than 50% away from the track's own (a
+          // stretch that far cannot be kept clean, so the pitch follows the tempo there and the deck says so).
           var kp = d.kl ? d.kp : d.kp * (tgt > 0 ? tgt : 1), kOn = false, kp1 = kp > 0.999999999 && kp < 1.000000001, kph = d.kph, ca, cb, cc;
           if(scrOn || d.rev) d.kWait = true;
           else if(d.kWait && Math.abs(cur - tgt) <= 0.004 * Math.abs(tgt)) d.kWait = false;
@@ -15938,7 +15946,7 @@
           if((d.kl || d.ksh !== 0) && !scrOn && !d.kWait && tgt > 0 && (d.playing || gate > 0)){
             w = tgt / kp;
             if(kp1 && w >= 0.9995 && w <= 1.0005) kOn = false;
-            else if(w < 0.45 || w > 2.2) d.kx = 1;
+            else if(w < 0.45 || w > 2.2 || (d.kl && (tgt < 0.4995 || tgt > 1.5005))) d.kx = 1;
             else kOn = true;
           }
           if(kOn && !d.kOn){
@@ -19003,7 +19011,7 @@
     // it comes to a file in the browser's own storage for this site (the File System Access API: createWritable),
     // or, where that is missing, in pieces of a megabyte to the DJ database; only without either is it held in
     // memory. Two hours is the limit. When recording stops the header is written and the file is offered for saving.
-    var REC = { on:false, frames:0, node:null, started:0, bits:16, sr:48000, ses:null, peak:0, kind:"" };
+    var REC = { on:false, frames:0, node:null, started:0, bits:16, sr:48000, ses:null, peak:0, kind:"", maxSecs:7200, room:null };
     var REC_STAGE = 1048576, REC_MAX_SECS = 7200;
     function wavHeader(frames, sr, bits){
       var bps = bits / 8, bytes = frames * 2 * bps, h = new ArrayBuffer(44), v = new DataView(h);
@@ -19018,11 +19026,21 @@
       return "First Loop mix " + d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate()) + " " + two(d.getHours()) + "." + two(d.getMinutes()) + ".wav";
     }
     // where the bytes go: {kind, write(Uint8Array) -> Promise, finish(header) -> Promise<Blob>}
+    function recPrune(olderMs){
+      try {
+        return navigator.storage.getDirectory().then(function(dir){
+          if(!dir.keys) return 0;
+          var it = dir.keys(), drop = [], now = Date.now();
+          function step(){ return it.next().then(function(r){ if(r.done) return; var m = /^fl-rec-(\d+)\.wav/.exec(r.value); if(m && now - (+m[1]) > olderMs) drop.push(r.value); return step(); }); }
+          return step().then(function(){ return Promise.all(drop.map(function(nm){ return dir.removeEntry(nm).catch(function(){}); })); }).then(function(){ return drop.length; });
+        }).catch(function(){ return 0; });
+      } catch(e){ return Promise.resolve(0); }
+    }
     function recSink(force){
       var stamp = Date.now();
       function memory(){
         var parts = [];
-        return { kind:"memory", write:function(u8){ parts.push(u8); return Promise.resolve(); },
+        return { kind:"memory", write:function(u8){ parts.push(u8.slice()); return Promise.resolve(); },
                  finish:function(h){ return Promise.resolve(new Blob([h].concat(parts), { type:"audio/wav" })); } };
       }
       function database(){
@@ -19044,16 +19062,8 @@
       }
       function file(){
         return navigator.storage.getDirectory().then(function(dir){
-          // older recordings kept here are removed once they are an hour old
-          var clean = Promise.resolve();
-          try {
-            if(dir.keys) clean = (function(){
-              var it = dir.keys(), drop = [];
-              function step(){ return it.next().then(function(r){ if(r.done) return; var m = /^fl-rec-(\d+)\.wav/.exec(r.value); if(m && stamp - (+m[1]) > 3600000) drop.push(r.value); return step(); }); }
-              return step().then(function(){ return Promise.all(drop.map(function(nm){ return dir.removeEntry(nm).catch(function(){}); })); });
-            })().catch(function(){});
-          } catch(e){}
-          return clean.then(function(){ return dir.getFileHandle("fl-rec-" + stamp + ".wav", { create:true }); }).then(function(h){
+          // older recordings kept here (each was handed over when it ended) are removed once they are an hour old
+          return recPrune(3600000).then(function(){ return dir.getFileHandle("fl-rec-" + stamp + ".wav", { create:true }); }).then(function(h){
             return h.createWritable().then(function(w){
               return w.write(new Uint8Array(44)).then(function(){
                 return { kind:"file", write:function(u8){ return w.write(u8); },
@@ -19070,27 +19080,44 @@
       catch(e){ p = Promise.reject(e); }
       return p.catch(function(){ return db ? database() : memory(); }).catch(function(){ return memory(); });
     }
+    // How many seconds of recording the browser's storage for this site still has room for (null if it does not say).
+    // A file that could not be finished is lost, so a recording is ended before the room runs out.
+    function recRoom(bits, sr, kind){
+      if(kind === "memory") return Promise.resolve(600);                 // held in memory: ten minutes, to be safe
+      try {
+        if(!navigator.storage || !navigator.storage.estimate) return Promise.resolve(null);
+        return navigator.storage.estimate().then(function(e){
+          if(!e || !(e.quota > 0)) return null;
+          return Math.max(0, Math.floor(((e.quota - (e.usage || 0)) * 0.9 - 4194304) / (sr * 2 * bits / 8)));
+        }, function(){ return null; });
+      } catch(e){ return Promise.resolve(null); }
+    }
     // One recording: feed(Float32Array of left/right pairs, how many values) turns sound into bytes and passes them on in
     // megabyte pieces, one write at a time; end() writes the header and gives {blob, seconds, bits, name, kind}.
     function recSession(sink, sr, bits){
-      var S = { sink:sink, sr:sr, bits:bits, frames:0, stage:new Uint8Array(REC_STAGE), n:0, chain:Promise.resolve(), waiting:0, failed:null, peak:0, at:new Date() };
+      var S = { sink:sink, sr:sr, bits:bits, frames:0, stage:new Uint8Array(REC_STAGE), n:0, chain:Promise.resolve(), waiting:0, written:0, failed:null, peak:0, at:new Date() };
+      var spare = [];
       function push(){
         if(!S.n) return;
-        var u8 = S.stage.slice(0, S.n); S.n = 0; S.waiting += u8.length;
-        S.chain = S.chain.then(function(){ return sink.write(u8); }).then(function(){ S.waiting -= u8.length; }, function(err){ S.waiting -= u8.length; S.failed = S.failed || String(err && err.message || err); });
+        var full = S.stage, u8 = full.subarray(0, S.n);
+        S.stage = spare.length ? spare.pop() : new Uint8Array(REC_STAGE);
+        S.n = 0; S.waiting += u8.length;
+        S.chain = S.chain.then(function(){ if(S.failed) throw new Error(S.failed); return sink.write(u8); })
+          .then(function(){ S.waiting -= u8.length; S.written += u8.length; if(spare.length < 4) spare.push(full); },
+                function(err){ S.waiting -= u8.length; S.failed = S.failed || String(err && err.message || err); });
       }
       S.feed = function(f, n){
         var st = S.stage, o = S.n, i, x, v, pk = 0;
         if(bits === 24){
           for(i = 0; i < n; i++){
-            if(o + 3 > REC_STAGE){ S.n = o; push(); o = 0; }
+            if(o + 3 > REC_STAGE){ S.n = o; push(); st = S.stage; o = 0; }
             x = f[i]; if(x !== x) x = 0; v = x < 0 ? -x : x; if(v > pk) pk = v;
             v = Math.round((x > 1 ? 1 : (x < -1 ? -1 : x)) * 8388607);
             st[o++] = v & 255; st[o++] = (v >> 8) & 255; st[o++] = (v >> 16) & 255;
           }
         } else {
           for(i = 0; i < n; i++){
-            if(o + 2 > REC_STAGE){ S.n = o; push(); o = 0; }
+            if(o + 2 > REC_STAGE){ S.n = o; push(); st = S.stage; o = 0; }
             x = f[i]; if(x !== x) x = 0; v = x < 0 ? -x : x; if(v > pk) pk = v;
             v = Math.round((x > 1 ? 1 : (x < -1 ? -1 : x)) * 32767);
             st[o++] = v & 255; st[o++] = (v >> 8) & 255;
@@ -19100,7 +19127,11 @@
       };
       S.end = function(){
         push();
-        return S.chain.then(function(){ return sink.finish(wavHeader(S.frames, sr, bits)); }).then(function(blob){
+        return S.chain.then(function(){
+          // if a piece could not be written, the file holds what was written before it, and says so in its header
+          if(S.failed) S.frames = Math.floor(S.written / (2 * bits / 8));
+          return sink.finish(wavHeader(S.frames, sr, bits));
+        }).then(function(blob){
           return { blob:blob, seconds:S.frames / sr, frames:S.frames, bits:bits, sampleRate:sr, name:recName(S.at), kind:sink.kind, error:S.failed };
         });
       };
@@ -19112,8 +19143,20 @@
         if(REC.on || REC.starting) return true;
         resumeCtx();
         REC.starting = true;
+        var bits0 = SET.recBits === 24 ? 24 : 16, theSink = null;
         return recSink().then(function(sink){
+          theSink = sink;
+          return recRoom(bits0, ENG.ctx.sampleRate, sink.kind);
+        }).then(function(room){
+          // short of room: recordings handed over more than two minutes ago make way
+          if(room !== null && room < REC_MAX_SECS && theSink.kind === "file") return recPrune(120000).then(function(n){ return n ? recRoom(bits0, ENG.ctx.sampleRate, "file") : room; });
+          return room;
+        }).then(function(room){
+          var sink = theSink;
           REC.starting = false;
+          REC.room = room; REC.maxSecs = room === null ? REC_MAX_SECS : Math.min(REC_MAX_SECS, room);
+          if(REC.maxSecs < 30){ note("There is no room left in this browser's storage for a recording. Remove some tracks from the library, or leave the private window."); return false; }
+          if(REC.maxSecs < REC_MAX_SECS) note("Recording. This browser's storage has room for about " + Math.floor(REC.maxSecs / 60) + " minutes" + (sink.kind === "memory" ? " (it is kept in memory here)" : "") + "; the recording ends by itself before that runs out.");
           if(!REC.node){
             var n = new AudioWorkletNode(ENG.ctx, "fl-rec", { numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2], channelCount:2, channelCountMode:"explicit" });
             var z = ENG.ctx.createGain(); z.gain.value = 0;
@@ -19124,18 +19167,18 @@
                 if(S){
                   S.feed(m.b, m.n); REC.frames = S.frames; REC.peak = S.peak;
                   if(S.failed || S.waiting > 67108864){ note(S.failed ? "The recording could not be written (" + S.failed + "). It stops here." : "The recording is not being written fast enough. It stops here."); recStop(); }
-                  else if(S.frames > S.sr * REC_MAX_SECS){ note("A recording is two hours at most. It stops here."); recStop(); }
+                  else if(S.frames > S.sr * REC.maxSecs){ note(REC.maxSecs >= REC_MAX_SECS ? "A recording is two hours at most. It stops here." : "The room for the recording is used up. It stops here, and what was recorded is kept."); recStop(); }
                 }
                 try { n.port.postMessage({ t:"back", b:m.b }, [m.b.buffer]); } catch(x){}
               } else if(m.t === "done" && REC.done){ var f = REC.done; REC.done = null; f(); }
             };
             REC.node = n;
           }
-          REC.bits = SET.recBits === 24 ? 24 : 16; REC.sr = ENG.ctx.sampleRate; REC.kind = sink.kind;
+          REC.bits = bits0; REC.sr = ENG.ctx.sampleRate; REC.kind = sink.kind;
           REC.ses = recSession(sink, REC.sr, REC.bits);
           REC.frames = 0; REC.peak = 0; REC.on = true; REC.started = Date.now();
           REC.node.port.postMessage("start");
-          emit("record", { on:true, bits:REC.bits, to:sink.kind });
+          emit("record", { on:true, bits:REC.bits, to:sink.kind, maxSeconds:REC.maxSecs });
           return true;
         }, function(){ REC.starting = false; note("The recording could not be started."); return false; });
       });
@@ -23317,7 +23360,7 @@
         maxChannels:function(){ return ENG && ENG.M ? ENG.M.maxCh() : null; },
         outputs:listOutputs, setOutput:setOutput,
         record:function(on2){ return on2 ? recStart() : recStop(); },
-        recordState:function(){ return { on:REC.on, seconds:REC.on && REC.sr ? Math.round(REC.frames / REC.sr * 10) / 10 : 0, bits:REC.on ? REC.bits : SET.recBits, to:REC.on ? REC.kind : "", peakDb:REC.on ? anDb(REC.peak) : null }; },
+        recordState:function(){ return { on:REC.on, seconds:REC.on && REC.sr ? Math.round(REC.frames / REC.sr * 10) / 10 : 0, bits:REC.on ? REC.bits : SET.recBits, to:REC.on ? REC.kind : "", peakDb:REC.on ? anDb(REC.peak) : null, maxSeconds:REC.on ? REC.maxSecs : null }; },
         // a short beep straight to the master output or to the headphone output, to find out what comes out where
         testTone:function(where, seconds){
           mix(function(M){
@@ -23470,7 +23513,7 @@
         prof:function(on2){ send({ t:"prof", on:!!on2 }); return ENG && ENG.prof; },
         forceFallback:function(on2){ forceFallback = !!on2; },
         send:send, burn:function(ms){ send({ t:"burn", ms:+ms || 0 }); }, drops:DROPS, rec:REC, recSink:recSink, recSession:recSession, wavHeader:wavHeader, recName:recName,
-        keySyncShift:keySyncShift, shiftKey:shiftKey,
+        keySyncShift:keySyncShift, shiftKey:shiftKey, recRoom:recRoom,
         // the mix analysis fed by hand: begin() stops the live reading, step(state, ms) hands in one reading and moves its clock on,
         // event(name, data) is an event of the DJ area as the analysis hears it, end() goes back to live
         an:{ AN:AN, begin:function(t0){ anReset(); AN.sim = { t:t0 || 1000000 }; }, end:function(){ anFlush(anNow(), true); AN.sim = null; anReset(); },

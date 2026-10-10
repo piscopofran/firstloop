@@ -1916,12 +1916,18 @@
   .dj-main > *{flex:none;}
   .dj-main > .dj-rows{flex:1 1 auto;}
   /* the line that says what a section is and what can be done with it */
-  .rb-bar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border-bottom:1px solid var(--line);font-size:11.5px;color:var(--ink-2);min-width:0;
+  .rb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 8px;background:var(--surface);border-bottom:1px solid var(--line);font-size:11.5px;color:var(--ink-2);min-width:0;
     user-select:text;-webkit-user-select:text;}
-  .rb-bar .tx{flex:1 1 auto;min-width:0;line-height:1.4;}
+  .rb-bar .tx{flex:1 1 300px;min-width:0;line-height:1.4;}
   .rb-bar .tx b{color:var(--ink);font-weight:600;}
-  .rb-bar .tx span::before{content:" \00B7 ";color:var(--ink-3);}
+  .rb-bar .tx > *:not(:last-child)::after{content:" \00B7";color:var(--ink-3);font-weight:400;}
   .rb-bar .dj-b{flex:none;height:20px;font-size:11px;white-space:nowrap;}
+  .dj-tools{flex-wrap:wrap;row-gap:4px;}
+  .dj-tools > .dj-b{flex:none;}
+  .dj-tools .dj-job{flex:1 1 150px;}
+  /* a release in Free music that turned out not to be allowed is greyed, not hidden: the four-deck rule
+     ".dj [data-off=true]{display:none}" also caught it, and its note could not be read */
+  .dj .fm-rel[data-off="true"]{display:block !important;}
   /* the tree: a stick, its folders and playlists */
   .dj-node .tw{flex:none;width:12px;margin-left:-3px;font-style:normal;font-size:9px;color:var(--ink-2);text-align:center;}
   .dj-node .tw:hover{color:var(--ink);}
@@ -1964,8 +1970,10 @@
   .rb-cues .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .rb-cues .dj-i{height:18px;font-size:11px;width:100%;}
   /* hot cue pads: the name rekordbox has for a cue, and a mark on a cue that is a loop */
-  .dj-hc span[data-nm]{font-size:0;}
-  .dj-hc span[data-nm]::after{content:attr(data-nm);font-family:inherit;font-size:9.5px;color:var(--ink);white-space:nowrap;}
+  .dj-hc .nm{display:none;font-style:normal;font-size:9.5px;color:var(--ink);flex:1 1 auto;min-width:0;margin-left:4px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dj-hc[data-nm="true"] .nm{display:block;}
+  .dj-hc[data-nm="true"] > span{display:none;}
+  .dj[data-compact="true"] .dj-hc .nm,.dj[data-up="4"] .dj-hc .nm{display:none;}
   .dj-hc[data-loop="true"] b::after{content:"\21BB";font-weight:400;font-size:9px;margin-left:2px;color:var(--ink-2);}
   /* the dialog */
   .rb-dlgback{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:16px;}
@@ -22678,8 +22686,8 @@
 
     // ---------- rekordbox: what is kept ----------
     var RBP = rbPure();
-    var RB = { list:[], by:{}, ready:false, job:null, bg:null, copy:null, last:null, ver:0, pv:{}, pvN:0, dlg:null, pend:0,
-               anlz:{ q:[], inq:{}, run:0, done:0, total:0, cancel:false, errs:{}, hold:false } };
+    var RB = { list:[], by:{}, ready:false, job:null, bg:null, copy:null, last:null, ver:0, lver:0, pv:{}, pvN:0, dlg:null, pend:0,
+               anlz:{ q:[], inq:{}, fly:{}, run:0, done:0, cancel:false, errs:{}, lastTree:0 } };
     var RB_COLOURS = ["", "Pink", "Red", "Orange", "Yellow", "Green", "Aqua", "Blue", "Purple"];
     var RB_COLOUR_RGB = ["", "#f870b8", "#e8433a", "#f59a2f", "#f2d23c", "#44c95a", "#3fd0d8", "#3f7df0", "#a45cf0"];
     // hot cue colours by code, 0x01 to 0x3e (the colours rekordbox shows; from the table in Deep Symmetry's beat-link)
@@ -22770,7 +22778,7 @@
       return c;
     }
     function rbSummary(s){
-      var c = rbCounts(s), bits = [rbPl(c.tracks, "track"), rbPl(c.playlists, "playlist")];
+      var c = rbCounts(s), bits = [rbPl(c.tracks, "track"), c.playlists ? rbPl(c.playlists, "playlist") : "no playlists"];
       if(s.kind !== "xml" && c.read < c.anlz) bits.push("cues read for " + rbNum(c.read) + " of " + rbNum(c.anlz));
       else bits.push(c.hot ? "hot cues on " + rbPl(c.hot, "track") : "no hot cues");
       return bits.join(", ");
@@ -22867,9 +22875,17 @@
         function here(){ if(done) return; done = true; delete rbWJobs[id]; setTimeout(function(){ res(RBP.parsePDB(ab)); }, 0); }
         try {
           if(!rbWBroken && window.Worker && !rbW){
-            var code = "var rbPure = " + rbPure.toString() + ";\nvar P = rbPure();\nself.onmessage = function(e){ var r; try { r = P.parsePDB(e.data.ab); } catch(x){ r = { ok:false, why:'error', error:String(x) }; } self.postMessage({ job:e.data.job, r:r }); };";
+            var code = "var rbPure = " + rbPure.toString() + ";\nvar P = rbPure();\nself.onmessage = function(e){ var r; try { r = P.parsePDB(e.data.ab); } catch(x){ r = { ok:false, why:'error', error:String(x) }; }" +
+              " var all = r.tracks || [], i = 0; r.tracks = [];" +                    // the tracks come over a thousand at a time: one big message would hold the page up while it is unpacked
+              " (function next(){ if(i >= all.length){ self.postMessage({ job:e.data.job, r:r }); return; } self.postMessage({ job:e.data.job, part:all.slice(i, i + 1000) }); i += 1000; setTimeout(next, 0); })(); };";
             rbW = new Worker(URL.createObjectURL(new Blob([code], { type:"text/javascript" })));
-            rbW.onmessage = function(e){ var j = rbWJobs[e.data.job]; if(j){ delete rbWJobs[e.data.job]; j(e.data.r); } };
+            rbW.onmessage = function(e){
+              var j = rbWJobs[e.data.job]; if(!j) return;
+              if(e.data.part){ j.parts = (j.parts || []).concat(e.data.part); return; }
+              delete rbWJobs[e.data.job];
+              if(e.data.r && j.parts) e.data.r.tracks = j.parts;
+              j(e.data.r);
+            };
             rbW.onerror = function(){ rbWBroken = true; rbW = null; Object.keys(rbWJobs).forEach(function(k){ rbWJobs[k](null); }); };
           }
         } catch(e){ rbWBroken = true; rbW = null; }
@@ -22954,9 +22970,9 @@
       s.read = Date.now(); s.pdb = { size:info.size || 0, mtime:info.mtime || 0 };
       s._st = info.kind === "split" && !s.contents ? "partial" : "ok";
       var seen = {};
-      for(i = 0; i < res.tracks.length; i++){
+      function one(i){
         var p = res.tracks[i], lid = "rb" + hashStr(s.id + "|" + rbLow(p.path)), t = T.by[lid], isNew = !t;
-        if(seen[lid]) continue;
+        if(seen[lid]) return;
         seen[lid] = true; idOf[p.id] = lid;
         if(isNew){ t = blankTrack(lid); nFresh++; t.rb = { source:s.id, st:0 }; }
         var rb = t.rb || (t.rb = { source:s.id, st:0 });
@@ -22981,6 +22997,18 @@
         T.by[lid] = derive(t);
         puts.push(cleanTrack(t));
       }
+      // 400 at a time, each lot written to the browser's database before the next, so the page keeps answering
+      function lot(from){
+        if(from >= res.tracks.length) return Promise.resolve();
+        var to = Math.min(res.tracks.length, from + 400);
+        for(i = from; i < to; i++) one(i);
+        var out = puts; puts = [];
+        if(RB.job){ RB.job.done = to; }
+        return dbPutMany("tracks", out).then(function(){ return later(0); }).then(function(){ return lot(to); });
+      }
+      return lot(0).then(function(){ return rbTake2(res, info, s, fresh, seen, idOf, nFresh, types, t0); });
+    }
+    function rbTake2(res, info, s, fresh, seen, idOf, nFresh, types, t0){
       // tracks that were on the stick last time and are not in its database any more
       var gone = 0;
       if(!fresh) T.list.slice().forEach(function(t){
@@ -22993,19 +23021,17 @@
       });
       s.history = res.history.map(function(h){ return { id:h.id, name:h.name || "History", tracks:h.tracks.map(function(id){ return idOf[id]; }).filter(Boolean) }; });
       s.shut = s.shut || {};
+      if(fresh && s.nodes.length > 60) s.nodes.forEach(function(n){ if(n.folder) s.shut[n.id] = true; });        // a big tree starts with its folders shut
       var rep = { ok:true, at:Date.now(), source:s.id, name:s.name, kind:s.kind, tracks:res.tracks.length, fresh:nFresh, known:res.tracks.length - nFresh, removed:gone,
         skipped:res.skippedCount, reasons:res.reasons || {}, playlists:s.nodes.filter(function(n){ return !n.folder; }).length, folders:s.nodes.filter(function(n){ return n.folder; }).length,
         history:s.history.length, tables:res.tables.map(function(x){ return { name:x.name, rows:x.rows, pages:x.pages, bad:x.bad, end:x.end }; }), strings:res.strings, notes:res.notes || [],
         bytes:res.bytes, pageSize:res.pageSize, pages:res.pages, worker:!!res.worker, fileTypes:types, dlp:!!info.dlp, ms:{ read:Math.round(info.readMs || 0), parse:res.ms, build:0, total:0 } };
       rep.msg = "“" + s.name + "”: " + rbPl(rep.tracks, "track") + " read" + (rep.skipped ? ", " + rbNum(rep.skipped) + " skipped (" + rbReasons(rep.reasons) + ")" : "") +
-        ", " + rbPl(rep.playlists, "playlist") + (rep.folders ? " in " + rbPl(rep.folders, "folder") : "") + (rep.history ? ", " + rbPl(rep.history, "history list") : "") +
+        ", " + (rep.playlists ? rbPl(rep.playlists, "playlist") : "no playlists") + (rep.folders ? " in " + rbPl(rep.folders, "folder") : "") + (rep.history ? ", " + rbPl(rep.history, "history list") : "") +
         ". Nothing was copied and nothing on the stick was changed.";
       s.report = rep;
       RB.ver++;
-      // written to the browser's database a thousand at a time, so the page keeps answering
-      var chain = Promise.resolve(), n0;
-      for(n0 = 0; n0 < puts.length; n0 += 1000) (function(a){ chain = chain.then(function(){ return dbPutMany("tracks", puts.slice(a, a + 1000)); }); })(n0);
-      return chain.then(function(){ return rbSave(); }).then(function(){
+      return rbSave().then(function(){
         rep.ms.build = Math.round(nowMs() - t0);
         return { source:s, report:rep };
       });
@@ -23265,8 +23291,9 @@
       (ids || []).forEach(function(id){
         var t = T.by[id];
         if(!t || !t.rb || t.rb.st || !t.rb.anlz) return;
+        if(A.fly[id] || t._rbP) return;
         if(A.inq[id]){ if(front){ var i = A.q.indexOf(id); if(i > 0){ A.q.splice(i, 1); add.push(id); } } return; }
-        A.inq[id] = true; add.push(id); A.total++;
+        A.inq[id] = true; add.push(id);
       });
       if(!add.length) return;
       if(front) A.q = add.concat(A.q); else A.q = A.q.concat(add);
@@ -23276,30 +23303,33 @@
     function rbAnlzCancel(){
       var A = RB.anlz;
       A.q.forEach(function(id){ delete A.inq[id]; });
-      A.q = []; A.cancel = true; A.total = A.done = 0;
+      A.q = []; A.cancel = true; A.done = 0;
       emit("job", { kind:"rekordbox", end:true });
     }
     var rbPuts = [], rbPutT = 0;
-    function rbFlush(){
+    function rbFlush(last){
       clearTimeout(rbPutT); rbPutT = 0;
-      if(!rbPuts.length) return;
+      if(!rbPuts.length && !last) return;
       var a = rbPuts; rbPuts = [];
-      dbPutMany("tracks", a.map(cleanTrack));
-      RB.ver++; UI.listDirty = true; UI.treeDirty = true;
+      if(a.length) dbPutMany("tracks", a.map(cleanTrack));
+      RB.ver++;
+      // the rows on screen show their cues as they come; the tree and its counts follow every few seconds
+      if(UI.rows){ paintRows(); rbBar(); }
+      if(last || nowMs() - RB.anlz.lastTree > 3000){ RB.anlz.lastTree = nowMs(); UI.treeDirty = true; UI.infoDirty = true; if(LV.node === "dups" || SET.sort === "cues") UI.listDirty = true; }
     }
+    function rbAnlzTotal(){ var A = RB.anlz; return A.done + A.q.length + A.run; }
     function rbAnlzPump(){
       var A = RB.anlz, lanes = decks.some(function(D){ return D.playing; }) ? 1 : 3;
       if(!A.q.length && !A.run){
-        if(A.total){ A.total = A.done = 0; rbFlush(); emit("job", { kind:"rekordbox", end:true }); UI.infoDirty = true; }
+        if(A.done){ A.done = 0; rbFlush(true); emit("job", { kind:"rekordbox", end:true }); }
         return;
       }
       while(A.run < lanes && A.q.length){
         var id = A.q.shift(), t = T.by[id];
         delete A.inq[id];
         var s = t && rbSrcOf(t);
-        if(!t || !s || t.rb.st){ A.done++; continue; }
-        if(s._st !== "ok"){ A.total--; continue; }                       // the stick is away: these wait for it
-        A.run++;
+        if(!t || !s || t.rb.st || s._st !== "ok") continue;            // read meanwhile, or the stick is away: those wait for it
+        A.run++; A.fly[id] = true;
         (function(t2, s2){
           (t2._rbP || rbAnlzRead(s2, t2).then(function(a){
             if(a.fail && a.fail !== "NotFoundError"){
@@ -23312,8 +23342,8 @@
             rbPuts.push(t2);
             if(!rbPutT) rbPutT = setTimeout(rbFlush, 700);
           })).then(null, function(){}).then(function(){
-            A.run--; A.done++;
-            if(A.done % 10 === 0 || !A.q.length) emit("job", { kind:"rekordbox", phase:"anlz", done:A.done, total:A.total });
+            A.run--; A.done++; delete A.fly[t2.id];
+            if(A.done % 10 === 0 || !A.q.length) emit("job", { kind:"rekordbox", phase:"anlz", done:A.done, total:rbAnlzTotal() });
             rbAnlzPump();
           });
         })(t, s);
@@ -23358,7 +23388,15 @@
     // Chrome does not decode AIFF, and DJs keep a lot of it. Plain (uncompressed) AIFF is the same
     // samples as WAV in the other byte order, so it is handed on as WAV. Nothing is written anywhere.
     function rbAiff(file){
-      if(!file || !/\.aiff?$/i.test(file.name || "") || file.size < 54 || file.size > 600 * 1048576) return Promise.resolve(file);
+      if(!file || !file.slice || file.size < 54 || file.size > 600 * 1048576) return Promise.resolve(file);
+      // told by its first bytes, not by its name
+      return file.slice(0, 12).arrayBuffer().then(function(h){
+        var b = new Uint8Array(h);
+        if(b.length < 12 || b[0] !== 0x46 || b[1] !== 0x4f || b[2] !== 0x52 || b[3] !== 0x4d || b[8] !== 0x41 || b[9] !== 0x49 || b[10] !== 0x46) return file;         // "FORM" .... "AIF"
+        return rbAiff2(file);
+      }, function(){ return file; });
+    }
+    function rbAiff2(file){
       return file.arrayBuffer().then(function(ab){
         var dv = new DataView(ab), u8 = new Uint8Array(ab), len = ab.byteLength;
         function cc(p){ return String.fromCharCode(u8[p], u8[p + 1], u8[p + 2], u8[p + 3]); }
@@ -23393,7 +23431,7 @@
         else if(bytes === 3){ for(i = 0; i < dataLen; i += 3){ out[44 + i] = src[i + 2]; out[45 + i] = src[i + 1]; out[46 + i] = src[i]; } }
         else { for(i = 0; i < dataLen; i += 4){ out[44 + i] = src[i + 3]; out[45 + i] = src[i + 2]; out[46 + i] = src[i + 1]; out[47 + i] = src[i]; } }
         var blob;
-        try { blob = new File([out], String(file.name).replace(/\.aiff?$/i, ".wav"), { type:"audio/wav", lastModified:file.lastModified || 0 }); }
+        try { blob = new File([out], String(file.name || "audio").replace(/\.aiff?$/i, "") + ".wav", { type:"audio/wav", lastModified:file.lastModified || 0 }); }
         catch(e){ blob = new Blob([out], { type:"audio/wav" }); }
         return blob;
       }, function(){ return file; });
@@ -23784,8 +23822,8 @@
     }
     var MISS = { n:0, ver:-1, len:-1 };
     function missCount(){
-      if(MISS.ver === RB.ver && MISS.len === T.list.length) return MISS.n;
-      MISS.n = missList().length; MISS.ver = RB.ver; MISS.len = T.list.length;
+      if(MISS.ver === RB.lver && MISS.len === T.list.length) return MISS.n;
+      MISS.n = missList().length; MISS.ver = RB.lver; MISS.len = T.list.length;
       return MISS.n;
     }
 
@@ -23793,9 +23831,17 @@
     // Two tracks are listed as duplicates when they are the same file (the same size and the same
     // file name, or the same size and the same bytes at the start and the end once "Compare the files"
     // has run), or when artist, title and length agree (within two seconds). Nothing is removed for you.
-    var DUP = { ver:-1, len:-1, groups:[], by:{}, n:0 };
-    function dupScan(){
-      if(DUP.ver === RB.ver && DUP.len === T.list.length) return DUP;
+    var DUP = { ver:-1, len:-1, groups:[], by:{}, n:0, at:0, later:0 };
+    // soon: for the count in the tree. While the library is changing fast (a folder being read) the last
+    // answer is good enough for a few seconds; the list and the interface always get a fresh one.
+    function dupScan(soon){
+      if(DUP.ver === RB.lver && DUP.len === T.list.length) return DUP;
+      if(soon){
+        // worked out in a moment of its own (a big library takes a while), and not more than once in four seconds
+        if(!DUP.later) DUP.later = setTimeout(function(){ DUP.later = 0; dupScan(); UI.treeDirty = true; }, DUP.at && nowMs() - DUP.at < 4000 ? 4200 : 250);
+        return DUP;
+      }
+      DUP.at = nowMs();
       var parent = {}, why = {}, bySize = {}, byTag = {}, i, t, k;
       function find(a){ while(parent[a] !== a){ parent[a] = parent[parent[a]]; a = parent[a]; } return a; }
       function join(a, b, w){ var ra = find(a), rb2 = find(b); if(ra !== rb2) parent[ra] = rb2; why[a] = why[a] || w; why[b] = why[b] || w; }
@@ -23825,7 +23871,7 @@
         list.push({ why:w, ids:ids });
         ids.forEach(function(id){ by[id] = { g:list.length, why:why[id] }; n++; });
       });
-      DUP.groups = list; DUP.by = by; DUP.n = n; DUP.ver = RB.ver; DUP.len = T.list.length;
+      DUP.groups = list; DUP.by = by; DUP.n = n; DUP.ver = RB.lver; DUP.len = T.list.length;
       return DUP;
     }
     function dupTracks(){
@@ -24047,12 +24093,22 @@
       if(out.length || base.length > 30000) return out;
       // nothing has those letters in that order: allow one slip in a word of four letters or more, two in eight or more
       if(!plain.some(function(p){ return p.length >= 4; })) return out;
+      // a word with one slip still has one of its two halves whole (with two slips, one of its three thirds):
+      // only tracks that hold such a piece are looked at letter by letter
+      var pieces = plain.map(function(p){
+        var n = p.length >= 8 ? 3 : 2, len = Math.floor(p.length / n), a = [], k;
+        for(k = 0; k < n; k++) a.push(k === n - 1 ? p.slice(k * len) : p.slice(k * len, (k + 1) * len));
+        return a;
+      });
       out = base.filter(function(t){
         var words = null;
         for(var i = 0; i < plain.length; i++){
           var p = plain[i];
           if(t._s.indexOf(p) >= 0) continue;
           if(p.length < 4) return false;
+          var pc = pieces[i], hit = false;
+          for(var q = 0; q < pc.length && !hit; q++) if(t._s.indexOf(pc[q]) >= 0) hit = true;
+          if(!hit) return false;
           var max = p.length >= 8 ? 2 : 1, ok = false;
           words = words || rbWords(t);
           for(var k = 0; k < words.length && !ok; k++){
@@ -24129,6 +24185,10 @@
       });
     }
     function rbTree(node, head, tr){
+      // a rekordbox tree has folders inside folders: the tree column gets wider for it where there is room
+      var nested = RB.list.some(function(s){ return (s.nodes || []).some(function(n){ return n.depth > 0; }); });
+      var tw = (nested && root.clientWidth >= 1000 ? Math.max(SET.treeW, 212) : SET.treeW) + "px";
+      if(UI.lib && UI.lib.style.getPropertyValue("--tree") !== tw){ UI.lib.style.setProperty("--tree", tw); setTimeout(function(){ pickCols(); paintRows(); }, 0); }
       if(!RB.list.length) return;
       head("rekordbox", function(){ rbDialog(); }, "Bring in from rekordbox");
       RB.list.forEach(function(s){
@@ -24155,9 +24215,9 @@
           if(n.folder){
             var shut = !!s.shut[n.id];
             if(shut) hidden[n.id] = true;
-            node("rbf:" + s.id + ":" + n.id, n.name, null, { depth:n.depth + 1, fold:shut ? "shut" : "open", cls:"rb-f",
+            node("rbf:" + s.id + ":" + n.id, n.name, null, { depth:n.depth + 1, fold:shut ? "shut" : "open", cls:"rb-f", title:n.name + ": a folder of playlists. Its name shows everything inside it; the arrow opens and shuts it.",
               toggle:function(){ if(s.shut[n.id]) delete s.shut[n.id]; else s.shut[n.id] = true; rbSave(); paintTree(); } });
-          } else node("rbpl:" + s.id + ":" + n.id, n.name, n.tracks.length, { depth:n.depth + 1, cls:"rb-p", title:"A rekordbox playlist, in rekordbox's order. Drag its tracks onto one of your own playlists to change the order." });
+          } else node("rbpl:" + s.id + ":" + n.id, n.name, n.tracks.length, { depth:n.depth + 1, cls:"rb-p", title:n.name + ": " + rbPl(n.tracks.length, "track") + ", in rekordbox's order. To make your own order, drag its tracks onto one of your playlists." });
         });
         if((s.history || []).length){
           var hs = s.shut.h !== false;
@@ -24173,7 +24233,7 @@
         acts:[["×", "Empty the Prepare list (the tracks stay in the library)", function(b){ confirmIn(b, "Empty the Prepare list?", function(){ PREP = []; prepSave(); }); }]] });
       var mc = missCount();
       if(mc || LV.node === "missing") node("missing", "Missing files", mc, { warn:mc > 0, title:"Tracks whose audio file is not where it was. Find folder connects them again; cues, grids and playlists are kept." });
-      var dc = dupScan().n;
+      var dc = dupScan(true).n;
       if(dc || LV.node === "dups") node("dups", "Duplicates", dc, { title:"Tracks that are the same file, or have the same artist, title and length" });
     }
     function rbNone(node){
@@ -24189,12 +24249,24 @@
         return { txt:b.phase === "files" ? "Checking the audio files on the stick" + (b.found ? ": " + rbNum(b.found) : "") : (b.phase === "relocate" ? "Looking through the folder: " + rbNum(b.found) + " audio files" : "Comparing files: " + b.done + " of " + b.total),
                  cancel:function(){ b.cancel = true; } };
       }
-      if(A.total > 0 && (A.q.length || A.run)) return { txt:"Reading cues and grids from the stick: " + rbNum(Math.min(A.done, A.total)) + " of " + rbNum(A.total), cancel:rbAnlzCancel };
+      if(A.q.length || A.run) return { txt:"Reading cues and grids from the stick: " + rbNum(A.done) + " of " + rbNum(rbAnlzTotal()), cancel:rbAnlzCancel };
       return null;
+    }
+    // the rows on screen are the ones whose cues are read first
+    var rbSeeT = 0;
+    function rbSee(){
+      clearTimeout(rbSeeT);
+      rbSeeT = setTimeout(function(){
+        if(!UI.rows || !RB.list.length) return;
+        var top = UI.rows.scrollTop, first = Math.max(0, Math.floor(top / RH)), last = Math.min(LV.rows.length, first + Math.ceil((UI.rows.clientHeight || 300) / RH) + 2), ids = [];
+        for(var i = first; i < last; i++){ var t = LV.rows[i]; if(t && t.rb && !t.rb.st && t.rb.anlz) ids.push(t.id); }
+        if(ids.length) rbAnlzAdd(ids, true);
+      }, 120);
     }
     // the line between the tools and the list: what this section is, and what can be done with it
     function rbBar(){
       var bar = UI.rbbar; if(!bar) return;
+      rbSee();
       var node = LV.node, m = /^(rb|rbpl|rbf|rbh):([^:]+)/.exec(node), s = m && RB.by[m[2]], key = "", parts = [], acts = [];
       function act(label, title, fn, id){ acts.push([label, title, fn, id]); }
       if(s){
@@ -24204,7 +24276,7 @@
         if(s._st !== "ok") parts.push(rbStateWords(s));
         else {
           parts.push(rbSummary(s));
-          if(s.kind !== "xml") parts.push(c.copied ? rbNum(c.copied) + " copied into this browser, the rest plays from the stick" : "plays from the stick while it is plugged in");
+          if(s.kind !== "xml") parts.push(c.copied >= c.tracks && c.tracks ? "all copied into this browser: plays without the stick" : (c.copied ? rbNum(c.copied) + " copied into this browser, the rest plays from the stick" : "plays from the stick while it is plugged in"));
           if(c.variable) parts.push("tempo varies in " + rbNum(c.variable));
           if(c.nf) parts.push(rbNum(c.nf) + " not on the stick");
         }
@@ -24214,7 +24286,7 @@
           if(un){ parts.push(rbNum(un) + " without audio"); act("Choose the music folder", "The folder that holds the files this collection names. They are matched by file name and size; nothing is copied.", function(){ relocatePick(s.id); }, "xmlfolder"); }
         } else if(s._st !== "ok") act(s._st === "partial" ? "Choose the Contents folder" : (s._st === "again" ? "Choose the stick again" : "Reconnect"), "Asks the browser for the stick again", function(){ rbReconnect(s.id); }, "reconnect");
         else {
-          if(onStick) act("Copy " + (node === "rb:" + s.id ? "all " : "these ") + rbNum(onStick) + " to this computer's browser storage" + (bytes ? " (" + fmtBytes(bytes) + ")" : ""), "Copies the audio of the tracks listed here into this browser, so they play without the stick. The stick is only read.", function(b){
+          if(onStick) act("Copy " + (node === "rb:" + s.id ? "all " : "these ") + rbNum(onStick) + " to this browser" + (bytes ? " (" + fmtBytes(bytes) + ")" : ""), "Copy to this computer's browser storage: the audio of the tracks listed here is copied into this browser, so they play without the stick. The stick is only read.", function(b){
             confirmIn(b, "Copy " + rbPl(onStick, "track") + (bytes ? " (" + fmtBytes(bytes) + ")" : "") + " from the stick into this browser's storage?", function(){ rbCopy({ ids:LV.rows.map(function(t){ return t.id; }) }); });
           }, "copy");
           if(copied) act("Delete " + rbNum(copied) + (copied === 1 ? " copy" : " copies"), "Deletes the copies in this browser. The tracks then play from the stick again.", function(b){
@@ -24248,7 +24320,7 @@
       if(!key){ if(!bar.hidden){ bar.hidden = true; bar._key = ""; } return; }
       if(bar._key === key && !bar.hidden) return;
       bar._key = key; bar.hidden = false; bar.textContent = "";
-      var tx = el("span", "tx"); parts.forEach(function(p, i){ tx.appendChild(el(i ? "span" : "b", "", p)); }); bar.appendChild(tx);
+      var tx = el("span", "tx"); parts.forEach(function(p, i){ if(i) tx.appendChild(document.createTextNode(" ")); tx.appendChild(el(i ? "span" : "b", "", p)); }); bar.appendChild(tx);
       acts.forEach(function(a){ var b = btn("", a[0], a[1]); if(a[3]) b.dataset.rb = a[3]; b.addEventListener("click", function(){ a[2](b); }); bar.appendChild(b); });
     }
     // the mark at the end of a row: beat grid, hot cues, memory cues
@@ -24417,8 +24489,11 @@
         var D = allDecks[i], t = D && D.track;
         if(!u || !u.hot) return;
         for(var k = 0; k < 8; k++){
-          var b = u.hot[k], c = t && t.cues && t.cues[k], sp = b.lastChild, nm = c && c.name ? c.name : "", lp = c && c.end > c.pos ? "true" : "false";
-          if((sp.dataset.nm || "") !== nm){ if(nm) sp.dataset.nm = nm; else delete sp.dataset.nm; }
+          var b = u.hot[k], c = t && t.cues && t.cues[k], nm = c && c.name ? c.name : "", lp = c && c.end > c.pos ? "true" : "false";
+          var ne = b._nm;
+          if(!ne){ ne = b._nm = el("i", "nm"); b.insertBefore(ne, b.lastChild); }       // the deck keeps writing the time into the last child; this sits before it
+          if(ne.textContent !== nm) ne.textContent = nm;
+          if(b.dataset.nm !== (nm ? "true" : "false")) b.dataset.nm = nm ? "true" : "false";
           if(b.dataset.loop !== lp) b.dataset.loop = lp;
           var title = "Hot cue " + HOT[k] + (c ? (nm ? " “" + nm + "”" : "") + " at " + fmtTime(c.pos, true) + (lp === "true" ? ", a loop of " + (c.end - c.pos).toFixed(2) + " s" : "") + ": click to jump there. Shift+click or right-click clears it." : ": click to set it here. Shift+click or right-click clears it.");
           if(b.title !== title) b.title = title;
@@ -24634,21 +24709,10 @@
         PREP.splice.apply(PREP, [at < 0 ? PREP.length : at, 0].concat(moving));
         prepSave(); refreshList();
       });
-      // the rows on screen are the ones whose cues are read first
-      var seeT = 0;
-      function see(){
-        clearTimeout(seeT);
-        seeT = setTimeout(function(){
-          if(!/^rb/.test(LV.node) && !RB.anlz.total) return;
-          var top = UI.rows.scrollTop, first = Math.max(0, Math.floor(top / RH)), last = Math.min(LV.rows.length, first + Math.ceil((UI.rows.clientHeight || 300) / RH) + 2), ids = [];
-          for(var i = first; i < last; i++){ var t = LV.rows[i]; if(t && t.rb && !t.rb.st && t.rb.anlz) ids.push(t.id); }
-          if(ids.length) rbAnlzAdd(ids, true);
-        }, 120);
-      }
-      UI.rows.addEventListener("scroll", see, { passive:true });
-      on("select", see);
-      on("job", function(){ rbDialogPaint(); if(/^rb/.test(LV.node)) UI.listDirty = true; });
-      on("library", function(){ rbDialogPaint(); see(); });
+      UI.rows.addEventListener("scroll", rbSee, { passive:true });
+      on("select", rbSee);
+      on("job", function(d){ rbDialogPaint(); if(d && d.end && /^rb/.test(LV.node)) UI.listDirty = true; });
+      on("library", function(){ rbDialogPaint(); rbSee(); });
       rbDeckHooks();
       if(typeof palAdd === "function"){
         try { palAdd("djrekordbox", "Bring in from rekordbox", "DJ", "rekordbox, usb stick, pioneer, cdj, import, playlists, hot cues, xml, export.pdb, library", "top", ['.viewtab[data-view="dj"]'], { run:function(){ setView("dj"); init().then(function(){ rbDialog(); }); } }); } catch(e){}
@@ -24656,7 +24720,7 @@
     }
     // after the library has been read from the browser's database
     function rbBoot(){
-      on("library", function(){ RB.ver++; });
+      on("library", function(){ RB.ver++; RB.lver++; });
       return Promise.all([dbGet("meta", "rb"), snapBoot()]).then(function(r){
         RB.list = Array.isArray(r[0]) ? r[0].filter(function(s){ return s && s.id; }) : [];
         RB.by = {};
@@ -24704,7 +24768,7 @@
       state:function(){
         var A = RB.anlz, j = rbJobLine();
         return { busy:!!(RB.job || RB.bg || RB.copy || RB.pend > 0), phase:RB.job ? RB.job.phase : (RB.bg ? RB.bg.phase : (RB.copy ? "copy" : (A.q.length || A.run ? "anlz" : ""))), text:j ? j.txt : "",
-                 done:RB.copy ? RB.copy.done : A.done, total:RB.copy ? RB.copy.total : A.total, analysis:{ running:!!(A.q.length || A.run), done:A.done, total:A.total, waiting:A.q.length },
+                 done:RB.copy ? RB.copy.done : A.done, total:RB.copy ? RB.copy.total : rbAnlzTotal(), analysis:{ running:!!(A.q.length || A.run), done:A.done, total:rbAnlzTotal(), waiting:A.q.length },
                  copy:RB.copy ? { done:RB.copy.done, total:RB.copy.total } : null, last:RB.last ? JSON.parse(JSON.stringify(RB.last)) : null, sources:RB.list.map(rbSourceOut) };
       },
       reconnect:function(id){ return rbReconnect(id); },

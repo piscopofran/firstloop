@@ -11178,6 +11178,8 @@
       if(!s) return;
       if(asksWord && e.kind === "word") s += 12;
       if(asksPlace && e.kind !== "word") s += 6;
+      // the same word in two places ("reverb" is in Mix and on the decks): the place she is in comes first
+      if(e.a === "dj" && e.kind !== "word") s += (view === "dj" || (typeof wsIs === "function" && wsIs("dj"))) ? 2 : -2;
       out.push({ e:e, s:s });
     });
     if(!out.length && toks.length > 1){

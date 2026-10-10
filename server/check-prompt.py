@@ -10,8 +10,10 @@ with somebody else's instructions. The two must be identical.
 
 Run from the root of the repository. Standard library only.
 """
+import ast
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +42,37 @@ def lines_of(text, path):
     return out
 
 
+def variants(lines, page, server):
+    """The prompt is sent in pieces (a line "@@ name" opens a piece of module
+    name). Both files must name the same sets of modules; each set's size is printed."""
+    ms = re.search(r"^PROMPT_SETS = (\{.*\})\s*$", server, re.M)
+    mp = re.search(r"var ASST_PROMPT_SETS = (\{.*?\});", page)
+    if not ms and not mp:
+        return 0
+    if not ms or not mp:
+        print("Only one of the two files says which pieces of the prompt go together.")
+        return 1
+    sets = dict((k, list(v)) for k, v in ast.literal_eval(ms.group(1)).items())
+    if json.loads(re.sub(r"([A-Za-z_]+):", r'"\1":', mp.group(1))) != sets:
+        print("The page and the server put different pieces of the prompt together (ASST_PROMPT_SETS, PROMPT_SETS).")
+        return 1
+    names = set(l[3:] for l in lines if l.startswith("@@ "))
+    missing = sorted(set(m for v in sets.values() for m in v) - names)
+    unused = sorted(names - set(m for v in sets.values() for m in v))
+    if missing or unused:
+        print("Modules named but not written: %s; written but in no set: %s" % (missing or "none", unused or "none"))
+        return 1
+    for kind in sorted(sets):
+        on, n = False, -1
+        for l in lines:
+            if l.startswith("@@ "):
+                on = l[3:] in sets[kind]
+            elif on:
+                n += len(l) + 1
+        print("  %-6s %s: %d characters (roughly %d tokens)" % (kind, " + ".join(sets[kind]), n, n // 4))
+    return 0
+
+
 def main():
     page = open(PAGE, encoding="utf-8").read()
     server = open(SERVER, encoding="utf-8").read()
@@ -56,7 +89,7 @@ def main():
     if have == want:
         chars = len("\n".join(want))
         print("Same prompt in both places: %d lines, %d characters (roughly %d tokens)." % (len(want), chars, chars // 4))
-        return 0
+        return variants(want, page, server)
     print("The prompts differ. Run: python3 server/check-prompt.py --write")
     for i in range(max(len(have), len(want))):
         h = have[i] if i < len(have) else None

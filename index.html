@@ -22437,7 +22437,7 @@
   //   w a 14-bit pair, the fine half 32 higher (wHH: the fine half is control HH)   x runs the other way round
   //   e an endless knob or wheel that counts 1.. up and 127.. down (default for a wheel: steps around 64)
   //   c the platter's one message: scratches while the top is touched, nudges otherwise
-  //   V / v only sent with vinyl mode on / off   E a pitch-bend message used as a fader
+  //   V / v only sent with vinyl mode on / off
   //   M a pad in Beat Jump mode   u by the family's convention, not confirmed   f in the family's list only
   // Sections: "d" once per deck, "m" once per mixer channel, "g" as written.
   var CLIB = (function(){
@@ -22466,37 +22466,40 @@
           "m cue=9n0C.L fader=Bn00 filter=Bn01 eq_low=Bn02 eq_mid=Bn03 eq_hi=Bn04 trim=Bn05 | g mix.xfader=B000 browse.knob=B001.e browse.press=9000",
       hcl: "d loop_in=9n09.L loop_out=9n0A.L loop_halve@loop_in=9s09.S loop_double@loop_out=9s0A.S"
     };
-    var AT = "https://support.alphatheta.com/", MX = "Mixxx ";
+    var MX = "Mixxx ";
     // k key, n name, re how the device's own name is recognised (after tidying), b the family parts, a what this model
     // adds or changes, ch channels on its mixer, dn / pn / qn / sn the MIDI channels of its decks, pads, pads with SHIFT
-    // and SHIFT layer, jt steps in one turn of a platter (as the source has it), cf m / o / f (see above), src,
+    // and SHIFT layer, jt steps in one turn of a platter, cf m / o / f (see above), src,
+    // jt is the number the Mixxx mapping uses where there is one. For the AlphaTheta / Pioneer DJ models with large platters and
+    // no mapping of their own it is 2,048, as in the DDJ-SX mapping (a DDJ-GRV6 sent 2,087 for one turn); for the small ones 720,
+    // as in the DDJ-400, FLX4 and SB mappings. Either way it is a starting point: the Quick check measures the unit itself.
     // lay how it is drawn when there is no drawing of its own: channels, pads (b below the platter, a above it,
     // m in the mixer section, 0 none) and how many, tempo slider (r right of each platter, o on the outer side,
     // t lying along the top), loop buttons (t above the platter, b beside the transport, 0 none on the unit)
     var M = [
-      { k:"ddj-flx4", n:"DDJ-FLX4", re:"ddj-?flx-?4", b:"rb", a:"d -9n47 _play=9n0E.S | g -B60D -B608 fx.on=9547.L", ch:2, jt:720, cf:"m", sx:"flx4",
+      { k:"ddj-flx4", n:"DDJ-FLX4", re:"ddj-?flx-?4", b:"rb", a:"d -9n47 _play=9n0E.S loop_halve@call_prev=9n51 loop_double@call_next=9n53 _mode_hotcue=9n1B _mode_padfx=9n1E _mode_bjump=9n20 _mode_sampler=9n22 _mode_hotcue=9n69.S _mode_padfx=9n6B.S _mode_bjump=9n6D.S _mode_sampler=9n6F.S | g -B60D -B608 fx.on=9547.L", ch:2, jt:720, cf:"m", sx:"flx4",
         src:MX + "Pioneer-DDJ-FLX4.midi.xml and -script.js; AlphaTheta DDJ-FLX4 MIDI message list", draw:"ddj-flx4" },
-      { k:"ddj-400", n:"DDJ-400", re:"ddj-?400", b:"rb", ch:2, jt:720, cf:"m", sx:"400",
+      { k:"ddj-400", n:"DDJ-400", re:"ddj-?400", b:"rb", a:"d loop_halve@call_prev=9n51 loop_double@call_next=9n53", ch:2, jt:720, cf:"m", sx:"400",
         src:MX + "Pioneer-DDJ-400.midi.xml and -script.js; Pioneer DJ DDJ-400 MIDI message list", draw:"ddj-400" },
       { k:"ddj-200", n:"DDJ-200", re:"ddj-?200", b:"rb", a:"d -9n10 -9n4C -9n11 -9n4E -9n4D -9n50 | m -Bn04 | g -B640 -9641 -9642 -9646 -9647 -B60C -B60D -B608 -9447 -B402", ch:2, jt:128, cf:"m",
         src:MX + "Pioneer DDJ-200.midi.xml and Pioneer-DDJ-200-scripts.js", lay:"2,b8,r,0" },
       { k:"ddj-flx2", n:"DDJ-FLX2", re:"ddj-?flx-?2", b:"rb", a:"d -9n10 -9n4C -9n11 -9n4E -9n4D -9n50 | m -Bn04 | g -B640 -9641 -9642 -9646 -9647 -B60C -9447 -B402", ch:2, jt:720, cf:"o",
         src:"AlphaTheta DDJ-FLX2 MIDI message list", lay:"2,b8,r,0" },
-      { k:"ddj-flx6", n:"DDJ-FLX6", re:"ddj-?flx-?6", b:"rb+rb4", a:"d -9n4E loop_double@loop_out=9n77.S", ch:4, jt:720, cf:"o",
+      { k:"ddj-flx6", n:"DDJ-FLX6", re:"ddj-?flx-?6", b:"rb+rb4", a:"d -9n4E loop_double@loop_out=9n77.S", ch:4, jt:2048, cf:"o",
         src:"Pioneer DJ DDJ-FLX6 MIDI message list", lay:"4,b8,r,t", mode:"flx6" },
-      { k:"ddj-flx10", n:"DDJ-FLX10", re:"ddj-?flx-?10", b:"rb+rb4", ch:4, jt:720, cf:"o", part:1,
+      { k:"ddj-flx10", n:"DDJ-FLX10", re:"ddj-?flx-?10", b:"rb+rb4", ch:4, jt:2048, cf:"o", part:1,
         src:"AlphaTheta DDJ-FLX10 MIDI message list (deck, channel faders, EQ, browse); the rest from its family", lay:"4,b8,r,t" },
-      { k:"ddj-1000srt", n:"DDJ-1000SRT", re:"ddj-?1000-?srt", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S", ch:4, pn:"789A", jt:720, cf:"f", src:"its family (DDJ-SX, " + MX + "Pioneer DDJ-SX.midi.xml)", lay:"4,b8,r,t" },
-      { k:"ddj-1000", n:"DDJ-1000", re:"ddj-?1000", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
-      { k:"ddj-800", n:"DDJ-800", re:"ddj-?800", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"2,b8,r,t" },
+      { k:"ddj-1000srt", n:"DDJ-1000SRT", re:"ddj-?1000-?srt", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S", ch:4, pn:"789A", jt:2048, cf:"f", src:"its family (DDJ-SX, " + MX + "Pioneer DDJ-SX.midi.xml)", lay:"4,b8,r,t" },
+      { k:"ddj-1000", n:"DDJ-1000", re:"ddj-?1000", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-800", n:"DDJ-800", re:"ddj-?800", b:"rb", ch:2, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"2,b8,r,t" },
       { k:"ddj-rb", n:"DDJ-RB", re:"ddj-?rb\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
       { k:"ddj-rr", n:"DDJ-RR", re:"ddj-?rr\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
-      { k:"ddj-rx", n:"DDJ-RX", re:"ddj-?rx\\b", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
-      { k:"ddj-rzx", n:"DDJ-RZX", re:"ddj-?rzx", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
-      { k:"ddj-rz", n:"DDJ-RZ", re:"ddj-?rz\\b", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rx", n:"DDJ-RX", re:"ddj-?rx\\b", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rzx", n:"DDJ-RZX", re:"ddj-?rzx", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rz", n:"DDJ-RZ", re:"ddj-?rz\\b", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
       { k:"ddj-rev1", n:"DDJ-REV1", re:"ddj-?rev-?1", b:"sr+srl", a:"d -9n3F loop_in@loop_halve=9n10.S loop_out@loop_double=9n11.S pad*8=9p00.L clear*8=9q00.SL | g mix.master=B608.w mix.hp_level=B60D.w",
         ch:2, pn:"79", qn:"8A", jt:720, cf:"o", src:"Pioneer DJ DDJ-REV1 MIDI message list", lay:"2,m8,t,b" },
-      { k:"ddj-rev5", n:"DDJ-REV5", re:"ddj-?rev-?5", b:"sr+srl", a:"d pad*8=9p00.L clear*8=9q00.SL | g mix.master=B608.w mix.hp_level=B60D.w mix.hp_mix=B60C.w", ch:2, pn:"79", qn:"8A", jt:720, cf:"o", part:1,
+      { k:"ddj-rev5", n:"DDJ-REV5", re:"ddj-?rev-?5", b:"sr+srl", a:"d pad*8=9p00.L clear*8=9q00.SL | g mix.master=B608.w mix.hp_level=B60D.w mix.hp_mix=B60C.w", ch:2, pn:"79", qn:"8A", jt:2048, cf:"o", part:1,
         src:"AlphaTheta DDJ-REV5 MIDI message list (mixer, browse, pads); the deck buttons from its family", lay:"2,m8,t,b" },
       { k:"ddj-rev7", n:"DDJ-REV7", re:"ddj-?rev-?7", b:"sr+srl", a:"d -9n35 -Bn23 -Bn21 -Bn26 -Bn1F slip=9n40 loop_in@loop_halve=9n10.S loop_out@loop_double=9n11.S pad*8=9p00.L clear*8=9p08.SL | g mix.master=B608.w mix.hp_level=B60D.w mix.hp_mix=B60C.w",
         ch:2, pn:"79", jt:720, cf:"o", part:1, src:"Pioneer DJ DDJ-REV7 MIDI message list (as far as it could be read); the rest from its family", lay:"2,m8,t,b" },
@@ -22508,8 +22511,8 @@
         src:MX + "Pioneer DDJ-SX.midi.xml and Pioneer-DDJ-SX-scripts.js (written for the first DDJ-SX; the SX2 and SX3 are taken to be the same)", lay:"4,b8,r,t" },
       { k:"ddj-sr", n:"DDJ-SR", re:"ddj-?sr-?2?\\b", b:"sr+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S loop_auto=9n14 loop_halve=9n12 loop_double=9n13", ch:2, pn:"78", jt:720, cf:"f", src:"its family (DDJ-SX)", lay:"2,b8,r,t" },
       { k:"ddj-sz", n:"DDJ-SZ", re:"ddj-?sz-?2?\\b", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S loop_auto=9n14 loop_halve=9n12 loop_double=9n13", ch:4, pn:"789A", jt:2048, cf:"f", src:"its family (DDJ-SX)", lay:"4,b8,r,t" },
-      { k:"xdj-4", n:"all-in-one unit (four channels)", re:"xdj-?(xz|az)|opus-?quad", b:"rb+rb4", ch:4, jt:720, cf:"f", aio:1, src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
-      { k:"xdj-2", n:"all-in-one unit (two channels)", re:"xdj-?(rx|rr)|omnis-?duo", b:"rb", ch:2, jt:720, cf:"f", aio:1, src:"its family (DDJ-400)", lay:"2,b8,r,t" },
+      { k:"xdj-4", n:"all-in-one unit (four channels)", re:"xdj-?(xz|az)|opus-?quad", b:"rb+rb4", ch:4, jt:2048, cf:"f", aio:1, src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"xdj-2", n:"all-in-one unit (two channels)", re:"xdj-?(rx|rr)|omnis-?duo", b:"rb", ch:2, jt:2048, cf:"f", aio:1, src:"its family (DDJ-400)", lay:"2,b8,r,t" },
       { k:"mixtrack-platinum-fx", n:"Mixtrack Platinum FX", re:"mix ?track ?platinum ?fx", b:"im", a:"d shift=9n20 _play=9n04.S _cue=9n05.S _sync=9n03.S pad*8=9p14.L clear*8=9p1C.S loop_auto=9p40.L loop_halve=9p34 loop_double=9p35 | g browse.press=9F07 _browse.knob=9F06.S browse.load3=9F04 browse.load4=9F05 mix.hp_level=BF0C mix.hp_mix=BF0D",
         ch:2, dn:"0123", pn:"4567", jt:1024, cf:"m", src:MX + "Numark Mixtrack Platinum FX.midi.xml and Numark-Mixtrack-Platinum-FX-scripts.js", lay:"2,b8,r,b" },
       { k:"mixtrack-pro-fx", n:"Mixtrack Pro FX", re:"mix ?track ?pro ?fx", b:"im", a:"d shift=9n20 _play=9n04.S _cue=9n05.S _sync=9n03.S pad*8=9p14.L clear*8=9p1C.S loop_auto=9p40.L loop_halve=9p34 loop_double=9p35 | g browse.press=9F07 _browse.knob=9F06.S",
@@ -22572,7 +22575,7 @@
     // which family a name hints at, when no model fits: "" when none
     function famFor(name, maker){
       var t = String(name || "") + " " + String(maker || "");
-      if(/alphatheta|pioneer|\bddj-|\bxdj-|opus-?quad|omnis-?duo/i.test(t)) return "rb";
+      if(/\bddj-|\bxdj-|opus-?quad|omnis-?duo/i.test(String(name || ""))) return "rb";       // by the name only: the same makers also build mixers and players
       if(/numark|denon|\bmc\d{4}|mix ?track|\bns\d|roland|\bdj-\d\d\d\b|rane|akai/i.test(t)) return "im";
       if(/hercules|djcontrol|inpulse/i.test(t)) return "hc";
       return "";
@@ -22580,17 +22583,17 @@
     // the second way one device can show up: a port for something else (the DIN sockets, a second layer)
     function extraPort(name){ return /\bmidi(in|out)[2-9]\b|\b(port|midi) ?[2-9]\b|\bdin\b|\bext(ernal)?\b/i.test(String(name || "")); }
     function hx(n){ return ("0" + (n & 255).toString(16).toUpperCase()).slice(-2); }
-    function rowKey(st, num){ var c = st & 0xF0; return (c === 0xB0 ? "c" : (c === 0xE0 ? "e" : "n")) + hx(st).toLowerCase() + "." + num; }
+    function rowKey(st, num){ var c = st & 0xF0; return (c === 0xB0 ? "c" : "n") + hx(st).toLowerCase() + "." + num; }
     var HOLD = /^(cue|shift|jog_touch|nudge_dn|nudge_up|loop_in|pad\d)$/;
     function idOf(a){
       if(/^jog_/.test(a)) return "jog";
       if(/^(clear|bjump)\d$/.test(a)) return "pad" + a.slice(-1);
       return a === "start" ? "cue" : (a === "master" ? "sync" : a);
     }
-    var TOK = /^(-)?(?:([a-z_0-9.]+?)(?:\*(\d))?(?:@([a-z_0-9.]+))?=)?([9BE])([0-9A-Fnpqs])([0-9A-F]{2})(?:\.([A-Za-z0-9]+))?$/;
+    var TOK = /^(-)?(?:([a-z_0-9.]+?)(?:\*(\d))?(?:@([a-z_0-9.]+))?=)?([9B])([0-9A-Fnpqs])([0-9A-F]{2})(?:\.([A-Za-z0-9]+))?$/;
     var made = {};
     // -> { key, title, model, channels, decks, by:{ "n90.11": entry }, list:[entry] }, the entries shaped like the DDJ-GRV6 table's:
-    // { st, num, key, id (the control in the drawing), t (target, "" when it is left alone), k (btn, hold, abs, msb, lsb, jog, enc, pb, ign),
+    // { st, num, key, id (the control in the drawing), t (target, "" when it is left alone), k (btn, hold, abs, msb, lsb, jog, enc, ign),
     //   dk (deck or channel), lid (the name its light goes by), sh, led, long, inv, tq, vin, unv, fam, mode, why, pair }
     function decode(m){
       if(made.hasOwnProperty(m.k)) return made[m.k];
@@ -22619,16 +22622,19 @@
             t = ign ? "" : "mix.ch" + deck + "." + a; id = "mix.ch" + (m.ch >= deck ? deck : side) + "." + ida; lid = "mix.ch" + deck + "." + ida;
           } else {
             t = ign ? "" : a; id = q[4] || (a === "browse.press" ? "browse.knob" : a);
+            // a unit with two channels whose sides can be switched to decks 3 and 4: what is for channel 3 or 4 is drawn on its side
+            var gm = /^(mix\.ch|browse\.load)([34])(.*)$/.exec(a);
+            if(gm && !q[4] && +gm[2] > m.ch){ id = gm[1] + (+gm[2] - 2) + gm[3]; deck = +gm[2]; scope = "G"; }
           }
-          var pb = (st & 0xF0) === 0xE0, k, base = a.replace(/^.*\./, ""), dk = /^d\d\./.test(t);
+          var k, base = a.replace(/^.*\./, ""), dk = /^d\d\./.test(t);
           if(ign) k = "ign";
-          else if(pb || fl.indexOf("E") >= 0) k = "pb";
           else if(dk ? /^jog(_bend|_side|_search)?$/.test(base) : t === "browse.knob") k = fl.indexOf("e") >= 0 ? "enc" : "jog";
           else if(dk ? base === "tempo" : (/^mix\./.test(t) ? base !== "cue" : t === "fx.depth")) k = /w/.test(fl) ? "msb" : "abs";
           else k = dk && HOLD.test(base) ? "hold" : "btn";
           var e = { st:st, num:num, id:id, t:t, k:k, key:rowKey(st, num) };
           if(lid) e.lid = lid;
           if(scope !== "g") e.dk = deck;
+          if(scope === "G") scope = "g";
           if(fl.indexOf("L") >= 0) e.led = 1;
           if(fl.indexOf("S") >= 0) e.sh = 1;
           if(fl.indexOf("G") >= 0) e["long"] = 1;
@@ -22963,7 +22969,7 @@
             small("deck_b", ox + 164, tempoAt === "t" ? y0 + 26 : y0, 28, "DECK " + (d + 2), "DECK " + (d + 2) + " button", "switches this side to deck " + (d + 2) + ": the same jog wheel, pads and buttons then work deck " + (d + 2), { fs:3.4, dg:"DECK 3 or 4" });
           } else if(tempoAt !== "t" && !(loopAt === "t" && loops.length > 4)) b.T(ox + (loopAt === "t" && loops.length ? 168 : DW / 2), 17, "DECK " + d, 7, "middle");
           if(padAt === "a"){
-            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", ox + 30 + (k - 1) * 36, 34, 32, 30, String(k), "Pad " + k, "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:7 });
+            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", ox + 24 + (k - 1) * 34, 34, 30, 30, String(k), "Pad " + k, "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:7 });
           }
           b.C("jog", "j", jx, jy, jr, 0, "JOG", "Jog wheel", has[pre + "jog"] && P.list.some(function(e){ return e.id === pre + "jog" && /jog_touch$/.test(e.t); })
             ? "touch the top to hold or scratch the track; turn the edge to push it a little faster or slower" : "turn it to push the track a little faster or slower");
@@ -22972,17 +22978,17 @@
           var sx = tempoAt === "t" ? ox + 152 : (outer ? (d === 1 ? ox + 4 : ox + DW - 35) : ox + 163), sy = tempoAt === "t" ? 34 : 154;
           if(has[pre + "sync"]) small("sync", sx, sy, 31, "SYNC", "Sync", "matches this deck’s tempo and beat to the " + (P.decks === 4 ? "master" : "other") + " deck");
           if(has[pre + "nudge_dn"]){
-            small("nudge_dn", sx, sy - 28, 15, "−", "Pitch bend −", "held down, slows the track a little so its beat lines up", { fs:5 });
-            small("nudge_up", sx + 16, sy - 28, 15, "+", "Pitch bend +", "held down, speeds the track up a little so its beat lines up", { fs:5 });
+            small("nudge_dn", sx, tempoAt === "t" ? sy + 16 : 25, 15, "−", "Pitch bend −", "held down, slows the track a little so its beat lines up", { fs:5 });
+            small("nudge_up", sx + 16, tempoAt === "t" ? sy + 16 : 25, 15, "+", "Pitch bend +", "held down, speeds the track up a little so its beat lines up", { fs:5 });
           }
           if(has[pre + "slip"]) small("slip", tempoAt === "t" ? ox + 8 : (outer && d === 1 ? ox + DW - 36 : ox + 6), tempoAt === "t" ? 34 : 154, 28, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop");
           // the bottom: shift, cue and play on the left; pads, or the loop buttons, to their right
           var by = 178;
-          if(has[pre + "shift"]) small("shift", ox + 6, by + 2, 24, "SHIFT", "Shift", "held down, gives the other buttons their second job");
+          // a unit whose SHIFT buttons all send the same message has it in its table once: both are drawn
+          if(has[pre + "shift"] || has["d1.shift"]) small("shift", ox + 6, by + 2, 24, "SHIFT", "Shift", "held down, gives the other buttons their second job");
           b.C("cue", "r", ox + 18, 222, 12, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
           b.C("play", "r", ox + 18, 258, 12, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
-          if(loopAt === "b" && loops.length) loopRow(ox + 44, by);
-          else if(loopAt === "t" && tempoAt === "t" && loops.length) loopRow(ox + 44, by);
+          if((loopAt !== "t" || tempoAt === "t") && loops.length) loopRow(ox + 44, padAt === "a" ? 232 : by);        // also when the description says the unit has none and its table does
           if(padAt === "b"){
             var rows = padN > 4 ? 2 : 1, ph = rows === 2 ? 48 : 60, py = rows === 2 ? 194 : 214;
             for(k = 1; k <= padN; k++) b.C("pad" + k, "p", ox + 44 + ((k - 1) % 4) * 34, py + (k > 4 ? 54 : 0), 31, ph, String(k), "Pad " + k,
@@ -22990,20 +22996,20 @@
           }
         })(d, d === 1 ? 0 : DW + MW);
         // the middle
-        var mx0 = DW, order = chans === 4 ? [3, 1, 2, 4] : [1, 2], pitch = chans === 4 ? 34 : 44, cxm = DW + MW / 2, x0 = cxm - pitch * (order.length - 1) / 2, sy0 = padAt === "m" ? 118 : 74;
+        var mx0 = DW, order = chans === 4 ? [3, 1, 2, 4] : [1, 2], pitch = chans === 4 ? 34 : 44, cxm = DW + MW / 2, x0 = cxm - pitch * (order.length - 1) / 2, sy0 = padAt === "m" ? 104 : 74;
         if(padAt === "m"){
           // a scratch-style unit: the pads sit in the mixer section, a block of eight for each deck
           for(d = 1; d <= 2; d++){
             b.at("Deck " + d, "mixer", " (deck " + d + ")", "d" + d + ".");
-            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", (d === 1 ? mx0 + 8 : mx0 + MW - 8 - 4 * 27) + ((k - 1) % 4) * 27, 44 + (k > 4 ? 32 : 0), 24, 28, String(k), "Pad " + k,
+            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", (d === 1 ? mx0 + 8 : mx0 + MW - 8 - 4 * 27) + ((k - 1) % 4) * 27, 38 + (k > 4 ? 27 : 0), 24, 24, String(k), "Pad " + k,
               "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:6 });
           }
         }
         b.at("Browse", "mixer", "", "browse.");
         if(has["browse.knob"]) b.C("knob", "e", cxm, 24, 10, 0, "BROWSE", "Browse knob", "turn to scroll through the track list, press to choose", { lp:"a", fs:3.8 });
         order.forEach(function(n, i){
-          var cx = x0 + i * pitch, pre = "mix.ch" + n + ".", yy = sy0, gap = padAt === "m" ? 20 : 24;
-          if(has["browse.load" + n]){ b.at("Browse", "mixer", "", "browse."); b.C("load" + n, "b", cx - 12, padAt === "m" ? 14 : 46, 24, 11, "LOAD " + n, "Load " + n, "puts the chosen track on deck " + n, { run:"Load buttons", fs:3.8 }); }
+          var cx = x0 + i * pitch, pre = "mix.ch" + n + ".", yy = sy0, gap = padAt === "m" ? 23 : 24;
+          if(has["browse.load" + n]){ b.at("Browse", "mixer", "", "browse."); b.C("load" + n, "b", padAt === "m" ? (cx < cxm ? cx - 40 : cx + 16) : cx - 12, padAt === "m" ? 16 : 46, 24, 11, "LOAD " + n, "Load " + n, "puts the chosen track on deck " + n, { run:"Load buttons", fs:3.8 }); }
           b.at("Mixer", "mixer", " (channel " + n + ")", pre);
           [["trim", "TRIM", "Trim", "sets how loud channel " + n + " comes into the mixer, before the EQ"], ["eq_hi", "HI", "High EQ", "turns the treble of channel " + n + " up or down"],
            ["eq_mid", "MID", "Mid EQ", "turns the middle of channel " + n + " up or down"], ["eq_low", "LOW", "Low EQ", "turns the bass of channel " + n + " up or down"],
@@ -25145,6 +25151,9 @@
         var sp = {}, stp = walk.list[walk.i], pr = profileFor(walk.dev, walk.maker);
         if(walk.cap) walk.cap.rows.forEach(function(r){ sp[rowKey(r.st, r.num)] = 1; });
         if(pr && stp) pr.list.forEach(function(e){ if(e.id === stp.id) sp[e.key] = 1; });
+        // ... and the control the person has just had this step tied to (the quick check)
+        var tmS = stp && stp.t && maps[walk.dev] ? maps[walk.dev].map : null;
+        if(tmS) Object.keys(tmS).forEach(function(k){ var q = k.slice(1).split("."); if(tmS[k].t === stp.t) sp[rowKey((k.charAt(0) === "c" ? 0xB0 : 0x90) + (+q[0]), +q[1])] = 1; });
         walk.spill = sp; walk.spillUntil = Date.now() + 2500;
       }
       if(walk.cap && walk.cap.timer) clearTimeout(walk.cap.timer);
@@ -25774,6 +25783,9 @@
       if(key === "ddj-400") out.push({ k:"mode", text:"If its controls do nothing here: the DDJ-400 can be told to work as a general MIDI controller whether or not rekordbox runs. From its manual: unplug the USB cable; hold SHIFT and PLAY/PAUSE on the left deck while plugging it in again (Utilities mode); press the BEAT JUMP mode button on the left deck so that it is lit; unplug and plug in once more." });
       else if(key === "ddj-flx6") out.push({ k:"mode", text:"The maker says a utility setting has to be changed before software other than rekordbox and Serato can use the DDJ-FLX6: see “Using as a controller for other DJ software” in its Operating Instructions.", links:links });
       else if(p && p.model && p.model.aio) out.push({ k:"mode", text:"An all-in-one unit plays from USB sticks by itself; it sends its controls to a computer only in its computer (controller) mode. Its manual says how to switch to that mode." });
+      // the two models whose Mixxx mapping sends them an extended message (the DDJ-FLX4 several times a second, the DDJ-400 once)
+      if(p && p.model && p.model.sx && !sysexLive()) out.push({ k:"ext", text:"If its controls do nothing or its lights stay dark: under Advanced, further down, tick “Allow extended messages”. The open-source mapping this one is based on sends this model a short identification message" +
+        (p.model.sx === "flx4" ? " several times a second" : " when it starts") + "; First Loop only does that once the box is ticked." });
       out.push({ k:"output", text:"In the DJ area, press Output and choose this controller under Output device. With “4 channels” the speakers and the headphones both come out of the controller.", go:"dj" });
       out.push({ k:"sound", text:"Test the sound: the first beep should come from the speakers, the second, higher one from the headphones only.", tone:1 });
       if(p && set.builtin) out.push({ k:"quick", text:"Run the Quick check below (2 minutes).", go:"quick" });

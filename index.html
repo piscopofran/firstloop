@@ -15587,9 +15587,6 @@
   function djcCtl(){
     try { return (typeof CTRL !== "undefined" && CTRL && typeof CTRL.onAction === "function") ? CTRL : null; } catch(e){ return null; }
   }
-  function djcKeylock(J){
-    try { return typeof J.deck(1).setKeylock === "function"; } catch(e){ return false; }
-  }
 
   // ---- the session: what has been played since coaching was switched on ----
   function djcFresh(){
@@ -15633,6 +15630,7 @@
   function djcEvent(d, ev){
     var s = djcS, n = d && d.deck, now = Date.now();
     if(!s || !d) return;
+    if(ev === "load" || ev === "analysis"){ djcGrids = {}; return; }
     if(ev === "mixer"){
       var c = d.control, ch = d.ch, v = typeof d.value === "number" ? Math.round(d.value * 100) : null;
       if(c === "eq") djcNote("mix.ch" + ch + ".eq_" + (d.band === "high" ? "hi" : d.band), v, "screen");
@@ -15662,7 +15660,7 @@
   // the beat grid of a track: where its first beat is and how long a beat lasts, in seconds of the track
   function djcGrid(J, id){
     var g = djcGrids[id], now = Date.now(), t = null;
-    if(g && now - g.at < 5000) return g.g;
+    if(g && now - g.at < 10000) return g.g;
     try { t = J.library.track(id); } catch(e){ t = null; }
     g = { at:now, g:(t && t.grid && t.grid.bpm > 0) ? { first:+t.grid.firstBeat || 0, bl:60 / t.grid.bpm } : null };
     djcGrids[id] = g;
@@ -16492,7 +16490,7 @@
     if(!djcBtn) return;
     var has = !!asstDJ(), s = djcS, ai = djcCanAsk();
     // shown where the decks are (and where the Assistant is its own area), and anywhere while coaching is on
-    djcBtn.hidden = !has || !(view === "dj" || view === "assistant" || djcOn() || !djcPanel.hidden);
+    djcBtn.hidden = !has || !(djcOn() || !djcPanel.hidden || ((view === "dj" || view === "assistant") && !asstDjPhone()));
     if(!has){ djcPanel.hidden = true; return; }
     djcUI.text.textContent = "Coach: " + DJC_MODES[djcSet.mode];
     djcUI.sub.textContent = (djcSet.mode === "after" && ai && s) ? Math.min(s.reviews, djcSet.cap) + " of " + djcSet.cap + " AI reviews" : (djcSet.mode === "off" ? "pointers on your mixing" : "");

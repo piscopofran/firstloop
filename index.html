@@ -14792,6 +14792,7 @@
     return messages;
   }
   var ASST_OPENED = "(The person has just opened the app.)";
+  var ASST_ASKED = "(The app asked the person a question of its own.)";
   // extra: one more turn from the person's side that is not in the conversation (the app introducing a device)
   function asstHistory(extra){
     var out = [];
@@ -14815,6 +14816,16 @@
         if(nx && nx.r === "u" && nx.ans && !nx.loc){
           put("user", ASST_OPENED);
           put("assistant", JSON.stringify({ say:m.t, actions:[] }));
+        }
+        return;
+      }
+      if(m.r === "a" && m.loc && typeof m.cq === "string" && m.cq){
+        // one of the coach's own questions: it goes along when what was said next went to the model, so the answer has its question
+        var nq = null;
+        for(var jq = i + 1; jq < asstMsgs.length && !nq; jq++) if(!asstSide(asstMsgs[jq])) nq = asstMsgs[jq];
+        if(nq && nq.r === "u" && !nq.loc){
+          put("user", ASST_ASKED);
+          put("assistant", JSON.stringify({ say:asstCut(m.t, 600), actions:[] }));
         }
         return;
       }
@@ -15153,6 +15164,8 @@
     if(!text || asstBusy || !asstEl) return false;
     // a plain answer to a question the coach asked ("after each mix", "rekordbox") is settled here: nothing is sent for it
     var cq = djcQuestion(), cv = cq ? djcParse(cq, text) : null;
+    // a longer answer goes to the model; what they mix with is still noted when they named it
+    if(cq === "sw" && !cv && djcParse("sw", text, true)){ djcSet.sw = djcParse("sw", text, true); djcSave(); }
     if(cv){
       asstPush({ r:"u", t:text, loc:true });
       equipSentAt = Date.now();
@@ -15632,7 +15645,10 @@
     }
     if(ev === "fx"){ if(d.on){ djcNote("fx.on", null, "screen"); if(s.tr) s.tr.fx = { type:String(d.type || ""), target:d.target, t:now }; } return; }
     if(!n) return;
-    if(ev === "play"){ djcNote("d" + n + ".play", null, "screen"); s.skip = now + 500; }
+    if(ev === "play"){
+      djcNote("d" + n + ".play", null, "screen"); s.skip = now + 500;
+      if(!d.playing && s.on[n]) s.on[n].stop = now;                 // when a deck was stopped: a cut is measured from that moment
+    }
     else if(ev === "cue"){ djcNote("d" + n + ".cue", null, "screen"); s.skip = now + 500; }
     else if(ev === "hotcue"){ if(d.jump || d.set) djcNote("d" + n + ".hot" + ((d.index | 0) + 1), null, "screen"); s.skip = now + 500; }
     else if(ev === "loop"){ if(d.active) djcNote("d" + n + ".loop", null, "screen"); s.skip = now + 500; }
@@ -15726,6 +15742,8 @@
       if(o.air) air.push(i);
     }
     air.sort(function(a, b){ return s.on[a].since - s.on[b].since; });
+    var prev = s.prev || [];
+    s.prev = D;
     djcRedline(J, s, dt, now);
     if(s.tr){
       var tr = s.tr, both = !!(s.on[tr.o] && s.on[tr.o].air && s.on[tr.i] && s.on[tr.i].air);
@@ -15743,7 +15761,7 @@
       var a = air[0], was = s.off;
       // one deck stopped and another started between two looks: the same as a silence of no length
       if(!was && s.cur && s.cur !== a && s.on[s.cur]) was = { deck:s.cur, t:s.on[s.cur].last, q:s.on[s.cur].q };
-      if(was && was.deck !== a && was.q && D[a] && s.on[a].since - was.t <= 15000) djcCut(J, s, was, D[a], now);
+      if(was && was.deck !== a && was.q && D[a] && s.on[a].since - was.t <= 15000) djcCut(J, s, was, D[a], now, D[was.deck], prev[was.deck], prev[a]);
       else if(was && was.deck === a && s.on[a].since - was.t >= DJC.DEAD_S * 1000 && s.on[a].since - was.t <= 15000 && s.ntracks > 0) djcDead(s, (s.on[a].since - was.t) / 1000, null);
       s.cur = a; s.off = null;
       return;
@@ -15779,6 +15797,12 @@
       xf:[1, 0], fo:[1, 0], fi:[1, 0], lo:[1, 0], li:[1, 0], liEnd:0, loEnd:0, filt:0, loop:0, pv:[], keyOk:p.keyOk };
     // what brought the new track in (the fader pushed up, the crossfader moved) was touched a moment before it was heard
     s.recent.forEach(function(g){ if(now - g.t < 1500) s.tr.ctl[g.id] = 1; });
+    // where the phrases are: the engine's own reading when it has one (bars to the next phrase on each deck), else 8-bar blocks from the grids
+    var A = djcEngine(J), eo = null, ei = null;
+    if(A && typeof A.deck === "function"){
+      try { eo = A.deck(out.n); ei = A.deck(inn.n); } catch(e){ eo = ei = null; }
+      if(eo && ei && djcFin(eo.barsToNextPhrase) && djcFin(ei.barsToNextPhrase)) s.tr.phrase = djcWrap((eo.barsToNextPhrase - ei.barsToNextPhrase) * 4, DJC.PHRASE);
+    }
     djcSample(J, s, s.tr, out, inn, 0, now);
   }
   function djcSample(J, s, tr, out, inn, dt, now){
@@ -15842,7 +15866,8 @@
     function num(o, names){ for(var k = 0; k < names.length; k++) if(o && djcFin(o[names[k]])) return o[names[k]]; return null; }
     list.slice(-200).forEach(function(e){
       if(!e || typeof e !== "object") return;
-      var kind = String(e.type || e.kind || e.event || "").toLowerCase().replace(/[\s_-]+/g, "");
+      var kind = typeof e.type === "string" ? e.type : (typeof e.kind === "string" ? e.kind : (typeof e.event === "string" ? e.event : ""));
+      kind = kind.slice(0, 40).toLowerCase().replace(/[\s_-]+/g, "");
       if(kind === "transition"){
         var v;
         if((v = num(e, ["maxPhaseMs"])) !== null) rec.phase_max_ms = Math.round(Math.abs(v));
@@ -15892,7 +15917,7 @@
     djcDone(s, rec);
   }
   // one track stopped and another started with nothing between them, or with a silence
-  function djcCut(J, s, was, inn, now){
+  function djcCut(J, s, was, inn, now, outNow, pOut, pIn){
     var out = was.q, gap = Math.max(0, (s.on[inn.n].since - was.t) / 1000), ok = out.beat !== null && inn.beat !== null && out.now > 0 && Math.abs(inn.now / out.now - 1) < 0.1;
     var rec = { from:{ deck:out.n, title:out.title, bpm:djcR1(out.now), key:out.key, id:out.id }, to:{ deck:inn.n, title:inn.title, bpm:djcR1(inn.now), key:inn.key, id:inn.id },
       tempo_adj:djcR1(inn.pct), bpm_diff_max:out.now > 0 ? djcR2((inn.now / out.now - 1) * 100) : 0, key:djcKeyRel(out.key, inn.key), bars:0, technique:"cut",
@@ -15900,8 +15925,17 @@
       x:{ t0:was.t, t1:now, secs:0, pre:0, sign:1, gap:gap, routing:"" } };
     try { rec.x.routing = String(J.mixer.routing() || ""); } catch(e){}
     if(inn.beat !== null) rec.in_bar = Math.max(1, Math.floor(inn.beat / 4 + 1e-6) + 1);
-    // against the phrase: where the old track was when it stopped, and where the new one started
-    if(ok && gap < 1) rec.phrase_off = (function(v){ return Math.abs(v) < 0.5 ? 0 : Math.round(v); })(djcWrap(inn.beat - out.beat - gap * out.now / 60, DJC.PHRASE));
+    // Against the phrase: where the new track was when the old one stopped. When both were running at the look
+    // before (the new one unheard, ready to be cut to) their distance then is the answer, read in one instant.
+    // Otherwise the old one is read where it stopped and the time since is taken from the press itself; and
+    // failing that, from the last look at the old track.
+    var stop = s.on[out.n] ? s.on[out.n].stop : 0, v = null;
+    if(ok && gap < 1){
+      if(pOut && pIn && pOut.playing && pIn.playing && pOut.id === out.id && pIn.id === inn.id && pOut.beat !== null && pIn.beat !== null) v = djcWrap(pIn.beat - pOut.beat, DJC.PHRASE);
+      else if(outNow && !outNow.playing && outNow.id === out.id && outNow.beat !== null && stop && now - stop < 3000) v = djcWrap(inn.beat - outNow.beat - (now - stop) / 1000 * inn.now / 60, DJC.PHRASE);
+      else v = djcWrap(inn.beat - out.beat - gap * out.now / 60, DJC.PHRASE);
+      rec.phrase_off = Math.abs(v) < 0.5 ? 0 : Math.round(v);
+    }
     if(gap >= DJC.DEAD_S){ rec.events.push("dead air"); djcDead(s, gap, rec); }
     djcDone(s, rec);
   }
@@ -16338,9 +16372,9 @@
     return (last && last.r === "a" && typeof last.cq === "string") ? last.cq : "";
   }
   // a typed answer to one of those questions -> the value a button would have given, or null
-  function djcParse(cq, text){
+  function djcParse(cq, text, any){
     var q = " " + String(text).toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim() + " ";
-    if(q.length > 80) return null;
+    if(q.length > 80 && !any) return null;                  // a sentence or two is a message, not a yes or a no
     if(cq === "coach"){
       if(/ (after|afterwards|review|reviews) /.test(q)) return "after";
       if(/ (while|live|during|as i play|real ?time) /.test(q)) return "live";

@@ -3,10 +3,12 @@
 
 A small relay between the First Loop page and the Anthropic Messages API, so
 the API key stays on this server and never reaches a browser. It also keeps
-the invite codes (an invite code is the whole of an "account"), counts what
-each code uses, and serves the owner's page.
+the invite codes (an invite code is the whole of an "account"), lets a tester
+make such an account for themselves when the owner allows it, counts what
+each code uses, takes the feedback people send, and serves the owner's page.
 
-  GET  /api/chat         ->  {"ok": true, "model": "...", "open": N, "v": 3}
+  GET  /api/chat         ->  {"ok": true, "model": "...", "open": N, "v": 4,
+                              "signup": true|false, "signup_word": true|false}
                              open = free messages a day for a visitor without an invite code
                              (0 = a code is needed). ok false + a reason when there is no key,
                              or the AI service has just refused the key or the request itself.
@@ -14,7 +16,11 @@ each code uses, and serves the owner's page.
                              on, the DJ decks, the equipment diagram and the fuller MIDI lists.
                              The page only sends those when it sees v >= 2. From 3 on, four
                              decks (decks and mixer channels 3 and 4, deck_count, sides); the
-                             page sends those only when it sees v >= 3.
+                             page sends those only when it sees v >= 3. From 4 on, the ops
+                             "signup", "account", "account.delete", "feedback" and
+                             "feedback.mine"; the page uses them only when it sees v >= 4.
+                             signup = people may create their own tester account;
+                             signup_word = creating one needs the word the owner gives out.
   GET  /api/chat?admin   ->  the owner's page (one self-contained HTML document)
   POST /api/chat         ->  JSON body; "op" says what is wanted:
      (absent) or "chat"  {"song": {...}, "messages": [{"role": "user"|"assistant", "content": "..."}],
@@ -24,6 +30,13 @@ each code uses, and serves the owner's page.
                          (or JSON {"text": "...", "left": N or null} when streaming is off)
      "code"              {"code": "..."}  ->  {"ok": true, "label", "limit", "left", "period"}
      "usage"             {"code": optional, "counts": {name: int}}  ->  {"ok": true}
+     "signup"            {"name", "email": optional, "role", "age_ok": true, "word": optional}
+                         ->  {"ok": true, "code", "label", "limit", "left", "period"}
+     "account"           {"code"}  ->  what is kept about that code
+     "account.delete"    {"code"}  ->  {"ok": true}; the code and the feedback sent with it are gone
+     "feedback"          {"code": optional, "name": optional, "kind", "text", "rating": optional,
+                          "details": optional}  ->  {"ok": true, "id", "receipt", "time", "account"}
+     "feedback.mine"     {"code": optional, "receipts": optional list}  ->  {"ok": true, "items": [...]}
      "admin.*"           the owner's operations; need  Authorization: Bearer <owner token>
      "selftest"          the installer's test message; only from this machine itself
 
@@ -58,8 +71,14 @@ What the database holds: the invite codes with the label and note the owner
 typed, and counts (messages, tokens, an estimated cost, messages per day,
 and how often each topic, kind of change, named piece of equipment and app
 feature came up), plus the most recent short "asked for but not possible"
-labels. It never holds what anyone typed, what the assistant said, a song,
-or an address.
+labels. For an account a person made themselves: the name they gave, what
+they said they do, and their email address if they chose to give one. It
+never holds what anyone typed to the assistant, what the assistant said, a
+song, or an address.
+
+The one place where words a person wrote are kept is the feedback table:
+text they chose to send to the owner with the Feedback button, with the few
+technical details they could see listed before sending. Nothing else.
 """
 import hashlib
 import hmac
@@ -73,6 +92,7 @@ import sqlite3
 import sys
 import threading
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 from collections import OrderedDict, deque
@@ -238,7 +258,7 @@ UPSTREAM = os.environ.get("FL_UPSTREAM") or "https://api.anthropic.com/v1/messag
 STREAM = (os.environ.get("FL_STREAM") or "1").strip() != "0"
 SITE_HOSTS = [h.strip().lower() for h in (os.environ.get("FL_SITE_HOSTS") or "").split(",") if h.strip()]
 
-WIRE_VERSION = 3              # "v" in the answer to GET: what the page may send (see SONG_SHAPE). 3: four decks
+WIRE_VERSION = 4              # "v" in the answer to GET: what the page may send (see SONG_SHAPE). 3: four decks. 4: sign-up, accounts, feedback
 MAX_BODY = 26 * 1024          # whole request, bytes
 MAX_SONG = 14 * 1024          # the description of the song, the decks and the equipment after checking, as JSON, bytes
 MAX_MESSAGES = 14
@@ -286,6 +306,22 @@ ADMIN_FAILS, ADMIN_FAIL_WINDOW = 5, 600
 CODE_FAILS = 10               # unknown codes from one address in 10 minutes before it has to wait
 SELFTEST_MAX_AGE = 900        # seconds the installer's one-time test secret is good for
 
+# accounts people make themselves, and feedback
+SIGNUP_DEFAULT = _int_env("FL_SIGNUP", 1, 0, 1)    # 1: people may create their own tester account
+ROLES = ("dj", "producer", "instrument", "curious")
+NAME_MAX, EMAIL_MAX, WORD_MAX = 40, 120, 40
+WORD_FAILS = 10               # wrong sign-up words from one address in 10 minutes before it has to wait
+FB_KINDS = ("broken", "missing", "other")
+FB_STATUS = ("new", "read", "done")
+FB_TEXT_MAX = 2000            # characters of feedback text
+FB_DETAILS_MAX = 4096         # bytes of technical details, as JSON
+FB_REPLY_MAX = 1000           # characters of the owner's reply
+FB_PER_CODE_DAY, FB_PER_IP_DAY, FB_PER_DAY = 10, 3, 300
+FB_MINE_MAX = 30              # most items one "feedback.mine" answers with
+KEEP_FEEDBACK = 5000          # most feedback kept; beyond it the oldest goes
+OWNER_ROOM = 200              # places among MAX_CODES that sign-up never takes: the owner can always make a code
+ADMIN_FEEDBACK_MAX = 500      # most items the owner's page is sent at once
+
 # Every error this service ever reports is one of these codes.
 MESSAGES = {
     "bad_request": "The request was not in the shape this service expects.",
@@ -302,8 +338,18 @@ MESSAGES = {
     "code_off": "That invite code has been switched off.",
     "code_spent": "That invite code has used up its allowance.",
     "auth": "This needs the owner link.",
+    "signup_off": "Creating an account is switched off on this site.",
+    "signup_full": "No more accounts can be created on this site today.",
+    "signup_limit": "No more accounts can be created from this internet connection today.",
+    "signup_word": "The sign-up word is not right.",
+    "bad_name": "The name needs 1 to 40 letters or digits; spaces, full stops, dashes and apostrophes are fine.",
+    "bad_email": "That does not look like an email address.",
+    "feedback_limit": "No more feedback can be taken from here today.",
+    "not_found": "That item no longer exists.",
 }
-STATUS = {"need_code": 401, "bad_code": 401, "code_off": 403, "code_spent": 429, "auth": 401}
+STATUS = {"need_code": 401, "bad_code": 401, "code_off": 403, "code_spent": 429, "auth": 401,
+          "signup_off": 403, "signup_full": 429, "signup_limit": 429, "signup_word": 403,
+          "feedback_limit": 429, "not_found": 404}
 
 _SALT = os.urandom(16)
 _lock = threading.Lock()
@@ -332,6 +378,11 @@ class ClientGone(Exception):
 
 
 # ---- the database: invite codes, counts, settings -----------------------------
+# The version stays 1 on purpose. What v33 added (three columns on codes, the
+# feedback and tally tables) is added in a way the service from before can
+# live with: it names the columns it reads and writes and never looks at the
+# rest. So if the installer has to put the previous version back, that version
+# still opens this file instead of setting it aside.
 SCHEMA_VERSION = 1
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS codes(
@@ -340,7 +391,8 @@ CREATE TABLE IF NOT EXISTS codes(
   used INTEGER NOT NULL DEFAULT 0, period_key TEXT NOT NULL DEFAULT '',
   enabled INTEGER NOT NULL DEFAULT 1, created INTEGER NOT NULL DEFAULT 0, last_seen INTEGER,
   messages INTEGER NOT NULL DEFAULT 0, in_tokens INTEGER NOT NULL DEFAULT 0,
-  out_tokens INTEGER NOT NULL DEFAULT 0, cost_micro INTEGER NOT NULL DEFAULT 0);
+  out_tokens INTEGER NOT NULL DEFAULT 0, cost_micro INTEGER NOT NULL DEFAULT 0,
+  email TEXT NOT NULL DEFAULT '', role TEXT NOT NULL DEFAULT '', self INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS days(
   code TEXT NOT NULL, day TEXT NOT NULL, messages INTEGER NOT NULL DEFAULT 0,
   in_tokens INTEGER NOT NULL DEFAULT 0, out_tokens INTEGER NOT NULL DEFAULT 0,
@@ -351,13 +403,37 @@ CREATE TABLE IF NOT EXISTS counts(
 CREATE TABLE IF NOT EXISTS missing(
   id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT NOT NULL, code_label TEXT NOT NULL, label TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS feedback(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, t INTEGER NOT NULL, code TEXT NOT NULL DEFAULT '',
+  label TEXT NOT NULL DEFAULT '', kind TEXT NOT NULL, rating INTEGER, text TEXT NOT NULL,
+  details TEXT NOT NULL DEFAULT '{}', status TEXT NOT NULL DEFAULT 'new',
+  reply TEXT NOT NULL DEFAULT '', reply_time INTEGER, receipt TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS tally(
+  day TEXT NOT NULL, name TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day, name));
 """
+# Made only once the tables have been looked at (see _connect): on a file that
+# is not ours they would fail in a way that says nothing about the file.
+INDEXES = """
+CREATE INDEX IF NOT EXISTS feedback_code ON feedback(code);
+CREATE INDEX IF NOT EXISTS feedback_receipt ON feedback(receipt);
+"""
+# Columns a database made by an earlier version does not have yet: (table, column, definition).
+_ADDED_COLUMNS = (
+    ("codes", "email", "TEXT NOT NULL DEFAULT ''"),
+    ("codes", "role", "TEXT NOT NULL DEFAULT ''"),
+    ("codes", "self", "INTEGER NOT NULL DEFAULT 0"),
+)
+# What a codes table has had since the first version with a database: asked
+# before any column is added, so a file that is set aside is set aside untouched.
+_CODES_PROBE = "SELECT code,label,note,lim,period,used,period_key,enabled,created,last_seen,messages,in_tokens,out_tokens,cost_micro FROM codes LIMIT 1"
 _SCHEMA_PROBES = (
-    "SELECT code,label,note,lim,period,used,period_key,enabled,created,last_seen,messages,in_tokens,out_tokens,cost_micro FROM codes LIMIT 1",
+    "SELECT code,label,note,lim,period,used,period_key,enabled,created,last_seen,messages,in_tokens,out_tokens,cost_micro,email,role,self FROM codes LIMIT 1",
     "SELECT code,day,messages,in_tokens,out_tokens,cost_micro FROM days LIMIT 1",
     "SELECT code,kind,name,n FROM counts LIMIT 1",
     "SELECT id,day,code_label,label FROM missing LIMIT 1",
     "SELECT key,value FROM settings LIMIT 1",
+    "SELECT id,t,code,label,kind,rating,text,details,status,reply,reply_time,receipt FROM feedback LIMIT 1",
+    "SELECT day,name,n FROM tally LIMIT 1",
 )
 SETTING_SPEC = {      # name: (kind, lowest, highest)
     "open": ("int", 0, 1000),
@@ -366,17 +442,28 @@ SETTING_SPEC = {      # name: (kind, lowest, highest)
     "per_ip_day": ("int", 1, 1000000),
     "price_in": ("num", 0, 1000),
     "price_out": ("num", 0, 1000),
+    "signup": ("int", 0, 1),                  # 1: people may create their own tester account
+    "signup_limit": ("int", 1, LIMIT_MAX),    # messages such an account gets, in total
+    "signup_day": ("int", 0, 100000),         # most new accounts a day, everyone together
+    "signup_ip_day": ("int", 1, 1000),        # most new accounts a day from one address
+    "signup_word": ("str", 0, WORD_MAX),      # "" = no word needed
 }
 
 
 def setting_defaults():
     return {"open": OPEN_DEFAULT, "daily_cap": DAILY_CAP, "per_ip_10min": PER_IP_IN_WINDOW,
-            "per_ip_day": PER_IP_DAILY, "price_in": PRICE_IN_DEFAULT, "price_out": PRICE_OUT_DEFAULT}
+            "per_ip_day": PER_IP_DAILY, "price_in": PRICE_IN_DEFAULT, "price_out": PRICE_OUT_DEFAULT,
+            "signup": SIGNUP_DEFAULT, "signup_limit": 150, "signup_day": 30, "signup_ip_day": 2, "signup_word": ""}
 
 
 def setting_value(name, v):
     """v as a valid value for that setting, or None."""
     spec = SETTING_SPEC.get(name)
+    if spec is not None and spec[0] == "str":
+        if not isinstance(v, str) or len(v) > spec[2] * 8:
+            return None
+        v = " ".join("".join(ch if unicodedata.category(ch)[0] != "C" else " " for ch in unicodedata.normalize("NFC", v)).split())
+        return v if len(v) <= spec[2] else None
     if spec is None or isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float("inf"), float("-inf")):
         return None
     if spec[0] == "int":
@@ -442,10 +529,18 @@ class Store:
                 conn.execute("PRAGMA synchronous=NORMAL")
             conn.executescript(SCHEMA)
             try:
+                conn.execute(_CODES_PROBE).fetchall()
+            except sqlite3.OperationalError:
+                raise BadSchema("has other tables in it")
+            for table, column, definition in _ADDED_COLUMNS:
+                if column not in [r[1] for r in conn.execute("PRAGMA table_info(%s)" % table)]:
+                    conn.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, column, definition))
+            try:
                 for q in _SCHEMA_PROBES:
                     conn.execute(q).fetchall()
             except sqlite3.OperationalError:
                 raise BadSchema("has other tables in it")
+            conn.executescript(INDEXES)
             if version != SCHEMA_VERSION:
                 conn.execute("PRAGMA user_version=%d" % SCHEMA_VERSION)
         except BaseException:
@@ -535,7 +630,7 @@ class Store:
         def run(c):
             for key, value in c.execute("SELECT key, value FROM settings"):
                 try:
-                    v = setting_value(key, float(value))
+                    v = setting_value(key, value if SETTING_SPEC.get(key, ("",))[0] == "str" else float(value))
                 except (TypeError, ValueError):
                     v = None
                 if v is not None:
@@ -547,7 +642,7 @@ class Store:
         def run(c):
             for key, v in changes.items():
                 c.execute("INSERT INTO settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-                          (key, repr(v)))
+                          (key, v if isinstance(v, str) else repr(v)))
         self.tx(run)
 
     # -- an invite code's allowance --
@@ -560,7 +655,7 @@ class Store:
     @staticmethod
     def _row(c, code):
         cur = c.execute("SELECT code,label,note,lim,period,used,period_key,enabled,created,last_seen,messages,"
-                        "in_tokens,out_tokens,cost_micro FROM codes WHERE code=?", (code,))
+                        "in_tokens,out_tokens,cost_micro,email,role,self FROM codes WHERE code=?", (code,))
         r = cur.fetchone()
         return dict(zip([d[0] for d in cur.description], r)) if r else None
 
@@ -691,7 +786,8 @@ class Store:
                "limit": row["lim"], "period": row["period"], "used": used, "left": max(0, row["lim"] - used),
                "enabled": bool(row["enabled"]) and not special, "created": row["created"], "last_seen": row["last_seen"],
                "messages": row["messages"], "in_tokens": row["in_tokens"], "out_tokens": row["out_tokens"],
-               "cost": row["cost_micro"] / 1e6}
+               "cost": row["cost_micro"] / 1e6,
+               "email": row["email"], "role": row["role"], "self": bool(row["self"])}
         if detail:
             out["days"] = [{"day": d, "messages": m, "cost": cm / 1e6} for d, m, cm in c.execute(
                 "SELECT day, messages, cost_micro FROM days WHERE code=? ORDER BY day", (row["code"],))]
@@ -708,22 +804,195 @@ class Store:
                     "other": [r for r in rows if r["code"] in SPECIAL]}
         return self.tx(run)
 
+    def _insert(self, c, t, label, limit, period, note, email="", role="", by_self=0):
+        """A new codes row; the code, or None when there is no room for one."""
+        if c.execute("SELECT COUNT(*) FROM codes").fetchone()[0] >= MAX_CODES:
+            return None
+        for _ in range(20):
+            code = new_code()
+            if self._row(c, code) is None:
+                break
+        else:
+            return None
+        c.execute("INSERT INTO codes(code, label, note, lim, period, used, period_key, enabled, created, email, role, self) "
+                  "VALUES(?, ?, ?, ?, ?, 0, ?, 1, ?, ?, ?, ?)",
+                  (code, label, note, limit, period, period_key(period, t), int(t), email, role, by_self))
+        return code
+
     def create(self, label, limit, period, note):
         t = now()
 
         def run(c):
-            if c.execute("SELECT COUNT(*) FROM codes").fetchone()[0] >= MAX_CODES:
-                return None
-            for _ in range(20):
-                code = new_code()
-                if self._row(c, code) is None:
-                    break
-            else:
-                return None
-            c.execute("INSERT INTO codes(code, label, note, lim, period, used, period_key, enabled, created) "
-                      "VALUES(?, ?, ?, ?, ?, 0, ?, 1, ?)", (code, label, note, limit, period, period_key(period, t), int(t)))
-            return self._public(c, self._row(c, code), t)
+            code = self._insert(c, t, label, limit, period, note)
+            return self._public(c, self._row(c, code), t) if code else None
         return self.tx(run)
+
+    # -- an account somebody makes for themselves --
+    @staticmethod
+    def _tally(c, day, name):
+        r = c.execute("SELECT n FROM tally WHERE day=? AND name=?", (day, name)).fetchone()
+        return r[0] if r else 0
+
+    @staticmethod
+    def _tally_add(c, day, name):
+        c.execute("INSERT INTO tally(day, name, n) VALUES(?, ?, 1) ON CONFLICT(day, name) DO UPDATE SET n=n+1", (day, name))
+        c.execute("DELETE FROM tally WHERE day < ?", (day_of(now() - KEEP_DAYS * 86400),))
+
+    def signup(self, label, email, role, limit, day_cap):
+        """(None, facts for the new account) or (error code, None). The count
+        of today's sign-ups is kept apart from the codes themselves, so
+        deleting an account does not make room for another one today."""
+        t = now()
+        day = day_of(t)
+
+        def run(c):
+            if self._tally(c, day, "signup") >= day_cap:
+                return "signup_full", None
+            if c.execute("SELECT COUNT(*) FROM codes").fetchone()[0] >= MAX_CODES - OWNER_ROOM:
+                return "signup_full", None
+            code = self._insert(c, t, label, limit, "total", "", email, role, 1)
+            if code is None:
+                return "signup_full", None
+            self._tally_add(c, day, "signup")
+            return None, {"code": code, "label": label, "limit": limit, "left": limit, "period": "total"}
+        return self.tx(run)
+
+    def account(self, code):
+        """What is kept about a code, for the person who holds it. The email
+        address is never sent back, only whether there is one."""
+        t = now()
+
+        def run(c):
+            row = self._row(c, code) if code not in SPECIAL else None
+            if row is None:
+                return "bad_code", None
+            used = self._current(row, t)[0]
+            return None, {"label": row["label"], "role": row["role"], "email": bool(row["email"]), "self": bool(row["self"]),
+                          "created": row["created"], "enabled": bool(row["enabled"]), "period": row["period"],
+                          "limit": row["lim"], "used": used, "left": max(0, row["lim"] - used), "messages": row["messages"],
+                          "feedback": c.execute("SELECT COUNT(*) FROM feedback WHERE code=?", (code,)).fetchone()[0]}
+        return self.tx(run)
+
+    def account_delete(self, code):
+        """The person removes their own account: the code, what was kept about
+        them, and the feedback they sent with it. Message counts fold into
+        'Deleted codes', as when the owner deletes a code."""
+        t = now()
+
+        def run(c):
+            if code in SPECIAL or self._row(c, code) is None:
+                return False
+            c.execute("DELETE FROM feedback WHERE code=?", (code,))
+            return self._delete(c, code, t)
+        return self.tx(run)
+
+    # -- feedback: the one place where words a person wrote are kept --
+    _FB_COLUMNS = "id,t,code,label,kind,rating,text,details,status,reply,reply_time"
+
+    @staticmethod
+    def _fb(r, who=None):
+        try:
+            details = json.loads(r[7])
+        except ValueError:
+            details = {}
+        out = {"id": r[0], "time": r[1], "code": r[2], "label": r[3], "kind": r[4], "rating": r[5], "text": r[6],
+               "details": details if isinstance(details, dict) else {}, "status": r[8], "reply": r[9], "reply_time": r[10]}
+        if who is not None:
+            row = who.get(r[2]) if r[2] else None
+            out["account"] = row is not None
+            out["email"], out["role"] = (row[0], row[1]) if row else ("", "")
+            if row:
+                out["label"] = row[2]
+        return out
+
+    def feedback_add(self, code, name, kind, rating, text, details, receipt_hash):
+        """(None, {id, time, account}) or (error code, None)."""
+        t = now()
+        day = day_of(t)
+
+        def run(c):
+            if self._tally(c, day, "feedback") >= FB_PER_DAY:
+                return "feedback_limit", None
+            row = self._row(c, code) if code and code not in SPECIAL else None
+            if row is not None:
+                start = int(t) - int(t) % 86400
+                if c.execute("SELECT COUNT(*) FROM feedback WHERE code=? AND t>=?", (code, start)).fetchone()[0] >= FB_PER_CODE_DAY:
+                    return "feedback_limit", None
+            cur = c.execute("INSERT INTO feedback(t, code, label, kind, rating, text, details, receipt) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                            (int(t), code if row is not None else "", row["label"] if row is not None else name,
+                             kind, rating, text, details, receipt_hash))
+            self._tally_add(c, day, "feedback")
+            c.execute("DELETE FROM feedback WHERE id <= (SELECT MAX(id) FROM feedback) - ?", (KEEP_FEEDBACK,))
+            return None, {"id": cur.lastrowid, "time": int(t), "account": row is not None}
+        return self.tx(run)
+
+    def feedback_mine(self, code, receipt_hashes):
+        """Only what the caller can show is theirs: sent with the code they
+        hold, or matching a receipt they were handed when they sent it."""
+        def run(c):
+            out, seen = [], set()
+            if code and code not in SPECIAL and self._row(c, code) is not None:
+                for r in c.execute("SELECT " + self._FB_COLUMNS + " FROM feedback WHERE code=? ORDER BY id DESC LIMIT ?", (code, FB_MINE_MAX)):
+                    seen.add(r[0])
+                    out.append({"id": r[0], "time": r[1], "kind": r[4], "rating": r[5], "text": r[6],
+                                "status": r[8], "reply": r[9], "reply_time": r[10]})
+            for h in receipt_hashes:
+                r = c.execute("SELECT " + self._FB_COLUMNS + " FROM feedback WHERE receipt=?", (h,)).fetchone()
+                if r and r[0] not in seen:
+                    seen.add(r[0])
+                    out.append({"id": r[0], "time": r[1], "kind": r[4], "status": r[8], "reply": r[9], "reply_time": r[10]})
+            out.sort(key=lambda x: -x["id"])
+            return out[:FB_MINE_MAX]
+        return self.tx(run)
+
+    @staticmethod
+    def _fb_counts(c):
+        counts = {"new": 0, "read": 0, "done": 0}
+        for status, n in c.execute("SELECT status, COUNT(*) FROM feedback GROUP BY status"):
+            if status in counts:
+                counts[status] = n
+        counts["total"] = sum(counts.values())
+        return counts
+
+    def feedback_list(self):
+        def run(c):
+            who = {code: (email, role, label) for code, email, role, label in c.execute(
+                "SELECT code, email, role, label FROM codes WHERE code IN (SELECT DISTINCT code FROM feedback WHERE code<>'')")}
+            rows = c.execute("SELECT " + self._FB_COLUMNS + " FROM feedback ORDER BY id DESC LIMIT ?", (ADMIN_FEEDBACK_MAX,)).fetchall()
+            return {"items": [self._fb(r, who) for r in rows], "counts": self._fb_counts(c)}
+        return self.tx(run)
+
+    def feedback_update(self, fid, status, reply):
+        t = now()
+
+        def run(c):
+            r = c.execute("SELECT status, reply FROM feedback WHERE id=?", (fid,)).fetchone()
+            if r is None:
+                return None
+            new_status = r[0]
+            if reply is not None and reply != r[1]:
+                c.execute("UPDATE feedback SET reply=?, reply_time=? WHERE id=?", (reply, int(t) if reply else None, fid))
+                if new_status == "new":
+                    new_status = "read"
+            if status is not None:
+                new_status = status
+            c.execute("UPDATE feedback SET status=? WHERE id=?", (new_status, fid))
+            row = c.execute("SELECT " + self._FB_COLUMNS + " FROM feedback WHERE id=?", (fid,)).fetchone()
+            who = {code: (email, role, label) for code, email, role, label in c.execute(
+                "SELECT code, email, role, label FROM codes WHERE code=?", (row[2],))} if row[2] else {}
+            return {"item": self._fb(row, who), "counts": self._fb_counts(c)}
+        return self.tx(run)
+
+    def feedback_delete(self, fid):
+        def run(c):
+            if not c.execute("DELETE FROM feedback WHERE id=?", (fid,)).rowcount:
+                return None
+            return {"counts": self._fb_counts(c)}
+        return self.tx(run)
+
+    def badge(self):
+        day = day_of(now())
+        return self.tx(lambda c: {"feedback_new": self._fb_counts(c)["new"], "signups_today": self._tally(c, day, "signup")})
 
     def update(self, code, changes):
         t = now()
@@ -751,23 +1020,28 @@ class Store:
         t = now()
 
         def run(c):
-            row = self._row(c, code) if code not in SPECIAL else None
-            if row is None:
+            if code in SPECIAL or self._row(c, code) is None:
                 return False
-            self._ensure(c, DELETED, t)
-            c.execute("UPDATE codes SET messages=messages+?, in_tokens=in_tokens+?, out_tokens=out_tokens+?, cost_micro=cost_micro+? "
-                      "WHERE code=?", (row["messages"], row["in_tokens"], row["out_tokens"], row["cost_micro"], DELETED))
-            c.execute("INSERT INTO days(code, day, messages, in_tokens, out_tokens, cost_micro) "
-                      "SELECT ?, day, messages, in_tokens, out_tokens, cost_micro FROM days WHERE code=? "
-                      "ON CONFLICT(code, day) DO UPDATE SET messages=messages+excluded.messages, in_tokens=in_tokens+excluded.in_tokens, "
-                      "out_tokens=out_tokens+excluded.out_tokens, cost_micro=cost_micro+excluded.cost_micro", (DELETED, code))
-            for kind, name, n in c.execute("SELECT kind, name, n FROM counts WHERE code=?", (code,)).fetchall():
-                self._bump(c, DELETED, kind, name, n)
-            c.execute("DELETE FROM days WHERE code=?", (code,))
-            c.execute("DELETE FROM counts WHERE code=?", (code,))
-            c.execute("DELETE FROM codes WHERE code=?", (code,))
-            return True
+            # feedback already sent stays with the owner, under the name it came with
+            c.execute("UPDATE feedback SET code='' WHERE code=?", (code,))
+            return self._delete(c, code, t)
         return self.tx(run)
+
+    def _delete(self, c, code, t):
+        row = self._row(c, code)
+        self._ensure(c, DELETED, t)
+        c.execute("UPDATE codes SET messages=messages+?, in_tokens=in_tokens+?, out_tokens=out_tokens+?, cost_micro=cost_micro+? "
+                  "WHERE code=?", (row["messages"], row["in_tokens"], row["out_tokens"], row["cost_micro"], DELETED))
+        c.execute("INSERT INTO days(code, day, messages, in_tokens, out_tokens, cost_micro) "
+                  "SELECT ?, day, messages, in_tokens, out_tokens, cost_micro FROM days WHERE code=? "
+                  "ON CONFLICT(code, day) DO UPDATE SET messages=messages+excluded.messages, in_tokens=in_tokens+excluded.in_tokens, "
+                  "out_tokens=out_tokens+excluded.out_tokens, cost_micro=cost_micro+excluded.cost_micro", (DELETED, code))
+        for kind, name, n in c.execute("SELECT kind, name, n FROM counts WHERE code=?", (code,)).fetchall():
+            self._bump(c, DELETED, kind, name, n)
+        c.execute("DELETE FROM days WHERE code=?", (code,))
+        c.execute("DELETE FROM counts WHERE code=?", (code,))
+        c.execute("DELETE FROM codes WHERE code=?", (code,))
+        return True
 
     def overview(self):
         t = now()
@@ -796,6 +1070,9 @@ class Store:
                    "missing": [{"label": l, "code": cl, "day": d} for d, cl, l in c.execute(
                        "SELECT day, code_label, label FROM missing ORDER BY id DESC LIMIT ?", (KEEP_MISSING,))]}
             out.update(self._tops(c, "", ()))
+            out["feedback"] = self._fb_counts(c)
+            out["signups"] = {"today": self._tally(c, today, "signup"),
+                              "accounts": c.execute("SELECT COUNT(*) FROM codes WHERE self=1").fetchone()[0]}
             return out
         return self.tx(run)
 
@@ -881,6 +1158,7 @@ class Limits:
         self.total = 0
         self.per_ip_day = {}
         self.free = {}                   # key -> free (no invite code) messages taken today
+        self.daily = {}                  # what -> {key -> how many today}: "signup", "feedback"
         self.recent = OrderedDict()      # key -> times of its recent requests; least recently active first
         self._load()
 
@@ -916,6 +1194,7 @@ class Limits:
             self.total = 0
             self.per_ip_day = {}
             self.free = {}
+            self.daily = {}
 
     def _prune(self, t):
         cutoff = t - PER_IP_WINDOW
@@ -977,6 +1256,25 @@ class Limits:
             if self.free.get(key, 0) > 0:
                 self.free[key] -= 1
 
+    def day_take(self, what, ip, allowance):
+        """One of today's sign-ups, or pieces of feedback, for this address, if any are left."""
+        key = rate_key(ip)
+        with _lock:
+            self._roll()
+            table = self.daily.setdefault(what, {})
+            used = table.get(key, 0)
+            if used >= allowance or (key not in table and len(table) >= MAX_TRACKED):
+                return False
+            table[key] = used + 1
+            return True
+
+    def day_back(self, what, ip):
+        key = rate_key(ip)
+        with _lock:
+            table = self.daily.get(what) or {}
+            if table.get(key, 0) > 0:
+                table[key] -= 1
+
     def today_total(self):
         with _lock:
             self._roll()
@@ -1033,7 +1331,8 @@ class Window:
 
 ADMIN_STRIKES = Window(ADMIN_FAILS, ADMIN_FAIL_WINDOW)     # wrong owner tokens
 CODE_STRIKES = Window(CODE_FAILS, 600)                     # unknown invite codes
-LIGHT_OPS = Window(90, 600)                                # "code" and "usage" requests
+LIGHT_OPS = Window(90, 600)                                # "code", "usage", account and feedback requests
+WORD_STRIKES = Window(WORD_FAILS, 600)                     # wrong sign-up words
 
 # The last time the AI service refused the key or the request itself. While
 # it is fresh, GET /api/chat says so, and the page shows "not connected"
@@ -1263,6 +1562,78 @@ def read_code(v):
     if len(code) > CODE_MAX or not re.match(r"^[A-Z0-9-]+$", code):
         raise Bad("bad_code")
     return code
+
+
+def read_name(v):
+    """A person's name as it is kept: letters and digits of any script, with
+    spaces, full stops, dashes and apostrophes between them; 1 to 40 long.
+    Raises Bad("bad_name") for anything else, so nothing that could be markup,
+    a control character or an invisible direction mark is ever stored."""
+    if not isinstance(v, str) or len(v) > NAME_MAX * 8:
+        raise Bad("bad_name")
+    v = unicodedata.normalize("NFC", v)
+    if any(ch not in " \t\n\r" and unicodedata.category(ch) in ("Cc", "Zl", "Zp") for ch in v):
+        raise Bad("bad_name")            # str.split() would quietly take a few control characters for spaces
+    s = " ".join(v.split())
+    if not 1 <= len(s) <= NAME_MAX:
+        raise Bad("bad_name")
+    solid = False
+    for ch in s:
+        cat = unicodedata.category(ch)
+        if cat[0] == "L" or cat == "Nd":
+            solid = True
+        elif not (cat[0] == "M" or ch in " .-'\u2019\u200c\u200d"):
+            raise Bad("bad_name")
+    if not solid:
+        raise Bad("bad_name")
+    return s
+
+
+_EMAIL = re.compile(r"^[^\s@<>\"\\]+@[^\s@<>\"\\]+\.[^\s@<>\"\\]+$")
+
+
+def read_email(v):
+    """An email address as given, or "" when none was. Only its shape is
+    checked. Raises Bad("bad_email")."""
+    if v is None or v == "":
+        return ""
+    if not isinstance(v, str) or len(v) > EMAIL_MAX or not _EMAIL.match(v) \
+            or any(unicodedata.category(ch)[0] in "CZ" for ch in v):
+        raise Bad("bad_email")
+    return v
+
+
+def word_matches(given, want):
+    """The sign-up word, compared without regard to capitals or spacing."""
+    if not isinstance(given, str) or len(given) > WORD_MAX * 8:
+        return False
+    tidy = lambda s: " ".join(unicodedata.normalize("NFC", s).split()).casefold().encode("utf-8", "replace")
+    return hmac.compare_digest(tidy(given), tidy(want))
+
+
+# The technical details that may come with feedback: exactly these, each cut
+# to a fixed length. They are what the page lists under "Show what is sent".
+DETAILS_SHAPE = D(app=S(20), ua=S(300), screen=S(20), area=S(20), equipment=L(S(60), 8),
+                  dj=D(decks=N, routing=S(12), sample_rate=N, latency_ms=N), errors=L(S(200), 5))
+
+
+def read_details(v):
+    """The details as compact JSON of at most FB_DETAILS_MAX bytes. Raises Bad."""
+    if v is None:
+        return "{}"
+    if not isinstance(v, dict):
+        raise Bad("bad_request")
+    try:
+        d = shape(v, DETAILS_SHAPE)
+    except RecursionError:
+        raise Bad("bad_request")
+    for drop in (None, "errors", "equipment", "ua"):
+        if drop:
+            d.pop(drop, None)
+        js = json.dumps(d, ensure_ascii=False, separators=(",", ":"))
+        if len(js.encode("utf-8", "replace")) <= FB_DETAILS_MAX:
+            return js
+    return "{}"
 
 
 def validate(body):
@@ -1561,6 +1932,42 @@ ADMIN_PAGE = r"""<!doctype html>
   .prose{display:grid;gap:8px;max-width:74ch;}
   .prose ul{margin:0;padding-left:18px;display:grid;gap:3px;}
 
+  .badge{display:inline-block;min-width:17px;margin-left:6px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--on-accent);
+    font-size:11px;font-weight:700;line-height:17px;text-align:center;vertical-align:1px;}
+  .tag{display:inline-block;padding:0 6px;border:1px solid var(--line-2);border-radius:var(--r);font-size:11px;font-weight:500;
+    color:var(--ink-2);line-height:17px;white-space:nowrap;}
+  .tag[data-kind="new"]{border-color:var(--accent);color:var(--ink);}
+  .tag[data-kind="done"]{border-color:var(--good);color:var(--good);}
+  textarea{width:100%;min-height:56px;padding:6px 8px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--bg);
+    color:var(--ink);resize:vertical;line-height:1.45;}
+  a{color:var(--ink);text-underline-offset:2px;}
+  a.btn{text-decoration:none;}
+  .signup-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .signup-top b{font-weight:600;}
+  .signup-top .state{color:var(--ink-2);}
+  .signup-grid{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .signup-grid input[type=text]{width:170px;}
+  .fb-filters{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+  .fb-filters .grow{flex:1 1 auto;}
+  .fb-list{display:grid;gap:0;}
+  .fb{display:grid;gap:8px;padding:12px;border-top:1px solid var(--line);border-left:3px solid transparent;min-width:0;}
+  .fb:first-child{border-top:0;}
+  .fb[data-status="new"]{border-left-color:var(--accent);}
+  .fb-head{display:flex;align-items:baseline;gap:6px 10px;flex-wrap:wrap;}
+  .fb-who{font-weight:600;overflow-wrap:anywhere;}
+  .fb-meta{color:var(--ink-2);font-size:12px;overflow-wrap:anywhere;}
+  .fb-when{color:var(--ink-3);font-size:12px;margin-left:auto;white-space:nowrap;}
+  .fb-text{white-space:pre-wrap;overflow-wrap:anywhere;max-width:80ch;}
+  .fb details summary{cursor:pointer;color:var(--ink-2);font-size:12px;}
+  .fb dl{margin:6px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;font-size:12px;}
+  .fb dt{color:var(--ink-3);}
+  .fb dd{margin:0;overflow-wrap:anywhere;font-family:var(--mono);font-size:11.5px;}
+  .fb-reply{display:grid;gap:6px;max-width:80ch;}
+  .fb-reply .hint{font-size:11.5px;}
+  .fb-mini{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px;}
+  .fb-mini li{overflow-wrap:anywhere;}
+  .fb-mini .fb-meta{display:block;}
+
   .gate{max-width:560px;margin:10vh auto 0;padding:0 16px;display:grid;gap:12px;}
   .gate h1{font-size:16px;}
   .gate pre{margin:0;padding:10px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
@@ -1590,6 +1997,10 @@ ADMIN_PAGE = r"""<!doctype html>
     .tab .long{display:none;}
     .tab .short{display:inline;}
     table.plain td{padding:7px 12px;}
+    .fb-when{margin-left:0;}
+    .signup-grid input[type=text]{width:100%;}
+    .signup-grid label.f{flex:1 1 130px;}
+    .tab .badge{margin-left:4px;}
   }
 </style>
 </head>
@@ -1609,6 +2020,7 @@ ADMIN_PAGE = r"""<!doctype html>
     <div class="brand">First Loop <small>owner</small></div>
     <div class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
+      <button class="tab" role="tab" data-view="feedback" aria-selected="false" id="tab-feedback">Feedback<span class="badge" id="fb-badge" hidden></span></button>
       <button class="tab" role="tab" data-view="codes" aria-selected="false" aria-label="Invite codes"><span class="long">Invite codes</span><span class="short">Codes</span></button>
       <button class="tab" role="tab" data-view="people" aria-selected="false" aria-label="What people do"><span class="long">What people do</span><span class="short">Activity</span></button>
       <button class="tab" role="tab" data-view="recorded" aria-selected="false" aria-label="What is recorded"><span class="long">What is recorded</span><span class="short">Recorded</span></button>
@@ -1631,6 +2043,26 @@ ADMIN_PAGE = r"""<!doctype html>
         </div>
       </section>
       <div class="tiles" id="tiles"></div>
+      <section class="panel" id="signup-panel">
+        <header><h2>Tester accounts people create themselves</h2><span class="hint" id="signup-count"></span></header>
+        <div class="body">
+          <div class="signup-top">
+            <button class="switch" type="button" role="switch" id="signup-switch" aria-checked="false" aria-labelledby="signup-name"></button>
+            <b id="signup-name">People can create their own tester account</b>
+            <span class="state" id="signup-state"></span>
+            <span class="msg" id="signup-msg" role="status"></span>
+          </div>
+          <p class="note" id="signup-why"></p>
+          <form class="signup-grid" id="signup-form" novalidate>
+            <label class="f">Messages each account gets<input type="number" id="su-limit" min="1" max="1000000" inputmode="numeric"></label>
+            <label class="f">New accounts a day, at most<input type="number" id="su-day" min="0" max="100000" inputmode="numeric"></label>
+            <label class="f">From one address a day<input type="number" id="su-ip" min="1" max="1000" inputmode="numeric"></label>
+            <label class="f">Sign-up word (empty: none needed)<input type="text" id="su-word" maxlength="40" autocomplete="off" spellcheck="false"></label>
+            <button class="btn primary" type="submit">Save</button>
+          </form>
+          <p class="hint" id="signup-word-note"></p>
+        </div>
+      </section>
       <section class="panel">
         <header><h2>Messages per day, last 30 days</h2><span class="hint" id="chart-note"></span></header>
         <div class="body"><div id="chart"></div></div>
@@ -1648,6 +2080,22 @@ ADMIN_PAGE = r"""<!doctype html>
       </section>
     </div>
 
+    <div id="v-feedback" class="view" hidden>
+      <section class="panel">
+        <header><h2>Feedback</h2><span class="hint" id="fb-note"></span></header>
+        <div class="body">
+          <div class="fb-filters">
+            <label class="f">Kind<select id="fb-kind"><option value="">All kinds</option><option value="broken">Something is broken</option><option value="missing">Something is missing</option><option value="other">Other</option></select></label>
+            <label class="f">Status<select id="fb-status"><option value="">Any status</option><option value="new">New</option><option value="read">Read</option><option value="done">Done</option></select></label>
+            <label class="f">From<select id="fb-who"><option value="">Everyone</option></select></label>
+            <span class="grow"></span>
+            <button class="btn" type="button" id="fb-copy" title="Copy what is listed below as plain text, to paste to the developer. Email addresses are left out.">Copy all as text</button>
+          </div>
+        </div>
+        <div class="fb-list" id="fb-list"></div>
+      </section>
+    </div>
+
     <div id="v-codes" class="view" hidden>
       <section class="panel">
         <header><h2>New invite code</h2><span class="hint">A code is the whole account: there is no email or password.</span></header>
@@ -1662,7 +2110,8 @@ ADMIN_PAGE = r"""<!doctype html>
         </div>
       </section>
       <section class="panel">
-        <header><h2>Invite codes</h2><span class="hint" id="codes-note"></span></header>
+        <header><h2>Invite codes</h2><span class="hint" id="codes-note"></span>
+          <label class="f">Show<select id="codes-filter"><option value="">All</option><option value="owner">Made by you</option><option value="self">Created by the person</option></select></label></header>
         <div id="codes"></div>
       </section>
       <section class="panel" id="other-panel" hidden>
@@ -1697,6 +2146,7 @@ ADMIN_PAGE = r"""<!doctype html>
           <p>Recorded for each invite code, as counts only:</p>
           <ul>
             <li>the label and note you typed for it, its allowance, and whether it is switched on</li>
+            <li>for an account the person created themselves: the name they gave, what they said they do, and their email address if they chose to give one (it is asked for only so you can reply to their feedback)</li>
             <li>how many messages it has sent, in total and per day (the last <span id="r-days">90</span> days are kept), and the day it was last used</li>
             <li>how many tokens Anthropic counted for those messages, and the cost estimated from them</li>
             <li>how often each topic came up, and which kinds of change the Assistant made to a song (for example "set_tempo")</li>
@@ -1704,7 +2154,8 @@ ADMIN_PAGE = r"""<!doctype html>
             <li>how often parts of the app were used (for example pressing play, or exporting), as counts the page sends</li>
           </ul>
           <p>Recorded for the site as a whole: the same counts for people without a code, your limits and prices, and the most recent <span id="r-missing">200</span> short labels of things people asked for that First Loop cannot do, each with the code's label and the date.</p>
-          <p>Never recorded, anywhere on the server: what anyone typed, what the Assistant answered, the songs, recordings, or anyone's internet address. The topic, equipment and "not possible" labels are short tags the AI attaches to its own reply; they are cut to a few words and reduced to plain letters and digits before they are kept.</p>
+          <p>Feedback is the one place where words a person wrote are kept. It is text they chose to send to you with the Feedback button: the text, its kind, the 1 to 5 answer if they gave one, the name or account it came from, your reply, and, if they left that ticked, a short list of technical details they could read before sending (app version, browser, screen size, the area that was open, names of connected equipment, the DJ output settings, and the last five error messages the page caught). At most <span id="r-feedback">5000</span> pieces are kept. A person who deletes their account deletes their feedback with it.</p>
+          <p>Never recorded, anywhere on the server: what anyone typed to the Assistant, what the Assistant answered, the songs, recordings, or anyone's internet address. The topic, equipment and "not possible" labels are short tags the AI attaches to its own reply; they are cut to a few words and reduced to plain letters and digits before they are kept.</p>
           <p>The service log has one line per request with the time, a scrambled form of the address that cannot be turned back, and token counts. No message text.</p>
           <p>Cost figures on this page are estimates: token counts multiplied by the prices under Limits. The bill from Anthropic is the real figure, and the monthly spend limit you set in the Anthropic Console is the only hard cap.</p>
         </div>
@@ -1718,6 +2169,7 @@ ADMIN_PAGE = r"""<!doctype html>
   "use strict";
   var API = location.pathname, STORE_KEY = "firstloop.owner.token";
   var token = "", overview = null, codes = [], other = [], openCode = null, view = "overview", confirming = null;
+  var feedback = [], fbCounts = { "new":0, read:0, done:0, total:0 }, fbDrafts = {}, fbConfirm = null, TITLE = document.title;
 
   function $(id){ return document.getElementById(id); }
   function el(tag, props, kids){
@@ -1752,6 +2204,14 @@ ADMIN_PAGE = r"""<!doctype html>
     if(d === isoDay(Date.parse(today + "T00:00:00Z") / 1000 - 86400)) return "yesterday";
     return dayLabel(d) + (d.slice(0, 4) !== today.slice(0, 4) ? " " + d.slice(0, 4) : "");
   }
+  function clock(sec){
+    if(!sec) return "";
+    var d = new Date(sec * 1000), mm = String(d.getMinutes());
+    return d.getDate() + " " + MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : "") + ", " + d.getHours() + ":" + (mm.length < 2 ? "0" + mm : mm);
+  }
+  var ROLE = { dj:"DJ", producer:"Producer", instrument:"Learning an instrument", curious:"Just curious" };
+  var KIND = { broken:"Something is broken", missing:"Something is missing", other:"Other" };
+  var STATUS = { "new":"New", read:"Read", done:"Done" };
   function periodWords(p){ return p === "month" ? "per month" : (p === "day" ? "per day" : "in total"); }
   function setMsg(node, text, kind){ node.textContent = text || ""; if(kind) node.setAttribute("data-kind", kind); else node.removeAttribute("data-kind"); }
 
@@ -1795,7 +2255,8 @@ ADMIN_PAGE = r"""<!doctype html>
           if(!overview){ showGate(e429.text); e429.handled = true; }
           throw e429;
         }
-        if(!r.ok || !j || j.ok !== true) throw { text:(j && j.error === "bad_code") ? "That code no longer exists. Press Refresh." : "The server did not accept that." };
+        if(!r.ok || !j || j.ok !== true) throw { text:(j && j.error === "bad_code") ? "That code no longer exists. Press Refresh."
+          : (j && j.error === "not_found") ? "That item no longer exists. Press Refresh." : "The server did not accept that." };
         return j;
       });
     }, function(){ throw { text:"The server could not be reached. Check the connection and press Refresh." }; });
@@ -1896,7 +2357,9 @@ ADMIN_PAGE = r"""<!doctype html>
     $("first-why").textContent = (o.settings.open > 0
       ? "Right now people without a code get " + num(o.settings.open) + " free messages a day. "
       : "Right now nobody can use the AI on the site, not even you: it needs an invite code. ") +
+      (o.settings.signup ? "(People can also create a tester account for themselves; see below.) " : "") +
       "Make one for yourself first and type it into the Assistant on the site (Invite code, at the top of the Assistant). Then make one for each person you invite, with its own allowance.";
+    var tiles = clear($("tiles"));
     [["Today", o.totals.today], ["Last 7 days", o.totals.week], ["Last 30 days", o.totals.month]].forEach(function(t){
       tiles.appendChild(el("div", { cls:"tile" }, [
         el("h3", { text:t[0] }),
@@ -1914,6 +2377,10 @@ ADMIN_PAGE = r"""<!doctype html>
     fact("Model", [el("span", { cls:"mono", text:o.model })]);
     fact("Invite codes", [num(o.codes.enabled) + " switched on"], num(o.codes.total) + " in all, " + num(o.codes.active_7d) + " used in the last 7 days");
     fact("Counted against today's limit", [num(o.counted_today) + " of " + num(o.settings.daily_cap)], "every request sent on to the AI, including ones that failed");
+    var fbGo = el("button", { cls:"btn quiet", type:"button", id:"fact-feedback", text:o.feedback["new"] ? num(o.feedback["new"]) + " new" : "None new", on:{ click:function(){ show("feedback"); } } });
+    fact("Feedback", [fbGo], num(o.feedback.total) + " in all");
+    fact("Sign-ups today", [num(o.signups.today) + (o.settings.signup ? " of " + num(o.settings.signup_day) : "")], o.settings.signup ? num(o.signups.accounts) + " such accounts in all" : "creating an account is switched off");
+    renderSignup();
     var notes = [];
     if(o.storage !== "file") notes.push("The database file could not be opened, so codes and counts are being kept in memory only and will be lost when the service restarts. Check the folder /var/lib/firstloop-chat on the server.");
     if(o.set_aside) notes.push("The database file was damaged and has been moved aside (state.db.bad-... in /var/lib/firstloop-chat). A new, empty one was started, so earlier codes and counts are not shown.");
@@ -1927,6 +2394,34 @@ ADMIN_PAGE = r"""<!doctype html>
         el("div", null, [el("label", { "for":"set-" + s[0] }, [el("b", { text:s[1] })]), el("p", { id:"set-" + s[0] + "-d", text:s[2] })]),
         input
       ]));
+    });
+  }
+  // ---- accounts people create themselves ----
+  function renderSignup(){
+    var o = overview, s = o.settings, on = !!s.signup, sw = $("signup-switch");
+    sw.setAttribute("aria-checked", on ? "true" : "false");
+    sw.title = on ? "On. Click to stop new accounts being created." : "Off. Click to let people create their own account.";
+    $("signup-state").textContent = on ? "On" : "Off (paused)";
+    $("signup-count").textContent = "Today: " + num(o.signups.today) + (on ? " of " + num(s.signup_day) : "") + " new. " + num(o.signups.accounts) + " in all.";
+    $("signup-why").textContent = on
+      ? "Anyone who opens the site can create an account without asking you. Each one gets " + num(s.signup_limit) + " messages in total, and all of them together still stop at \u201cMost messages a day, everyone together\u201d under Limits (" + num(s.daily_cap) + "). Switch this off to pause it at once; accounts that exist keep working."
+      : "Nobody can create an account for themselves right now. People need an invite code from you. Accounts that already exist keep working.";
+    if(document.activeElement !== $("su-limit")) $("su-limit").value = s.signup_limit;
+    if(document.activeElement !== $("su-day")) $("su-day").value = s.signup_day;
+    if(document.activeElement !== $("su-ip")) $("su-ip").value = s.signup_ip_day;
+    if(document.activeElement !== $("su-word")) $("su-word").value = s.signup_word;
+    $("signup-word-note").textContent = s.signup_word
+      ? "A sign-up word is set: only people who type \u201c" + s.signup_word + "\u201d can create an account. Capitals do not matter."
+      : "No sign-up word is set. Set one to let only people you have told the word create an account.";
+  }
+  function saveSignup(changes, done){
+    var msg = $("signup-msg");
+    setMsg(msg, "Saving...");
+    call("admin.settings", changes).then(function(j){
+      overview.settings = j.settings; renderOverview(); setMsg(msg, done, "good");
+    }).catch(function(e){
+      if(e && e.text === "The server did not accept that.") e.text = "One of those is outside what the service allows. The word can be 40 characters at most.";
+      fail(e, msg);
     });
   }
   function saveSettings(){
@@ -2003,10 +2498,29 @@ ADMIN_PAGE = r"""<!doctype html>
       yes.focus();
     }
     if(confirming === c.code) askDelete(); else plainActions();
+    var mine = feedback.filter(function(f){ return f.code === c.code; });
+    var who = el("p", { cls:"note" });
+    if(c.self){
+      who.appendChild(document.createTextNode("Created by the person themselves. They said: " + (ROLE[c.role] || "nothing about what they do") + ". "));
+      if(c.email){ who.appendChild(document.createTextNode("Email: ")); who.appendChild(el("a", { href:"mailto:" + encodeURIComponent(c.email).replace(/%40/g, "@"), text:c.email })); who.appendChild(document.createTextNode(".")); }
+      else who.appendChild(document.createTextNode("No email address given."));
+    }
+    var fbBox = el("div", null, [el("h3", { text:"Feedback from this person" })]);
+    if(!mine.length) fbBox.appendChild(el("div", { cls:"empty", text:"None yet." }));
+    else {
+      var ul = el("ul", { cls:"fb-mini" });
+      mine.slice(0, 5).forEach(function(f){
+        ul.appendChild(el("li", null, [el("span", { cls:"fb-meta", text:clock(f.time) + " \u00b7 " + (KIND[f.kind] || "Other") + " \u00b7 " + (STATUS[f.status] || "") }), el("span", { text:f.text.length > 240 ? f.text.slice(0, 240) + "\u2026" : f.text })]));
+      });
+      fbBox.appendChild(ul);
+      fbBox.appendChild(el("p", null, [el("button", { cls:"btn", type:"button", text:mine.length > 5 ? "See all " + mine.length + " in Feedback" : "Open in Feedback", on:{ click:function(){ $("fb-kind").value = ""; $("fb-status").value = ""; fbWho = "c:" + c.code; renderFeedback(); show("feedback"); } } })]));
+    }
     var facts = "Created " + when(c.created) + ". " + num(c.messages) + " messages since then, " + num(c.in_tokens) + " tokens in and " + num(c.out_tokens) + " out, estimated cost " + money(c.cost) + ".";
     return el("div", { cls:"detail-grid" }, [
       form, actions,
       el("p", { cls:"note", text:facts }),
+      c.self ? who : null,
+      fbBox,
       el("div", null, [el("h3", { text:"Messages per day, last 30 days" }), chart(lastDays(c.days, 30), "No messages from this code in the last 30 days.")]),
       el("div", { cls:"cols" }, [
         el("div", null, [el("h3", { text:"Topics" }), bars(c.topics, TOPIC, "Nothing yet.")]),
@@ -2022,15 +2536,16 @@ ADMIN_PAGE = r"""<!doctype html>
     if(!codes.length){
       host.appendChild(el("div", { cls:"body empty", text:"No invite codes yet. Create one above, starting with one for yourself." }));
     } else {
-      var body = el("tbody");
+      var body = el("tbody"), want = $("codes-filter").value;
       codes.forEach(function(c){
+        if((want === "self" && !c.self) || (want === "owner" && c.self)) return;
         var open = openCode === c.code, full = c.used >= c.limit;
         var fill = el("i"); fill.style.width = Math.min(100, Math.round(c.used / Math.max(1, c.limit) * 100)) + "%";
         var sw = el("button", { cls:"switch", type:"button", role:"switch", "aria-checked":c.enabled ? "true" : "false",
           "aria-label":(c.label || c.code) + (c.enabled ? ": switched on" : ": switched off"), title:c.enabled ? "Switched on. Click to switch off." : "Switched off. Click to switch on.",
           on:{ click:function(ev){ ev.stopPropagation(); sw.disabled = true; update(c.code, { enabled:!c.enabled }); } } });
         var tr = el("tr", { cls:"code", "data-open":open ? "true" : "false", "data-off":c.enabled ? "false" : "true", tabindex:0, "aria-expanded":open ? "true" : "false" }, [
-          el("td", { cls:"c-label" }, [el("span", { cls:"lbl", text:c.label || "(no name)" })]),
+          el("td", { cls:"c-label" }, [el("span", { cls:"lbl", text:c.label || "(no name)" }), c.self ? " " : null, c.self ? el("span", { cls:"tag", text:"self sign-up", title:"This person created the account themselves" }) : null]),
           el("td", { cls:"c-code" }, [el("span", { cls:"codetext", text:c.code }), " ",
             el("button", { cls:"btn quiet", type:"button", text:"Copy", "aria-label":"Copy the code " + c.code, on:{ click:function(ev){ ev.stopPropagation(); copyText(c.code, this); } } })]),
           el("td", { cls:"c-used" }, [el("span", { text:num(c.used) + " / " + num(c.limit) + (full ? " (used up)" : "") }), el("div", { cls:"meter", "data-full":full ? "true" : "false" }, [fill])]),
@@ -2076,6 +2591,136 @@ ADMIN_PAGE = r"""<!doctype html>
     }).catch(function(e){ fail(e, msg); });
   }
 
+  // ---- feedback ----
+  var fbWho = "";
+  function fbKey(f){ return f.code ? "c:" + f.code : (f.label ? "n:" + f.label : "none"); }
+  function fbName(f){ return f.code ? (f.label || f.code) : (f.label ? f.label + " (no account)" : "No account"); }
+  function fbDetails(d){
+    var rows = [];
+    if(d.app) rows.push(["App version", d.app]);
+    if(d.ua) rows.push(["Browser and system", d.ua]);
+    if(d.screen) rows.push(["Screen", d.screen]);
+    if(d.area) rows.push(["Area open", d.area]);
+    if(d.equipment && d.equipment.length) rows.push(["Equipment", d.equipment.join(", ")]);
+    if(d.dj){
+      var dj = [];
+      if(typeof d.dj.decks === "number") dj.push(d.dj.decks + " decks in use");
+      if(d.dj.routing) dj.push("output " + d.dj.routing);
+      if(typeof d.dj.sample_rate === "number") dj.push(d.dj.sample_rate + " Hz");
+      if(typeof d.dj.latency_ms === "number") dj.push(d.dj.latency_ms + " ms latency");
+      if(dj.length) rows.push(["DJ engine", dj.join(", ")]);
+    }
+    (d.errors || []).forEach(function(e, i){ rows.push(["Error " + (i + 1), e]); });
+    return rows;
+  }
+  function fbShown(){
+    var kind = $("fb-kind").value, status = $("fb-status").value;
+    return feedback.filter(function(f){ return (!kind || f.kind === kind) && (!status || f.status === status) && (!fbWho || fbKey(f) === fbWho); });
+  }
+  function fbPlain(list){
+    var out = ["First Loop feedback, copied " + clock(Date.now() / 1000) + ". " + list.length + (list.length === 1 ? " item." : " items."), ""];
+    list.forEach(function(f){
+      out.push("#" + f.id + " | " + clock(f.time) + " | " + (KIND[f.kind] || "Other") + " | from " + fbName(f) + (f.role ? " (" + (ROLE[f.role] || f.role) + ")" : "") +
+        (f.rating ? " | usable today: " + f.rating + " of 5" : "") + " | " + (STATUS[f.status] || f.status));
+      out.push(f.text);
+      var rows = fbDetails(f.details || {});
+      if(rows.length) out.push("Details: " + rows.map(function(r){ return r[0] + ": " + r[1]; }).join("; "));
+      if(f.reply) out.push("Reply sent: " + f.reply);
+      out.push("");
+    });
+    return out.join("\n");
+  }
+  function fbApply(j){
+    if(j.counts) fbCounts = j.counts;
+    if(j.item){ for(var i = 0; i < feedback.length; i++) if(feedback[i].id === j.item.id) feedback[i] = j.item; }
+    if(overview) overview.feedback = fbCounts;
+    renderFeedback(); renderBadge();
+    if(overview && $("fact-feedback")) $("fact-feedback").textContent = fbCounts["new"] ? num(fbCounts["new"]) + " new" : "None new";
+  }
+  function renderBadge(){
+    var nNew = fbCounts["new"] || 0, b = $("fb-badge"), tab = $("tab-feedback"), tabs = tab.parentNode, first = tabs.querySelector('.tab[data-view="overview"]');
+    b.hidden = !nNew; b.textContent = nNew ? String(nNew) : "";
+    tab.setAttribute("aria-label", "Feedback" + (nNew ? ", " + nNew + " new" : ""));
+    // with something unread, Feedback is the first tab; otherwise it follows Overview
+    var had = document.activeElement === tab;
+    if(nNew){ if(tabs.firstElementChild !== tab) tabs.insertBefore(tab, tabs.firstElementChild); }
+    else if(first.nextElementSibling !== tab) tabs.insertBefore(tab, first.nextElementSibling);
+    if(had){ try { tab.focus(); } catch(e){} }
+    document.title = (nNew ? "(" + nNew + ") " : "") + TITLE;
+  }
+  function renderFeedback(){
+    var host = clear($("fb-list")), sel = $("fb-who"), seen = {}, people = [];
+    feedback.forEach(function(f){ var k = fbKey(f); if(!seen[k]){ seen[k] = 1; people.push([k, fbName(f)]); } });
+    if(fbWho && !seen[fbWho]) fbWho = "";
+    clear(sel).appendChild(el("option", { value:"", text:"Everyone" }));
+    people.forEach(function(p){ sel.appendChild(el("option", { value:p[0], text:p[1] })); });
+    sel.value = fbWho;
+    var list = fbShown();
+    $("fb-note").textContent = feedback.length ? num(fbCounts["new"]) + " new, " + num(fbCounts.total) + " in all" + (list.length !== feedback.length ? ", " + list.length + " listed" : "") + "." : "";
+    $("fb-copy").disabled = !list.length;
+    if(!feedback.length){ host.appendChild(el("div", { cls:"body empty", text:"No feedback yet. When someone presses Feedback on the site and sends something, it appears here, newest first." })); return; }
+    if(!list.length){ host.appendChild(el("div", { cls:"body empty", text:"Nothing matches what is chosen above." })); return; }
+    list.forEach(function(f){
+      var msg = el("span", { cls:"msg", role:"status" });
+      function send(changes, saying){
+        setMsg(msg, saying || "Saving...");
+        return call("admin.feedback.update", Object.assign({ id:f.id }, changes)).then(function(j){ if(changes.reply !== undefined) delete fbDrafts[f.id]; fbApply(j); })
+          .catch(function(e){ fail(e, msg); });
+      }
+      var head = el("div", { cls:"fb-head" }, [
+        el("span", { cls:"fb-who", text:fbName(f) }),
+        el("span", { cls:"tag", "data-kind":f.status, text:STATUS[f.status] || f.status }),
+        el("span", { cls:"tag", text:KIND[f.kind] || "Other" }),
+        f.rating ? el("span", { cls:"fb-meta", text:"Usable today: " + f.rating + " of 5" }) : null,
+        f.role ? el("span", { cls:"fb-meta", text:ROLE[f.role] || "" }) : null,
+        f.email ? el("a", { cls:"fb-meta", href:"mailto:" + encodeURIComponent(f.email).replace(/%40/g, "@"), text:f.email }) : null,
+        el("span", { cls:"fb-when", text:clock(f.time) })
+      ]);
+      var rows = fbDetails(f.details || {}), det = null;
+      if(rows.length){
+        var dl = el("dl");
+        rows.forEach(function(r){ dl.appendChild(el("dt", { text:r[0] })); dl.appendChild(el("dd", { text:r[1] })); });
+        det = el("details", null, [el("summary", { text:"Technical details" }), dl]);
+      }
+      var ta = el("textarea", { maxlength:1000, "aria-label":"Reply to " + fbName(f), placeholder:"Write a reply. The person sees it in the Feedback panel on the site." });
+      ta.value = Object.prototype.hasOwnProperty.call(fbDrafts, f.id) ? fbDrafts[f.id] : (f.reply || "");
+      ta.addEventListener("input", function(){ fbDrafts[f.id] = ta.value; });
+      var acts = el("div", { cls:"row" });
+      function plain(){
+        clear(acts);
+        acts.appendChild(el("button", { cls:"btn primary", type:"button", text:f.reply ? "Save reply" : "Send reply", on:{ click:function(){
+          if(!ta.value.trim() && !f.reply) return setMsg(msg, "Write the reply first.", "bad");
+          send({ reply:ta.value }, "Saving...");
+        } } }));
+        if(f.email) acts.appendChild(el("a", { cls:"btn", href:"mailto:" + encodeURIComponent(f.email).replace(/%40/g, "@") + "?subject=" + encodeURIComponent("Your feedback on First Loop") +
+          "&body=" + encodeURIComponent("\n\n\nYou wrote on " + clock(f.time) + ":\n" + f.text.slice(0, 600)), text:"Reply by email" }));
+        if(f.status !== "read") acts.appendChild(el("button", { cls:"btn", type:"button", text:f.status === "new" ? "Mark as read" : "Back to read", on:{ click:function(){ send({ status:"read" }); } } }));
+        if(f.status !== "done") acts.appendChild(el("button", { cls:"btn", type:"button", text:"Done", on:{ click:function(){ send({ status:"done" }); } } }));
+        if(f.status !== "new") acts.appendChild(el("button", { cls:"btn quiet", type:"button", text:"Mark as new", on:{ click:function(){ send({ status:"new" }); } } }));
+        acts.appendChild(el("button", { cls:"btn danger", type:"button", text:"Delete", on:{ click:function(){ fbConfirm = f.id; ask(); } } }));
+        acts.appendChild(msg);
+      }
+      function ask(){
+        clear(acts);
+        var yes = el("button", { cls:"btn danger", type:"button", text:"Delete it", on:{ click:function(){
+          yes.disabled = true;
+          call("admin.feedback.delete", { id:f.id }).then(function(j){ fbConfirm = null; feedback = feedback.filter(function(x){ return x.id !== f.id; }); fbApply(j); })
+            .catch(function(e){ fbConfirm = null; plain(); fail(e, msg); });
+        } } });
+        acts.appendChild(el("div", { cls:"confirm", role:"alertdialog", "aria-label":"Delete this feedback" }, [
+          el("span", { text:"Delete this feedback? It cannot be brought back, and the person no longer sees your reply." }), yes,
+          el("button", { cls:"btn", type:"button", text:"Keep it", on:{ click:function(){ fbConfirm = null; plain(); } } })
+        ]));
+        yes.focus();
+      }
+      if(fbConfirm === f.id) ask(); else plain();
+      host.appendChild(el("article", { cls:"fb", "data-status":f.status, "data-id":f.id }, [
+        head, el("div", { cls:"fb-text", text:f.text }), det,
+        el("div", { cls:"fb-reply" }, [ta, f.reply ? el("span", { cls:"hint", text:"Reply sent " + clock(f.reply_time) + ". It is shown to the person in the app." }) : null, acts])
+      ]));
+    });
+  }
+
   // ---- what people do ----
   function renderPeople(){
     var o = overview; if(!o) return;
@@ -2112,11 +2757,11 @@ ADMIN_PAGE = r"""<!doctype html>
   // ---- loading and moving about ----
   function load(){
     $("refresh").disabled = true;
-    return Promise.all([call("admin.overview"), call("admin.codes")]).then(function(r){
-      overview = r[0]; codes = r[1].codes; other = r[1].other;
+    return Promise.all([call("admin.overview"), call("admin.codes"), call("admin.feedback")]).then(function(r){
+      overview = r[0]; codes = r[1].codes; other = r[1].other; feedback = r[2].items; fbCounts = r[2].counts;
       $("gate").hidden = true; $("app").hidden = false;
-      $("r-days").textContent = overview.keep_days; $("r-missing").textContent = overview.keep_missing;
-      renderOverview(); renderCodes(); renderPeople();
+      $("r-days").textContent = overview.keep_days; $("r-missing").textContent = overview.keep_missing; $("r-feedback").textContent = overview.keep_feedback;
+      renderOverview(); renderCodes(); renderPeople(); renderFeedback(); renderBadge();
     }).catch(function(e){ if(overview) fail(e); else if(!(e && e.handled)) showGate((e && e.text) || "The server could not be reached."); })
       .then(function(){ $("refresh").disabled = false; });
   }
@@ -2132,6 +2777,36 @@ ADMIN_PAGE = r"""<!doctype html>
   $("settings-save").addEventListener("click", saveSettings);
   $("create").addEventListener("submit", createCode);
   $("first-go").addEventListener("click", function(){ show("codes"); try { $("new-label").focus(); } catch(e){} });
+  $("codes-filter").addEventListener("change", renderCodes);
+  $("signup-switch").addEventListener("click", function(){
+    var on = !overview.settings.signup;
+    saveSignup({ signup:on ? 1 : 0 }, on ? "Switched on. People can create an account from now." : "Paused. Nobody can create an account until you switch it on again.");
+  });
+  $("signup-form").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var lim = Number($("su-limit").value), day = Number($("su-day").value), ip = Number($("su-ip").value), word = $("su-word").value, msg = $("signup-msg");
+    function whole(v, lo){ return isFinite(v) && Math.floor(v) === v && v >= lo; }
+    if($("su-limit").value.trim() === "" || $("su-day").value.trim() === "" || $("su-ip").value.trim() === "" || !whole(lim, 1) || !whole(day, 0) || !whole(ip, 1))
+      return setMsg(msg, "The three numbers need whole numbers: at least 1 message, 0 or more accounts a day, at least 1 per address.", "bad");
+    saveSignup({ signup_limit:lim, signup_day:day, signup_ip_day:ip, signup_word:word }, "Saved. It applies to accounts created from now on.");
+  });
+  ["fb-kind", "fb-status"].forEach(function(id){ $(id).addEventListener("change", renderFeedback); });
+  $("fb-who").addEventListener("change", function(){ fbWho = this.value; renderFeedback(); });
+  $("fb-copy").addEventListener("click", function(){ copyText(fbPlain(fbShown()), this); });
+  // A pinned tab is the notifier: the number of unread pieces of feedback is
+  // kept in the tab's title. Asked for every two minutes; nothing on screen is redrawn.
+  setInterval(function(){
+    if(!token || !overview) return;
+    fetch(API, { method:"POST", cache:"no-store", credentials:"omit", referrerPolicy:"no-referrer",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + token }, body:JSON.stringify({ op:"admin.badge" }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        if(!j || j.ok !== true || typeof j.feedback_new !== "number") return;
+        var more = j.feedback_new !== fbCounts["new"];
+        fbCounts["new"] = j.feedback_new; renderBadge();
+        if(more) $("fb-note").textContent = "There is new feedback. Press Refresh to see it.";
+      }).catch(function(){});
+  }, 120000);
 
   readToken();
   if(!token) showGate("This page opens only with the owner link, and this address does not have it.");
@@ -2213,12 +2888,12 @@ class Handler(BaseHTTPRequestHandler):
                 query = {}
             if "admin" in query:
                 return self.owner_page()
-            if not API_KEY:
-                return self.send_json(200, {"ok": False, "reason": "no_key", "model": MODEL, "open": CFG["open"], "v": WIRE_VERSION})
-            refused = sticky_get()
+            hello = {"ok": True, "model": MODEL, "open": CFG["open"], "v": WIRE_VERSION,
+                     "signup": bool(CFG["signup"]), "signup_word": bool(CFG["signup"] and CFG["signup_word"])}
+            refused = "no_key" if not API_KEY else sticky_get()
             if refused:
-                return self.send_json(200, {"ok": False, "reason": refused, "model": MODEL, "open": CFG["open"], "v": WIRE_VERSION})
-            return self.send_json(200, {"ok": True, "model": MODEL, "open": CFG["open"], "v": WIRE_VERSION})
+                hello["ok"], hello["reason"] = False, refused
+            return self.send_json(200, hello)
         except Exception:
             pass
 
@@ -2295,6 +2970,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.op_usage(ip, body)
             if op == "selftest":
                 return self.op_selftest(ip, body)
+            if op == "signup":
+                return self.op_signup(ip, body)
+            if op == "account" or op == "account.delete":
+                return self.op_account(ip, op, body)
+            if op == "feedback":
+                return self.op_feedback(ip, body)
+            if op == "feedback.mine":
+                return self.op_feedback_mine(ip, body)
             if op.startswith("admin."):
                 return self.op_admin(ip, op, body)
             raise Bad("bad_request")
@@ -2372,6 +3055,129 @@ class Handler(BaseHTTPRequestHandler):
             STORE.add_features(code, counts)
         return self.send_json(200, {"ok": True})
 
+    # -- "create a tester account": a code somebody makes for themselves --
+    def op_signup(self, ip, body):
+        if set(body.keys()) - {"op", "name", "email", "role", "age_ok", "word"}:
+            raise Bad("bad_request")
+        if not LIGHT_OPS.allow(ip):
+            return self.fail(429, "rate_limited", ip, "signup")
+        if not CFG["signup"]:
+            return self.fail(STATUS["signup_off"], "signup_off", ip)
+        if body.get("age_ok") is not True or body.get("role") not in ROLES:
+            raise Bad("bad_request")
+        name, email = read_name(body.get("name")), read_email(body.get("email"))
+        if CFG["signup_word"]:
+            if WORD_STRIKES.full(ip):
+                return self.fail(429, "rate_limited", ip, "word")
+            if not word_matches(body.get("word"), CFG["signup_word"]):
+                WORD_STRIKES.add(ip)
+                return self.fail(STATUS["signup_word"], "signup_word", ip)
+        if not LIMITS.day_take("signup", ip, CFG["signup_ip_day"]):
+            return self.fail(STATUS["signup_limit"], "signup_limit", ip)
+        try:
+            err, facts = STORE.signup(name, email, body["role"], CFG["signup_limit"], CFG["signup_day"])
+        except Exception:
+            LIMITS.day_back("signup", ip)
+            raise
+        if err:
+            LIMITS.day_back("signup", ip)
+            return self.fail(STATUS[err], err, ip)
+        log_line(ip, 200, None, "signup")
+        out = {"ok": True}
+        out.update(facts)
+        return self.send_json(200, out)
+
+    # -- "what do you keep about me", and "remove it" --
+    def op_account(self, ip, op, body):
+        if set(body.keys()) - {"op", "code"}:
+            raise Bad("bad_request")
+        if CODE_STRIKES.full(ip) or not LIGHT_OPS.allow(ip):
+            return self.fail(429, "rate_limited", ip, "codes")
+        try:
+            code = read_code(body.get("code"))
+        except Bad:
+            code = None
+        err, facts = "bad_code", None
+        if code is not None:
+            if op == "account.delete":
+                err = None if STORE.account_delete(code) else "bad_code"
+                facts = {}
+            else:
+                err, facts = STORE.account(code)
+        if err:
+            CODE_STRIKES.add(ip)
+            return self.send_json(200, {"error": err, "message": MESSAGES[err]})     # an answer, as for "code"
+        if op == "account.delete":
+            log_line(ip, 200, None, "account_deleted")
+        out = {"ok": True}
+        out.update(facts)
+        return self.send_json(200, out)
+
+    # -- feedback for the owner: the only words anybody writes that are kept --
+    def op_feedback(self, ip, body):
+        if set(body.keys()) - {"op", "code", "name", "kind", "text", "rating", "details"}:
+            raise Bad("bad_request")
+        if not LIGHT_OPS.allow(ip):
+            return self.fail(429, "rate_limited", ip, "feedback")
+        kind, text, rating = body.get("kind"), body.get("text"), body.get("rating")
+        if kind not in FB_KINDS or not isinstance(text, str):
+            raise Bad("bad_request")
+        if len(text) > FB_TEXT_MAX:
+            raise Bad("too_big")
+        text = clean_text(text, FB_TEXT_MAX).strip()
+        if not text:
+            raise Bad("bad_request")
+        if rating is not None and (isinstance(rating, bool) or not isinstance(rating, int) or not 1 <= rating <= 5):
+            raise Bad("bad_request")
+        details = read_details(body.get("details"))
+        try:
+            name = read_name(body.get("name")) if body.get("name") else ""
+        except Bad:
+            name = ""                    # a name that will not do is left out; the feedback still counts
+        try:
+            code = read_code(body.get("code"))
+        except Bad:
+            code = None
+        if code is not None and STORE.account(code)[0]:
+            code = None                  # a code that is gone: the feedback is still taken, as from nobody in particular
+        if code is None and not LIMITS.day_take("feedback", ip, FB_PER_IP_DAY):
+            return self.fail(STATUS["feedback_limit"], "feedback_limit", ip)
+        receipt = secrets.token_urlsafe(18)
+        try:
+            err, facts = STORE.feedback_add(code, name, kind, rating, text, details,
+                                            hashlib.sha256(receipt.encode("ascii")).hexdigest())
+        except Exception:
+            if code is None:
+                LIMITS.day_back("feedback", ip)
+            raise
+        if err:
+            if code is None:
+                LIMITS.day_back("feedback", ip)
+            return self.fail(STATUS[err], err, ip)
+        log_line(ip, 200, None, "feedback")
+        return self.send_json(200, {"ok": True, "id": facts["id"], "time": facts["time"], "account": facts["account"], "receipt": receipt})
+
+    def op_feedback_mine(self, ip, body):
+        if set(body.keys()) - {"op", "code", "receipts"}:
+            raise Bad("bad_request")
+        receipts = body.get("receipts", [])
+        if not isinstance(receipts, list) or len(receipts) > FB_MINE_MAX:
+            raise Bad("bad_request")
+        if CODE_STRIKES.full(ip) or not LIGHT_OPS.allow(ip):
+            return self.fail(429, "rate_limited", ip, "feedback")
+        hashes = []
+        for r in receipts:
+            if isinstance(r, str) and re.match(r"^[A-Za-z0-9_-]{20,40}$", r):
+                hashes.append(hashlib.sha256(r.encode("ascii")).hexdigest())
+        try:
+            code = read_code(body.get("code"))
+        except Bad:
+            code = None
+        if code is not None and STORE.account(code)[0]:
+            CODE_STRIKES.add(ip)         # guessing at codes gets nowhere, and not for long
+            code = None
+        return self.send_json(200, {"ok": True, "items": STORE.feedback_mine(code, hashes)})
+
     # -- the installer's test message --
     def op_selftest(self, ip, body):
         # nginx always adds X-Real-IP to what it passes on, so a request from
@@ -2400,8 +3206,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             out = self.admin(op, body)
         except Bad as e:
-            if e.code == "bad_code":         # the code named does not exist (any more)
-                return self.fail(404, "bad_code", ip)
+            if e.code in ("bad_code", "not_found"):      # the code or the item named does not exist (any more)
+                return self.fail(404, e.code, ip)
             raise
         if out is None:
             raise Bad("bad_request")
@@ -2457,7 +3263,7 @@ class Handler(BaseHTTPRequestHandler):
             out.update({"model": MODEL, "default_model": DEFAULT_MODEL, "key": bool(API_KEY), "refused": sticky_get(),
                         "storage": STORE.kind, "set_aside": STORE.set_aside, "settings": dict(CFG),
                         "counted_today": LIMITS.today_total(), "max_tokens": MAX_TOKENS,
-                        "keep_days": KEEP_DAYS, "keep_missing": KEEP_MISSING})
+                        "keep_days": KEEP_DAYS, "keep_missing": KEEP_MISSING, "keep_feedback": KEEP_FEEDBACK})
             return out
         if op == "admin.codes":
             return STORE.codes()
@@ -2480,6 +3286,36 @@ class Handler(BaseHTTPRequestHandler):
             if not STORE.delete(target()):
                 raise Bad("bad_code")
             return {}
+        if op == "admin.badge":
+            return STORE.badge()
+        if op == "admin.feedback":
+            if set(body.keys()) - {"op"}:
+                raise Bad("bad_request")
+            return STORE.feedback_list()
+        if op in ("admin.feedback.update", "admin.feedback.delete"):
+            fid = body.get("id")
+            if isinstance(fid, bool) or not isinstance(fid, int) or not 0 < fid < 2 ** 62:
+                raise Bad("bad_request")
+            if op == "admin.feedback.delete":
+                if set(body.keys()) - {"op", "id"}:
+                    raise Bad("bad_request")
+                done = STORE.feedback_delete(fid)
+            else:
+                if set(body.keys()) - {"op", "id", "status", "reply"}:
+                    raise Bad("bad_request")
+                status, reply = body.get("status"), body.get("reply")
+                if status is not None and status not in FB_STATUS:
+                    raise Bad("bad_request")
+                if reply is not None:
+                    if not isinstance(reply, str):
+                        raise Bad("bad_request")
+                    if len(reply) > FB_REPLY_MAX:
+                        raise Bad("too_big")
+                    reply = clean_text(reply, FB_REPLY_MAX).strip()
+                done = STORE.feedback_update(fid, status, reply)
+            if done is None:
+                raise Bad("not_found")
+            return done
         if op == "admin.settings":
             changes = {}
             for name, v in body.items():
@@ -2663,6 +3499,7 @@ class Handler(BaseHTTPRequestHandler):
 
 class Server(ThreadingHTTPServer):
     daemon_threads = True
+    request_queue_size = 64            # a burst of connections waits its turn instead of being turned away
 
     def handle_error(self, request, client_address):   # no tracebacks: they could quote a request
         pass
@@ -2675,7 +3512,7 @@ def main():
     srv = Server(("127.0.0.1", PORT), Handler)
     log_line("-", "start", None, "model=%s cap=%d key=%s db=%s%s open=%d" % (
         MODEL if re.match(r"^[A-Za-z0-9._:@-]{1,80}$", MODEL) else "(odd name)", CFG["daily_cap"], "set" if API_KEY else "missing",
-        STORE.kind, (" set_aside=%d" % STORE.set_aside) if STORE.set_aside else "", CFG["open"]))
+        STORE.kind, (" set_aside=%d" % STORE.set_aside) if STORE.set_aside else "", CFG["open"]) + " signup=%d" % CFG["signup"])
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

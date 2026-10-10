@@ -1708,7 +1708,10 @@ def word_matches(given, want):
 # The technical details that may come with feedback: exactly these, each cut
 # to a fixed length. They are what the page lists under "Show what is sent".
 DETAILS_SHAPE = D(app=S(20), ua=S(300), screen=S(20), area=S(20), equipment=L(S(60), 8),
-                  dj=D(decks=N, routing=S(12), sample_rate=N, latency_ms=N), errors=L(S(200), 5))
+                  dj=D(decks=N, routing=S(12), sample_rate=N, latency_ms=N, player=S(12), dropouts=N, keylock=S(8), audio_load=N),
+                  controller=D(device=S(60), table=S(24), confidence=S(16), unknown_controls=N, taught=N),
+                  library=D(tracks=N, own=N, playlists=N, rekordbox=N, missing=N), workspace=S(8),
+                  errors=L(S(200), 5))
 
 
 def read_details(v):
@@ -2702,8 +2705,21 @@ ADMIN_PAGE = r"""<!doctype html>
       if(d.dj.routing) dj.push("output " + d.dj.routing);
       if(typeof d.dj.sample_rate === "number") dj.push(d.dj.sample_rate + " Hz");
       if(typeof d.dj.latency_ms === "number") dj.push(d.dj.latency_ms + " ms latency");
+      if(d.dj.player) dj.push(d.dj.player + " player");
+      if(typeof d.dj.dropouts === "number") dj.push(d.dj.dropouts + " dropouts");
+      if(d.dj.keylock) dj.push("key lock " + d.dj.keylock);
+      if(typeof d.dj.audio_load === "number") dj.push("audio thread " + d.dj.audio_load + "% busy");
       if(dj.length) rows.push(["DJ engine", dj.join(", ")]);
     }
+    if(d.controller && d.controller.device){
+      var ct = [d.controller.device, "table " + (d.controller.table || "none") + (d.controller.confidence ? " (" + d.controller.confidence + ")" : "")];
+      if(typeof d.controller.taught === "number") ct.push(d.controller.taught + " taught");
+      if(typeof d.controller.unknown_controls === "number") ct.push(d.controller.unknown_controls + " unknown controls seen");
+      rows.push(["Controller", ct.join(", ")]);
+    }
+    if(d.library && typeof d.library.tracks === "number")
+      rows.push(["DJ library", d.library.tracks + " tracks, " + (d.library.playlists || 0) + " playlists, " + (d.library.rekordbox || 0) + " rekordbox sources, " + (d.library.missing || 0) + " missing"]);
+    if(d.workspace) rows.push(["Workspace", d.workspace]);
     (d.errors || []).forEach(function(e, i){ rows.push(["Error " + (i + 1), e]); });
     return rows;
   }

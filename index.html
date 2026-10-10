@@ -1169,6 +1169,9 @@
   #asstinput:focus{outline:none;border-color:var(--ink-2);}
   .asst-row .sendbtn,.asst-row .ghost{flex:none;min-width:58px;}
   .asst-priv{margin:0;font-size:11px;line-height:1.4;color:var(--ink-3);}
+  /* once a message has been sent the note is one line, and a click opens it again: the conversation needs the room */
+  .asst-priv[data-fold="true"]{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;line-clamp:1;overflow:hidden;cursor:pointer;}
+  .asst-priv[data-fold="true"]:hover,.asst-priv[data-fold="true"]:focus-visible{color:var(--ink-2);}
   .asst-state[data-why="code"],.asst-state[data-why="spent"]{color:var(--ink);}
   .asst-acct{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
     padding:6px 10px;border-bottom:1px solid var(--line);}
@@ -1561,7 +1564,12 @@
   .dj-tools .gap{flex:1 1 0;}
   .dj-tools .bpmf{display:inline-flex;align-items:center;gap:3px;flex:none;}
   .dj-job{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:11px;white-space:nowrap;min-width:0;overflow:hidden;}
-  .dj-job span{overflow:hidden;text-overflow:ellipsis;}
+  .dj-job span{overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .dj-job .dj-b{flex:none;}
+  /* Browse: a taller track list for when a controller is in the hands. With two decks the controls and the mixer on
+     screen are put away and the waveforms stay; with four decks side by side it is the waveforms that go. */
+  .dj[data-browse="true"][data-up="2"] .dj-console,.dj[data-browse="true"][data-up="4"] .dj-waves{display:none;}
+  .dj[data-browse="true"] > .dj-lib{grid-row-end:-1;}
   .dj-empty{padding:9px 12px;background:var(--surface);border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;color:var(--ink-2);user-select:text;-webkit-user-select:text;}
   .dj-empty strong{color:var(--ink);}
   .dj-empty p{margin:0;max-width:92ch;}
@@ -1640,6 +1648,13 @@
   .dj-menu hr{border:0;border-top:1px solid var(--line);margin:3px 0;width:100%;}
 
   /* ---- a narrow screen: the library and one deck to listen with ---- */
+  .dj-wake{position:absolute;z-index:8;left:50%;top:92px;transform:translateX(-50%);width:min(460px,calc(100% - 32px));padding:14px 16px 16px;
+    background:var(--surface);border:1px solid var(--accent);border-radius:var(--r);box-shadow:0 10px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;
+    font-size:12.5px;line-height:1.45;color:var(--ink-2);user-select:text;-webkit-user-select:text;}
+  .dj-wake[hidden]{display:none;}
+  .dj-wake strong{font-size:14px;font-weight:600;color:var(--ink);}
+  .dj-wake p{margin:0;}
+  .dj-wake .dj-wake-go{align-self:flex-start;height:30px;padding:0 16px;font-size:13px;font-weight:600;background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
   .dj-phone{display:none;}
   @media (max-width:699.98px){
     .dj{height:auto;min-height:0;overflow:visible;grid-template-rows:auto auto;padding-bottom:40px;}
@@ -11748,7 +11763,7 @@
   var asstAll = {}, asstMsgs = [], asstSongId = null;
   var asstBusy = false, asstCtl = null, asstProbe = null, asstInfo = null, asstMode = "probing";
   var asstEl = null, asstLog = null, asstInput = null, asstSendBtn = null, asstStopBtn = null,
-      asstHintEl = null, asstStateEl = null, asstPrivEl = null, asstTab = null, asstPending = null;
+      asstHintEl = null, asstStateEl = null, asstPrivEl = null, asstTab = null, asstPending = null, asstPrivOpen = false;
   var asstCollapsed = false, asstMQ = null;
 
   // ---- the invite code and the on/off switch ----
@@ -13490,7 +13505,7 @@
     "rec":[".dj-rec", "Rec"], "out":["#djout", "Output"], "keys":["#djkeys", "Shortcuts"], "settings":["#djset", "Settings"], "decks":["#djdecks", "Decks 2 | 4"],
     "lib.search":["#djsearch", "library search"], "lib.list":["#djrows", "track list"], "lib.add":["#djaddfiles", "Add files"],
     "lib.folder":["#djaddfolder", "Add folder"], "lib.tree":[".dj-tree", "library sections and playlists"], "lib.bpm":[".dj-tools .bpmf", "BPM and key filter"],
-    "lib.info":["#djinfobtn", "Info"], "lib.menu":["#djmore", "Library menu"],
+    "lib.info":["#djinfobtn", "Info"], "lib.menu":["#djmore", "Library menu"], "lib.browse":["#djbrowse", "Browse (a taller track list)"],
     "lib.rekordbox":["#djmore", "where a rekordbox library is brought in"]
   };
   var ASST_DJ_ALIAS = { "mix.crossfader":"mix.xfader", "mix.cue_mix":"mix.hp_mix", "mix.phones":"mix.hp_level", "mix.rec":"rec", "record":"rec",
@@ -14967,6 +14982,11 @@
                : "AI not connected")
            : "Checking the connection…";
     asstStateEl.textContent = st; asstStateEl.dataset.mode = asstMode;
+    // what is sent is spelled out in full until the first message has gone; after that it is one line that opens on a click
+    var fold = hasUser && !asstPrivOpen;
+    asstPrivEl.dataset.fold = fold ? "true" : "false";
+    if(hasUser){ asstPrivEl.tabIndex = 0; asstPrivEl.setAttribute("role", "button"); asstPrivEl.setAttribute("aria-expanded", fold ? "false" : "true"); asstPrivEl.title = fold ? "Click to read all of it" : "Click to fold this away"; }
+    else { asstPrivEl.removeAttribute("tabindex"); asstPrivEl.removeAttribute("role"); asstPrivEl.removeAttribute("aria-expanded"); asstPrivEl.removeAttribute("title"); }
     asstStateEl.dataset.why = asstMode === "local" ? why : "";
     var counts = asstSrvCodes() ? "The site owner sees counts of how the app is used" : "";
     asstPrivEl.textContent = asstMode === "local"
@@ -15829,6 +15849,8 @@
     });
     row.appendChild(asstInput); row.appendChild(asstSendBtn); row.appendChild(asstStopBtn);
     asstPrivEl = el("p", "asst-priv"); asstPrivEl.id = "asstpriv";
+    asstPrivEl.addEventListener("click", function(){ asstPrivOpen = !asstPrivOpen; asstPaint(); });
+    asstPrivEl.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); asstPrivOpen = !asstPrivOpen; asstPaint(); } });
     form.appendChild(asstHintEl); form.appendChild(row); form.appendChild(asstPrivEl);
     form.addEventListener("submit", function(e){
       e.preventDefault();
@@ -18136,7 +18158,7 @@
     // ---------- settings (small, per browser) ----------
     var SET = { routing:"speakers", sinkId:"", xfCurve:"smooth", zoom:6, autoAnalyse:true, info:false,
                 range:[0.1, 0.1, 0.1, 0.1], quant:[true, true, true, true], vinyl:[true, true, true, true],
-                sort:"added", sortDir:-1, treeW:168, hideEmpty:false, deckN:0,       // deckN: 0 = not chosen (two, or four with a four-channel controller), 2, 4
+                sort:"added", sortDir:-1, treeW:168, hideEmpty:false, browse:false, deckN:0,       // deckN: 0 = not chosen (two, or four with a four-channel controller), 2, 4
                 // v33, the deck engine: key lock per deck and for newly loaded tracks; the part of a beat Quantize snaps to;
                 // a hot cue pressed on a paused deck plays only while held (rekordbox: "During Pause, GATE playback is applied");
                 // the whole-track strip moves the position only while paused (CDJ rule); seconds of warning before the end (0 = none);
@@ -19793,7 +19815,45 @@
       });
       return engineP;
     }
-    function resumeCtx(){ try { if(ENG && ENG.ctx && ENG.ctx.state === "suspended") ENG.ctx.resume(); } catch(e){} }
+    function resumeCtx(){ try { if(ENG && ENG.ctx && ENG.ctx.state === "suspended"){ ENG.ctx.resume(); wakeWatch(); } } catch(e){} }
+    // A browser lets a page make sound only after a click or a key press on the page, and a button on a
+    // controller is neither. When something asks for sound and the browser holds it back, this says so once,
+    // over the decks, with the one thing to click; any click or key anywhere on the page then starts the sound.
+    var WAKE = { armed:false, on:false, el:null };
+    function wakeWatch(){
+      if(WAKE.armed || WAKE.on) return;
+      WAKE.armed = true;
+      setTimeout(function(){
+        WAKE.armed = false;
+        if(!ENG || !ENG.ctx || ENG.ctx.state !== "suspended" || WAKE.on) return;
+        wakeShow();
+      }, 350);
+    }
+    function wakeTry(){ try { if(ENG && ENG.ctx && ENG.ctx.state === "suspended") ENG.ctx.resume(); } catch(e){} }
+    function wakeDone(){
+      if(!WAKE.on) return;
+      WAKE.on = false;
+      document.removeEventListener("pointerdown", wakeTry, true); document.removeEventListener("keydown", wakeTry, true);
+      if(WAKE.el) WAKE.el.hidden = true;
+      note("Sound is on. From here the controller is enough.");
+    }
+    function wakeShow(){
+      WAKE.on = true;
+      if(!WAKE.el && root){
+        var w = el("div", "dj-wake"); w.id = "djwake"; w.setAttribute("role", "alertdialog"); w.setAttribute("aria-label", "Sound is waiting for one click");
+        w.appendChild(el("strong", "", "Sound is waiting for one click"));
+        w.appendChild(el("p", "", "A browser lets a page make sound only after a click or a key press on the page itself. A button on a controller does not count. Click once; after that the controller is enough."));
+        var b = btn("dj-wake-go", "Start sound", "Lets this page make sound"); b.id = "djwakego";
+        b.addEventListener("click", wakeTry);
+        w.appendChild(b);
+        root.appendChild(w); WAKE.el = w;
+      }
+      if(WAKE.el) WAKE.el.hidden = false;
+      try { ENG.ctx.addEventListener("statechange", function(){ if(ENG.ctx.state === "running") wakeDone(); }); } catch(e){}
+      document.addEventListener("pointerdown", wakeTry, true); document.addEventListener("keydown", wakeTry, true);
+      note(view === "dj" ? "Sound is waiting for one click: press Start sound, over the decks. A button on a controller does not count as a click for the browser."
+        : "Sound is waiting for one click anywhere on this page. A button on a controller does not count as a click for the browser.");
+    }
     // ---- latency, dropouts, load on the audio thread ----
     // The Latency setting is the hint the browser is given for the size of its audio buffer: "interactive" is the
     // smallest it offers (the tightest feel, the first to crackle on a slow machine), "safe" the largest.
@@ -21683,8 +21743,15 @@
       SET.zoom = ZOOMS[clamp(k + dir, 0, ZOOMS.length - 1)]; saveSet();
       decks.forEach(function(D){ D.dirty = true; });
     }
+    function setBrowse(on){
+      SET.browse = !!on; saveSet();
+      if(UI.browseBtn) UI.browseBtn.setAttribute("aria-pressed", SET.browse ? "true" : "false");
+      sizeAll();
+      note(SET.browse ? "Browse: the track list has the room. The Browse button, over the list, brings the controls on screen back." : "The deck controls and the mixer are back on screen.");
+    }
     function sizeAll(){
       if(!root) return;
+      root.dataset.browse = SET.browse ? "true" : "false";
       var dpr = Math.min(2, window.devicePixelRatio || 1);
       UI.dpr = dpr;
       var rw = root.clientWidth, four = decks.length === 4, up4 = four && rw >= 900 && window.innerWidth >= 1100;
@@ -22683,7 +22750,7 @@
     function pickCols(){
       if(!UI.main) return;
       var w = UI.rows.clientWidth || UI.main.clientWidth, x4 = decks.length === 4 ? 40 : 0;       // four Load buttons are 40 px wider than two
-      var set = w < 450 ? "phone" : (w < 585 + x4 ? "small" : (w < 725 + x4 ? "mid" : (w < 860 + x4 ? "full" : "wide")));
+      var set = w < 450 ? "phone" : (w < 585 + x4 ? "small" : (w < 800 + x4 ? "mid" : (w < 860 + x4 ? "full" : "wide")));       // under 800 px the title and the artist get the room of Added and Plays
       RH = root.clientWidth < 700 ? 34 : 24;
       if(set === UI.colset && UI.thead.firstChild) return;
       UI.colset = set;
@@ -22786,6 +22853,10 @@
         if(f) rbXmlFile(f);
       });
       tools.appendChild(xf);
+      var bw = btn("", "Browse", "A taller track list. With two decks the deck controls and the mixer on screen are put away and the waveforms stay; with four decks the waveforms are put away. For when a controller is in your hands. Press again to bring them back.");
+      bw.id = "djbrowse"; bw.setAttribute("aria-pressed", SET.browse ? "true" : "false");
+      bw.addEventListener("click", function(){ setBrowse(!SET.browse); });
+      UI.browseBtn = bw; tools.appendChild(bw);
       var inf = btn("", "Info", "Tags, rating, beat grid and comment of the selected track"); inf.id = "djinfobtn"; inf.setAttribute("aria-pressed", SET.info ? "true" : "false");
       inf.addEventListener("click", function(){ SET.info = !SET.info; saveSet(); paintInfoShell(); });
       UI.infoBtn = inf; tools.appendChild(inf);
@@ -27686,6 +27757,8 @@
         if(e.altKey && !altLoad(e)) return;
         if(e.key === "/"){ e.preventDefault(); e.stopPropagation(); UI.q.focus(); UI.q.select(); return; }
         if(root.contains(t)) return;                       // goes on to the control, then to the handler on the area itself
+        // a dialog or a menu laid over the page has the keyboard to itself, and Escape and Tab always go where the focus is
+        if(e.key === "Escape" || e.key === "Tab" || (t && t.closest && t.closest('[aria-modal="true"], [role="menu"]'))) return;
         // focus is somewhere else on the page (nothing, the top bar, a panel): the DJ keys still work
         // and the other areas' shortcuts never see the key
         if(shortcut(e)) e.preventDefault();
@@ -31696,6 +31769,8 @@
     if(acctOpen !== "ready") acctNew = null;
     asstPaint();
     if(!acctE) return;
+    // in the DJ workspace the form starts with "DJ" chosen
+    if(acctOpen === "signup" && wsIs("dj") && !acctE.role.value) acctE.role.value = "dj";
     try {
       if(acctOpen === "signup") acctE.name.focus({ preventScroll:true });
       else if(acctOpen === "ready") acctE.copy.focus({ preventScroll:true });
@@ -32028,9 +32103,28 @@
         if(a.started && a.sampleRate){
           d.dj.sample_rate = Math.round(a.sampleRate);
           d.dj.latency_ms = Math.round(((+a.baseLatency || 0) + (+a.outputLatency || 0)) * 1000);
+          // which player is running (the full one on the audio thread, or the reduced one), how often the sound broke up, key lock
+          d.dj.player = a.engine === "worklet" ? "full" : (a.engine === "fallback" ? "reduced" : String(a.engine || "").slice(0, 12));
+          if(a.dropouts && typeof a.dropouts.inWindow === "number") d.dj.dropouts = a.dropouts.inWindow | 0;
+          d.dj.keylock = a.keylock ? String(a.keylockQuality || "full").slice(0, 8) : "none";
+          if(typeof a.cpuPercent === "number") d.dj.audio_load = Math.round(a.cpuPercent);
+        }
+        if(DJ.ready()){
+          var ls = DJ.snapshot().library || {};
+          var rbp = 0; (ls.rekordbox || []).forEach(function(q){ rbp += q.playlists | 0; });
+          d.library = { tracks:ls.tracks | 0, own:ls.ownFiles | 0, playlists:(ls.playlists | 0) + rbp, rekordbox:(ls.rekordbox || []).length, missing:ls.missing | 0 };
         }
       }
     } catch(e){}
+    // the controller: its name is in the equipment list; here, which table drives it and how sure that table is
+    try {
+      if(typeof CTRL !== "undefined" && CTRL && typeof CTRL.summary === "function"){
+        var cs = CTRL.summary();
+        if(cs && cs.device) d.controller = { device:String(cs.device).slice(0, 60), table:String(cs.profile || "none").slice(0, 24), confidence:String(cs.confidence || "").slice(0, 16),
+          unknown_controls:cs.unmappedSeen | 0, taught:CTRL.taught(cs.device) | 0 };
+      }
+    } catch(e){}
+    if(typeof workspace === "string" && workspace !== "all") d.workspace = workspace;
     return d;
   }
   function fbDetailRows(d){
@@ -32038,6 +32132,12 @@
       ["Connected equipment", d.equipment.length ? d.equipment.join(", ") : "none"]];
     if(d.dj) rows.push(["DJ engine", d.dj.decks + " decks in use, output " + (d.dj.routing || "not set") +
       (d.dj.sample_rate ? ", " + d.dj.sample_rate + " Hz, " + d.dj.latency_ms + " ms latency" : ", not started")]);
+    if(d.dj && d.dj.player) rows.push(["DJ player", d.dj.player + (typeof d.dj.dropouts === "number" ? ", " + d.dj.dropouts + " dropouts in the last 30 minutes" : "") + ", key lock " + d.dj.keylock +
+      (typeof d.dj.audio_load === "number" ? ", audio thread " + d.dj.audio_load + "% busy" : "")]);
+    if(d.controller) rows.push(["Controller", d.controller.device + ": table " + d.controller.table + (d.controller.confidence ? " (" + d.controller.confidence + ")" : "") + ", " +
+      d.controller.taught + " taught, " + d.controller.unknown_controls + " unknown controls seen"]);
+    if(d.library) rows.push(["DJ library", d.library.tracks + " tracks (" + d.library.own + " own files), " + d.library.playlists + " playlists, " + d.library.rekordbox + " rekordbox sources, " + d.library.missing + " missing"]);
+    if(d.workspace) rows.push(["Workspace", d.workspace]);
     rows.push(["Last errors caught", d.errors.length ? d.errors.join(" | ") : "none"]);
     return rows;
   }
@@ -32728,6 +32828,7 @@
     dj("djsettings", "Deck behaviour, key lock quality, latency, recording", "DJ Settings", "settings, preferences, options, latency, buffer, dropouts, key lock, recording format, needle", wsDjPress("#djset"));
     dj("djshort", "Keyboard shortcuts for the decks", "Shortcuts", "shortcuts, keyboard, keys, hotkeys", wsDjPress("#djkeys"));
     dj("djaddfolder", "Add a folder of music", "Add folder", "add folder, music folder, import, my music, files, mp3, flac, wav, aiff", wsDjPoint(["lib.folder", "lib.add"]));
+    dj("djbrowse", "Give the track list more room", "Browse", "browse, bigger list, taller, more rows, library size, hide decks, hide mixer, expand, full screen list", wsDjPress("#djbrowse"), 1);
     dj("djsearch", "Search the library", "Search, BPM and key filter", "search, find a track, filter, bpm, key, artist, genre", wsDjPoint(["lib.search", "lib.bpm"]));
     dj("djlists", "Playlists, Prepare, History, Related", "Library sections", "playlist, playlists, prepare, tag list, history, related, crate, missing files, duplicates", wsDjPoint(["lib.tree"]));
     dj("djctrl", "Set up a DJ controller", "Equipment: setup checklist and Quick check", "controller, setup, checklist, quick check, driver, firmware, mapping, midi, teach, ddj, connect", function(){ wsCtrlTab(); }, 2);
@@ -32809,7 +32910,7 @@
   // what the Assistant's box suggests, by workspace
   function wsHint(local){
     if(workspace !== "dj") return "";
-    return local ? "Try: open the dj area · two decks · where is key lock" : "Try: set up my controller · where is Master Tempo here · load the next track from my playlist";
+    return local ? "Try: where is key lock · four decks · what is a memory cue" : "Try: set up my controller · where is Master Tempo here · load the next track from my playlist";
   }
   // the first run in the DJ workspace: no question about what to make
   function wsFirstRun(){

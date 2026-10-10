@@ -28159,10 +28159,10 @@
           "pad*8=9p00.L clear*8=9q00.SL bjump*8=9p20.M _pad*8=9p30 | m cue=9n54.L fader=Bn13.w trim=Bn04.w eq_hi=Bn07.w eq_mid=Bn0B.w eq_low=Bn0F.w | " +
           "g mix.xfader=B61F.w mix.hp_mix=B60C.w mix.hp_level=B60D.w mix.master=B608.w mix.ch1.filter=B617.w mix.ch2.filter=B618.w browse.knob=B640.e browse.press=9641 _browse.knob=9642.S " +
           "browse.load1=9646 browse.load2=9647 fx.on=9447.L fx.depth=B402.w",
-      rb4: "d decksel=9n72.u | g mix.ch3.filter=B619.w mix.ch4.filter=B61A.w browse.load3=9648 browse.load4=9649",
+      rb4: "d decksel=9n72.u keylock=9n1A.f | g mix.ch3.filter=B619.w mix.ch4.filter=B61A.w browse.load3=9648 browse.load4=9649",
       // AlphaTheta / Pioneer DJ, the Serato generation (DDJ-SB, SX, SR, REV ...)
       sr: "d play=9n0B.L _play=9n47.S cue=9n0C.L start=9n48.S shift=9n3F jog_touch=9n36 _jog=9n35 jog_touch=9n67.S jog=Bn22.V jog_bend=Bn23.v jog_side=Bn21 jog_search=Bn1F.S jog_search=Bn26.S tempo=Bn00.w " +
-          "sync=9n58.L _sync=9n5C.S | m cue=9n54.L fader=Bn13.w trim=Bn04.w eq_hi=Bn07.w eq_mid=Bn0B.w eq_low=Bn0F.w | " +
+          "sync=9n58.L _sync=9n5C.S keylock=9n1A | m cue=9n54.L fader=Bn13.w trim=Bn04.w eq_hi=Bn07.w eq_mid=Bn0B.w eq_low=Bn0F.w | " +
           "g mix.xfader=B61F.w mix.ch1.filter=B617.w mix.ch2.filter=B618.w browse.knob=B640.e browse.press=9641 _browse.knob=9642.S browse.load1=9646 browse.load2=9647",
       sr4: "d decksel=9n72 | g mix.ch3.filter=B619.w mix.ch4.filter=B61A.w browse.load3=9648 browse.load4=9649",
       srp8: "d pad*8=9p00.L clear*8=9p08.SL", srp4: "d pad*4=9p00.L clear*4=9p08.SL",
@@ -28202,7 +28202,7 @@
         src:"AlphaTheta DDJ-FLX10 MIDI message list (deck, channel faders, EQ, browse); the rest from its family", lay:"4,b8,r,t" },
       { k:"ddj-1000srt", n:"DDJ-1000SRT", re:"ddj-?1000-?srt", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S", ch:4, pn:"789A", jt:2048, cf:"f", src:"its family (DDJ-SX, " + MX + "Pioneer DDJ-SX.midi.xml)", lay:"4,b8,r,t" },
       { k:"ddj-1000", n:"DDJ-1000", re:"ddj-?1000", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
-      { k:"ddj-800", n:"DDJ-800", re:"ddj-?800", b:"rb", ch:2, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"2,b8,r,t" },
+      { k:"ddj-800", n:"DDJ-800", re:"ddj-?800", b:"rb", a:"d keylock=9n1A.f", ch:2, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"2,b8,r,t" },
       { k:"ddj-rb", n:"DDJ-RB", re:"ddj-?rb\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
       { k:"ddj-rr", n:"DDJ-RR", re:"ddj-?rr\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
       { k:"ddj-rx", n:"DDJ-RX", re:"ddj-?rx\\b", b:"rb+rb4", ch:4, jt:2048, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
@@ -28699,6 +28699,8 @@
             small("nudge_up", sx + 16, tempoAt === "t" ? sy + 16 : 25, 15, "+", "Pitch bend +", "held down, speeds the track up a little so its beat lines up", { fs:5 });
           }
           if(has[pre + "slip"]) small("slip", tempoAt === "t" ? ox + 8 : (outer && d === 1 ? ox + DW - 36 : ox + 6), tempoAt === "t" ? 34 : 154, 28, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop");
+          if(has[pre + "keylock"]) small("keylock", tempoAt === "t" ? ox + 8 : sx, tempoAt === "t" ? 48 : sy + 13, 31, /^sr/.test(m.b) ? "KEY LOCK" : "M.TEMPO", /^sr/.test(m.b) ? "Key lock" : "Master Tempo (key lock)",
+            "keeps the key of the track the same while the tempo changes", { fs:3 });
           // the bottom: shift, cue and play on the left; pads, or the loop buttons, to their right
           var by = 178;
           // a unit whose SHIFT buttons all send the same message has it in its table once: both are drawn
@@ -29527,6 +29529,7 @@
       tempo:["Tempo slider", "abs"], nudge_dn:["Nudge slower (hold)", "hold"], nudge_up:["Nudge faster (hold)", "hold"], jump_back:["Beat jump back", "press"], jump_fwd:["Beat jump forward", "press"],
       loop_in:["Loop in", "hold"], loop_out:["Loop out", "press"], loop_auto:["Auto loop (4 beats)", "press"], loop_halve:["Loop half as long", "press"], loop_double:["Loop twice as long", "press"], reloop:["Reloop / exit", "press"],
       master:["Make this deck the tempo master", "press"], start:["Back to the start of the track", "press"], shift:["Shift", "hold"], slip:["Slip", "press"],
+      keylock:["Key lock (Master Tempo)", "press"], key_sync:["Key sync", "press"], quantize:["Quantize", "press"],
       jog_bend:["Jog wheel (top, vinyl off)", "rel"], jog_side:["Jog wheel (outer edge)", "rel"], jog_search:["Jog wheel (fast search)", "rel"] };
     var CHW = { trim:["trim", "abs"], eq_hi:["high EQ", "abs"], eq_mid:["mid EQ", "abs"], eq_low:["low EQ", "abs"], filter:["filter", "abs"], fader:["fader", "abs"], cue:["headphone cue", "press"] };
     var GLOBW = { "mix.xfader":["Crossfader", "abs"], "mix.master":["Master level", "abs"], "mix.hp_mix":["Headphones mix", "abs"], "mix.hp_level":["Headphones level", "abs"],
@@ -29558,7 +29561,7 @@
     function teachList(){
       var out = [], d, k;
       function deck(d){
-        ["play", "cue", "sync", "jog", "jog_touch", "tempo", "nudge_dn", "nudge_up", "jump_back", "jump_fwd", "loop_in", "loop_out", "loop_auto", "loop_halve", "loop_double"].forEach(function(a){ out.push("d" + d + "." + a); });
+        ["play", "cue", "sync", "jog", "jog_touch", "tempo", "keylock", "nudge_dn", "nudge_up", "jump_back", "jump_fwd", "loop_in", "loop_out", "loop_auto", "loop_halve", "loop_double"].forEach(function(a){ out.push("d" + d + "." + a); });
         for(k = 1; k <= 8; k++) out.push("d" + d + ".pad" + k);
       }
       function chan(c){ ["trim", "eq_hi", "eq_mid", "eq_low", "filter", "fader", "cue"].forEach(function(a){ out.push("mix.ch" + c + "." + a); }); }
@@ -29709,6 +29712,9 @@
           case "loop_auto": if(ph === "down") d.autoLoop(4); break;
           case "loop_halve": if(ph === "down") d.loopHalve(); break;
           case "slip": if(ph === "down") d.setSlip(); break;
+          case "keylock": if(ph === "down") d.setKeylock(); break;
+          case "key_sync": if(ph === "down") d.keySync(); break;
+          case "quantize": if(ph === "down") d.setQuantise(); break;
           case "loop_double": if(ph === "down") d.loopDouble(); break;
         }
         return;
@@ -29825,8 +29831,8 @@
         if(grv6){                    // from the owner's controller check, 7 Oct 2026 (seen on decks 1 and 2)
           A(N, 0x40, "slip", "slip", "btn");
           A(N, 0x1B, "mode_hotcue", "", "ign", { why:"the pad mode is kept inside the controller; the pads already send hot cue messages" });
-          A(N, 0x1A, "master_tempo", "", "ign", { why:"Master Tempo (key lock) is not in First Loop yet" });
-          A(N, 0x65, "key_sync", "", "ign", { why:"Key Sync is not in First Loop yet" });
+          A(N, 0x1A, "master_tempo", "keylock", "btn");          // MASTER TEMPO is First Loop's Key lock
+          A(N, 0x65, "key_sync", "key_sync", "btn");
         }
         // the mixer strip of this channel: every channel has its own knobs and fader on the unit
         add(N, 0x54, "mix.ch" + (n + 1) + ".cue", "mix.ch" + (n + 1) + ".cue", "btn", x ? { led:1, unv:1 } : { led:1 });

@@ -2013,6 +2013,15 @@
   .eq-ref li[data-sec]{font-weight:600;color:var(--ink-3);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-top:9px;}
   .eq-ref li .eq-badge{margin-left:6px;}
   .eq-ref li[data-hot="1"]{box-shadow:inset 3px 0 0 var(--good);padding-left:7px;}
+  /* the setup checklist of a controller */
+  .eq-setup{list-style:none;margin:0;padding:0;width:100%;display:flex;flex-direction:column;}
+  .eq-setup li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:5px;}
+  .eq-setup li:last-child{border-bottom:0;}
+  .eq-setup .eq-check{align-items:flex-start;font-weight:400;line-height:1.4;}
+  .eq-setup .eq-check input{margin-top:3px;flex:0 0 auto;}
+  .eq-setup li[data-done="1"] .eq-check span{color:var(--ink-3);}
+  .eq-setup .eq-row,.eq-setup .asst-links{padding-left:21px;}
+  #ctrlfamrow:empty,#ctrlportnote:empty{display:none;}
   #ctrldiapick{flex:1 1 auto;min-width:0;height:26px;font:inherit;font-size:12px;color:var(--ink);background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r);padding:0 6px;}
   #ctrlhint{position:fixed;left:10px;bottom:34px;z-index:70;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 20px);
     padding:7px 8px 7px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-2);font-size:12.5px;
@@ -11764,11 +11773,15 @@
     "Check that the device is switched on and has power.",
     "If it was plugged in for the first time while the browser was open, close the browser completely and open it again.",
     "On Windows some devices need the maker’s driver before the computer sees them. On a Mac most need none.",
-    "On Windows some devices can only be used by one program at a time. Close other music or DJ software, then press Check again."
+    "On Windows some devices can only be used by one program at a time. Close other music or DJ software, then press Check again.",
+    // Native Instruments' own staff, on community.native-instruments.com (read 10 October 2026): the Kontrol S4 MK3 "has never supported MIDI"
+    "Some controllers, for example Native Instruments Traktor Kontrol, do not send standard MIDI unless switched to MIDI mode, and a browser can only hear MIDI. The Traktor Kontrol S4 MK3 has no MIDI mode at all, so it cannot be used here. For other models the maker’s manual says how to switch."
   ];
   // Known equipment. Matched on the name the device reports, then on its
   // manufacturer. Every address below is a page on the maker's own site that
-  // was looked at on 7 October 2026; a maker without "url" has none that was
+  // was looked at on 7 October 2026 (the AlphaTheta model pages, Hercules, and
+  // again Denon DJ, Roland, Native Instruments and rekordbox on 10 October
+  // 2026); a maker without "url" has none that was
   // checked, and the app then says to search the maker's site. The model
   // never supplies an address: show_link only ever picks a row from here.
   var GEAR = [
@@ -11776,7 +11789,16 @@
       re:/alphatheta|pioneer|\bddj\b|ddj-|\bxdj|\bcdj|\bdjm|opus-?quad|omnis-?duo|\bdjs-/i, kind:"dj controller",
       kinds:[[/\bdjm/i, "dj mixer"]],
       url:"https://support.alphatheta.com", soft:"rekordbox",
-      models:[{ k:"ddj-grv6", re:/ddj-?grv6/i, name:"DDJ-GRV6", url:"https://support.alphatheta.com/en-US/products/37070449483417" }] },
+      // each model's own support page (manuals, drivers, firmware), as listed under "DJ Controllers" on support.alphatheta.com on 10 October 2026
+      models:[{ k:"ddj-grv6", re:/ddj-?grv6/i, name:"DDJ-GRV6", url:"https://support.alphatheta.com/en-US/products/37070449483417" },
+        { k:"ddj-flx4", re:/ddj-?flx-?4/i, name:"DDJ-FLX4", url:"https://support.alphatheta.com/en-US/products/12077079532697" },
+        { k:"ddj-400", re:/ddj-?400/i, name:"DDJ-400", url:"https://support.alphatheta.com/en-US/products/4416577146009" },
+        { k:"ddj-flx6", re:/ddj-?flx-?6/i, name:"DDJ-FLX6", url:"https://support.alphatheta.com/en-US/products/4416571326233" },
+        { k:"ddj-flx10", re:/ddj-?flx-?10/i, name:"DDJ-FLX10", url:"https://support.alphatheta.com/en-US/products/16715825715481" },
+        { k:"ddj-flx2", re:/ddj-?flx-?2/i, name:"DDJ-FLX2", url:"https://support.alphatheta.com/en-US/products/32749270709529" },
+        { k:"ddj-rev1", re:/ddj-?rev-?1/i, name:"DDJ-REV1", url:"https://support.alphatheta.com/en-US/products/4416578056089" },
+        { k:"ddj-rev5", re:/ddj-?rev-?5/i, name:"DDJ-REV5", url:"https://support.alphatheta.com/en-US/products/21317927313561" },
+        { k:"ddj-rev7", re:/ddj-?rev-?7/i, name:"DDJ-REV7", url:"https://support.alphatheta.com/en-US/products/4416585726873" }] },
     { k:"rekordbox", maker:"rekordbox", names:["rekordbox"], url:"https://rekordbox.com/en/download/", label:"Official rekordbox download" },
     { k:"serato", maker:"Serato", names:["serato","seratodj","seratodjpro","seratodjlite"],
       models:[{ k:"ddj-grv6", re:/ddj-?grv6/i, name:"DDJ-GRV6", url:"https://serato.com/dj/hardware/alphatheta-ddj-grv6",
@@ -11811,7 +11833,8 @@
     { k:"rane", maker:"RANE", names:["rane","ranedj"], re:/\brane\b|seventy-?two|\bseventy\b/i, kind:"dj mixer",
       url:"https://www.rane.com/downloads/?legacy=true" },
     { k:"numark", maker:"Numark", names:["numark"], re:/numark|mixtrack|party ?mix|\bdj2go|\bns[46]\b|\bns7/i, kind:"dj controller" },
-    { k:"hercules", maker:"Hercules", names:["hercules","herculesdj"], re:/hercules|djcontrol|inpulse|dj ?console/i, kind:"dj controller" },
+    { k:"hercules", maker:"Hercules", names:["hercules","herculesdj"], re:/hercules|djcontrol|inpulse|dj ?console/i, kind:"dj controller",
+      url:"https://support.hercules.com/en/" },
     { k:"reloop", maker:"Reloop", names:["reloop"], re:/reloop|beatmix|mixon|mixtour|beatpad|terminal ?mix/i, kind:"dj controller",
       url:"https://www.reloop.com/faqs.html" },
     { k:"roland", maker:"Roland", names:["roland","boss"],
@@ -12232,7 +12255,10 @@
       var g = equipFind(fresh[0].name, fresh[0].maker), kw = EQUIP_KIND_WORDS[fresh[0].kind];
       if(kw) t += " It is " + kw + (g ? " from " + g.maker : "") + ".";
     }
-    t += " Its buttons, pads, knobs and faders can be tied to this app with MIDI learn, in Make under Pads" +
+    // a DJ controller First Loop has a mapping for: what to do first is said at once
+    var cw = fresh.length === 1 && typeof ctrlArrivedWords === "function" ? ctrlArrivedWords(fresh[0]) : "";
+    if(cw) t += " " + cw;
+    else t += " Its buttons, pads, knobs and faders can be tied to this app with MIDI learn, in Make under Pads" +
       (equipAnyKeys() ? ", and its keys or pads play the layer selected under Notes." : ".");
     var note = asstPush({ r:"a", t:t, loc:true, eqn:true });
     say("Equipment connected: " + fresh.map(function(d){ return d.name; }).join(", ") + ".");
@@ -22386,6 +22412,259 @@
   })();
   // ===== /DJ area =====
   // ===== controllers + diagrams =====
+  // ---- CLIB: the controllers First Loop knows, as data ----
+  // One row per model: how its name is recognised, where its numbers come from, and its
+  // messages written as short tokens that are only worked out when that model is plugged in.
+  //
+  // WHERE THE NUMBERS COME FROM (read 10 October 2026; facts only, no code or text was copied):
+  //   m  the mapping that ships with the open-source Mixxx project (github.com/mixxxdj/mixxx,
+  //      res/controllers/<file named in src>): which message each control sends, 14-bit pairs,
+  //      how a jog wheel counts, which notes light a button.
+  //   o  the maker's own "MIDI message list" for the model (AlphaTheta / Pioneer DJ, linked from
+  //      support.alphatheta.com), read through a text extraction that keeps the numbers but loses
+  //      most control names; a row is used where its numbers agree with the rest of the family.
+  //   f  inferred: the model is given the numbers its family shares. Not read for this model.
+  // No profile here has been tried on a real unit except the DDJ-GRV6 (its own table, further down).
+  //
+  // A token is  target[*count][@drawing id]=SSNN[.flags]
+  //   SS  status in hex; the second digit may be n (the deck's or channel's own MIDI channel),
+  //       p / q (its pad channel, plain / with SHIFT) or s (its SHIFT-layer channel)
+  //   NN  note or control number in hex
+  //   *8  a run: pad*8=9p00 is pad1..pad8 on 00..07
+  //   _x  a control that is recognised and left alone (x is its name in the drawing)
+  //   -SSNN  takes a message out of what the family gave
+  // flags: L its light is lit with the same message   S sent while SHIFT is held   G sent after a long press
+  //   w a 14-bit pair, the fine half 32 higher (wHH: the fine half is control HH)   x runs the other way round
+  //   e an endless knob or wheel that counts 1.. up and 127.. down (default for a wheel: steps around 64)
+  //   c the platter's one message: scratches while the top is touched, nudges otherwise
+  //   V / v only sent with vinyl mode on / off   E a pitch-bend message used as a fader
+  //   M a pad in Beat Jump mode   u by the family's convention, not confirmed   f in the family's list only
+  // Sections: "d" once per deck, "m" once per mixer channel, "g" as written.
+  var CLIB = (function(){
+    var F = {
+      // AlphaTheta / Pioneer DJ, the rekordbox generation (DDJ-400, FLX4, FLX6, GRV6 ...)
+      rb: "d play=9n0B.L _play=9n47.S cue=9n0C.L start=9n48.S shift=9n3F jog_touch=9n36 jog_touch=9n67.S jog=Bn22.V jog_bend=Bn23.v jog_side=Bn21 jog_search=Bn29.S tempo=Bn00.w " +
+          "loop_in=9n10.L loop_halve@loop_in=9n4C.SL loop_out=9n11.L loop_double@loop_out=9n4E.SL reloop=9n4D.L reloop=9n50.SL sync=9n58.L master=9n5C.G " +
+          "pad*8=9p00.L clear*8=9q00.SL bjump*8=9p20.M _pad*8=9p30 | m cue=9n54.L fader=Bn13.w trim=Bn04.w eq_hi=Bn07.w eq_mid=Bn0B.w eq_low=Bn0F.w | " +
+          "g mix.xfader=B61F.w mix.hp_mix=B60C.w mix.hp_level=B60D.w mix.master=B608.w mix.ch1.filter=B617.w mix.ch2.filter=B618.w browse.knob=B640.e browse.press=9641 _browse.knob=9642.S " +
+          "browse.load1=9646 browse.load2=9647 fx.on=9447.L fx.depth=B402.w",
+      rb4: "d decksel=9n72.u | g mix.ch3.filter=B619.w mix.ch4.filter=B61A.w browse.load3=9648 browse.load4=9649",
+      // AlphaTheta / Pioneer DJ, the Serato generation (DDJ-SB, SX, SR, REV ...)
+      sr: "d play=9n0B.L _play=9n47.S cue=9n0C.L start=9n48.S shift=9n3F jog_touch=9n36 _jog=9n35 jog_touch=9n67.S jog=Bn22.V jog_bend=Bn23.v jog_side=Bn21 jog_search=Bn1F.S jog_search=Bn26.S tempo=Bn00.w " +
+          "sync=9n58.L _sync=9n5C.S | m cue=9n54.L fader=Bn13.w trim=Bn04.w eq_hi=Bn07.w eq_mid=Bn0B.w eq_low=Bn0F.w | " +
+          "g mix.xfader=B61F.w mix.ch1.filter=B617.w mix.ch2.filter=B618.w browse.knob=B640.e browse.press=9641 _browse.knob=9642.S browse.load1=9646 browse.load2=9647",
+      sr4: "d decksel=9n72 | g mix.ch3.filter=B619.w mix.ch4.filter=B61A.w browse.load3=9648 browse.load4=9649",
+      srp8: "d pad*8=9p00.L clear*8=9p08.SL", srp4: "d pad*4=9p00.L clear*4=9p08.SL",
+      // the loop buttons of the DDJ-SB3 and the REV models: AUTO LOOP, 1/2X, 2X
+      srl: "d loop_auto=9n14.L reloop@loop_auto=9n50.S loop_halve=9n12 loop_double=9n13",
+      // inMusic brands and others that follow Serato's numbering (Numark, Denon DJ, Roland)
+      im: "d play=9n00.L cue=9n01.L sync=9n02.L jog_touch=9n06 jog=Bn06.ec tempo=Bn09.w nudge_up=9n0B nudge_dn=9n0C | " +
+          "m cue=9n1B.L trim=Bn16 eq_hi=Bn17 eq_mid=Bn18 eq_low=Bn19 filter=Bn1A fader=Bn1C | g mix.xfader=BF08 browse.knob=BF00.e browse.load1=9F02 browse.load2=9F03",
+      iml: "d loop_auto=9p32.L reloop=9p33 loop_halve=9p34 loop_double=9p35 loop_in=9p38 loop_out=9p39",
+      // Hercules DJControl
+      hc: "d play=9n07.L cue=9n06.L sync=9n05.L start=9s06.S master=9s05.S jog_touch=9n08 jog_touch=9s08.S jog=Bn0A.e jog_side=Bn09.e jog_search=Bs0A.eS tempo=Bn08.wx load=9n0D | " +
+          "m cue=9n0C.L fader=Bn00 filter=Bn01 eq_low=Bn02 eq_mid=Bn03 eq_hi=Bn04 trim=Bn05 | g mix.xfader=B000 browse.knob=B001.e browse.press=9000",
+      hcl: "d loop_in=9n09.L loop_out=9n0A.L loop_halve@loop_in=9s09.S loop_double@loop_out=9s0A.S"
+    };
+    var AT = "https://support.alphatheta.com/", MX = "Mixxx ";
+    // k key, n name, re how the device's own name is recognised (after tidying), b the family parts, a what this model
+    // adds or changes, ch channels on its mixer, dn / pn / qn / sn the MIDI channels of its decks, pads, pads with SHIFT
+    // and SHIFT layer, jt steps in one turn of a platter (as the source has it), cf m / o / f (see above), src,
+    // lay how it is drawn when there is no drawing of its own: channels, pads (b below the platter, a above it,
+    // m in the mixer section, 0 none) and how many, tempo slider (r right of each platter, o on the outer side,
+    // t lying along the top), loop buttons (t above the platter, b beside the transport, 0 none on the unit)
+    var M = [
+      { k:"ddj-flx4", n:"DDJ-FLX4", re:"ddj-?flx-?4", b:"rb", a:"d -9n47 _play=9n0E.S | g -B60D -B608 fx.on=9547.L", ch:2, jt:720, cf:"m", sx:"flx4",
+        src:MX + "Pioneer-DDJ-FLX4.midi.xml and -script.js; AlphaTheta DDJ-FLX4 MIDI message list", draw:"ddj-flx4" },
+      { k:"ddj-400", n:"DDJ-400", re:"ddj-?400", b:"rb", ch:2, jt:720, cf:"m", sx:"400",
+        src:MX + "Pioneer-DDJ-400.midi.xml and -script.js; Pioneer DJ DDJ-400 MIDI message list", draw:"ddj-400" },
+      { k:"ddj-200", n:"DDJ-200", re:"ddj-?200", b:"rb", a:"d -9n10 -9n4C -9n11 -9n4E -9n4D -9n50 | m -Bn04 | g -B640 -9641 -9642 -9646 -9647 -B60C -B60D -B608 -9447 -B402", ch:2, jt:128, cf:"m",
+        src:MX + "Pioneer DDJ-200.midi.xml and Pioneer-DDJ-200-scripts.js", lay:"2,b8,r,0" },
+      { k:"ddj-flx2", n:"DDJ-FLX2", re:"ddj-?flx-?2", b:"rb", a:"d -9n10 -9n4C -9n11 -9n4E -9n4D -9n50 | m -Bn04 | g -B640 -9641 -9642 -9646 -9647 -B60C -9447 -B402", ch:2, jt:720, cf:"o",
+        src:"AlphaTheta DDJ-FLX2 MIDI message list", lay:"2,b8,r,0" },
+      { k:"ddj-flx6", n:"DDJ-FLX6", re:"ddj-?flx-?6", b:"rb+rb4", a:"d -9n4E loop_double@loop_out=9n77.S", ch:4, jt:720, cf:"o",
+        src:"Pioneer DJ DDJ-FLX6 MIDI message list", lay:"4,b8,r,t", mode:"flx6" },
+      { k:"ddj-flx10", n:"DDJ-FLX10", re:"ddj-?flx-?10", b:"rb+rb4", ch:4, jt:720, cf:"o", part:1,
+        src:"AlphaTheta DDJ-FLX10 MIDI message list (deck, channel faders, EQ, browse); the rest from its family", lay:"4,b8,r,t" },
+      { k:"ddj-1000srt", n:"DDJ-1000SRT", re:"ddj-?1000-?srt", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S", ch:4, pn:"789A", jt:720, cf:"f", src:"its family (DDJ-SX, " + MX + "Pioneer DDJ-SX.midi.xml)", lay:"4,b8,r,t" },
+      { k:"ddj-1000", n:"DDJ-1000", re:"ddj-?1000", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-800", n:"DDJ-800", re:"ddj-?800", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"2,b8,r,t" },
+      { k:"ddj-rb", n:"DDJ-RB", re:"ddj-?rb\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
+      { k:"ddj-rr", n:"DDJ-RR", re:"ddj-?rr\\b", b:"rb", ch:2, jt:720, cf:"f", src:"its family (DDJ-400)", lay:"2,b8,r,t" },
+      { k:"ddj-rx", n:"DDJ-RX", re:"ddj-?rx\\b", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rzx", n:"DDJ-RZX", re:"ddj-?rzx", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rz", n:"DDJ-RZ", re:"ddj-?rz\\b", b:"rb+rb4", ch:4, jt:720, cf:"f", src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"ddj-rev1", n:"DDJ-REV1", re:"ddj-?rev-?1", b:"sr+srl", a:"d -9n3F loop_in@loop_halve=9n10.S loop_out@loop_double=9n11.S pad*8=9p00.L clear*8=9q00.SL | g mix.master=B608.w mix.hp_level=B60D.w",
+        ch:2, pn:"79", qn:"8A", jt:720, cf:"o", src:"Pioneer DJ DDJ-REV1 MIDI message list", lay:"2,m8,t,b" },
+      { k:"ddj-rev5", n:"DDJ-REV5", re:"ddj-?rev-?5", b:"sr+srl", a:"d pad*8=9p00.L clear*8=9q00.SL | g mix.master=B608.w mix.hp_level=B60D.w mix.hp_mix=B60C.w", ch:2, pn:"79", qn:"8A", jt:720, cf:"o", part:1,
+        src:"AlphaTheta DDJ-REV5 MIDI message list (mixer, browse, pads); the deck buttons from its family", lay:"2,m8,t,b" },
+      { k:"ddj-rev7", n:"DDJ-REV7", re:"ddj-?rev-?7", b:"sr+srl", a:"d -9n35 -Bn23 -Bn21 -Bn26 -Bn1F slip=9n40 loop_in@loop_halve=9n10.S loop_out@loop_double=9n11.S pad*8=9p00.L clear*8=9p08.SL | g mix.master=B608.w mix.hp_level=B60D.w mix.hp_mix=B60C.w",
+        ch:2, pn:"79", jt:720, cf:"o", part:1, src:"Pioneer DJ DDJ-REV7 MIDI message list (as far as it could be read); the rest from its family", lay:"2,m8,t,b" },
+      { k:"ddj-sb3", n:"DDJ-SB3", re:"ddj-?sb-?3", b:"sr+sr4+srp8+srl", a:"d loop_in@loop_halve=9n61.S loop_out@loop_double=9n62.S | g mix.master=B608.w mix.hp_level=B60D.w", ch:2, dn:"0123", pn:"789A", jt:720, cf:"m",
+        src:MX + "Pioneer-DDJ-SB3.midi.xml and -scripts.js", lay:"2,b8,r,t" },
+      { k:"ddj-sb2", n:"DDJ-SB2", re:"ddj-?sb-?2", b:"sr+sr4+srp4", a:"g mix.hp_mix=B605.w", ch:2, dn:"0123", pn:"789A", jt:720, cf:"m", src:MX + "Pioneer-DDJ-SB2.midi.xml and -scripts.js", lay:"2,b8,r,0" },
+      { k:"ddj-sb", n:"DDJ-SB", re:"ddj-?sb\\b", b:"sr+srp4", a:"g mix.hp_mix=B605.w", ch:2, pn:"78", jt:720, cf:"m", src:MX + "Pioneer-DDJ-SB.midi.xml and -scripts.js", lay:"2,b8,r,0" },
+      { k:"ddj-sx", n:"DDJ-SX", re:"ddj-?sx-?[23]?\\b", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S loop_auto=9n14 loop_halve=9n12 loop_double=9n13 slip=9n40", ch:4, pn:"789A", jt:2048, cf:"m",
+        src:MX + "Pioneer DDJ-SX.midi.xml and Pioneer-DDJ-SX-scripts.js (written for the first DDJ-SX; the SX2 and SX3 are taken to be the same)", lay:"4,b8,r,t" },
+      { k:"ddj-sr", n:"DDJ-SR", re:"ddj-?sr-?2?\\b", b:"sr+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S loop_auto=9n14 loop_halve=9n12 loop_double=9n13", ch:2, pn:"78", jt:720, cf:"f", src:"its family (DDJ-SX)", lay:"2,b8,r,t" },
+      { k:"ddj-sz", n:"DDJ-SZ", re:"ddj-?sz-?2?\\b", b:"sr+sr4+srp8", a:"d loop_in=9n10.L loop_out=9n11.L reloop@loop_out=9n4D.S loop_auto=9n14 loop_halve=9n12 loop_double=9n13", ch:4, pn:"789A", jt:2048, cf:"f", src:"its family (DDJ-SX)", lay:"4,b8,r,t" },
+      { k:"xdj-4", n:"all-in-one unit (four channels)", re:"xdj-?(xz|az)|opus-?quad", b:"rb+rb4", ch:4, jt:720, cf:"f", aio:1, src:"its family (DDJ-400, DDJ-FLX6)", lay:"4,b8,r,t" },
+      { k:"xdj-2", n:"all-in-one unit (two channels)", re:"xdj-?(rx|rr)|omnis-?duo", b:"rb", ch:2, jt:720, cf:"f", aio:1, src:"its family (DDJ-400)", lay:"2,b8,r,t" },
+      { k:"mixtrack-platinum-fx", n:"Mixtrack Platinum FX", re:"mix ?track ?platinum ?fx", b:"im", a:"d shift=9n20 _play=9n04.S _cue=9n05.S _sync=9n03.S pad*8=9p14.L clear*8=9p1C.S loop_auto=9p40.L loop_halve=9p34 loop_double=9p35 | g browse.press=9F07 _browse.knob=9F06.S browse.load3=9F04 browse.load4=9F05 mix.hp_level=BF0C mix.hp_mix=BF0D",
+        ch:2, dn:"0123", pn:"4567", jt:1024, cf:"m", src:MX + "Numark Mixtrack Platinum FX.midi.xml and Numark-Mixtrack-Platinum-FX-scripts.js", lay:"2,b8,r,b" },
+      { k:"mixtrack-pro-fx", n:"Mixtrack Pro FX", re:"mix ?track ?pro ?fx", b:"im", a:"d shift=9n20 _play=9n04.S _cue=9n05.S _sync=9n03.S pad*8=9p14.L clear*8=9p1C.S loop_auto=9p40.L loop_halve=9p34 loop_double=9p35 | g browse.press=9F07 _browse.knob=9F06.S",
+        ch:2, pn:"45", jt:1024, cf:"m", src:MX + "Numark Mixtrack Pro FX.midi.xml and Numark-Mixtrack-Pro-FX-scripts.js", lay:"2,b8,r,b" },
+      { k:"mixtrack-platinum", n:"Mixtrack Platinum", re:"mix ?track ?platinum", b:"im", a:"d -Bn09 tempo=Bn09.w77 _play=9n04.S _cue=9n05.S _sync=9n03.S load=9n10 pad*4=9p18.L clear*4=9p20.S loop_in=9p38 loop_out=9p39 reloop=9p32 loop_halve=9p34 loop_double=9p35 | g -9F02 -9F03 d1.shift=9F32 browse.press=9F1F mix.master=BF0A mix.hp_level=BF0C mix.hp_mix=BF0D",
+        ch:2, dn:"0123", pn:"4567", jt:1240, cf:"m", src:MX + "Numark Mixtrack Platinum.midi.xml and Numark-Mixtrack-Platinum-scripts.js", lay:"2,b8,r,b" },
+      { k:"mixtrack-3", n:"Mixtrack Pro 3", re:"mix ?track ?(pro ?)?(3|iii)\\b", ch:2, dn:"12", jt:1200, cf:"m", src:MX + "Numark-Mixtrack-3.midi.xml and -scripts.js",
+        s:"d play=9n01.L cue=9n03.L sync=9n02.L shift=9n0B jog_touch=9n0C jog=Bn11.ec tempo=Bn18.w38 nudge_up=9n05 nudge_dn=9n04 loop_in=9n13.L loop_out=9n14.L reloop=9n15.L loop_halve=9n16.L pad*4=9n1B.L | m fader=Bn05 filter=Bn04 eq_hi=Bn01 eq_mid=Bn02 eq_low=Bn03 | " +
+          "g mix.ch1.cue=900E.L mix.ch2.cue=900F.L browse.load1=9010 browse.load2=9011 browse.knob=B017.e browse.press=9012 mix.master=B00A mix.hp_level=B008 mix.hp_mix=B009 mix.xfader=B007", lay:"2,b8,r,b" },
+      { k:"party-mix", n:"Party Mix", re:"party ?mix", ch:2, pn:"45", jt:340, cf:"m", src:MX + "Numark-Party-Mix.midi.xml and Numark-Party-Mix.scripts.js",
+        s:"d play=9n00.L cue=9n01.L sync=9n02.L jog_side@jog=Bn06.e tempo=Bn09.x pad*4=9p14.L | m cue=9n1B.L trim=Bn17 eq_hi=Bn18 eq_low=Bn19 fader=Bn1C | " +
+          "g mix.xfader=BF08 mix.master=BF0A mix.hp_level=BF0C mix.hp_mix=BF0D browse.knob=BF00.e browse.press=9F00 browse.load1=9F02 browse.load2=9F03", lay:"2,b4,r,0" },
+      { k:"dj2go2-touch", n:"DJ2GO2 Touch", re:"dj2go2", ch:2, pn:"45", jt:236, cf:"m", src:MX + "Numark_DJ2GO2_Touch.midi.xml and Numark_DJ2GO2_Touch_scripts.js",
+        s:"d play=9n00.L cue=9n01.L sync=9n02.L jog_touch=9n06 jog=Bn06.ec tempo=Bn09 pad*4=9p01.L clear*4=9p09.S loop_in=9p21 loop_out=9p22 reloop=9p24 | m cue=9n1B.L | " +
+          "g mix.xfader=BF08 mix.master=BF0A mix.hp_level=BF0C browse.knob=BF00.e browse.press=9F06 browse.load1=9F02 browse.load2=9F03", lay:"2,a4,r,0" },
+      { k:"inpulse-500", n:"DJControl Inpulse 500", re:"inpulse ?500", b:"hc+hcl", a:"d shift=9n04 slip=9n01 pad*8=9p00.L clear*8=9p08.S | m -Bn00 -Bn02 -Bn03 -Bn04 -Bn05 fader=Bn00.w eq_low=Bn02.w eq_mid=Bn03.w eq_hi=Bn04.w trim=Bn05.w",
+        ch:2, dn:"12", sn:"45", pn:"67", jt:248, cf:"m", init:"B07F7F", src:MX + "Hercules_DJControl_Inpulse_500.midi.xml and Hercules-DJControl-Inpulse-500-script.js", lay:"2,b8,o,b" },
+      { k:"inpulse-300", n:"DJControl Inpulse 300", re:"inpulse ?300", b:"hc+hcl", a:"d slip=9n01 pad*8=9p00.L clear*8=9p08.S", ch:2, dn:"12", sn:"45", pn:"67", jt:248, cf:"m", init:"B07F7F",
+        src:MX + "Hercules_DJControl_Inpulse_300.midi.xml and Hercules-DJControl-Inpulse-300-script.js", lay:"2,b8,o,b" },
+      { k:"inpulse-200", n:"DJControl Inpulse 200", re:"inpulse ?200", b:"hc+hcl", a:"d pad*4=9p00.L clear*4=9p08.S | m -Bn03", ch:2, dn:"12", sn:"45", pn:"67", jt:248, cf:"m", init:"B07F7F",
+        src:MX + "Hercules_DJControl_Inpulse_200.midi.xml and Hercules-DJControl-Inpulse-200-script.js", lay:"2,b4,o,b" },
+      { k:"starlight", n:"DJControl Starlight", re:"djcontrol ?starlight|\\bstarlight\\b", b:"hc", a:"d -9n0D pad*4=9p00.L clear*4=9p08.S | m -Bn03 -Bn04 -Bn05 | g -B001 -9000", ch:2, dn:"12", sn:"45", pn:"67", jt:248, cf:"m",
+        src:MX + "Hercules DJControl Starlight.midi.xml and Hercules-DJControl-Starlight-scripts.js", lay:"2,b4,o,0" },
+      { k:"mc7000", n:"MC7000", re:"mc-?7000", b:"im+iml", a:"d -Bn09 tempo=Bn09.w77 shift=9n32 slip=9n0F start=9n05.S pad*8=9p14.L clear*8=9p1C.S | g browse.press=9F07 browse.press=9F1F browse.load3=9F04 browse.load4=9F05",
+        ch:4, pn:"4567", jt:894, cf:"m", src:MX + "Denon-MC7000.midi.xml and Denon-MC7000-scripts.js", lay:"4,b8,r,b" },
+      { k:"mc4000", n:"MC4000", re:"mc-?4000", b:"im+iml", a:"d -Bn09 -9n0B tempo=Bn09.wx nudge_dn=9n0C nudge_up=9n0D start=9n05.S pad*4=9p14.L clear*4=9p1C.S | g browse.press=9F1F mix.hp_level=BF0C mix.hp_mix=BF0D",
+        ch:2, pn:"45", jt:605, cf:"m", src:MX + "Denon MC4000.midi.xml and Denon-MC4000-scripts.js", lay:"2,b4,r,b" },
+      { k:"dj-505", n:"DJ-505", re:"\\bdj-?505", b:"im+iml", a:"d -Bn09 -9n0B -9n0C tempo=Bn09.w3Bx _play=9n04.S _cue=9n05.S _sync=9n03.S slip=9n07 pad*8=9p14.L clear*8=9p1C.S | m -Bn16 -Bn17 -Bn18 -Bn19 -Bn1C trim=Bn16.w34 eq_hi=Bn17.w35 eq_mid=Bn18.w36 eq_low=Bn19.w37 fader=Bn1C.w3A | " +
+          "g -BF08 mix.xfader=BF08.w58 d1.shift=9F00 browse.press=9F06 browse.load3=9F04 browse.load4=9F05", ch:2, dn:"0123", pn:"4567", jt:512, cf:"m", keep:"BF6400", src:MX + "Roland_DJ-505.midi.xml and Roland_DJ-505-scripts.js", lay:"2,b8,r,b" },
+      { k:"dj-202", n:"DJ-202", re:"\\bdj-?202", b:"im+iml", a:"d -Bn09 -9n0B -9n0C tempo=Bn09.w3Bx _play=9n04.S _cue=9n05.S _sync=9n03.S pad*8=9p14.L clear*8=9p1C.S | m -Bn16 -Bn17 -Bn18 -Bn19 -Bn1C trim=Bn16.w34 eq_hi=Bn17.w35 eq_mid=Bn18.w36 eq_low=Bn19.w37 fader=Bn1C.w3A | " +
+          "g -BF08 mix.xfader=BF08.w58 d1.shift=9F00 browse.press=9F06", ch:2, dn:"0123", pn:"4567", jt:512, cf:"f", keep:"BF6400", src:"its family (Roland DJ-505, " + MX + "Roland_DJ-505.midi.xml)", lay:"2,b8,r,b" }
+    ];
+    // A name as the computer gives it ("2- DDJ-FLX4", "Pioneer DDJ-FLX4 MIDI 1", "DDJ-FLX4 Port 1") without the parts
+    // that only say which port or which copy it is.
+    function tidy(name){
+      return String(name || "").toLowerCase().replace(/^\s*\d+\s*-\s*/, "").replace(/\bmidi(in|out)\d*\b/g, " ").replace(/[()\[\]]/g, " ")
+        .replace(/\b(midi|usb|port|in|out|input|output|controller|audio)\b( ?\d+)?/g, " ").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    }
+    var res = null;
+    function find(name){
+      var t = tidy(name), i;
+      if(!t) return null;
+      if(!res) res = M.map(function(m){ return new RegExp(m.re, "i"); });
+      for(i = 0; i < M.length; i++) if(res[i].test(t)) return M[i];
+      return null;
+    }
+    function byKey(k){ for(var i = 0; i < M.length; i++) if(M[i].k === k) return M[i]; return null; }
+    // the tokens of a model, family parts first, then its own; a later token for the same message replaces an earlier one
+    function spec(m){
+      var parts = [];
+      if(m.s) parts.push(m.s);
+      if(m.b) m.b.split("+").forEach(function(f){ parts.push(F[f]); });
+      if(m.a) parts.push(m.a);
+      return parts;
+    }
+    // a family on its own, for a controller whose name only says who made it (the person chooses to try it)
+    var FAMS = { rb:{ k:"fam-rb", n:"AlphaTheta / Pioneer DJ layout", b:"rb", ch:2, jt:720, cf:"f", fam:1, src:"the numbers AlphaTheta and Pioneer DJ controllers share", lay:"2,b8,r,t" },
+      im:{ k:"fam-im", n:"Numark / Denon DJ / Roland layout", b:"im+iml", a:"d pad*8=9p14.L", ch:2, pn:"45", jt:1024, cf:"f", fam:1, src:"the numbers Numark, Denon DJ and Roland controllers share", lay:"2,b8,r,b" },
+      hc:{ k:"fam-hc", n:"Hercules DJControl layout", b:"hc+hcl", a:"d pad*4=9p00.L", ch:2, dn:"12", sn:"45", pn:"67", jt:248, cf:"f", fam:1, src:"the numbers Hercules DJControl controllers share", lay:"2,b4,o,b" } };
+    // which family a name hints at, when no model fits: "" when none
+    function famFor(name, maker){
+      var t = String(name || "") + " " + String(maker || "");
+      if(/alphatheta|pioneer|\bddj-|\bxdj-|opus-?quad|omnis-?duo/i.test(t)) return "rb";
+      if(/numark|denon|\bmc\d{4}|mix ?track|\bns\d|roland|\bdj-\d\d\d\b|rane|akai/i.test(t)) return "im";
+      if(/hercules|djcontrol|inpulse/i.test(t)) return "hc";
+      return "";
+    }
+    // the second way one device can show up: a port for something else (the DIN sockets, a second layer)
+    function extraPort(name){ return /\bmidi(in|out)[2-9]\b|\b(port|midi) ?[2-9]\b|\bdin\b|\bext(ernal)?\b/i.test(String(name || "")); }
+    function hx(n){ return ("0" + (n & 255).toString(16).toUpperCase()).slice(-2); }
+    function rowKey(st, num){ var c = st & 0xF0; return (c === 0xB0 ? "c" : (c === 0xE0 ? "e" : "n")) + hx(st).toLowerCase() + "." + num; }
+    var HOLD = /^(cue|shift|jog_touch|nudge_dn|nudge_up|loop_in|pad\d)$/;
+    function idOf(a){
+      if(/^jog_/.test(a)) return "jog";
+      if(/^(clear|bjump)\d$/.test(a)) return "pad" + a.slice(-1);
+      return a === "start" ? "cue" : (a === "master" ? "sync" : a);
+    }
+    var TOK = /^(-)?(?:([a-z_0-9.]+?)(?:\*(\d))?(?:@([a-z_0-9.]+))?=)?([9BE])([0-9A-Fnpqs])([0-9A-F]{2})(?:\.([A-Za-z0-9]+))?$/;
+    var made = {};
+    // -> { key, title, model, channels, decks, by:{ "n90.11": entry }, list:[entry] }, the entries shaped like the DDJ-GRV6 table's:
+    // { st, num, key, id (the control in the drawing), t (target, "" when it is left alone), k (btn, hold, abs, msb, lsb, jog, enc, pb, ign),
+    //   dk (deck or channel), lid (the name its light goes by), sh, led, long, inv, tq, vin, unv, fam, mode, why, pair }
+    function decode(m){
+      if(made.hasOwnProperty(m.k)) return made[m.k];
+      var P = { key:m.k, by:{}, list:[], title:m.n, model:m, channels:m.ch, grv6:false, bad:[] };
+      var dn = m.dn || "0123".slice(0, m.ch), pn = m.pn || "79BD", qn = m.qn || "8ACE", sn = m.sn || "";
+      P.decks = dn.length;
+      function drop(k){ var old = P.by[k]; if(old){ P.list.splice(P.list.indexOf(old), 1); delete P.by[k]; } }
+      function put(e){ drop(e.key); P.by[e.key] = e; P.list.push(e); }
+      function one(scope, tok, di){
+        var q = TOK.exec(tok);
+        if(!q){ P.bad.push(tok); return; }
+        var deck = di + 1, side = di % 2 + 1, nb = q[6], c;
+        if(nb === "n") c = dn.charAt(di); else if(nb === "p") c = pn.charAt(di); else if(nb === "q") c = qn.charAt(di); else if(nb === "s") c = sn.charAt(di); else c = nb;
+        if(!c) return;
+        var st = parseInt(q[5] + c, 16), num0 = parseInt(q[7], 16), fl = q[8] || "", n = q[3] ? +q[3] : 1, i;
+        if(q[1]){ var dk0 = P.by[rowKey(st, num0)]; if(dk0 && dk0.pair) drop(dk0.pair); drop(rowKey(st, num0)); return; }
+        for(i = 0; i < n; i++){
+          var a = q[2] + (q[3] ? String(i + 1) : ""), ign = a.charAt(0) === "_", t = "", id = "", lid = "", num = num0 + i;
+          if(ign) a = a.slice(1);
+          var ida = q[4] ? q[4] + (q[3] ? String(i + 1) : "") : idOf(a);
+          if(scope === "d"){
+            if(a === "decksel"){ t = "deck." + (side === 1 ? "l" : "r") + deck; id = "d" + side + ".deck_" + (deck <= 2 ? "a" : "b"); }
+            else if(a === "load"){ t = "browse.load" + deck; id = "browse.load" + (m.ch >= deck ? deck : side); }
+            else { t = ign ? "" : "d" + deck + "." + a; id = "d" + side + "." + ida; lid = "d" + deck + "." + ida; }
+          } else if(scope === "m"){
+            t = ign ? "" : "mix.ch" + deck + "." + a; id = "mix.ch" + (m.ch >= deck ? deck : side) + "." + ida; lid = "mix.ch" + deck + "." + ida;
+          } else {
+            t = ign ? "" : a; id = q[4] || (a === "browse.press" ? "browse.knob" : a);
+          }
+          var pb = (st & 0xF0) === 0xE0, k, base = a.replace(/^.*\./, ""), dk = /^d\d\./.test(t);
+          if(ign) k = "ign";
+          else if(pb || fl.indexOf("E") >= 0) k = "pb";
+          else if(dk ? /^jog(_bend|_side|_search)?$/.test(base) : t === "browse.knob") k = fl.indexOf("e") >= 0 ? "enc" : "jog";
+          else if(dk ? base === "tempo" : (/^mix\./.test(t) ? base !== "cue" : t === "fx.depth")) k = /w/.test(fl) ? "msb" : "abs";
+          else k = dk && HOLD.test(base) ? "hold" : "btn";
+          var e = { st:st, num:num, id:id, t:t, k:k, key:rowKey(st, num) };
+          if(lid) e.lid = lid;
+          if(scope !== "g") e.dk = deck;
+          if(fl.indexOf("L") >= 0) e.led = 1;
+          if(fl.indexOf("S") >= 0) e.sh = 1;
+          if(fl.indexOf("G") >= 0) e["long"] = 1;
+          if(fl.indexOf("x") >= 0) e.inv = 1;
+          if(fl.indexOf("c") >= 0) e.tq = 1;
+          if(fl.indexOf("V") >= 0) e.vin = true; else if(fl.indexOf("v") >= 0) e.vin = false;
+          if(fl.indexOf("u") >= 0) e.unv = 1;
+          if(fl.indexOf("f") >= 0) e.fam = 1;
+          if(fl.indexOf("M") >= 0) e.mode = "beat jump";
+          if(ign) e.why = /^pad\d$/.test(a) ? "sampler pad: the DJ area has no sampler" : "has no job in First Loop" + (e.sh ? " with SHIFT" : "");
+          put(e);
+          if(k === "msb"){
+            var w = /w([0-9A-F]{2})?/.exec(fl), l = { st:st, num:w[1] ? parseInt(w[1], 16) : num + 0x20, id:id, t:t, k:"lsb" }, kk;
+            l.key = rowKey(st, l.num);
+            for(kk in e) if(e.hasOwnProperty(kk) && !l.hasOwnProperty(kk)) l[kk] = e[kk];
+            e.pair = l.key;
+            put(l);
+          }
+        }
+      }
+      spec(m).forEach(function(part){
+        part.split(" | ").forEach(function(sec){
+          var scope = sec.charAt(0), di;
+          sec.slice(2).split(" ").forEach(function(tok){
+            if(!tok) return;
+            if(scope === "g") one("g", tok, 0);
+            else for(di = 0; di < dn.length; di++) one(scope, tok, di);
+          });
+        });
+      });
+      made[m.k] = P;
+      return P;
+    }
+    return { models:M, find:find, byKey:byKey, spec:spec, decode:decode, tidy:tidy, extraPort:extraPort, rowKey:rowKey, fams:FAMS, famFor:famFor,
+             CF:{ m:"from the open-source Mixxx project", o:"from the maker’s MIDI message list", f:"from its family of controllers" } };
+  })();
   // ---- GEARMAP: drawings of equipment ----
   // Our own line drawings (no photographs, no logos), made here from short
   // tables of positions. The Assistant picks controls by id; a control that is
@@ -22429,6 +22708,7 @@
     var NS = "http://www.w3.org/2000/svg", MAPS = {}, KEYS = [];
     var NOTE_OWN = "Diagram drawn by First Loop; positions are approximate.";
     var NOTE_GEN = "Typical layout for this kind of equipment — yours may differ.";
+    var NOTE_TYP = "Typical layout — positions may differ on your unit.";
     function sv(tag, at){
       var e = document.createElementNS(NS, tag), k;
       if(at) for(k in at) if(at.hasOwnProperty(k)) e.setAttribute(k, at[k]);
@@ -22647,6 +22927,178 @@
     genericDJ("generic-dj2", "DJ controller, two channels", 2);
     genericDJ("generic-dj4", "DJ controller, four channels", 4);
 
+    // ---- a drawing for every controller in CLIB ----
+    // Built from the model's own description (how many channels, where its pads, tempo slider and loop
+    // buttons are) and from the controls its table really has, so nothing is drawn that the unit lacks
+    // and every control of its table is in the picture. The shape is right; the place of each button
+    // inside its part of the unit is the usual one for its family, hence the caption.
+    var LOOPW = { loop_in:["IN", "Loop in", "marks where a loop starts"], loop_out:["OUT", "Loop out", "marks where the loop ends and starts it going round"],
+      reloop:["RELOOP", "Reloop / exit", "leaves the loop, or goes back into the last one"], loop_auto:["AUTO", "Auto loop", "makes a 4-beat loop from where the track is"],
+      loop_halve:["1/2X", "Loop half as long", "halves the loop"], loop_double:["2X", "Loop twice as long", "doubles the loop"] };
+    function modelDJ(m){
+      var lay = String(m.lay || "2,b8,r,t").split(","), chans = +lay[0] === 4 ? 4 : 2, padAt = lay[1].charAt(0), padN = +lay[1].slice(1) || 0, tempoAt = lay[2] || "r", loopAt = lay[3] || "t";
+      var MW = chans === 4 ? 190 : 150, DW = 198, W = DW * 2 + MW, H = 310;
+      if(padAt === "m") MW += 120, W = DW * 2 + MW;
+      define("dj-" + m.k, m.n, false, W, H, 4.6, function(b){
+        var P = CLIB.decode(m), has = {}, d, k;
+        P.list.forEach(function(e){ has[e.id] = 1; });
+        b.P(0, 0, W, H, "", { body:1 });
+        b.R("deck1", 0, 0, DW, H, P.decks === 4 ? "Left side: decks 1 and 3" : "Left side: deck 1");
+        b.R("deck2", DW + MW, 0, DW, H, P.decks === 4 ? "Right side: decks 2 and 4" : "Right side: deck 2");
+        b.R("mixer", DW, 0, MW, H, "Middle: browse and mixer");
+        for(d = 1; d <= 2; d++) (function(d, ox){
+          var pre = "d" + d + ".", tail = " (deck " + d + ")", loops = ["loop_in", "loop_out", "reloop", "loop_auto", "loop_halve", "loop_double"].filter(function(a){ return has[pre + a]; });
+          var outer = tempoAt === "o", tx = tempoAt === "t" ? 0 : (outer ? (d === 1 ? ox + 10 : ox + DW - 23) : ox + 172), jx = tempoAt === "t" ? ox + 99 : (outer ? (d === 1 ? ox + 112 : ox + 86) : ox + 92);
+          var jy = padAt === "a" ? 150 : (tempoAt === "t" ? 112 : 100), jr = padAt === "a" ? 52 : 60, y0 = 8;
+          b.at("Deck " + d, "deck" + d, tail, pre);
+          function small(id, x, y, w, cap, name, does, o){ b.C(id, "b", x, y, w, 11, cap, name, does, o || { fs:3.5 }); }
+          function loopRow(x, y){
+            loops.forEach(function(a, i){ var q = LOOPW[a]; small(a, x + i * 23, y, 21, q[0], q[1], q[2], { fs:a === "reloop" ? 3.1 : 3.6 }); });
+          }
+          // the top edge: the tempo slider when it lies along the top, else the loop buttons; the DECK buttons on the right
+          if(tempoAt === "t"){ b.C("tempo", "fh", ox + 50, y0 + 2, 98, 12, "TEMPO", "Tempo slider", "makes the track faster or slower", { lp:"b" }); }
+          else if(loopAt === "t" && loops.length) loopRow(ox + 8, y0);
+          if(has[pre + "deck_a"]){
+            small("deck_a", ox + 134, tempoAt === "t" ? y0 + 26 : y0, 28, "DECK " + d, "DECK " + d + " button", "switches this side to deck " + d + ": every control on this side then works deck " + d, { fs:3.4, dg:"DECK 1 or 2" });
+            small("deck_b", ox + 164, tempoAt === "t" ? y0 + 26 : y0, 28, "DECK " + (d + 2), "DECK " + (d + 2) + " button", "switches this side to deck " + (d + 2) + ": the same jog wheel, pads and buttons then work deck " + (d + 2), { fs:3.4, dg:"DECK 3 or 4" });
+          } else if(tempoAt !== "t" && !(loopAt === "t" && loops.length > 4)) b.T(ox + (loopAt === "t" && loops.length ? 168 : DW / 2), 17, "DECK " + d, 7, "middle");
+          if(padAt === "a"){
+            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", ox + 30 + (k - 1) * 36, 34, 32, 30, String(k), "Pad " + k, "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:7 });
+          }
+          b.C("jog", "j", jx, jy, jr, 0, "JOG", "Jog wheel", has[pre + "jog"] && P.list.some(function(e){ return e.id === pre + "jog" && /jog_touch$/.test(e.t); })
+            ? "touch the top to hold or scratch the track; turn the edge to push it a little faster or slower" : "turn it to push the track a little faster or slower");
+          if(tempoAt !== "t") b.C("tempo", "fv", tx, 40, 13, 96, "TEMPO", "Tempo slider", "makes the track faster or slower");
+          // beside the tempo slider, or under the top slider: sync and the pitch bend buttons
+          var sx = tempoAt === "t" ? ox + 152 : (outer ? (d === 1 ? ox + 4 : ox + DW - 35) : ox + 163), sy = tempoAt === "t" ? 34 : 154;
+          if(has[pre + "sync"]) small("sync", sx, sy, 31, "SYNC", "Sync", "matches this deck’s tempo and beat to the " + (P.decks === 4 ? "master" : "other") + " deck");
+          if(has[pre + "nudge_dn"]){
+            small("nudge_dn", sx, sy - 28, 15, "−", "Pitch bend −", "held down, slows the track a little so its beat lines up", { fs:5 });
+            small("nudge_up", sx + 16, sy - 28, 15, "+", "Pitch bend +", "held down, speeds the track up a little so its beat lines up", { fs:5 });
+          }
+          if(has[pre + "slip"]) small("slip", tempoAt === "t" ? ox + 8 : (outer && d === 1 ? ox + DW - 36 : ox + 6), tempoAt === "t" ? 34 : 154, 28, "SLIP", "Slip", "lets the track carry on silently underneath while you scratch or loop");
+          // the bottom: shift, cue and play on the left; pads, or the loop buttons, to their right
+          var by = 178;
+          if(has[pre + "shift"]) small("shift", ox + 6, by + 2, 24, "SHIFT", "Shift", "held down, gives the other buttons their second job");
+          b.C("cue", "r", ox + 18, 222, 12, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
+          b.C("play", "r", ox + 18, 258, 12, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
+          if(loopAt === "b" && loops.length) loopRow(ox + 44, by);
+          else if(loopAt === "t" && tempoAt === "t" && loops.length) loopRow(ox + 44, by);
+          if(padAt === "b"){
+            var rows = padN > 4 ? 2 : 1, ph = rows === 2 ? 48 : 60, py = rows === 2 ? 194 : 214;
+            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", ox + 44 + ((k - 1) % 4) * 34, py + (k > 4 ? 54 : 0), 31, ph, String(k), "Pad " + k,
+              "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:7 });
+          }
+        })(d, d === 1 ? 0 : DW + MW);
+        // the middle
+        var mx0 = DW, order = chans === 4 ? [3, 1, 2, 4] : [1, 2], pitch = chans === 4 ? 34 : 44, cxm = DW + MW / 2, x0 = cxm - pitch * (order.length - 1) / 2, sy0 = padAt === "m" ? 118 : 74;
+        if(padAt === "m"){
+          // a scratch-style unit: the pads sit in the mixer section, a block of eight for each deck
+          for(d = 1; d <= 2; d++){
+            b.at("Deck " + d, "mixer", " (deck " + d + ")", "d" + d + ".");
+            for(k = 1; k <= padN; k++) b.C("pad" + k, "p", (d === 1 ? mx0 + 8 : mx0 + MW - 8 - 4 * 27) + ((k - 1) % 4) * 27, 44 + (k > 4 ? 32 : 0), 24, 28, String(k), "Pad " + k,
+              "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:6 });
+          }
+        }
+        b.at("Browse", "mixer", "", "browse.");
+        if(has["browse.knob"]) b.C("knob", "e", cxm, 24, 10, 0, "BROWSE", "Browse knob", "turn to scroll through the track list, press to choose", { lp:"a", fs:3.8 });
+        order.forEach(function(n, i){
+          var cx = x0 + i * pitch, pre = "mix.ch" + n + ".", yy = sy0, gap = padAt === "m" ? 20 : 24;
+          if(has["browse.load" + n]){ b.at("Browse", "mixer", "", "browse."); b.C("load" + n, "b", cx - 12, padAt === "m" ? 14 : 46, 24, 11, "LOAD " + n, "Load " + n, "puts the chosen track on deck " + n, { run:"Load buttons", fs:3.8 }); }
+          b.at("Mixer", "mixer", " (channel " + n + ")", pre);
+          [["trim", "TRIM", "Trim", "sets how loud channel " + n + " comes into the mixer, before the EQ"], ["eq_hi", "HI", "High EQ", "turns the treble of channel " + n + " up or down"],
+           ["eq_mid", "MID", "Mid EQ", "turns the middle of channel " + n + " up or down"], ["eq_low", "LOW", "Low EQ", "turns the bass of channel " + n + " up or down"],
+           ["filter", "FILTER", "Filter knob", "one-knob filter for channel " + n + ": left takes away the highs, right takes away the lows, the middle is off"]].forEach(function(q){
+            if(!has[pre + q[0]]) return;
+            b.C(q[0], "k", cx, yy, 7.5, 0, q[1], q[2], q[3]); yy += gap;
+          });
+          if(yy < sy0 + 3 * gap) yy = sy0 + 3 * gap;
+          if(has[pre + "cue"]){ b.C("cue", "b", cx - 11, yy - 2, 22, 11, "CUE", "Headphone cue", "sends channel " + n + " to the headphones so you can hear it before the audience does"); yy += 17; }
+          if(has[pre + "fader"]) b.C("fader", "fv", cx - 6, yy, 12, Math.max(40, H - 34 - yy), "", "Channel fader", "the volume of channel " + n + " in the mix");
+        });
+        b.at("Mixer", "mixer", "", "mix.");
+        if(has["mix.xfader"]) b.C("xfader", "fh", cxm - 34, H - 22, 68, 12, "", "Crossfader", P.decks === 4 ? "slides the sound between the left decks (1 and 3) and the right decks (2 and 4)" : "slides the sound between the left deck and the right deck");
+        var lx = DW + 14, ly = sy0;
+        if(has["mix.master"]){ b.C("master", "k", lx, ly, 7, 0, "MASTER", "Master level", "the volume of the main output to the speakers", { fs:3.5 }); ly += 48; }
+        if(has["mix.hp_mix"]){ b.C("hp_mix", "k", lx, ly, 7, 0, "PHONES\nMIX", "Headphones mix", "what the headphones hear: the cued channel at one end, the main mix at the other", { fs:3.4 }); ly += 52; }
+        if(has["mix.hp_level"]) b.C("hp_level", "k", lx, ly, 7, 0, "PHONES\nLEVEL", "Headphones level", "the volume in the headphones", { fs:3.4 });
+        b.at("Effect", "mixer", "", "fx.");
+        if(has["fx.depth"]) b.C("depth", "k", DW + MW - 14, sy0, 7, 0, "LEVEL\nDEPTH", "Effect level/depth", "how much of the effect is heard", { fs:3.4 });
+        if(has["fx.on"]) b.C("on", "r", DW + MW - 14, sy0 + 50, 8, 0, "FX", "Effect on/off", "switches the effect on or off", { fs:3.6 });
+      });
+      MAPS["dj-" + m.k].note = NOTE_TYP;
+    }
+    CLIB.models.forEach(function(m){ if(!m.draw) modelDJ(m); });
+    Object.keys(CLIB.fams).forEach(function(f){ modelDJ(CLIB.fams[f]); });
+
+    // DDJ-400 and DDJ-FLX4: millimetres (482 x 272). Which controls each has, and which part of the unit each is in, are
+    // from the makers' manuals ("Part names") and the VirtualDJ hardware manuals (virtualdj.com/manuals/hardware/pioneer/
+    // ddj400/controls.html and ddjflx4/controls.html, read 10 October 2026), and one review (digitaldjtips.com: "a Beat FX
+    // section on the right side of the mixer"; the DDJ-400's mic level knob is on the back). None of those texts says where
+    // a button sits inside its section, so the places are the ones this family of controllers shares, and the caption says so.
+    function ddj400like(key, title, flx4){
+      define(key, title, false, 482, 272, 4.2, function(b){
+        var d, k;
+        b.P(0, 0, 482, 272, "", { body:1 });
+        b.R("deck1", 0, 0, 170, 272, "Left side: deck 1");
+        b.R("deck2", 312, 0, 170, 272, "Right side: deck 2");
+        b.R("mixer", 170, 0, 142, 272, "Middle: browse, mixer, effects");
+        for(d = 1; d <= 2; d++) (function(d, ox){
+          b.at("Deck " + d, "deck" + d, " (deck " + d + ")", "d" + d + ".");
+          b.T(ox + 126, 21, "DECK " + d, 5, "middle");
+          b.C("loop_in", "b", ox + 8, 10, 17, 9, "IN", "Loop in", "marks where a loop starts; held down it makes a 4-beat loop", { fs:3.4 });
+          b.C("loop_out", "b", ox + 27, 10, 17, 9, "OUT", "Loop out", "marks where the loop ends and starts it going round", { fs:3.4 });
+          b.C("reloop", "b", ox + 46, 10, 20, 9, "RELOOP", "Reloop / exit", "leaves the loop, or goes back into the last one", { fs:2.9 });
+          b.T(ox + 37, 7, "LOOP", 2.8, "middle");
+          b.C("call_prev", "b", ox + 74, 10, 14, 9, "◀", "Cue/loop call back", "goes to the saved cue or loop before this point; while a loop is on, halves it", { fs:3.6 });
+          b.C("call_next", "b", ox + 90, 10, 14, 9, "▶", "Cue/loop call forward", "goes to the next saved cue or loop; while a loop is on, doubles it", { fs:3.6 });
+          b.T(ox + 89, 7, "CUE/LOOP CALL", 2.8, "middle");
+          b.C("sync", "b", ox + 140, 10, 24, 10, "BEAT\nSYNC", "Beat Sync", "matches this deck’s tempo and beat to the other deck; held down, makes this deck the master", { fs:3 });
+          b.C("jog", "j", ox + 70, 96, 58, 0, "JOG", "Jog wheel", "touch the top to hold or scratch the track; turn the outer edge to push it a little faster or slower");
+          b.C("tempo", "fv", ox + 146, 44, 12, 104, "TEMPO", "Tempo slider", "makes the track faster (towards you) or slower (away from you)");
+          b.C("shift", "b", ox + 8, 164, 18, 9, "SHIFT", "Shift", "held down, gives the other buttons their second job", { fs:3.2 });
+          b.C("cue", "r", ox + 17, 198, 11, 0, "CUE", "Cue", "sets the cue point when paused; goes back to it when playing; held down, plays from it");
+          b.C("play", "r", ox + 17, 240, 11, 0, "▶/❙❙", "Play / pause", "starts the track, or pauses it");
+          var MODES = flx4 ? [["mode_hotcue", "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues"], ["mode_padfx", "PAD FX", "Pad FX mode", "makes the pads switch quick effects on (in rekordbox)"],
+                               ["mode_bjump", "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats"], ["mode_sampler", "SAMPLER", "Sampler mode", "makes the pads play short samples (in rekordbox)"]]
+                            : [["mode_hotcue", "HOT CUE", "Hot Cue mode", "makes the eight pads hot cues"], ["mode_bloop", "B.LOOP", "Beat Loop mode", "makes the pads start loops of a set number of beats (in rekordbox)"],
+                               ["mode_bjump", "B.JUMP", "Beat Jump mode", "makes the pads jump forwards or backwards by a number of beats"], ["mode_sampler", "SAMPLER", "Sampler mode", "makes the pads play short samples (in rekordbox)"]];
+          MODES.forEach(function(q, i){ b.C(q[0], "b", ox + 38 + i * 31, 164, 28, 9, q[1], q[2], q[3], { fs:3 }); });
+          for(k = 1; k <= 8; k++) b.C("pad" + k, "p", ox + 38 + ((k - 1) % 4) * 31, 180 + (k > 4 ? 44 : 0), 28, 40, String(k), "Pad " + k,
+            "in Hot Cue mode: marks a spot in the track the first time, jumps back to it every time after", { run:"Performance pads", fs:6.4 });
+        })(d, d === 1 ? 0 : 312);
+        b.at("Browse", "mixer", "", "browse.");
+        b.C("knob", "e", 241, 21, 9, 0, "", "Browse knob (rotary selector)", "turn to scroll through the track list, press to choose");
+        b.T(241, 8, "BROWSE", 3, "middle");
+        b.C("load1", "b", 202, 15, 22, 10, "LOAD", "Load 1", "puts the chosen track on deck 1", { run:"Load buttons", fs:3.3 });
+        b.C("load2", "b", 258, 15, 22, 10, "LOAD", "Load 2", "puts the chosen track on deck 2", { run:"Load buttons", fs:3.3 });
+        strip(b, 1, 211, 50, 23, { r:7, cw:20, ch:9, fh:66, fname:flx4 ? "CFX" : "FILTER" });
+        strip(b, 2, 271, 50, 23, { r:7, cw:20, ch:9, fh:66, fname:flx4 ? "CFX" : "FILTER" });
+        b.T(211, 252, "1", 4.6, "middle"); b.T(271, 252, "2", 4.6, "middle");
+        b.at("Mixer", "mixer", "", "mix.");
+        b.C("xfader", "fh", 211, 256, 60, 11, "", "Crossfader", "slides the sound between the left deck and the right deck");
+        b.C("master", "k", flx4 ? 300 : 241, flx4 ? 21 : 54, 7, 0, "MASTER\nLEVEL", "Master level", "the volume of the main output to the speakers", { fs:2.9 });
+        if(flx4) b.C("mic_level", "k", 183, 21, 6.5, 0, "MIC\nLEVEL", "Mic level", "the volume of the microphone", { fs:2.9 });
+        b.C("master_cue", "b", 231, flx4 ? 44 : 78, 20, 8, "MASTER\nCUE", "Master cue", "sends the main mix to the headphones", { fs:2.5 });
+        b.C("hp_mix", "k", 241, flx4 ? 72 : 110, 7, 0, "PHONES\nMIX", "Headphones mix", "what the headphones hear: the cued channel at one end (CUE), the main mix at the other (MASTER)", { fs:2.9 });
+        b.C("hp_level", "k", 241, flx4 ? 104 : 142, 7, 0, "PHONES\nLEVEL", "Headphones level", "the volume in the headphones", { fs:2.9 });
+        if(flx4){
+          b.C("smart_cfx", "b", 230, 138, 22, 9, "SMART\nCFX", "Smart CFX", "switches the CFX knobs to a ready-made combination of effects (in rekordbox)", { fs:2.6 });
+          b.C("smart_fader", "b", 230, 200, 22, 9, "SMART\nFADER", "Smart Fader", "lets the faders also match the tempo and bass of the two tracks for you (in rekordbox)", { fs:2.6 });
+        }
+        b.at("Beat FX", "mixer", "", "fx.");
+        b.T(298, flx4 ? 44 : 44, "BEAT FX", 3.2, "middle");
+        b.C("beat_dn", "b", 287, 50, 10, 9, "◀", "Beat shorter", "halves the length the Beat FX works over");
+        b.C("beat_up", "b", 299, 50, 10, 9, "▶", "Beat longer", "doubles the length the Beat FX works over");
+        b.C("select", "b", 287, 70, 22, 9, "FX SELECT", "Beat FX select", "chooses which Beat FX is used (echo, reverb, flanger and others)", { fs:2.7 });
+        b.C("ch", "sw", 287, 92, 22, 12, "1  2  MST", "Beat FX channel switch", "a switch that chooses what the Beat FX is put on: channel 1, channel 2 or the master", { fs:2.7, lp:"in" });
+        b.C("depth", "k", 298, 128, 7, 0, "LEVEL\nDEPTH", "Beat FX level/depth", "how much of the Beat FX is heard", { fs:2.9 });
+        b.C("on", "r", 298, 164, 8, 0, "ON\nOFF", "Beat FX on/off", "switches the Beat FX on or off", { fs:3 });
+      });
+      MAPS[key].note = NOTE_TYP;
+    }
+    ddj400like("ddj-400", "DDJ-400", false);
+    ddj400like("ddj-flx4", "DDJ-FLX4", true);
+
     // A keyboard controller: wheels, pads, knobs, transport, keys.
     function genericKeys(key, title, whites, opt){
       var KW = 11, W = Math.max(whites * KW + 56, 272), H = 150;
@@ -22769,6 +23221,11 @@
       var n = String(name || ""), mk = String(maker || ""), kind = "";
       if(!n && !mk) return "";
       if(/ddj-?grv6/i.test(n)) return "ddj-grv6";
+      // a model First Loop has a table for has its own drawing; a family the person chose for an unknown controller has the family's
+      var cm = CLIB.find(n), fam = "";
+      if(cm) return cm.draw || "dj-" + cm.k;
+      try { fam = typeof ctrlFamilyOf === "function" ? ctrlFamilyOf(n) : ""; } catch(e0){ fam = ""; }
+      if(fam && CLIB.fams[fam]) return "dj-" + CLIB.fams[fam].k;
       try { kind = typeof equipKind === "function" ? equipKind(n, mk) : ""; } catch(e){ kind = ""; }
       if(kind === "dj controller" || (!kind && /\b(dj|ddj|deck|mixtrack)\b/i.test(n))){
         return /flx-?6|flx-?10|ddj-?(1000|800|sx|sz|rz|rx|rzx|xp)|grv|xdj-?(xz|rx3|az)|opus|omnis|\b(s4|s8|mc6000|mc7000|prime 4|four)\b|platinum|\b4 ?(ch|deck)/i.test(n) ? "generic-dj4" : "generic-dj2";
@@ -22790,7 +23247,9 @@
         k = keyFor(devs[i].name, devs[i].maker);
         if(!k) continue;
         if(k === "ddj-grv6") return k;
-        if(!best || (/^generic-dj/.test(k) && !/^generic-dj/.test(best))) best = k;
+        // a drawing made for the model comes before a typical one, and a DJ controller before anything else
+        var rk = /^(ddj-|dj-)/.test(k) ? 3 : (/^generic-dj/.test(k) ? 2 : 1), rb0 = !best ? 0 : (/^(ddj-|dj-)/.test(best) ? 3 : (/^generic-dj/.test(best) ? 2 : 1));
+        if(rk > rb0) best = k;
       }
       return best;
     }
@@ -23291,16 +23750,44 @@
   // on screen, or has passed through it; until then the control on screen shows where
   // the hardware one stands. The tempo slider does the same after its side has been
   // switched to another deck.
+  //
+  // Other controllers: CLIB (above) has a table for each model it knows, and profileFor()
+  // turns a device's name into one. A tempo slider's lowest value is its "−" end (slower),
+  // as the makers' lists say; a model whose slider runs the other way is marked so in its
+  // table, and the Quick check can turn one device's slider round. A platter's steps are
+  // scaled by the number of steps in one turn: the model's own, or what the Quick check
+  // measured on this device.
+  //
+  // WHAT THE PERSON DOES ON THE CONTROLLER, for anything that wants to follow it (coaching):
+  //   CTRL.onAction(fn) -> unsubscribe. fn is called for every message from a controller that was
+  //     understood (the built-in table or a taught control), after it has acted:
+  //       { t: Date.now() in ms, device: the device's name, id: the control in the drawing ("" if none),
+  //         target: what it works ("d1.play", "mix.ch1.eq_low"; "" for a control that is recognised and left alone),
+  //         kind: "press" | "release" | "move" | "turn",
+  //         value: 1 for a press, 0 for a release, 0..1 for a knob or fader (move), the steps since the last
+  //                event for a wheel or endless knob (turn; + is clockwise),
+  //         deck: the deck or channel it belongs to (left out for the middle of the unit), via: "controller" }
+  //     Presses and releases arrive at once; a control that is being moved or turned is gathered into at
+  //     most 10 events a second for each control (the last value always arrives).
+  //   CTRL.summary() -> { device, profile (the table's key, "taught" or ""),
+  //     confidence ("experimental", "mixxx", "official", "family", "taught" or ""; never "checked on a real unit"),
+  //     controlsUsed:{ id: events so far }, unmappedSeen: how many different controls arrived that nothing knows }
   var CTRL = (function(){
     var testMode = /[?&]fltest/.test(window.location.search);
     var AT_RE = /alphatheta|pioneer|\bddj-|\bxdj-|\bdjm-|opus-?quad|omnis-?duo/i;
-    var SET_KEY = "firstloop.ctrl", MAP_KEY = "firstloop.djmap", WALK_KEY = "firstloop.ctrlwalk";
+    var SET_KEY = "firstloop.ctrl", MAP_KEY = "firstloop.djmap", WALK_KEY = "firstloop.ctrlwalk", DEV_KEY = "firstloop.ctrldev";
     var JOG_TICKS = 2080;         // steps in one turn of a platter: the owner's DDJ-GRV6 sent 2,087 for one full turn (controller check, 7 Oct 2026)
     var TURN_SECONDS = 1.8;       // one turn of a record at 33 1/3
     var SX_FLX4 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x04, 0x05, 0x00, 0x50, 0x02, 0xF7];   // DDJ-FLX4: asked again every 200 ms
     var SX_400 = [0xF0, 0x00, 0x40, 0x05, 0x00, 0x00, 0x02, 0x06, 0x00, 0x03, 0x01, 0xF7];    // DDJ-400: asked once
-    var set = { jog:1, flip:false, leds:true, builtin:true, sysex:false, pickup:true, conv:false };      // conv: the controller has been seen sending on channels 3 or 4
+    var set = { jog:1, flip:false, leds:true, builtin:true, sysex:false, pickup:true, conv:false, tv:2 };      // conv: the controller has been seen sending on channels 3 or 4; tv: which way the tempo slider runs (2 = lowest value is the − end)
     var maps = {};
+    // what is known about one device, by its name: jt (steps in one turn of its platter, measured), tflip / jflip (its tempo slider or
+    // platter runs the other way round), fam (the family layout the person chose for a controller First Loop has no table for),
+    // ck (the lines of its setup checklist that are ticked), quick (when its Quick check was last finished)
+    var devs = {};
+    function devOpt(name, make){ var d = devs.hasOwnProperty(name) ? devs[name] : null; if(!d && make){ d = devs[name] = {}; } return d; }
+    function saveDevs(){ try { window.localStorage.setItem(DEV_KEY, JSON.stringify(devs)); } catch(e){} }
     function saveSet(){ try { window.localStorage.setItem(SET_KEY, JSON.stringify(set)); } catch(e){} }
     function saveMaps(){ try { window.localStorage.setItem(MAP_KEY, JSON.stringify(maps)); } catch(e){} }
     function hx(n){ return ("0" + (n & 255).toString(16).toUpperCase()).slice(-2); }
@@ -23316,7 +23803,7 @@
     var DECKW = { play:["Play / pause", "press"], cue:["Cue", "hold"], sync:["Beat sync", "press"], jog:["Jog wheel (turn the top)", "rel"], jog_touch:["Jog wheel touch (the top, without turning)", "hold"],
       tempo:["Tempo slider", "abs"], nudge_dn:["Nudge slower (hold)", "hold"], nudge_up:["Nudge faster (hold)", "hold"], jump_back:["Beat jump back", "press"], jump_fwd:["Beat jump forward", "press"],
       loop_in:["Loop in", "hold"], loop_out:["Loop out", "press"], loop_auto:["Auto loop (4 beats)", "press"], loop_halve:["Loop half as long", "press"], loop_double:["Loop twice as long", "press"], reloop:["Reloop / exit", "press"],
-      master:["Make this deck the tempo master", "press"], start:["Back to the start of the track", "press"], shift:["Shift", "hold"],
+      master:["Make this deck the tempo master", "press"], start:["Back to the start of the track", "press"], shift:["Shift", "hold"], slip:["Slip", "press"],
       jog_bend:["Jog wheel (top, vinyl off)", "rel"], jog_side:["Jog wheel (outer edge)", "rel"], jog_search:["Jog wheel (fast search)", "rel"] };
     var CHW = { trim:["trim", "abs"], eq_hi:["high EQ", "abs"], eq_mid:["mid EQ", "abs"], eq_low:["low EQ", "abs"], filter:["filter", "abs"], fader:["fader", "abs"], cue:["headphone cue", "press"] };
     var GLOBW = { "mix.xfader":["Crossfader", "abs"], "mix.master":["Master level", "abs"], "mix.hp_mix":["Headphones mix", "abs"], "mix.hp_level":["Headphones level", "abs"],
@@ -23445,8 +23932,10 @@
     }
     function hintGone(){ if(hintEl && hintEl.parentNode) hintEl.parentNode.removeChild(hintEl); hintEl = null; }
     // ph: "down", "up", "abs" (v from 0 to 1), "rel" (v in steps)
+    var spyOn = false;                // tests only: every call of act() is written down
     function act(t, ph, v){
       var m = /^d([1-4])\.([a-z_]+?)(\d?)$/.exec(t), d, n, a, k, spt;
+      if(spyOn && api && api._test) api._test.acts.push([t, ph, v === undefined ? null : v]);
       if(typeof DJ === "undefined" || !DJ) return;
       if(m){
         n = layered(+m[1]); a = m[2]; k = m[3] ? +m[3] - 1 : -1; d = deckFor(n);
@@ -23473,7 +23962,9 @@
           case "jog_bend": case "jog_side": d.jogTurn(v * spt, false); break;
           case "jog_search": var s = d.state(); if(s.loaded) d.seek(Math.max(0, Math.min(s.duration, s.position + v * spt * 16))); break;
           case "tempo":
-            var tn = (set.flip ? -1 : 1) * (1 - 2 * v), ok = true;
+            // v is 0 at the slider's "−" end (slower) and 1 at its "+" end: AlphaTheta's own lists say "− side: Min", and the
+            // Mixxx mappings turn it the same way. (Up to v32 this was the other way round.)
+            var tn = (set.flip ? -1 : 1) * (2 * v - 1), ok = true;
             if(tempoNeed[n]){
               var ds = d.state();
               ok = ds.sync && !ds.master ? true : pickTake(t, (tn + 1) / 2, (ds.tempo + 1) / 2, true);
@@ -23663,13 +24154,33 @@
       return P;
     }
     var PROFILES = {}, profCache = {};
+    // The table for a device, by the name it gives: the DDJ-GRV6's own; else the model's from CLIB; else the family the person
+    // chose for it in the Controller tab; else, for any other "DDJ-" name, the few controls that family has in common.
     function profileFor(name, maker){
       var key = name + "|" + (maker || "");
       if(profCache.hasOwnProperty(key)) return profCache[key];
-      var p = null, which = /ddj-?grv6/i.test(name) ? "ddj-grv6" : (/\bddj-/i.test(name) && AT_RE.test(name + " " + (maker || "")) ? "ddj" : "");
-      if(which) p = PROFILES[which] || (PROFILES[which] = buildProfile(which === "ddj-grv6"));
+      var p = null, which = /ddj-?grv6/i.test(name) ? "ddj-grv6" : "", cm = which ? null : CLIB.find(name), dv = devOpt(name);
+      if(!which && !cm && dv && dv.fam && CLIB.fams[dv.fam]) cm = CLIB.fams[dv.fam];
+      if(cm) p = CLIB.decode(cm);
+      else {
+        if(!which && /\bddj-/i.test(name) && AT_RE.test(name + " " + (maker || ""))) which = "ddj";
+        if(which) p = PROFILES[which] || (PROFILES[which] = buildProfile(which === "ddj-grv6"));
+      }
       profCache[key] = p;
       return p;
+    }
+    // how sure the table is: its words for the screen, and the one word CTRL.summary() gives
+    function confOf(p){
+      if(!p) return { word:"", text:"" };
+      if(p.grv6) return { word:"experimental", text:"from a community mapping, the maker’s MIDI message list and one controller check on a real unit" };
+      if(!p.model) return { word:"family", text:CLIB.CF.f };
+      return { word:p.model.cf === "m" ? "mixxx" : (p.model.cf === "o" ? "official" : "family"), text:CLIB.CF[p.model.cf] };
+    }
+    // steps in one turn of this device's platter: measured on it, else its model's, else the DDJ-GRV6's
+    function ticksOf(dev, p){
+      var dv = devOpt(dev);
+      if(dv && dv.jt > 0) return dv.jt;
+      return p && p.model && p.model.jt > 0 ? p.model.jt : JOG_TICKS;
     }
     function entryWords(e){
       var ti = e.t ? tinfo(e.t) : null, w;
@@ -23704,6 +24215,7 @@
     function chansOf(name, maker){
       var p = profileFor(name, maker);
       if(p && p.grv6) return 4;
+      if(p && p.model) return p.channels === 4 ? 4 : 2;
       return keyOf(name, maker) === "generic-dj4" ? 4 : 2;
     }
     // the device the Controller tab is about: one with a table, else one that was taught, else any DJ controller, else the first
@@ -23712,6 +24224,7 @@
       try { devs = equipDevices(); } catch(e){ devs = []; }
       for(i = 0; i < devs.length; i++){
         r = profileFor(devs[i].name, devs[i].maker) ? 4 : (maps[devs[i].name] ? 3 : (isDJ(devs[i].name, devs[i].maker) ? 2 : 1));
+        if(CLIB.extraPort(devs[i].name)) r -= 0.5;          // a controller's second port is not the one its controls come from
         if(r > rank){ rank = r; best = devs[i]; }
       }
       return best;
@@ -23788,7 +24301,7 @@
         // a deck that is not in use (3 and 4 with two decks) has its lights put out
         try { s = n <= DJ.deckCount() ? DJ.deck(n).state() : { playing:false, loaded:false, sync:false, loop:{ active:false }, hotcues:[] }; } catch(e){ continue; }
         led("d" + n + ".play", s.playing); led("d" + n + ".cue", s.loaded); led("d" + n + ".sync", s.sync);
-        led("d" + n + ".loop_in", s.loop.active); led("d" + n + ".loop_out", s.loop.active); led("d" + n + ".reloop", s.loop.active);
+        led("d" + n + ".loop_in", s.loop.active); led("d" + n + ".loop_out", s.loop.active); led("d" + n + ".reloop", s.loop.active); led("d" + n + ".loop_auto", s.loop.active);
         for(k = 0; k < 8; k++) led("d" + n + ".pad" + (k + 1), s.hotcues[k] !== null && s.hotcues[k] !== undefined);
         rawLed([0x9F, n - 1, s.loaded ? 0x7F : 0x00], true);
       }
@@ -23800,7 +24313,7 @@
       DJ.on("play", function(d){ led("d" + d.deck + ".play", d.playing); });
       DJ.on("cue", function(d){ led("d" + d.deck + ".cue", true); });
       DJ.on("sync", function(d){ led("d" + d.deck + ".sync", d.on); });
-      DJ.on("loop", function(d){ led("d" + d.deck + ".loop_in", d.active); led("d" + d.deck + ".loop_out", d.active); led("d" + d.deck + ".reloop", d.active); });
+      DJ.on("loop", function(d){ led("d" + d.deck + ".loop_in", d.active); led("d" + d.deck + ".loop_out", d.active); led("d" + d.deck + ".reloop", d.active); led("d" + d.deck + ".loop_auto", d.active); });
       DJ.on("hotcue", function(d){ led("d" + d.deck + ".pad" + (d.index + 1), d.set !== false); });
       DJ.on("load", function(d){
         var s; try { s = DJ.deck(d.deck).state(); } catch(e){ return; }
@@ -23827,8 +24340,25 @@
     function ports(access){
       var next = {}, names = [];
       try { if(access && access.outputs) access.outputs.forEach(function(o){ if(o.state !== "disconnected"){ var nm = String(o.name || "MIDI device"); if(!next[nm]) next[nm] = o; } }); } catch(e){}
+      // A controller that shows up as two ports (its own, and one for its DIN sockets or a second layer): lights and
+      // start messages go to its own port only, so nothing is sent on to whatever is plugged into the other.
+      Object.keys(next).forEach(function(nm){
+        if(!CLIB.extraPort(nm)) return;
+        var t0 = CLIB.tidy(nm);
+        if(Object.keys(next).some(function(o2){ return o2 !== nm && !CLIB.extraPort(o2) && CLIB.tidy(o2) === t0; })) delete next[nm];
+      });
       var fresh = Object.keys(next).filter(function(nm){ return !outs[nm]; }), gone = Object.keys(outs).some(function(nm){ return !next[nm]; });
       outs = next;
+      // what a model needs to hear before it sends where its knobs stand, or to stay in touch (short messages, never extended ones)
+      var keep = false;
+      Object.keys(next).forEach(function(nm){
+        var pm = set.builtin ? profileFor(nm, "") : null, md = pm && pm.model;
+        if(!md) return;
+        if(md.init && fresh.indexOf(nm) >= 0) send(nm, hexBytes(md.init));
+        if(md.keep) keep = true;
+      });
+      if(keep && !keepTimer) keepTimer = setInterval(keepTick, 500);
+      if(!keep && keepTimer){ clearInterval(keepTimer); keepTimer = null; }
       var active = null, chans = 0;
       try { (midiPorts.ins || []).forEach(function(p){ if(!active && (profileFor(p.name, p.maker) || maps[p.name])){ active = p.name; chans = chansOf(p.name, p.maker); } }); } catch(e2){}
       try { if(typeof DJ !== "undefined" && DJ && DJ.setController){ var was = lastCtl; lastCtl = active || ""; if(was !== lastCtl) DJ.setController({ active:!!active, name:active || "", channels:chans }); } } catch(e3){}
@@ -23846,7 +24376,20 @@
       sysexStart();
       paint();
     }
-    var lastCtl = null;
+    var lastCtl = null, keepTimer = null;
+    function hexBytes(hex){ var b = [], i; for(i = 0; i + 1 < hex.length; i += 2) b.push(parseInt(hex.substr(i, 2), 16)); return b; }
+    function keepTick(){
+      Object.keys(outs).forEach(function(nm){ var pm = set.builtin ? profileFor(nm, "") : null; if(pm && pm.model && pm.model.keep) send(nm, hexBytes(pm.model.keep)); });
+    }
+    // a family was chosen or dropped for a device: what was worked out from its name is worked out again
+    function forgetNames(){ profCache = {}; gmKey = {}; isDJc = {}; }
+    function chooseFamily(name, fam){
+      var dv = devOpt(name, true);
+      if(fam && CLIB.fams[fam]) dv.fam = fam; else delete dv.fam;
+      saveDevs(); forgetNames();
+      ports(typeof midiAccess !== "undefined" ? midiAccess : null);
+      try { if(typeof equipPaint === "function") equipPaint(); } catch(e){}
+    }
 
     // ---------- every message from every device comes through here first ----------
     var meaning = "", known = false, enc14 = {};
@@ -23886,7 +24429,8 @@
       // 2. taught for this device
       var tm = maps[dv.name], te = tm && tm.map[key];
       if(te){
-        runTaught(dv.name, key, te, val, cc, on, note);
+        var ra = runTaught(dv.name, key, te, val, cc, on, note), tdk = /^(?:d|mix\.ch)([1-4])\./.exec(te.t);
+        if(ra) action(dv.name, idFor(te.t), te.t, ra[0], ra[1], tdk ? +tdk[1] : 0);
         var ti = tinfo(te.t);
         meaning = (ti ? ti.name.charAt(0).toLowerCase() + ti.name.slice(1) : te.t) + " (taught)"; known = true;
         touch(gk, te.t, val, raw, on);
@@ -23898,16 +24442,20 @@
       if(p){
         var en = p.by[(cc ? "c" : "n") + hx(st).toLowerCase() + "." + num];
         if(en){
-          runEntry(dv.name, en, val, on);
+          var rb = runEntry(dv.name, en, val, on, p);
+          if(rb) action(dv.name, en.id, rb[2], rb[0], rb[1], en.dk || 0);
           meaning = entryWords(en); known = true;
-          touch(gk, en.id, val, raw, on, en.dk);
+          touch(gk, en.id, val, raw, on || (cc && val > 0 && (en.k === "btn" || en.k === "hold")), en.dk);
           return true;
         }
       }
       // 4. not known
       if(isDJ(dv.name, dv.maker)){
         meaning = "unknown";
-        if(on || cc) touch(gk, "", val, raw, on);
+        if(on || cc){
+          touch(gk, "", val, raw, on);
+          if(!unmapped[dv.name + "|" + key]){ unmapped[dv.name + "|" + key] = 1; unmappedN++; }
+        }
         return false;
       }
       if(gk && /^generic-keys/.test(gk)){
@@ -23925,52 +24473,132 @@
         return tg ? "Make area: " + padTargetName(tg) : "";
       } catch(e){ return ""; }
     }
-    function runEntry(dev, e, val, on){
-      var k = e.k, t = e.t, id14, v;
-      if(k === "ign" || !t) return;
-      if(k === "btn"){ if(on) doNow(t, "down"); }
-      else if(k === "hold") doNow(t, on ? "down" : "up");
-      else if(k === "abs") queue(t, "abs", val / 127);
-      else if(k === "msb" || k === "lsb"){
-        id14 = dev + "|" + t;
-        v = enc14[id14] || (enc14[id14] = { m:0, l:0, fine:false });
-        if(k === "msb") v.m = val; else { v.l = val; v.fine = true; }
-        queue(t, "abs", v.fine ? ((v.m << 7) | v.l) / 16383 : v.m / 127);
+    // Does what a table entry asks. Returns what happened, for CTRL.onAction: [kind, value, target] or null.
+    var touching = {};               // "device|deck": the top of that platter is being touched
+    function runEntry(dev, e, val, on, p){
+      var k = e.k, t = e.t, id14, v, cc = (e.st & 0xF0) === 0xB0, dv, steps;
+      if(cc && (k === "btn" || k === "hold" || k === "ign")) on = val > 0;        // a button that sends a control message
+      if(k === "ign" || !t) return [on ? "press" : "release", on ? 1 : 0, ""];
+      if(k === "btn"){ if(on) doNow(t, "down"); return [on ? "press" : "release", on ? 1 : 0, t]; }
+      if(k === "hold"){
+        if(/\.jog_touch$/.test(t)) touching[dev + "|" + e.dk] = on;
+        doNow(t, on ? "down" : "up");
+        return [on ? "press" : "release", on ? 1 : 0, t];
       }
-      else if(k === "jog"){
+      dv = devOpt(dev);
+      if(k === "abs" || k === "msb" || k === "lsb"){
+        if(k === "abs") v = val / 127;
+        else {
+          id14 = dev + "|" + t;
+          v = enc14[id14] || (enc14[id14] = { m:0, l:0, fine:false });
+          if(k === "msb") v.m = val; else { v.l = val; v.fine = true; }
+          v = v.fine ? ((v.m << 7) | v.l) / 16383 : v.m / 127;
+        }
+        // a control that runs the other way round on this model, or a tempo slider found to on this device
+        if(e.inv) v = 1 - v;
+        if(dv && dv.tflip && /\.tempo$/.test(t)) v = 1 - v;
+        queue(t, "abs", v);
+        return ["move", v, t];
+      }
+      if(k === "jog" || k === "enc"){
+        steps = k === "jog" ? val - 64 : (val < 64 ? val : val - 128);
+        if(t === "browse.knob"){ queue(t, "rel", steps); return ["turn", steps, t]; }
         var n = layered(+t.charAt(1)), want = e.vin;
-        if(n > 2 && !fourDecks()){ doNow(t, "rel", 0); return; }
-        queue(t, "rel", val - 64, want === undefined ? null : function(){
+        // one message for the whole platter: it scratches while the top is touched, and nudges otherwise
+        if(e.tq) t = t.slice(0, 3) + (touching[dev + "|" + e.dk] ? "jog" : "jog_side");
+        if(dv && dv.jflip) steps = -steps;
+        if(n > 2 && !fourDecks()){ doNow(t, "rel", 0); return ["turn", steps, t]; }
+        // act() counts in steps of the DDJ-GRV6's platter: another platter's steps are brought to that scale
+        queue(t, "rel", steps * JOG_TICKS / ticksOf(dev, p), want === undefined ? null : function(){
           if(vinyl[n] === undefined){ try { vinyl[n] = !!DJ.deck(n).state().vinyl; } catch(err){} }
           if(vinyl[n] !== want){ try { DJ.deck(n).setVinyl(want); } catch(err2){} vinyl[n] = want; }
         });
+        return ["turn", steps, t];
       }
-      else if(k === "enc") queue(t, "rel", val < 64 ? val : val - 128);
+      return null;
+    }
+    // ---------- what the person does, for whoever listens (CTRL.onAction) ----------
+    var actFns = [], actPend = {}, used = {}, unmapped = {}, unmappedN = 0, lastDev = "";
+    function emit(ev){ actFns.slice().forEach(function(fn){ try { fn(ev); } catch(e){} }); }
+    function action(dev, id, t, kind, value, deck){
+      lastDev = dev;
+      var ev = { t:Date.now(), device:dev, id:id || "", target:t || "", kind:kind, value:value, via:"controller" }, k, q, now;
+      if(deck) ev.deck = deck;
+      if(kind === "press" || kind === "release"){
+        if(kind === "press" && id) used[id] = (used[id] || 0) + 1;
+        if(actFns.length) emit(ev);
+        return;
+      }
+      k = dev + "|" + (t || id); q = actPend[k] || (actPend[k] = { last:0, timer:null, ev:null, sum:0 }); now = ev.t;
+      if(kind === "turn"){ q.sum += value; ev.value = q.sum; }
+      if(now - q.last >= 100 && !q.timer){
+        q.last = now; q.sum = 0;
+        if(id) used[id] = (used[id] || 0) + 1;
+        if(actFns.length) emit(ev);
+        return;
+      }
+      q.ev = ev;
+      if(!q.timer) q.timer = setTimeout(function(){
+        var e2 = q.ev; q.timer = null; q.ev = null; q.last = Date.now(); q.sum = 0;
+        if(!e2) return;
+        e2.t = q.last;
+        if(e2.id) used[e2.id] = (used[e2.id] || 0) + 1;
+        if(actFns.length) emit(e2);
+      }, Math.max(1, 100 - (now - q.last)));
+    }
+    function onAction(fn){
+      if(typeof fn !== "function") return function(){};
+      actFns.push(fn);
+      return function(){ var i = actFns.indexOf(fn); if(i >= 0) actFns.splice(i, 1); };
+    }
+    function summary(){
+      var d = currentDev(), name = lastDev || (d ? d.name : ""), p = name ? profileFor(name, d && d.name === name ? d.maker : "") : null, u = {}, k;
+      for(k in used) if(used.hasOwnProperty(k)) u[k] = used[k];
+      return { device:name, profile:p && set.builtin ? p.key : (name && maps[name] ? "taught" : ""), confidence:p && set.builtin ? confOf(p).word : (name && maps[name] ? "taught" : ""),
+               controlsUsed:u, unmappedSeen:unmappedN };
     }
     var tstate = {};
+    // the control in a drawing that a target belongs to: the left side is drawn as d1, the right as d2
+    function idFor(t){
+      var m = /^d([1-4])\.([a-z_]+?)(\d?)$/.exec(t), a;
+      if(m){
+        a = m[2];
+        if(/^jog_/.test(a)) a = "jog"; else if(a === "clear" || a === "bjump") a = "pad"; else if(a === "start") a = "cue"; else if(a === "master") a = "sync";
+        return "d" + ((+m[1] - 1) % 2 + 1) + "." + a + m[3];
+      }
+      return t === "browse.press" ? "browse.knob" : t;
+    }
+    // Returns what happened, for CTRL.onAction: [kind, value] or null.
     function runTaught(dev, key, te, val, cc, on, note){
-      var k = te.k, t = te.t, st = tstate[dev + "|" + key] || (tstate[dev + "|" + key] = {});
+      var k = te.k, t = te.t, st = tstate[dev + "|" + key] || (tstate[dev + "|" + key] = {}), v;
       if(k === "press" || k === "hold"){
         var down = cc ? val > 0 : on, changed = down !== !!st.down;
-        if(!cc && !on && !note) return;
+        if(!cc && !on && !note) return null;
         st.down = down;
-        if(!changed) return;
+        if(!changed) return null;
         if(k === "press"){ if(down) doNow(t, "down"); }
         else doNow(t, down ? "down" : "up");
+        return [down ? "press" : "release", down ? 1 : 0];
       } else if(k === "abs"){
-        if(!cc) return;
+        if(!cc) return null;
         st.m = val;
-        queue(t, "abs", te.hi && st.fine ? ((st.m << 7) | (st.l || 0)) / 16383 : val / 127);
+        v = te.hi && st.fine ? ((st.m << 7) | (st.l || 0)) / 16383 : val / 127;
+        if(te.inv) v = 1 - v;
+        queue(t, "abs", v);
+        return ["move", v];
       } else if(k === "rel"){
-        if(!cc) return;
-        queue(t, "rel", te.m === "rel2" ? (val < 64 ? val : val - 128) : val - 64);
+        if(!cc) return null;
+        v = te.m === "rel2" ? (val < 64 ? val : val - 128) : val - 64;
+        queue(t, "rel", v);
+        return ["turn", v];
       }
+      return null;
     }
     function runFine(dev, mainKey, val){
       var tm = maps[dev], te = tm && tm.map[mainKey]; if(!te) return;
       var st = tstate[dev + "|" + mainKey] || (tstate[dev + "|" + mainKey] = {});
       st.l = val; st.fine = true;
-      if(st.m !== undefined) queue(te.t, "abs", ((st.m << 7) | st.l) / 16383);
+      if(st.m !== undefined) queue(te.t, "abs", te.inv ? 1 - ((st.m << 7) | st.l) / 16383 : ((st.m << 7) | st.l) / 16383);
     }
 
     // ---------- taught controls: keeping, sending out, taking in ----------
@@ -23984,6 +24612,7 @@
         if(!ti) return;
         var c = { t:e.t, k:ti.kind };
         if(ti.kind === "rel") c.m = e.m === "rel2" ? "rel2" : "relb";
+        if(ti.kind === "abs" && e.inv) c.inv = 1;
         if(ti.kind === "abs" && e.hi && k.charAt(0) === "c"){
           var q = k.slice(1).split("."), num = +q[1];
           if(num < 32){ c.hi = 1; out.fine["c" + q[0] + "." + (num + 32)] = k; }
@@ -23999,6 +24628,7 @@
       var c = { t:target, k:ti.kind };
       if(extra && extra.m) c.m = extra.m;
       if(extra && extra.hi) c.hi = 1;
+      if(extra && extra.inv) c.inv = 1;
       tm.map[key] = c;
       maps[dev] = cleanMap(tm) || { map:{}, fine:{} };
       saveMaps();
@@ -24021,7 +24651,7 @@
     }
     function exportText(dev){
       var tm = maps[dev], o = { firstloop:"dj-controller-map", version:1, device:dev, map:{} };
-      if(tm) Object.keys(tm.map).forEach(function(k){ var e = tm.map[k], c = { t:e.t }; if(e.m) c.m = e.m; if(e.hi) c.hi = 1; o.map[k] = c; });
+      if(tm) Object.keys(tm.map).forEach(function(k){ var e = tm.map[k], c = { t:e.t }; if(e.m) c.m = e.m; if(e.hi) c.hi = 1; if(e.inv) c.inv = 1; o.map[k] = c; });
       return JSON.stringify(o, null, 1);
     }
     // returns the number of controls taken in, or a sentence saying why not
@@ -24157,10 +24787,12 @@
         });
         return out;
       }
-      var ids = /^generic-dj/.test(gk) ? DJ_CHECK : m.c.map(function(c){ return c.id; });
+      var model = /^(dj-|ddj-)/.test(gk), D2 = { "d2.play":1, "d2.cue":1, "d2.jog":1, "d2.tempo":1, "d2.pad1":1 };
+      // a model's own drawing: the whole left deck and the middle, then the main controls of the right deck
+      var ids = /^generic-dj/.test(gk) ? DJ_CHECK : m.c.filter(function(c){ return !model || !/^d2\./.test(c.id) || D2[c.id]; }).map(function(c){ return c.id; });
       ids.forEach(function(id){
         var c = m.by[id], say = c ? askFor(c) : "";
-        if(!c || !say || out.length >= 40) return;
+        if(!c || !say || out.length >= (model ? 90 : 40)) return;
         out.push({ id:id, say:say, only:"", sh:false, slow:false, sec:c.section, dk:0, tag:"", teach:"", key:id });
       });
       return out;
@@ -24176,7 +24808,212 @@
         out.push(hx(e.st) + " " + hx(e.num));
       });
       if(step.sh) p.list.forEach(function(e){ if(e.t === step.id.slice(0, 3) + "shift") out.push(hx(e.st) + " " + hx(e.num)); });
+      // a control the person has corrected (the quick check) is expected where they put it
+      var tm = step.t && maps[dev] ? maps[dev].map : null;
+      if(tm) Object.keys(tm).forEach(function(k){
+        if(tm[k].t !== step.t) return;
+        var q = k.slice(1).split("."), w = hx((k.charAt(0) === "c" ? 0xB0 : 0x90) + (+q[0])) + " " + hx(+q[1]);
+        if(out.indexOf(w) < 0) out.push(w);
+      });
       return out;
+    }
+
+    // ---------- the quick check: a dozen controls, two minutes, and a control that arrives differently can be put right ----------
+    // Steps are check steps (see walk above) with, besides: t (the target the control is for, which a correction is tied to)
+    // and q ("turn": one full turn of the platter is measured; "tempo": which end of the slider is which).
+    function quickList(dev, maker, gk){
+      var p = profileFor(dev, maker), m = GEARMAP._map(gk), out = [], has = {};
+      if(!p || !m) return out;
+      p.list.forEach(function(e){ if(e.t && !(e.dk > 2)) has[e.t] = e; });
+      function add(t, say, o){
+        var e = has[t], id, c;
+        if(!e) return;
+        id = e.id; c = m.by[id];
+        o = o || {};
+        out.push({ id:id, t:t, say:say, only:o.only || "", sh:false, slow:!!o.slow, sec:"Quick check", dk:0, tag:"", teach:"", q:o.q || "", key:"q:" + t + (o.q ? "~" + o.q : ""), name:c ? c.label : (tinfo(t) || { name:t }).name });
+      }
+      add("d1.play", "Press PLAY/PAUSE on the left deck once.", { only:"play$" });
+      add("d1.cue", "Press CUE on the left deck once.", { only:"cue$" });
+      add("d1.jog_touch", "Put a finger on the top of the left jog wheel without turning it, then lift it off.", { only:"jog_touch" });
+      add(has["d1.jog"] ? "d1.jog" : "d1.jog_side", "Turn the left jog wheel exactly one full turn to the right (clockwise), slowly" + (has["d1.jog_touch"] ? ", with a finger on its top" : "") + ". It moves on about three seconds after you stop.",
+        { only:"jog$|jog_bend|jog_side|jog_touch", slow:1, q:"turn" });
+      add("d1.tempo", "Slide the left TEMPO slider all the way towards you (its + end, faster) and leave it there.", { only:"tempo$", q:"tempo" });
+      add("mix.ch1.fader", "Move the channel 1 fader all the way down, then all the way up.", { only:"fader$" });
+      add("mix.xfader", "Move the crossfader all the way to the left, then all the way to the right.", { only:"xfader$" });
+      if(has["mix.ch1.eq_low"]) add("mix.ch1.eq_low", "Turn the LOW knob of channel 1 all the way to the left, then back to the middle.", { only:"eq_low$" });
+      else add("mix.ch1.eq_hi", "Turn the HI knob of channel 1 all the way to the left, then back to the middle.", { only:"eq_hi$" });
+      add("mix.ch1.cue", "Press the headphone CUE button of channel 1 once.", { only:"ch1\\.cue$" });
+      add("d1.pad1", "Press pad 1 on the left deck (in Hot Cue mode) once.", { only:"pad1$" });
+      if(has["d1.loop_in"]) add("d1.loop_in", "Press LOOP IN on the left deck once, shortly.", { only:"loop_in$" });
+      else add("d1.loop_auto", "Press AUTO LOOP on the left deck once.", { only:"loop_auto$" });
+      add("browse.knob", "Turn the browse knob a few clicks to the right, then a few to the left.", { only:"knob$" });
+      add("browse.load1", "Press LOAD for deck 1 once. (Nothing is loaded while the check runs.)", { only:"load1$" });
+      return out;
+    }
+    function quickStore(dev){
+      try { var o = JSON.parse(window.localStorage.getItem(WALK_KEY + ".quick") || "null"); return o && o.dev === dev && o.res ? o : null; } catch(e){ return null; }
+    }
+    function quickBegin(){
+      var d = currentDev();
+      if(!d){ if(UI.quickNote) UI.quickNote.textContent = "No controller is connected yet."; return false; }
+      var gk = GEARMAP.keyFor(d.name, d.maker), list = quickList(d.name, d.maker, gk);
+      if(!list.length){ if(UI.quickNote) UI.quickNote.textContent = "The quick check needs a controller First Loop has a mapping for. Teach this one below instead."; return false; }
+      walk = { mode:"check", quick:true, scope:"quick", run:Date.now().toString(36), dev:d.name, maker:d.maker, gk:gk, list:list, i:0, res:{}, live:true, cap:null, done:false };
+      walkShow();
+      return true;
+    }
+    // the rows of a capture the table does not know at all
+    function quickUnknown(rows){
+      var p = profileFor(walk.dev, walk.maker), tm = maps[walk.dev];
+      return rows.filter(function(r){
+        var cc = (r.st & 0xF0) === 0xB0, k = (cc ? "c" : "n") + (r.st & 0x0F) + "." + r.num;
+        if(p && p.by[rowKey(r.st, r.num)]) return false;
+        if(tm && (tm.map[k] || (tm.fine && tm.fine[k]))) return false;
+        return true;
+      });
+    }
+    // What to tie a target to, from what arrived: { key, extra, words } or null when the rows do not suit the target.
+    function quickPick(t, rows){
+      var ti = tinfo(t), cc = [], nt = [], i, r, best = null, extra = {};
+      if(!ti) return null;
+      rows.forEach(function(r0){ if((r0.st & 0xF0) === 0xB0) cc.push(r0); else nt.push(r0); });
+      if(ti.kind === "press" || ti.kind === "hold"){
+        r = nt[0] || null;
+        if(!r) for(i = 0; i < cc.length; i++) if(cc[i].hi >= 64 && cc[i].n <= 6){ r = cc[i]; break; }
+        return r ? { key:((r.st & 0xF0) === 0xB0 ? "c" : "n") + (r.st & 0x0F) + "." + r.num, extra:null, row:r } : null;
+      }
+      if(!cc.length) return null;
+      if(ti.kind === "abs"){
+        cc.forEach(function(q){ if(q.hi - q.lo >= 16 && (!best || q.num < best.num)) best = q; });
+        if(!best) return null;
+        // the fine half of a pair is 32 higher than its coarse half
+        if(best.num < 32 && cc.some(function(q){ return q.st === best.st && q.num === best.num + 32; })) extra.hi = 1;
+        return { key:"c" + (best.st & 0x0F) + "." + best.num, extra:extra, row:best };
+      }
+      cc.forEach(function(q){ if(!best || q.n > best.n) best = q; });
+      extra.m = best.not2 ? "relb" : "rel2";
+      return { key:"c" + (best.st & 0x0F) + "." + best.num, extra:extra, row:best };
+    }
+    // Called when a quick step's messages have stopped arriving. True when the step stays (a question is on screen).
+    function quickJudge(step, cap){
+      var rows = cap.rows, exp = expected(walk.dev, walk.maker, step), v = verdict(exp, rows), unk = quickUnknown(rows), u = UI, pk, p, dv, r, tot = 0, last = -1, inv = false, model;
+      var res = walk.res[walk.i];
+      if(v === "ok" || v === "partly"){
+        p = profileFor(walk.dev, walk.maker); model = p && p.model ? p.model.jt : JOG_TICKS;
+        if(step.q === "turn"){
+          rows.forEach(function(q){ var e = p && p.by[rowKey(q.st, q.num)]; if(e && (e.k === "jog" || e.k === "enc")) tot += e.k === "enc" ? q.sum2 : q.sum; });
+          res.turn = tot;
+          if(Math.abs(tot) >= 24){
+            if(Math.abs(tot) >= model * 0.5 && Math.abs(tot) <= model * 2){
+              dv = devOpt(walk.dev, true); dv.jt = Math.abs(tot); if(tot < 0) dv.jflip = 1; else delete dv.jflip; saveDevs();
+              if(u.got) u.got.textContent += "  One turn is " + Math.abs(tot) + " steps on this unit" + (tot < 0 ? ", counted backwards (noted)" : "") + ": noted, the platter on screen now turns with yours.";
+            } else {
+              // far from what the table has: only taken when the person says it was one whole turn
+              walk.fix = { kind:"turn", n:Math.abs(tot), back:tot < 0 };
+              if(u.got){ u.got.textContent = "That was " + Math.abs(tot) + " steps. The built-in mapping expects about " + model + " for one full turn, so nothing has been changed. If it was exactly one turn, press the button; else turn it again, or go on."; u.got.dataset.ok = "0"; }
+              u.fix.textContent = "It was one full turn: use " + Math.abs(tot) + " steps"; u.fix.hidden = false;
+              walk.cap = null; walk.keep = walk.i; walkSave();
+              return true;
+            }
+          }
+        } else if(step.q === "tempo"){
+          rows.forEach(function(q){ var e = p && p.by[rowKey(q.st, q.num)]; if(e && e.k !== "lsb" && (q.st & 0xF0) === 0xB0){ last = q.last; inv = !!e.inv; } });
+          if(last >= 0){
+            r = inv ? 1 - last / 127 : last / 127; res.tempoEnd = last;
+            dv = devOpt(walk.dev, true);
+            if(r < 0.25){ dv.tflip = 1; saveDevs(); if(u.got) u.got.textContent += "  On this unit the slider counts the other way round: noted, First Loop has turned it round for this device."; }
+            else if(r > 0.75){ if(dv.tflip){ delete dv.tflip; saveDevs(); } if(u.got) u.got.textContent += "  The + end is where First Loop expects it."; }
+            else if(u.got) u.got.textContent += "  The slider did not end at either end, so its direction was not checked.";
+          }
+        }
+        res.v = v;
+        return false;
+      }
+      // nothing the table knows arrived, but something did: offer to take it as this control
+      if(unk.length && unk.length === rows.length){
+        pk = quickPick(step.t, unk);
+        res.v = "different";
+        if(pk){
+          walk.fix = { kind:"bind", key:pk.key, extra:pk.extra, t:step.t, last:pk.row.last };
+          if(u.got){ u.got.textContent = "Received: " + gotWords(rows) + ". That is not where the built-in mapping expects " + step.name + (exp.length ? " (" + exp.join(", ") + ")" : "") +
+            ". If you did use " + step.name + ", press the button and First Loop will use what it just received."; u.got.dataset.ok = "0"; }
+          u.fix.textContent = "Use what I just received for " + step.name; u.fix.hidden = false;
+          walk.cap = null; walk.keep = walk.i; walkSave();
+          return true;
+        }
+      }
+      res.v = v;
+      return false;
+    }
+    function quickFix(){
+      var f = walk && walk.quick ? walk.fix : null, dv, res, extra;
+      if(!f) return;
+      res = walk.res[walk.i] || (walk.res[walk.i] = { state:"got", got:[], run:walk.run });
+      if(f.kind === "turn"){
+        dv = devOpt(walk.dev, true); dv.jt = f.n; if(f.back) dv.jflip = 1; else delete dv.jflip; saveDevs();
+        res.fixed = "one turn = " + f.n + " steps";
+      } else {
+        extra = f.extra || {};
+        // a tempo slider left at its + end tells which way it counts
+        if(/\.tempo$/.test(f.t) && f.last >= 0 && f.last < 32) extra.inv = 1;
+        if(!bind(walk.dev, f.key, f.t, extra)) return;
+        res.fixed = keyWords(f.key); res.v = "fixed";
+      }
+      walk.fix = null; UI.fix.hidden = true;
+      if(UI.got){ UI.got.textContent = f.kind === "turn" ? "Noted: one turn is " + f.n + " steps on this unit." : "Done. " + (tinfo(f.t) || { name:f.t }).name + " now uses " + keyWords(f.key) + " on this device (kept as a taught control)."; UI.got.dataset.ok = "1"; }
+      walkSave();
+      var mine = walk;
+      setTimeout(function(){ if(walk === mine && !walk.done && !walk.cap) walkGo(1); }, 900);
+    }
+    function quickCounts(dev, maker, gk, st){
+      var c = { ok:0, fixed:0, different:0, nothing:0, skipped:0, n:0 };
+      quickList(dev, maker, gk).forEach(function(step){
+        var r = st && st.res[step.key], v;
+        c.n++;
+        if(!r){ c.skipped++; return; }
+        v = r.v === "fixed" ? "fixed" : verdict(expected(dev, maker, step), r.got);
+        if(v === "ok" || v === "partly" || v === "fixed") c[v === "fixed" ? "fixed" : "ok"]++;
+        else if(v === "nothing") c.nothing++; else c.different++;
+      });
+      return c;
+    }
+    function quickDoneWords(){
+      var c = quickCounts(walk.dev, walk.maker, walk.gk, quickStore(walk.dev));
+      return "That was the last control. " + c.ok + " of " + c.n + " arrived as expected" + (c.fixed ? ", " + c.fixed + (c.fixed === 1 ? " was" : " were") + " corrected and " + (c.fixed === 1 ? "is" : "are") + " kept for this device" : "") +
+        (c.different ? ", " + c.different + " arrived differently" : "") + (c.nothing + c.skipped ? ", " + (c.nothing + c.skipped) + " sent nothing or " + (c.nothing + c.skipped === 1 ? "was" : "were") + " left out" : "") +
+        ". " + (c.different + c.nothing + c.skipped ? "Copy report gives a text to send to the developer; a control that does nothing can also be taught under Teach your controller." : "This controller is ready for the DJ area.");
+    }
+    function quickReport(){
+      var d = currentDev(), dev = walk && walk.quick ? walk.dev : (d ? d.name : ""), maker = walk && walk.quick ? walk.maker : (d ? d.maker : "");
+      if(walk && walk.quick) walkSave();
+      var st = quickStore(dev), gk = st ? st.gk : GEARMAP.keyFor(dev, maker), p = profileFor(dev, maker), dv = devOpt(dev), b = document.querySelector(".build"), L = ["First Loop quick check"], cf = confOf(p);
+      L.push("Device: " + (dev || "none") + " | " + (maker || "maker not given") + (d && d.name === dev ? " | in " + d.ins + ", out " + d.outs : ""));
+      L.push("Mapping: " + (p ? "built-in " + p.key + " (" + cf.text + ")" + (set.builtin ? "" : ", switched off") : "none built in") + " | taught controls: " + taughtCount(dev) + " | drawing: " + (gk || "none"));
+      L.push("Version: " + (b ? b.textContent.trim() : "?") + " | System: " + osName() + " | Browser: " + String(navigator.userAgent || "").slice(0, 160));
+      L.push("Measured on this device: " + (dv && dv.jt ? "one turn of the platter = " + dv.jt + " steps" + (dv.jflip ? " (counted backwards)" : "") : "platter not measured") + " | tempo slider " + (dv && dv.tflip ? "turned round" : "as in the table"));
+      L.push("Each line: control | expected (status number) | received (status number, values, count) | result");
+      quickList(dev, maker, gk).forEach(function(step, i){
+        var r = st && st.res[step.key], exp = expected(dev, maker, step), v = !r ? "not done" : (r.v === "fixed" ? "fixed" : verdict(exp, r.got));
+        L.push(" " + (i + 1) + " " + step.t + (step.q ? " (" + step.q + ")" : "") + " | " + (exp.length ? exp.join(", ") : "?") + " | " + (r ? gotWords(r.got) : "-") + " | " +
+          ({ ok:"as expected", partly:"partly as expected", different:"DIFFERENT", "new":"new", nothing:"NOTHING ARRIVED", fixed:"CORRECTED: now " + (r && r.fixed), "not done":"not done" })[v] +
+          (r && r.turn !== undefined ? " | one turn: " + r.turn + " steps" : "") + (r && r.tempoEnd !== undefined ? " | value at the + end: " + r.tempoEnd : ""));
+      });
+      var c = quickCounts(dev, maker, gk, st), ck = dv && dv.ck ? Object.keys(dv.ck).join(", ") : "";
+      L.push("Summary: " + c.ok + " as expected, " + c.fixed + " corrected, " + c.different + " different, " + c.nothing + " nothing arrived, " + c.skipped + " not done");
+      L.push("Setup checklist ticked: " + (ck || "nothing"));
+      return L.join("\n");
+    }
+    // the system the browser runs on, as well as it says: "Windows", "macOS", "Linux", "ChromeOS", "Android", "iOS" or "unknown"
+    function osName(){
+      var ua = "", pf = "";
+      try { ua = String(navigator.userAgent || ""); pf = String((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ""); } catch(e){}
+      if(/android/i.test(ua)) return "Android";
+      if(/iphone|ipad|ipod/i.test(ua)) return "iOS";
+      if(/cros/i.test(ua) || /chrome ?os/i.test(pf)) return "ChromeOS";
+      if(/win/i.test(pf) || /windows/i.test(ua)) return "Windows";
+      if(/mac/i.test(pf) || /mac os x|macintosh/i.test(ua)) return "macOS";
+      if(/linux/i.test(pf) || /linux/i.test(ua)) return "Linux";
+      return "unknown";
     }
     // true when what a step expects rests on the convention for decks 3 and 4 only
     function expectedUnv(dev, maker, step){
@@ -24190,6 +25027,14 @@
     }
     function walkSave(){
       if(!walk || walk.mode === "one") return;
+      if(walk.quick){
+        // the quick check keeps its own answers, by step, with what was measured and corrected
+        var qs = { dev:walk.dev, gk:walk.gk, res:{}, done:walk.done ? Date.now() : 0, n:walk.list.length };
+        walk.list.forEach(function(step, i){ if(walk.res[i]) qs.res[step.key] = walk.res[i]; });
+        try { window.localStorage.setItem(WALK_KEY + ".quick", JSON.stringify(qs)); } catch(e){}
+        if(walk.done){ var dq = devOpt(walk.dev, true); dq.quick = qs.done; if(!dq.ck) dq.ck = {}; dq.ck.quick = 1; saveDevs(); }
+        return;
+      }
       if(walk.mode === "check"){
         // answers are kept by step, so a later list (or a run over only part of it) finds them again
         var st = checkStore(walk.dev) || { dev:walk.dev, gk:walk.gk, v:2, res:{} };
@@ -24377,6 +25222,8 @@
             walkSave();
             return;
           }
+          // the quick check: what arrived is not in the table (it can be taken as it is), or it is and has something to measure
+          if(walk.quick && quickJudge(step, cap)) return;
           // a DECK button: one note nobody has a number for yet is learned on the spot
           if(step.teach && cap.rows.length === 1 && (cap.rows[0].st & 0xF0) === 0x90){
             var pr0 = profileFor(walk.dev, walk.maker);
@@ -24458,7 +25305,7 @@
       if(stored) res = stored.res;
       var p = profileFor(dev, maker), counts = { ok:0, partly:0, different:0, "new":0, nothing:0, skipped:0 }, sec = "";
       L.push("Device: " + (dev || "none") + " | " + (maker || "maker not given") + (d ? " | in " + d.ins + ", out " + d.outs : ""));
-      L.push("Mapping: " + (p ? "built-in " + p.key + (p.grv6 ? " (experimental)" : " (typical DDJ layout)") + (set.builtin ? "" : ", switched off") : "none built in") + " | taught controls: " + taughtCount(dev) + " | drawing: " + (gk || "none"));
+      L.push("Mapping: " + (p ? "built-in " + p.key + (p.grv6 ? " (experimental)" : (p.model ? " (" + confOf(p).text + ")" : " (typical DDJ layout)")) + (set.builtin ? "" : ", switched off") : "none built in") + " | taught controls: " + taughtCount(dev) + " | drawing: " + (gk || "none"));
       L.push("Version: " + (b ? b.textContent.trim() : "?") + " | Browser: " + String(navigator.userAgent || "").slice(0, 160));
       L.push("Extended messages: " + (sysexLive() ? "on" : "off") + " | Jog sensitivity: " + set.jog.toFixed(2) + " | Tempo reversed: " + (set.flip ? "yes" : "no"));
       L.push("Each line: step, control | expected (status number) | received (status number, values, count; sum = jog steps added up)");
@@ -24535,6 +25382,31 @@
       c = check("ctrlbuiltin", "Use First Loop’s own mapping for this controller", function(on){ set.builtin = on; saveSet(); paint(); });
       u.builtin = c.inp; u.builtinLab = c.lab;
       s.appendChild(u.state); s.appendChild(u.exp); s.appendChild(c.lab);
+      // a controller with no table of its own whose name says who made it: the layout that maker's controllers share can be tried
+      u.famRow = el("div", "eq-row"); u.famRow.id = "ctrlfamrow";
+      u.famGo = btn("sendbtn", "", function(){
+        var d = currentDev(); if(!d) return;
+        var dv = devOpt(d.name), f = dv && dv.fam ? "" : CLIB.famFor(d.name, d.maker);
+        chooseFamily(d.name, f);
+        paint();
+      }, "ctrlfamgo");
+      u.famRow.appendChild(u.famGo); s.appendChild(u.famRow);
+      u.portNote = el("p", "eq-fine"); u.portNote.id = "ctrlportnote"; s.appendChild(u.portNote);
+
+      s = sec("ctrl", "Setup checklist"); u.secSetup = s; s.id = "ctrlsetup";
+      u.setupLbl = s.firstChild;
+      u.setupList = el("ul", "eq-setup"); u.setupList.id = "ctrlsetuplist"; s.appendChild(u.setupList);
+      u.setupNote = el("p", "eq-note"); u.setupNote.id = "ctrlsetupnote"; u.setupNote.setAttribute("role", "status"); s.appendChild(u.setupNote);
+
+      s = sec("ctrl", "Quick check (2 minutes)"); u.secQuick = s; s.id = "ctrlquick";
+      u.quickWords = el("p", "eq-state"); u.quickWords.id = "ctrlquickwords"; s.appendChild(u.quickWords);
+      row = el("div", "eq-row");
+      u.quickGo = btn("sendbtn", "Start the quick check", function(){ quickBegin(); }, "ctrlquickgo");
+      u.quickCopy = btn("tinybtn", "Copy report", function(){ copyText(quickReport(), u.quickNote, u.quickBox); }, "ctrlquickcopy");
+      row.appendChild(u.quickGo); row.appendChild(u.quickCopy); s.appendChild(row);
+      u.quickNote = el("p", "eq-note"); u.quickNote.id = "ctrlquicknote"; u.quickNote.setAttribute("role", "status"); s.appendChild(u.quickNote);
+      u.quickBox = el("textarea", "eq-copybox"); u.quickBox.id = "ctrlquickbox"; u.quickBox.readOnly = true; u.quickBox.rows = 6; u.quickBox.hidden = true;
+      u.quickBox.setAttribute("aria-label", "The quick check report as text"); s.appendChild(u.quickBox);
 
       s = sec("ctrl", "Jog sensitivity"); u.secOpt = s;
       row = el("div", "eq-range");
@@ -24543,7 +25415,13 @@
       u.jogOut = el("output"); u.jogOut.id = "ctrljogout";
       u.jog.addEventListener("input", function(){ set.jog = Math.max(0.25, Math.min(4, +u.jog.value || 1)); u.jogOut.textContent = set.jog.toFixed(2) + "×"; saveSet(); });
       row.appendChild(u.jog); row.appendChild(u.jogOut); s.appendChild(row);
-      s.appendChild(el("p", "eq-fine", "How far the track moves when the jog wheel turns. If one turn of the wheel moves the record more or less than one turn on screen, change this. For the DDJ-GRV6 it is set from a real unit (2,080 steps in one turn), so 1.00 is right."));
+      u.jogFine = el("p", "eq-fine"); u.jogFine.id = "ctrljogfine"; s.appendChild(u.jogFine);
+      u.jogReset = btn("tinybtn", "Forget what was measured on this device", function(){
+        var d = currentDev(), dv = d && devOpt(d.name);
+        if(dv){ delete dv.jt; delete dv.jflip; delete dv.tflip; saveDevs(); }
+        paint();
+      }, "ctrljogreset");
+      s.appendChild(u.jogReset);
       c = check("ctrlflip", "The tempo slider works the wrong way round: reverse it", function(on){ set.flip = on; saveSet(); }); u.flip = c.inp; s.appendChild(c.lab);
       c = check("ctrlleds", "Lights on the controller follow First Loop", function(on){ set.leds = on; saveSet(); if(on){ vuLast = [-1, -1, -1, -1]; ledsAll(); } }); u.leds = c.inp; s.appendChild(c.lab);
       c = check("ctrlpickup", "Pickup: a knob or fader takes over only once it reaches the position on screen", function(on){ set.pickup = on; saveSet(); if(!on) pickReset(); }); u.pickup = c.inp; s.appendChild(c.lab);
@@ -24634,12 +25512,15 @@
       u.back = btn("tinybtn", "Back", function(){ walkGo(-1); }, "ctrlback");
       u.skip = btn("tinybtn", "Skip", walkSkip, "ctrlskip");
       u.stop = btn("tinybtn", "Stop for now", walkStop, "ctrlstop");
-      u.copy2 = btn("sendbtn", "Copy report", function(){ copyText(report(), u.copyNote2, u.copyBox2); }, "ctrlcopy2");
+      u.copy2 = btn("sendbtn", "Copy report", function(){ copyText(walk && walk.quick ? quickReport() : report(), u.copyNote2, u.copyBox2); }, "ctrlcopy2");
+      // the quick check: a control that arrived on other numbers than the table has can be taken as it is
+      u.fix = btn("sendbtn", "", function(){ quickFix(); }, "ctrlfix"); u.fix.hidden = true;
+      u.fixRow = el("div", "eq-row"); u.fixRow.appendChild(u.fix);
       row.appendChild(u.back); row.appendChild(u.skip); row.appendChild(u.copy2); row.appendChild(u.stop);
       u.copyNote2 = el("p", "eq-note"); u.copyNote2.id = "ctrlcopynote2"; u.copyNote2.setAttribute("role", "status");
       u.copyBox2 = el("textarea", "eq-copybox"); u.copyBox2.id = "ctrlreportbox2"; u.copyBox2.readOnly = true; u.copyBox2.rows = 8; u.copyBox2.hidden = true;
       u.copyBox2.setAttribute("aria-label", "The controller check report as text");
-      u.walk.appendChild(u.step); u.walk.appendChild(u.bar); u.walk.appendChild(u.secRow); u.walk.appendChild(u.ask); u.walk.appendChild(u.figHost); u.walk.appendChild(u.got); u.walk.appendChild(row);
+      u.walk.appendChild(u.step); u.walk.appendChild(u.bar); u.walk.appendChild(u.secRow); u.walk.appendChild(u.ask); u.walk.appendChild(u.figHost); u.walk.appendChild(u.got); u.walk.appendChild(u.fixRow); u.walk.appendChild(row);
       u.walk.appendChild(u.copyNote2); u.walk.appendChild(u.copyBox2);
       s.appendChild(u.walk);
 
@@ -24668,6 +25549,7 @@
       var u = UI, walking = !!(walk && walk.mode !== "one");
       if(walking) equipPanel.setAttribute("data-walk", "1"); else equipPanel.removeAttribute("data-walk");
       [u.secState, u.secOpt, u.secCheck, u.secTeach, u.secAdv].forEach(function(s){ s.hidden = walking; });
+      if(walking){ u.secSetup.hidden = true; u.secQuick.hidden = true; }
       u.secWalk.hidden = !walking;
       return walking;
     }
@@ -24681,6 +25563,7 @@
       u.skip.hidden = walk.done;
       u.got.dataset.ok = "0";
       u.copyNote2.textContent = ""; u.copyBox2.hidden = true;
+      u.fix.hidden = true; walk.fix = null;
       // the sections, each with how far this run has got in it
       var secs2 = [], secAt = {}, pos = 0, tot = 0;
       walk.list.forEach(function(q, k2){
@@ -24696,9 +25579,9 @@
       u.secRow.hidden = walk.done || secs2.length < 2;
       if(walk.done){
         var got = 0, k; for(k in walk.res) if(walk.res.hasOwnProperty(k) && walk.res[k].state === "got") got++;
-        u.step.textContent = (check ? "Controller check" : "Teaching") + " · finished";
-        u.ask.textContent = check ? "That was the last control. " + got + " of " + n + " sent something. Press Copy report and paste it into a message to the developer."
-          : "That was the last control. " + taughtCount(walk.dev) + " controls on " + walk.dev + " now drive the DJ area.";
+        u.step.textContent = (walk.quick ? "Quick check" : (check ? "Controller check" : "Teaching")) + " · finished";
+        u.ask.textContent = walk.quick ? quickDoneWords() : (check ? "That was the last control. " + got + " of " + n + " sent something. Press Copy report and paste it into a message to the developer."
+          : "That was the last control. " + taughtCount(walk.dev) + " controls on " + walk.dev + " now drive the DJ area.");
         u.got.textContent = "";
         u.figHost.textContent = ""; fig = null; figKey = "";
         u.stop.textContent = "Done";
@@ -24706,8 +25589,9 @@
       }
       u.stop.textContent = "Stop for now";
       u.skip.textContent = check ? "Nothing happens: next" : "Skip this one";
-      u.step.textContent = check ? "Controller check" + (walk.scope === "unknown" ? " (still unknown)" : "") + " · " + step.sec + " " + pos + " of " + tot + " · " + (walk.i + 1) + " of " + n + " in all"
-        : "Teaching " + walk.dev + " · " + step.sec + " · " + (walk.i + 1) + " of " + n;
+      u.step.textContent = walk.quick ? "Quick check · " + (walk.i + 1) + " of " + n
+        : (check ? "Controller check" + (walk.scope === "unknown" ? " (still unknown)" : "") + " · " + step.sec + " " + pos + " of " + tot + " · " + (walk.i + 1) + " of " + n + " in all"
+        : "Teaching " + walk.dev + " · " + step.sec + " · " + (walk.i + 1) + " of " + n);
       var m = GEARMAP._map(walk.gk), c = m && m.by[step.id], ti = check ? null : tinfo(step.t), prev = walk.res[walk.i];
       if(check) u.ask.textContent = step.say;
       else u.ask.textContent = ti.kind === "abs" ? "Move the knob or fader you want for: " + ti.name + "."
@@ -24758,14 +25642,16 @@
         GEARMAP.keys().forEach(function(k){ var o = el("option", "", GEARMAP.info(k).title); o.value = k; u.pick.appendChild(o); });
       }
       u.pick.value = refPick;
-      u.diaWords.textContent = refPick ? inf.title + "." : (cur ? (d ? d.name + ": " : "") + (inf.exact ? "this drawing was made for this model." : "there is no drawing of this exact model yet, so this is a typical one of its kind.")
+      u.diaWords.textContent = refPick ? inf.title + "." : (cur ? (d ? d.name + ": " : "") + (inf.exact ? "this drawing was made for this model."
+          : (/^(ddj-|dj-)/.test(key) && !/^dj-fam-/.test(key) ? "this drawing has the controls of this model. Where each one sits is the usual place for its family and has not been checked against a real unit." : "there is no drawing of this exact model yet, so this is a typical one of its kind."))
         : (d ? "There is no drawing for " + d.name + " yet. This is a typical DJ controller." : "No equipment is connected. This is a typical DJ controller; plug yours in to see its own."));
       if(force || refKey !== key || !refFig){
         refKey = key; u.diaHost.textContent = "";
         refFig = GEARMAP.figure(key, {});
         if(refFig) u.diaHost.appendChild(refFig);
         u.ref.textContent = "";
-        var sec = "", p = d && !refPick ? profileFor(d.name, d.maker) : (key === "ddj-grv6" ? (PROFILES["ddj-grv6"] || (PROFILES["ddj-grv6"] = buildProfile(true))) : null);
+        var pm = CLIB.byKey(key.replace(/^dj-/, ""));
+        var sec = "", p = d && !refPick ? profileFor(d.name, d.maker) : (key === "ddj-grv6" ? (PROFILES["ddj-grv6"] || (PROFILES["ddj-grv6"] = buildProfile(true))) : (pm ? CLIB.decode(pm) : null));
         var live = {};
         if(p) p.list.forEach(function(e){ if(e.t) live[e.id] = true; });
         if(d && maps[d.name] && !refPick) Object.keys(maps[d.name].map).forEach(function(k){ live[maps[d.name].map[k].t] = true; });
@@ -24792,15 +25678,49 @@
       } else if(p && p.grv6){
         u.state.textContent = d.name + ": First Loop has its own mapping for this controller. Its play, cue, sync, jog wheels, tempo sliders, loops, hot cue pads, mixer and browse controls drive the DJ area. With four decks, the DECK buttons move a side to deck 3 or 4.";
         u.exp.textContent = "Experimental — based on a community mapping; some controls may not respond yet. The controller check below finds out which. Decks 3 and 4 follow the usual pattern of this family of controllers and have not been confirmed on a real unit.";
+      } else if(p && p.model && p.model.cf !== "f"){
+        // (a) a model First Loop has a table for
+        u.state.textContent = d.name + " — built-in mapping" + (CLIB.tidy(d.name) === p.model.n.toLowerCase() ? "" : " for the " + p.model.n) + " (" + CLIB.CF[p.model.cf] + "; not yet confirmed on a real unit). " + worksWords(p);
+        u.exp.textContent = "Not yet confirmed on a real unit" + (p.model.part ? ", and part of it is taken from this model’s family" : "") + ". Run the Quick check below: it takes two minutes, and a control that arrives differently can be put right there with one press.";
       } else if(p){
-        u.state.textContent = d.name + ": First Loop uses the typical DDJ layout for this controller, the controls that AlphaTheta and Pioneer DDJ models have in common.";
-        u.exp.textContent = "Typical DDJ layout — not made for this exact model. A control that does nothing or the wrong thing can be taught below; what you teach wins.";
+        // (b) only its family is known
+        var famOnly = p.model && p.model.fam;
+        u.state.textContent = d.name + " — First Loop has no mapping made for this exact model. It is using the layout " + (famOnly ? "you chose: the one " + p.model.src.replace(/^the numbers /, "") : (p.model ? "of " + p.model.src : "that AlphaTheta and Pioneer DDJ models have in common")) + ".";
+        u.exp.textContent = "Family layout — not confirmed for this model. Most controls should work. " + (p.model ? "Run the Quick check below: a control that arrives differently can be put right there with one press. " : "") + "A control that does nothing or the wrong thing can also be taught further down; what you teach wins.";
       } else {
+        // (c) nothing is known about it
+        var fam0 = isDJ(d.name, d.maker) || CLIB.famFor(d.name, d.maker) ? CLIB.famFor(d.name, d.maker) : "";
         u.state.textContent = d.name + ": First Loop has no mapping of its own for this " + (isDJ(d.name, d.maker) ? "controller" : "device") + ". Teach it below: press each control once and it drives the DJ area.";
-        u.exp.textContent = "";
+        u.exp.textContent = isDJ(d.name, d.maker) ? "Ways to get it working: " + (fam0 ? "try the layout that most controllers of its make share (the button below); " : "") +
+          "teach it (Teach your controller, below); or run the Controller check and send its report to the developer, who can add this model." : "";
+      }
+      // the family layout: offered for an unknown controller whose name says who made it, and taken back the same way
+      var dvP = d ? devOpt(d.name) : null, famNow = dvP && dvP.fam && p && p.model && p.model.fam ? dvP.fam : "", famCan = d && !p ? CLIB.famFor(d.name, d.maker) : "";
+      u.famRow.hidden = !(famNow || (famCan && isDJ(d.name, d.maker)));
+      u.famGo.textContent = famNow ? "Stop using the family layout" : (famCan ? "Try the usual " + CLIB.fams[famCan].n : "");
+      u.famGo.className = famNow ? "tinybtn" : "sendbtn";
+      // a controller that shows up as more than one port
+      var sib = d ? equipDevices().filter(function(q){ return q.name !== d.name && CLIB.tidy(q.name) === CLIB.tidy(d.name); }) : [];
+      u.portNote.textContent = sib.length ? "This controller shows up as " + (sib.length + 1) + " ports (" + [d.name].concat(sib.map(function(q){ return q.name; })).join(", ") + "). First Loop listens to all of them; lights are only sent to " + d.name + "." : "";
+      paintSetup(d, p);
+      // the quick check: for a controller with a table
+      var qOK = !!(d && p && set.builtin), qs = qOK ? quickStore(d.name) : null, qc = qs ? quickCounts(d.name, d.maker, qs.gk, qs) : null;
+      u.secQuick.hidden = !qOK;
+      if(qOK){
+        u.quickWords.textContent = qs && qs.done ? "Done on this device: " + qc.ok + " of " + qc.n + " controls arrived as expected" + (qc.fixed ? ", " + qc.fixed + " corrected" : "") + (qc.different + qc.nothing + qc.skipped ? ", " + (qc.different + qc.nothing + qc.skipped) + " still open" : "") + "."
+          : "About a dozen controls, one at a time: play, cue, the jog wheel, the tempo slider, a fader, the crossfader, an EQ knob, headphone cue, a pad, a loop button, browse and load. First Loop shows what arrived for each. A control that arrives on other numbers than expected can be put right with one press, and that is kept for this device.";
+        u.quickGo.textContent = qs && qs.done ? "Run the quick check again" : "Start the quick check";
+        u.quickCopy.hidden = !(qs && Object.keys(qs.res).length);
       }
       u.builtinLab.hidden = !p; u.builtin.checked = set.builtin;
       u.jog.value = String(set.jog); u.jogOut.textContent = set.jog.toFixed(2) + "×";
+      var tk = d ? ticksOf(d.name, p) : JOG_TICKS, meas = !!(dvP && (dvP.jt || dvP.tflip || dvP.jflip));
+      u.jogFine.textContent = "How far the track moves when the jog wheel turns. If one turn of the wheel moves the record more or less than one turn on screen, change this. " +
+        (dvP && dvP.jt ? "On this device one turn was measured as " + dvP.jt + " steps" + (dvP.jflip ? ", counted backwards" : "") + " (Quick check), so 1.00 should be right."
+          : (p && p.grv6 ? "For the DDJ-GRV6 it is set from a real unit (2,080 steps in one turn), so 1.00 is right."
+          : (p && p.model ? "For this controller one turn is taken as " + tk + " steps, as its mapping’s source has it; the Quick check measures your unit." : ""))) +
+        (dvP && dvP.tflip ? " The tempo slider of this device was found to count the other way round and has been turned round." : "");
+      u.jogReset.hidden = !meas;
       u.flip.checked = set.flip; u.leds.checked = set.leds; u.pickup.checked = set.pickup;
       var gkC = d ? GEARMAP.keyFor(d.name, d.maker) : "", stC = d ? checkStore(d.name) : null, stT = d ? walkStored("teach", d.name) : null, total = d ? checkList(gkC).length : 0;
       var answered = stC ? Object.keys(stC.res).length : 0, toGo = 0;
@@ -24823,13 +25743,103 @@
       u.grvGo.disabled = !sysexLive();
       if(u.all.open) paintList();
     }
+    // what a table covers, in a sentence
+    function worksWords(p){
+      var has = {}, parts = ["play", "cue"];
+      p.list.forEach(function(e){ if(e.t) has[e.t.replace(/^d1\./, "").replace(/^mix\.ch1\./, "ch.")] = 1; });
+      if(has.sync) parts.push("sync");
+      if(has.jog || has.jog_side) parts.push("jog wheels");
+      if(has.tempo) parts.push("tempo sliders");
+      if(has.loop_in || has.loop_auto) parts.push("loops");
+      if(has.pad1) parts.push("hot cue pads");
+      parts.push("mixer");
+      if(has["browse.knob"]) parts.push("browse");
+      return "Its " + parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] + " controls drive the DJ area." + (p.decks === 4 && p.channels !== 4 ? " Its DECK buttons move a side to deck 3 or 4." : "");
+    }
+    // ---------- the setup checklist ----------
+    // What a maker says about drivers, by model. Read on the makers' own sites on 10 October 2026: AlphaTheta's driver article for
+    // each "none" model says no extra driver software has to be installed (Windows and macOS); AlphaTheta offers an audio driver for
+    // Windows for the DDJ-FLX10; Denon DJ's downloads page lists a Windows driver for the MC4000 and the MC7000.
+    var DRIVER = { "ddj-grv6":"none", "ddj-flx4":"none", "ddj-400":"none", "ddj-flx6":"none", "ddj-flx2":"none", "ddj-flx10":"win", "mc4000":"win", "mc7000":"win" };
+    function setupItems(d, p){
+      var os = osName(), key = p ? p.key : "", drv = DRIVER[key] || "", at = AT_RE.test(d.name + " " + d.maker), out = [], links = [];
+      try { links = equipLinksFor([d]).slice(0, 1); } catch(e){ links = []; }
+      if(os === "Windows") out.push(drv === "none" ? { k:"driver", text:"Driver: none to install. The maker says Windows sets this model up by itself when it is plugged in." }
+        : (drv === "win" ? { k:"driver", text:"Windows: install the maker’s driver for this model first (its sound card needs it), then close the browser completely and open it again.", links:links }
+        : { k:"driver", text:"Windows: if this controller’s sound card does not show up under Output in the DJ area, it needs the maker’s driver. Install it from the maker’s own page for this model, then close the browser completely and open it again.", links:links }));
+      else out.push({ k:"driver", text:os === "macOS" ? (drv === "none" ? "Driver: none needed. The maker says so for this model." : "Driver: on a Mac a DJ controller normally needs none.") : "Driver: this system normally needs none for a DJ controller." });
+      out.push({ k:"close", text:at ? "Close rekordbox, Serato and any other DJ program, then switch the controller off and on again. The maker says two DJ programs must not use it at the same time."
+        : "Close every other DJ program (Serato, rekordbox, VirtualDJ, Traktor, djay): two programs cannot share one controller. If it still does nothing, switch it off and on again." });
+      // model by model, only what the maker's own pages or manual say
+      if(key === "ddj-400") out.push({ k:"mode", text:"If its controls do nothing here: the DDJ-400 can be told to work as a general MIDI controller whether or not rekordbox runs. From its manual: unplug the USB cable; hold SHIFT and PLAY/PAUSE on the left deck while plugging it in again (Utilities mode); press the BEAT JUMP mode button on the left deck so that it is lit; unplug and plug in once more." });
+      else if(key === "ddj-flx6") out.push({ k:"mode", text:"The maker says a utility setting has to be changed before software other than rekordbox and Serato can use the DDJ-FLX6: see “Using as a controller for other DJ software” in its Operating Instructions.", links:links });
+      else if(p && p.model && p.model.aio) out.push({ k:"mode", text:"An all-in-one unit plays from USB sticks by itself; it sends its controls to a computer only in its computer (controller) mode. Its manual says how to switch to that mode." });
+      out.push({ k:"output", text:"In the DJ area, press Output and choose this controller under Output device. With “4 channels” the speakers and the headphones both come out of the controller.", go:"dj" });
+      out.push({ k:"sound", text:"Test the sound: the first beep should come from the speakers, the second, higher one from the headphones only.", tone:1 });
+      if(p && set.builtin) out.push({ k:"quick", text:"Run the Quick check below (2 minutes).", go:"quick" });
+      else out.push({ k:"teach", text:"Teach the controls you need, under Teach your controller below." });
+      return out;
+    }
+    var setupSig = "";
+    function paintSetup(d, p){
+      var u = UI, show = !!d && (!!p || isDJ(d.name, d.maker));
+      u.secSetup.hidden = !show;
+      if(!show){ setupSig = ""; return; }
+      var dv = devOpt(d.name), ck = dv && dv.ck ? dv.ck : {}, items = setupItems(d, p), nm = p && p.model && !p.model.fam && !p.model.aio ? p.model.n : (p && p.grv6 ? "DDJ-GRV6" : d.name);
+      var sig = d.name + "|" + (p ? p.key : "") + "|" + set.builtin + "|" + items.map(function(it){ return it.k + (ck[it.k] ? 1 : 0); }).join(",");
+      if(sig === setupSig) return;
+      setupSig = sig;
+      u.setupLbl.textContent = "Setup checklist for " + nm;
+      u.setupList.textContent = "";
+      items.forEach(function(it){
+        var li = el("li"), c = check("ctrlsetup-" + it.k, it.text, function(on){
+          var q = devOpt(d.name, true); if(!q.ck) q.ck = {};
+          if(on) q.ck[it.k] = 1; else delete q.ck[it.k];
+          saveDevs(); li.dataset.done = on ? "1" : "0"; setupSig = "";
+        }), row, box;
+        c.inp.checked = !!ck[it.k]; li.dataset.done = ck[it.k] ? "1" : "0"; li.dataset.k = it.k;
+        li.appendChild(c.lab);
+        if(it.links && it.links.length){ try { box = equipLinkBox(it.links); } catch(e){ box = null; } if(box) li.appendChild(box); }
+        if(it.go === "dj"){ row = el("div", "eq-row"); row.appendChild(btn("tinybtn", "Open the DJ area", function(){ try { equipClose(false); setView("dj"); } catch(e){} }, "ctrlsetupdj")); li.appendChild(row); }
+        if(it.go === "quick"){ row = el("div", "eq-row"); row.appendChild(btn("tinybtn", "Start the quick check", function(){ quickBegin(); }, "ctrlsetupquick")); li.appendChild(row); }
+        if(it.tone){
+          row = el("div", "eq-row");
+          row.appendChild(btn("tinybtn", "Test tone: speakers", function(){ tone("master"); }, "ctrltone1"));
+          row.appendChild(btn("tinybtn", "Test tone: headphones", function(){ tone("phones"); }, "ctrltone2"));
+          li.appendChild(row);
+        }
+        u.setupList.appendChild(li);
+      });
+    }
+    function tone(which){
+      var u = UI;
+      try {
+        DJ.init().then(function(){
+          DJ.mixer.testTone(which, 1);
+          u.setupNote.textContent = which === "phones" ? "A higher beep was sent to the headphones. Nothing heard: the DJ area’s Output has to be on Split cue or 4 channels, and the headphones plugged into the controller." : "A beep was sent to the speakers.";
+        }, function(){ u.setupNote.textContent = "The DJ area could not start its sound."; });
+      } catch(e){ u.setupNote.textContent = "The DJ area could not start its sound."; }
+    }
     function load(){
       try {
         var s0 = JSON.parse(window.localStorage.getItem(SET_KEY) || "null");
         if(s0 && typeof s0 === "object"){
           if(s0.jog > 0) set.jog = Math.max(0.25, Math.min(4, +s0.jog));
           set.flip = !!s0.flip; set.leds = s0.leds !== false; set.builtin = s0.builtin !== false; set.sysex = !!s0.sysex; set.pickup = s0.pickup !== false; set.conv = !!s0.conv;
+          // up to v32 the tempo slider ran the wrong way round, and "reverse it" was the cure: now that it runs the right way the tick is taken out once
+          if(s0.tv !== 2 && set.flip){ set.flip = false; set.tv = 2; saveSet(); }
         }
+        var d0 = JSON.parse(window.localStorage.getItem(DEV_KEY) || "null");
+        if(d0 && typeof d0 === "object") Object.keys(d0).slice(0, 40).forEach(function(k){
+          var q = d0[k], c = {};
+          if(!q || typeof q !== "object") return;
+          if(q.jt >= 24 && q.jt <= 40000) c.jt = Math.round(q.jt);
+          if(q.tflip) c.tflip = 1; if(q.jflip) c.jflip = 1;
+          if(typeof q.fam === "string" && CLIB.fams.hasOwnProperty(q.fam)) c.fam = q.fam;
+          if(q.quick > 0) c.quick = +q.quick;
+          if(q.ck && typeof q.ck === "object"){ c.ck = {}; Object.keys(q.ck).slice(0, 12).forEach(function(i){ if(/^[a-z]{2,10}$/.test(i) && q.ck[i]) c.ck[i] = 1; }); }
+          devs[k] = c;
+        });
         var m0 = JSON.parse(window.localStorage.getItem(MAP_KEY) || "null");
         if(m0 && typeof m0 === "object") Object.keys(m0).forEach(function(k){ var c = cleanMap(m0[k]); if(c) maps[k] = c; });
       } catch(e){}
@@ -24841,11 +25851,15 @@
     var api = {
       onMsg:onMsg, meaning:function(){ return { text:meaning, known:known }; }, ports:ports, build:build, paint:paint,
       sysexWanted:function(){ return sx.want; }, isDJ:isDJ, learnOne:learnOne, taught:taughtCount, tinfo:tinfo, targets:teachList,
-      exportText:exportText, importText:importText, report:report, profileFor:profileFor, settings:function(){ return set; }
+      exportText:exportText, importText:importText, report:report, profileFor:profileFor, settings:function(){ return set; },
+      onAction:onAction, summary:summary, quickReport:quickReport,
+      familyOf:function(name){ var dv = devOpt(String(name)); return dv && dv.fam ? dv.fam : ""; }
     };
     if(testMode){
       api._test = { STAT:STAT, maps:function(){ return maps; }, walk:function(){ return walk; }, outs:function(){ return outs; }, sendSysex:sendSysex, sx:sx, bind:bind, forget:forget,
-        checkList:checkList, expected:expected, setTab:setTab, flushNow:function(){ if(frame){ flush(); } }, pending:function(){ return pendN; }, JOG_TICKS:JOG_TICKS };
+        checkList:checkList, expected:expected, setTab:setTab, flushNow:function(){ if(frame){ flush(); } }, pending:function(){ return pendN; }, JOG_TICKS:JOG_TICKS,
+        devs:function(){ return devs; }, quickList:quickList, quickBegin:quickBegin, setupItems:setupItems, osName:osName, chooseFamily:chooseFamily, ticksOf:ticksOf, confOf:confOf,
+        acts:[], spy:function(on){ spyOn = !!on; } };
       try { window.__flCTRL = api; } catch(e){}
     }
     return api;
@@ -24868,6 +25882,17 @@
   function ctrlSysex(){ return CTRL ? CTRL.sysexWanted() : false; }
   function ctrlPanelBuild(){ if(CTRL) CTRL.build(); }
   function ctrlPanelPaint(){ if(CTRL) CTRL.paint(); }
+  // the family layout the person chose for a controller without a table of its own ("" if none): the drawing follows it
+  function ctrlFamilyOf(name){ try { return CTRL ? CTRL.familyOf(name) : ""; } catch(e){ return ""; } }
+  // said in the Assistant when a controller with a table from CLIB is plugged in ("" for anything else, the DDJ-GRV6 included)
+  function ctrlArrivedWords(d){
+    try {
+      var p = CTRL ? CTRL.profileFor(d.name, d.maker) : null;
+      if(!p || !p.model) return "";
+      return "First Loop has a " + (p.model.cf === "f" ? "family layout" : "built-in mapping") + " for it, so its decks, mixer and pads drive the DJ area. " +
+        "Open Equipment, then Controller: there is a short setup checklist and a two-minute Quick check that shows whether every control arrives as expected.";
+    } catch(e){ return ""; }
+  }
   // midiLearnStart("dj:d1.play") learns one DJ control; "" when listening started, else the reason
   function ctrlLearnStart(target, from){
     if(!CTRL) return "the page is still starting";

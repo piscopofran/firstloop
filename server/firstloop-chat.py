@@ -126,10 +126,10 @@ PROMPT_LINES = [
     "@@ dj",
     "",
     "THE DJ AREA",
-    "- Two decks, or four (Decks 2 | 4 in the top row, or dj_decks). Each has a scrolling waveform with beat lines, a strip of the whole track, a platter, CUE, play, hot cues A to H, loops (In, Out, Reloop, auto Loop in beats), beat Jump, Sync, Master, Quantize, Slip, Vinyl, a tempo fader (range 6, 10 or 16 per cent, or wide) and pitch bend.",
+    "- Two decks, or four (Decks 2 | 4 in the top row, or dj_decks). Each has a scrolling waveform with beat lines, a strip of the whole track, a platter, CUE, play, hot cues A to H, loops (In, Out, Reloop, auto Loop in beats), beat Jump, Sync, Master, Quantize, Slip, Vinyl, Key lock, key shift and Key sync, Rev, a tempo fader (range 6, 10 or 16 per cent, or wide) and pitch bend.",
     "- Mixer, per deck: Trim, High, Mid, Low, Filter, a channel fader, a headphone cue button, a meter. Then Master, Cue/Mst (the headphone mix), Phones, and a crossfader (each deck on side A, Thru or B; Smooth or Cut curve). Beat FX: echo, reverb, filter sweep or flanger, on a deck or the master, timed in beats. Rec records the mix to WAV. Output: speakers; split (master left ear, cue right, for one sound output); or four channels.",
     "- Decks 1 and 3 are on the left and on side A of the crossfader, 2 and 4 on the right and on side B; the mixer channels run 3 1 2 4.",
-    "- Library: their own music files (Add files, Add folder) and their First Loop songs; search, BPM and key filter, playlists, history, Related, rekordbox XML in and out; analysis finds BPM, key and beat grid.",
+    "- Library: their own music files (Add files, Add folder) and their First Loop songs; search, BPM and key filter, playlists, history, Related, Prepare; a rekordbox USB stick or rekordbox.xml read where it is with its playlists, cues and grids, never written to (library.rekordbox); rekordbox XML out; analysis finds BPM, key and beat grid. Browse, over the list, gives the list the room.",
     "- Limits: \"dj.lacks\" lists what First Loop does not have, \"dj.has\" what this copy does. Say so plainly when it matters or when they compare with rekordbox, Serato or Traktor, and never promise what is in lacks. The decks and the song in Make do not sound together. Sound starts only after a press on the page (a Start button shows).",
     "- For someone who knows rekordbox, Serato or Traktor (\"dj.software\"), give their name for a thing once: Key lock is rekordbox's Master Tempo, Sync its Beat Sync, a memory point its Memory Cue, Jump its Beat Jump.",
     "@@ core",
@@ -197,7 +197,7 @@ PROMPT_LINES = [
     "go_to {area: \"make\", \"mix\", \"dj\", \"learn\" or \"songs\"}",
     "play",
     "stop",
-    "open_equipment opens the Equipment panel: devices, what they send, the Controller check",
+    "open_equipment {tab: \"status\", \"controller\" or \"diagram\"} opens the Equipment panel: devices and what they send; a controller's setup checklist, Quick check and teaching; its drawing",
     "show_link {maker} a button to that maker's official support and downloads page (AlphaTheta or Pioneer DJ, rekordbox, Serato, Native Instruments, Akai, Novation, Roland, Korg, others)",
     "show_controls {controls: [ids from equipment.controls], captions: {id: \"what it does\"}, title} draws their equipment with those controls ringed and numbered; a control lights up when they touch it",
     "@@ gear",
@@ -228,9 +228,12 @@ PROMPT_LINES = [
     "Example. Request: \"faster, and a kick on every beat\" (4/4, kick in part A was [1,9]):",
     "{\"say\":\"Tempo is up from 92 to 108, and part A has a kick on every beat: four on the floor.\",\"actions\":[{\"type\":\"set_tempo\",\"value\":108},{\"type\":\"set_drum\",\"part\":\"A\",\"drum\":\"kick\",\"steps\":[1,5,9,13]}],\"topic\":\"beat\"}",
     "@@ dj",
-    "dj_point {controls: [ids]} rings controls on the DJ screen for a few seconds. Ids: d1. to d4. followed by play, cue, jog, wave, overview, tempo, range, bend, sync, master, hot1 to hot8, loop_in, loop_out, reloop, loop, loop_size, jump_back, jump_fwd, quantize, slip, vinyl or load; mix.ch1. to mix.ch4. followed by trim, eq_hi, eq_mid, eq_low, filter, fader, cue or meter; mix.xfader, mix.master, mix.meter, mix.hp_mix, mix.hp_level, fx.type, fx.target, fx.beats, fx.depth, fx.on, rec, out, lib.search, lib.list, lib.add, lib.folder, lib.tree, lib.bpm, lib.rekordbox (where a rekordbox library is brought in)",
+    "dj_point {controls: [ids]} rings controls on the DJ screen for a few seconds. Ids: d1. to d4. followed by play, cue, jog, wave, overview, tempo, range, bend, sync, master, hot1 to hot8, loop_in, loop_out, reloop, loop, loop_size, jump_back, jump_fwd, quantize, slip, vinyl, keylock, key_sync, rev, mem or load; mix.ch1. to mix.ch4. followed by trim, eq_hi, eq_mid, eq_low, filter, fader, cue or meter; mix.xfader, mix.master, mix.meter, mix.hp_mix, mix.hp_level, fx.type, fx.target, fx.beats, fx.depth, fx.on, rec, out, settings, lib.search, lib.list, lib.add, lib.folder, lib.tree, lib.bpm, lib.browse, lib.rekordbox (where a rekordbox library is brought in)",
     "dj_decks {count: 2 or 4} two decks or four; going back to two empties decks 3 and 4",
-    "dj_load {deck: 1 to 4, track: an id from library.rows, or words from the title; force: true only when they said a playing track may be replaced}",
+    "dj_load {deck: 1 to 4, track: an id from library.rows, or words from the title; or next: true for the next track of the list on show that has not been on a deck this visit; force: true only when they said a playing track may be replaced}",
+    "dj_list {name} opens a playlist or library section by name: theirs, one from a rekordbox stick, All tracks, Prepare, Related, Free music. Before dj_load with next it chooses the list",
+    "dj_keylock {deck, on} key lock (rekordbox: Master Tempo)",
+    "dj_key {deck, shift: -12 to 12 semitones, 0 is the track's own key} or {deck, sync: true} to the nearest key that goes with the master deck",
     "dj_play {deck}",
     "dj_pause {deck}",
     "dj_cue {deck} back to the cue point, paused",
@@ -1506,7 +1509,8 @@ _PART = D(drums=D(kick=L(N, 16), snare=L(N, 16), hat=L(N, 16), clap=L(N, 16)),
 _TRACK = D(level=N, tone=N, space=N, echo=N, muted=B)
 # From wire version 2: the DJ area, the diagram of the connected equipment, MIDI ports one by one.
 _DECK = D(deck=N, empty=B, loading=B, title=S(), artist=S(), bpm=N, bpm_now=N, key=S(12), camelot=S(4), playing=B,
-          at=S(12), left=N, tempo=N, range=N, sync=B, master=B, loop=N, hot=L(N, 8), quantise=B, vinyl=B, ending=B)
+          at=S(12), left=N, tempo=N, range=N, sync=B, master=B, loop=N, hot=L(N, 8), quantise=B, vinyl=B, ending=B,
+          keylock=B, key_shift=N, key_now=S(12), reverse=B)
 _CHANNEL = D(ch=N, trim=N, hi=N, mid=N, low=N, filter=N, fader=N, cue=B, side=S(4))
 _ROW = D(id=S(40), title=S(), artist=S(), bpm=N, key=S(12), camelot=S(4), missing=B)
 _PORT = D(name=S(), maker=S(), kind=S(), state=S(20))
@@ -1517,7 +1521,7 @@ _DJ = D(open=B, tracks=N, audio=S(), screen=S(12), deck_count=N, sides=D(left=N,
                 fx=D(type=S(12), on=B, beats=N, depth=N, target=S(12)), recording=B, too_loud=L(S(12), 5)),
         routing=S(12), max_channels=N,
         library=D(tracks=N, own_files=N, analysed=N, playlists=L(S(), 8), more_playlists=N, analysing=B,
-                  selected=_ROW, section=S(), showing=N, search=S(), rows=L(_ROW, 12)),
+                  selected=_ROW, section=S(), showing=N, search=S(), rows=L(_ROW, 12), rekordbox=L(S(60), 3)),
         controller=D(active=B, name=S()),
         lacks=L(S(40), 12), has=L(S(40), 8), software=S(16), level=S(8))
 # From wire version 4: in the DJ area, what First Loop has and lacks beside other DJ software (lacks, has), what the person

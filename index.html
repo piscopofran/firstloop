@@ -11556,10 +11556,10 @@
     "@@ dj",
     "",
     "THE DJ AREA",
-    "- Two decks, or four (Decks 2 | 4 in the top row, or dj_decks). Each has a scrolling waveform with beat lines, a strip of the whole track, a platter, CUE, play, hot cues A to H, loops (In, Out, Reloop, auto Loop in beats), beat Jump, Sync, Master, Quantize, Slip, Vinyl, a tempo fader (range 6, 10 or 16 per cent, or wide) and pitch bend.",
+    "- Two decks, or four (Decks 2 | 4 in the top row, or dj_decks). Each has a scrolling waveform with beat lines, a strip of the whole track, a platter, CUE, play, hot cues A to H, loops (In, Out, Reloop, auto Loop in beats), beat Jump, Sync, Master, Quantize, Slip, Vinyl, Key lock, key shift and Key sync, Rev, a tempo fader (range 6, 10 or 16 per cent, or wide) and pitch bend.",
     "- Mixer, per deck: Trim, High, Mid, Low, Filter, a channel fader, a headphone cue button, a meter. Then Master, Cue/Mst (the headphone mix), Phones, and a crossfader (each deck on side A, Thru or B; Smooth or Cut curve). Beat FX: echo, reverb, filter sweep or flanger, on a deck or the master, timed in beats. Rec records the mix to WAV. Output: speakers; split (master left ear, cue right, for one sound output); or four channels.",
     "- Decks 1 and 3 are on the left and on side A of the crossfader, 2 and 4 on the right and on side B; the mixer channels run 3 1 2 4.",
-    "- Library: their own music files (Add files, Add folder) and their First Loop songs; search, BPM and key filter, playlists, history, Related, rekordbox XML in and out; analysis finds BPM, key and beat grid.",
+    "- Library: their own music files (Add files, Add folder) and their First Loop songs; search, BPM and key filter, playlists, history, Related, Prepare; a rekordbox USB stick or rekordbox.xml read where it is with its playlists, cues and grids, never written to (library.rekordbox); rekordbox XML out; analysis finds BPM, key and beat grid. Browse, over the list, gives the list the room.",
     "- Limits: \"dj.lacks\" lists what First Loop does not have, \"dj.has\" what this copy does. Say so plainly when it matters or when they compare with rekordbox, Serato or Traktor, and never promise what is in lacks. The decks and the song in Make do not sound together. Sound starts only after a press on the page (a Start button shows).",
     "- For someone who knows rekordbox, Serato or Traktor (\"dj.software\"), give their name for a thing once: Key lock is rekordbox's Master Tempo, Sync its Beat Sync, a memory point its Memory Cue, Jump its Beat Jump.",
     "@@ core",
@@ -11627,7 +11627,7 @@
     "go_to {area: \"make\", \"mix\", \"dj\", \"learn\" or \"songs\"}",
     "play",
     "stop",
-    "open_equipment opens the Equipment panel: devices, what they send, the Controller check",
+    "open_equipment {tab: \"status\", \"controller\" or \"diagram\"} opens the Equipment panel: devices and what they send; a controller's setup checklist, Quick check and teaching; its drawing",
     "show_link {maker} a button to that maker's official support and downloads page (AlphaTheta or Pioneer DJ, rekordbox, Serato, Native Instruments, Akai, Novation, Roland, Korg, others)",
     "show_controls {controls: [ids from equipment.controls], captions: {id: \"what it does\"}, title} draws their equipment with those controls ringed and numbered; a control lights up when they touch it",
     "@@ gear",
@@ -11658,9 +11658,12 @@
     "Example. Request: \"faster, and a kick on every beat\" (4/4, kick in part A was [1,9]):",
     "{\"say\":\"Tempo is up from 92 to 108, and part A has a kick on every beat: four on the floor.\",\"actions\":[{\"type\":\"set_tempo\",\"value\":108},{\"type\":\"set_drum\",\"part\":\"A\",\"drum\":\"kick\",\"steps\":[1,5,9,13]}],\"topic\":\"beat\"}",
     "@@ dj",
-    "dj_point {controls: [ids]} rings controls on the DJ screen for a few seconds. Ids: d1. to d4. followed by play, cue, jog, wave, overview, tempo, range, bend, sync, master, hot1 to hot8, loop_in, loop_out, reloop, loop, loop_size, jump_back, jump_fwd, quantize, slip, vinyl or load; mix.ch1. to mix.ch4. followed by trim, eq_hi, eq_mid, eq_low, filter, fader, cue or meter; mix.xfader, mix.master, mix.meter, mix.hp_mix, mix.hp_level, fx.type, fx.target, fx.beats, fx.depth, fx.on, rec, out, lib.search, lib.list, lib.add, lib.folder, lib.tree, lib.bpm, lib.rekordbox (where a rekordbox library is brought in)",
+    "dj_point {controls: [ids]} rings controls on the DJ screen for a few seconds. Ids: d1. to d4. followed by play, cue, jog, wave, overview, tempo, range, bend, sync, master, hot1 to hot8, loop_in, loop_out, reloop, loop, loop_size, jump_back, jump_fwd, quantize, slip, vinyl, keylock, key_sync, rev, mem or load; mix.ch1. to mix.ch4. followed by trim, eq_hi, eq_mid, eq_low, filter, fader, cue or meter; mix.xfader, mix.master, mix.meter, mix.hp_mix, mix.hp_level, fx.type, fx.target, fx.beats, fx.depth, fx.on, rec, out, settings, lib.search, lib.list, lib.add, lib.folder, lib.tree, lib.bpm, lib.browse, lib.rekordbox (where a rekordbox library is brought in)",
     "dj_decks {count: 2 or 4} two decks or four; going back to two empties decks 3 and 4",
-    "dj_load {deck: 1 to 4, track: an id from library.rows, or words from the title; force: true only when they said a playing track may be replaced}",
+    "dj_load {deck: 1 to 4, track: an id from library.rows, or words from the title; or next: true for the next track of the list on show that has not been on a deck this visit; force: true only when they said a playing track may be replaced}",
+    "dj_list {name} opens a playlist or library section by name: theirs, one from a rekordbox stick, All tracks, Prepare, Related, Free music. Before dj_load with next it chooses the list",
+    "dj_keylock {deck, on} key lock (rekordbox: Master Tempo)",
+    "dj_key {deck, shift: -12 to 12 semitones, 0 is the track's own key} or {deck, sync: true} to the nearest key that goes with the master deck",
     "dj_play {deck}",
     "dj_pause {deck}",
     "dj_cue {deck} back to the cue point, paused",
@@ -13275,6 +13278,13 @@
       (Array.isArray(s.hotcues) ? s.hotcues : []).forEach(function(c, i){ if(c !== null && c !== undefined && i < 8) hot.push(i + 1); });
       if(hot.length) e.hot = hot;
       e.quantise = !!d.quantise; e.vinyl = !!s.vinyl;
+      // from wire version 4: key lock, key shift, reverse (a server from before leaves out what it does not know)
+      if(wire >= 4){
+        if(d.keylock) e.keylock = true;
+        if(d.keyShift) e.key_shift = d.keyShift | 0;
+        if(d.keyNow && d.keyNow !== d.key) e.key_now = asstCut(String(d.keyNow), 8);
+        if(d.reverse) e.reverse = true;
+      }
       if(d.endWarning) e.ending = true;
       return e;
     });
@@ -13330,6 +13340,11 @@
         return q;
       });
     }
+    // from wire version 4: the rekordbox sticks and collections that were brought in, one line each
+    if(wire >= 4 && Array.isArray(lib.rekordbox) && lib.rekordbox.length)
+      L.rekordbox = lib.rekordbox.slice(0, 3).map(function(r){
+        return asstCut(asstCut(String(r.name || ""), 24) + ": " + (r.tracks | 0) + " tracks, " + (r.playlists | 0) + " playlists, " + (r.state === "gone" ? "not plugged in" : (r.state === "locked" ? "needs reconnecting" : "connected")), 60);
+      });
     o.library = L;
     var ct = snap.controller;
     if(ct && (ct.active || ct.name)) o.controller = { active:!!ct.active, name:asstCut(String(ct.name || ""), 40) };
@@ -13403,6 +13418,40 @@
     c.sort(function(x, y){ return rank(x) - rank(y); });
     var exact = c.filter(function(r){ return rank(r) === 0; }).length;
     return { row:c[0], more:exact === 1 ? 0 : c.length - 1 };
+  }
+  // tracks that have been on a deck since the page was opened (so that "the next one" does not offer them again)
+  var asstDjBeen = {}, asstDjBeenOn = false;
+  function asstDjWatch(J){
+    if(asstDjBeenOn) return;
+    asstDjBeenOn = true;
+    try { J.on("load", function(d){ if(d && d.id) asstDjBeen[d.id] = 1; else { for(var n = 1; n <= J.deckCount(); n++){ var s = J.deck(n).state(); if(s.trackId) asstDjBeen[s.trackId] = 1; } } }); } catch(e){}
+  }
+  // the next track of the list on show that has not been on a deck (and is not about to be put on one by this reply)
+  function asstDjNext(J, plans){
+    var rows = [], n, s, taken = {}, k;
+    asstDjWatch(J);
+    try { rows = J.library.list() || []; } catch(e){ rows = []; }
+    if(!rows.length) return { why:"the list on show is empty, so there is no next track in it" };
+    try { for(n = 1; n <= J.deckCount(); n++){ s = J.deck(n).state(); if(s.trackId) taken[s.trackId] = 1; } } catch(e2){}
+    for(k in plans) if(plans.hasOwnProperty(k) && plans[k].id) taken[plans[k].id] = 1;
+    for(n = 0; n < rows.length; n++) if(!taken[rows[n].id] && !asstDjBeen[rows[n].id] && !rows[n].missing) return { row:rows[n], more:0 };
+    return { why:"every track of the list on show has been on a deck already (or its file is not here)" };
+  }
+  // a playlist or section of the library by name -> { node:{id, name}, more } or { why }
+  function asstDjList(J, raw){
+    if(typeof raw !== "string" || !raw.trim()) return { why:"no playlist or section was named" };
+    var q = raw.replace(/\s+/g, " ").trim().slice(0, 60), ql = q.toLowerCase().replace(/^(my|the) /, "").replace(/ (playlist|list|crate|folder)$/, ""), nodes = [], c = [];
+    if(/^free( music)?( catalogue)?$/.test(ql)) return { node:{ id:"free", name:"Free music" }, more:0 };
+    try { nodes = J.library.nodes() || []; } catch(e){ nodes = []; }
+    nodes = nodes.filter(function(nd){ return nd && nd.id && !nd.folder; });
+    function rank(nd){
+      var t = String(nd.name || "").toLowerCase().trim();
+      return t === ql ? 0 : (t.indexOf(ql) === 0 ? 1 : (t.indexOf(ql) >= 0 ? 2 : (ql.split(" ").every(function(w){ return t.indexOf(w) >= 0; }) ? 3 : 9)));
+    }
+    nodes.forEach(function(nd){ if(rank(nd) < 9) c.push(nd); });
+    if(!c.length) return { why:"the library has no playlist or section called " + asstShow(q) + ". The tree on the left of the track list shows the ones there are" };
+    c.sort(function(x, y){ return rank(x) - rank(y); });
+    return { node:{ id:c[0].id, name:String(c[0].name || "") }, more:c.length - 1 };
   }
   function asstDjTrackWords(r){
     return "“" + asstCut(r.title, 48) + "”" + (r.artist ? " by " + asstCut(r.artist, 32) : "") +
@@ -13791,7 +13840,7 @@
     }
     st.playing = !!playing;
     st.area = view;
-    if(workspace !== "all") st.workspace = workspace;
+    if(workspace !== "all" && wire >= 4) st.workspace = workspace;
     st.setup = { gear:(profile.gear || []).slice(0, 4),
       microphone: (LOG.voiceRecorded || mediaStream) ? "has been used to record here" : "not used here yet" };
     if(profile.goal) st.setup.goal = profile.goal;
@@ -14207,10 +14256,11 @@
           out.changes.push("Press Learn " + nm + ", below, then " + (turns ? "turn the knob or move the fader" : "press the button, pad or key") + " on your device");
         }
       },
-      open_equipment:function(){
-        if(out.changes.indexOf("Opened the Equipment panel") >= 0) return;
-        post.push(function(){ equipOpen(); });
-        out.changes.push("Opened the Equipment panel");
+      open_equipment:function(a){
+        if(out.changes.some(function(c){ return c.indexOf("Opened the Equipment panel") === 0; })) return;
+        var tab = a && typeof a.tab === "string" ? ({ controller:"ctrl", ctrl:"ctrl", checklist:"ctrl", setup:"ctrl", quick_check:"ctrl", diagram:"diagram", drawing:"diagram", picture:"diagram", status:"status" })[a.tab.toLowerCase().trim().replace(/[\s-]+/g, "_")] || "" : "";
+        post.push(function(){ equipOpen(); if(tab){ var t = document.getElementById("equiptab-" + tab); if(t) t.click(); } });
+        out.changes.push("Opened the Equipment panel" + (tab === "ctrl" ? ", on Controller: the setup checklist and the Quick check are there" : (tab === "diagram" ? ", on Diagram" : "")));
       },
       // A link to a maker's own site. The model gives a name and nothing else;
       // the address is the one in the table of known equipment, or there is none.
@@ -14241,7 +14291,13 @@
         var n = asstInt(a.deck !== undefined ? a.deck : (a.ch !== undefined ? a.ch : a.channel), 1, Math.max(djN(J), +J.maxDecks || 0));
         if(n === null) return void djDeck(J, a);
         var raw = a.track !== undefined ? a.track : (a.id !== undefined ? a.id : (a.title !== undefined ? a.title : a.q));
-        var f = asstDjFind(J, raw);
+        // "the next one": from a list named here, or from the list on show
+        if(a.list !== undefined || a.playlist !== undefined){
+          var fl = asstDjList(J, a.list !== undefined ? a.list : a.playlist);
+          if(!fl.node) return skip(fl.why);
+          try { J.library.node(fl.node.id); } catch(eL){}
+        }
+        var f = (a.next === true || (typeof raw === "string" && /^(the )?next( one| track)?$/i.test(raw.trim()))) ? asstDjNext(J, djPlans) : asstDjFind(J, raw);
         if(!f.row) return skip(f.why);
         if(f.row.missing) return skip("the file for “" + asstCut(f.row.title, 40) + "” is not on this device any more");
         if(n > djN(J)){ djCountPlan = 4; djSay("Four decks are on screen now: 1 and 3 on the left, 2 and 4 on the right"); }
@@ -14309,6 +14365,47 @@
                                                            : ". There is no other track to follow yet")
                                            : "off. Its tempo stays where sync had put it"));
         djq.push(function(){ J.deck(n).sync(on); });
+      },
+      dj_keylock:function(a){
+        var J = djOK(); if(!J) return;
+        var n = djDeck(J, a); if(n === null) return;
+        var d = J.deck(n), on = a.on === undefined && a.value === undefined ? null : asstBool(a.on !== undefined ? a.on : a.value);
+        if(typeof d.setKeylock !== "function") return skip("this copy of the app has no key lock");
+        if((a.on !== undefined || a.value !== undefined) && on === null) return skip("key lock is on or off, not " + asstShow(a.on !== undefined ? a.on : a.value));
+        var cur = !!djPlan(J, n).s.keylock, want = on === null ? !cur : on;
+        if(djPlan(J, n).kl !== undefined) cur = djPlan(J, n).kl;
+        if(cur === want) return djSay("Deck " + n + ": key lock is already " + (want ? "on" : "off"));
+        djPlan(J, n).kl = want;
+        djSay("Deck " + n + ": key lock " + (want ? "on. The tempo fader changes the speed and the key stays" : "off. The pitch follows the tempo again"));
+        djq.push(function(){ d.setKeylock(want); });
+      },
+      dj_key:function(a){
+        var J = djOK(); if(!J) return;
+        var n = djDeck(J, a); if(n === null) return;
+        var d = J.deck(n), p = djPlan(J, n);
+        if(typeof d.setKeyShift !== "function") return skip("this copy of the app has no key shift");
+        if(!p.loaded) return skip("deck " + n + " is empty, so there is no key to move");
+        if(a.sync === true || a.shift === "sync" || a.to === "sync"){
+          var o = djOtherN(J, n);
+          if(!djPlan(J, o).loaded) return skip("key sync follows the master deck, and no other deck is loaded");
+          djSay("Deck " + n + ": key sync with deck " + o + " (the nearest key that goes with it, two semitones at most; key lock goes on)");
+          djq.push(function(){ var r = null; try { r = d.keySync(); } catch(e){ r = null; } if(r && !r.ok && r.why) asstNotice("Key sync did not move deck " + n + ". " + r.why); });
+          return;
+        }
+        var v = asstInt(a.shift !== undefined ? a.shift : (a.semitones !== undefined ? a.semitones : a.value), -12, 12);
+        if(v === null) return skip("a key shift of " + asstShow(a.shift !== undefined ? a.shift : a.semitones) + " is outside -12 to 12 semitones");
+        djSay("Deck " + n + ": " + (v === 0 ? "back to the track’s own key" : "key shifted " + (v > 0 ? "up " : "down ") + Math.abs(v) + (Math.abs(v) === 1 ? " semitone" : " semitones")));
+        djq.push(function(){ d.setKeyShift(v); });
+      },
+      // a playlist or a section of the library, by name: opened at once, so that a dj_load in the same reply can read it
+      dj_list:function(a){
+        var J = djOK(); if(!J) return;
+        var raw = a.name !== undefined ? a.name : (a.list !== undefined ? a.list : (a.playlist !== undefined ? a.playlist : a.section));
+        var f = asstDjList(J, raw);
+        if(!f.node) return skip(f.why);
+        try { J.library.node(f.node.id); } catch(e){ return skip("the library could not open " + asstShow(raw)); }
+        var cnt = 0; try { cnt = (J.library.list() || []).length; } catch(e2){ cnt = 0; }
+        djSay("Library: " + asstCut(f.node.name, 60) + (f.node.id === "free" ? " (the catalogue)" : ", " + cnt + (cnt === 1 ? " track" : " tracks")) + (f.more ? ". " + f.more + " other lists have that in their name; this is the closest" : ""));
       },
       dj_tempo:function(a){
         var J = djOK(); if(!J) return;
@@ -15325,6 +15422,11 @@
     var q = String(text).replace(/\s+/g, " ").trim().replace(/^(please |can you |could you |will you |would you )+/i, "").replace(/( please)?[.!?]+$/i, "").trim(), m, acts = [];
     if(/^(open|show|show me|go to)( the)? (dj|dj area|decks|dj decks)$/i.test(q)) return { t:"", acts:[{ type:"go_to", area:"dj" }] };
     if((m = /^(?:use |show |give me |switch to |go to )?(two|four|2|4) decks$/i.exec(q))) return { t:"", acts:[{ type:"dj_decks", count:/^(four|4)$/i.test(m[1]) ? 4 : 2 }] };
+    if((m = /^(?:key ?lock|master tempo) (on|off)(?: (?:on|for) deck ?([1-4]))?$/i.exec(q)) || (m = /^(?:switch |turn )?(?:key ?lock|master tempo) (on|off)(?: (?:on|for) deck ?([1-4]))?$/i.exec(q)))
+      return { t:"", acts:[{ type:"dj_keylock", deck:+(m[2] || 1), on:/^on$/i.test(m[1]) }] };
+    if((m = /^(?:open|show|show me)(?: my| the)? (.+?) (?:playlist|list|crate)$/i.exec(q))) return { t:"", acts:[{ type:"dj_list", name:m[1] }] };
+    if((m = /^load (?:the )?next(?: track| one)?(?: from(?: my| the)? (.+?)(?: playlist| list)?)? (?:on|onto|on to|in|into)(?: the)? deck ?([1-4])$/i.exec(q)))
+      return { t:"", acts:[m[1] ? { type:"dj_load", deck:+m[2], next:true, list:m[1] } : { type:"dj_load", deck:+m[2], next:true }] };
     if((m = /^(?:load|put) (.+?) (?:on|onto|on to|in|into)(?: the)? deck ?([1-4])(?: and (?:then )?(?:play|start)(?: it| deck ?[1-4])?)?$/i.exec(q))){
       acts.push({ type:"dj_load", deck:+m[2], track:m[1].replace(/^["“”‘’']+|["“”‘’']+$/g, "") });
       if(/ and (then )?(play|start)/i.test(q.slice(m[1].length))) acts.push({ type:"dj_play", deck:+m[2] });
@@ -15753,7 +15855,7 @@
   }
   function asstOnView(v){
     djcPaint();
-    if(v === "dj") setTimeout(function(){ if(view === "dj"){ djcArrive(); djcPaint(); } }, 400);
+    if(v === "dj") setTimeout(function(){ if(view === "dj"){ djcArrive(); djcPaint(); var Jw = asstDJ(); if(Jw) asstDjWatch(Jw); } }, 400);
     if(v === "dj" && asstPointWait){
       var waitIds = asstPointWait; asstPointWait = null;
       setTimeout(function(){ if(view === "dj") asstPointShow(waitIds); }, 150);
@@ -15955,7 +16057,14 @@
     NUDGE_GAP:90000,   // ms between two one-line pointers while playing
     REVIEW_WAIT:240000,// a review that could not be asked for within this long is dropped
     KEEP:20,           // transitions kept in the journal
-    WIRE_MAX:1500      // bytes of "coach" in what is sent to the model
+    WIRE_MAX:1500,     // bytes of "coach" in what is sent to the model
+    // Whether the audio engine's own analysis (DJ.analysis) is used for a transition. Off: the tracker in this block
+    // measures every mix itself, from the same positions, grids, mixer settings and level meters. The engine's analysis
+    // names its numbers differently from what the reader below was written against (maxAbsPhaseMs, lowsOverlapBars,
+    // maxBpmDiffPercent), counts the gap between two beats with the opposite sign, and calls 40 ms a trainwreck where
+    // the rules here say 70, so read as it is it gave reviews that contradicted themselves. One measurer, then, until
+    // the two are brought together.
+    ENGINE:false
   };
   var djcSet = { mode:"off", asked:false, level:"", cap:8, warn:false, sw:"", onb:false };
   var djcS = null, djcTimer = null, djcOffs = [], djcAskOff = null, djcGrids = {}, djcPendingReview = null;
@@ -15985,6 +16094,7 @@
   // x brought into [-span/2, span/2)
   function djcWrap(x, span){ x = ((x % span) + span) % span; return x >= span / 2 ? x - span : x; }
   function djcEngine(J){
+    if(!DJC.ENGINE) return null;
     try { return (J && J.analysis && typeof J.analysis.pair === "function") ? J.analysis : null; } catch(e){ return null; }
   }
   function djcCtl(){
@@ -16573,7 +16683,7 @@
     var C = djcCtl(), sum = null, counts = s.gest;
     try { sum = C && typeof C.summary === "function" ? C.summary() : null; } catch(e){ sum = null; }
     if(sum && typeof sum === "object"){
-      var src = Array.isArray(sum) ? sum : (Array.isArray(sum.top) ? sum.top : (sum.counts && typeof sum.counts === "object" ? sum.counts : null)), cc = {};
+      var src = Array.isArray(sum) ? sum : (Array.isArray(sum.top) ? sum.top : (sum.counts && typeof sum.counts === "object" ? sum.counts : (sum.controlsUsed && typeof sum.controlsUsed === "object" ? sum.controlsUsed : null))), cc = {};       // controlsUsed is the name the controllers block gives it
       if(Array.isArray(src)) src.slice(0, 60).forEach(function(e){ if(e && typeof e.id === "string" && ASST_GEAR_ID.test(e.id)) cc[e.id] = +e.count || +e.n || 1; });
       else if(src) Object.keys(src).slice(0, 200).forEach(function(k){ if(ASST_GEAR_ID.test(k) && djcFin(src[k])) cc[k] = src[k]; });
       if(Object.keys(cc).length) counts = cc;
@@ -21987,7 +22097,7 @@
         p.appendChild(el("h3", "", "The DJ area"));
         p.appendChild(el("p", "", "Two decks play two tracks at once and the mixer between them blends one into the other. The library underneath holds the tracks."));
         var ol = el("ol"); ol.style.cssText = "margin:0 0 8px;padding-left:18px;color:var(--ink-2);";
-        ["Add music: Free music in the library has tracks you may mix and share, Add folder and Add files bring in your own, and the songs made in First Loop are there already. Your files stay on this device.",
+        ["Add music: Free music in the library has tracks you may mix and share, Add folder and Add files bring in your own" + ((typeof wsFLMode === "function" ? wsFLMode() : "all") === "all" ? ", and the songs made in First Loop are there already" : "") + ". Your files stay on this device.",
          "Select a track and load it on a deck: the 1 and 2 buttons in its row, or drag it onto a deck.",
          "Press play on that deck. Load a second track on the other deck and press Sync there: it takes the tempo and the beat of the first.",
          "Bring the second track in with its channel fader or the crossfader. Turning one Low knob down while the other comes up swaps the bass lines.",
@@ -27472,6 +27582,7 @@
       cr.addEventListener("click", function(){ rbCopyText(rbReportText(r.ok ? r.source : null), "The import report was copied. It has counts only, no track names."); });
       row.appendChild(cr);
       if(r.ok){ var go = btn("", "Show it in the library"); go.id = "djrb-show"; go.addEventListener("click", function(){ rbDialogClose(); setNode("rb:" + r.source); }); row.appendChild(go); }
+      if(r.ok && typeof wsRekordboxPage === "function"){ var fr = btn("quiet", "Coming from rekordbox", "What is the same under another name, what works differently, what is not here"); fr.id = "djrb-from"; fr.addEventListener("click", function(){ rbDialogClose(); wsRekordboxPage(); }); row.appendChild(fr); }
       box.appendChild(row);
       (r.notes || []).slice(0, 4).forEach(function(n){ box.appendChild(el("p", "note", n)); });
       o.appendChild(box);
@@ -27537,6 +27648,11 @@
     function rbHelp(p){
       p.appendChild(el("p", "", "Coming from rekordbox: Library, Bring in from rekordbox reads the USB stick you play from on club players (tracks, playlists, hot cues, memory cues, loops and beat grids), a rekordbox.xml file, or a plain music folder. The stick is only read, and its tracks play from it while it is plugged in. The newer encrypted library on a stick (OneLibrary) cannot be read; the Device Library can."));
       p.appendChild(el("p", "", "The mark at the end of a row opens quick grid fixes (×2, ÷2, shift, tap) and Prepare, a scratch list for the next set. Missing files and Duplicates appear under Collection when there are any. Library, Safe-keeping holds daily copies of your cues, grids and playlists."));
+      if(typeof wsRekordboxPage === "function"){
+        var fr = btn("", "Coming from rekordbox: the whole list", "What is the same under another name, what works differently, what is not here"); fr.id = "djfromrb";
+        fr.addEventListener("click", function(){ closePops(); wsRekordboxPage(); });
+        p.appendChild(fr);
+      }
     }
     // listeners and the pieces of the page this block owns; called once, when the library is built
     function rbBuildUI(){
@@ -32937,7 +33053,56 @@
     if(/[?&]fltest/.test(window.location.search)) window.__flWs = { get:function(){ return workspace; }, set:wsSet, facts:wsStartFacts, page:wsPage };
   }
   function wsRekordboxPage(){ wsPage("wsrb", "Coming from rekordbox", WS_RB_PAGE()); }
-  function WS_RB_PAGE(){ return [["p", "…"]]; }
+  function WS_RB_PAGE(){
+    return [
+      ["p", "First Loop’s DJ area runs in the browser. It reads a rekordbox USB stick, or a rekordbox.xml, as they are and never changes them. This page says what is the same under another name, what works differently, and what is not here."],
+      ["h", "The same thing, under another name"],
+      ["table", ["In rekordbox", "Here", "Where"], [
+        ["Master Tempo", "Key lock", "Mode row of each deck"],
+        ["Beat Sync, Master", "Sync, Master", "Beat row of each deck"],
+        ["Key Sync, Key Shift", "Key sync, and − 0 + beside it", "Key row of each deck"],
+        ["Hot Cue A to H", "Hot cues A to H, with their colours and names from the stick", "The pads above each deck"],
+        ["Memory Cue, Cue/Loop Call", "Set, ◀ ▶, Delete", "Mem row of each deck"],
+        ["Active Loop", "Active", "Mem row, while the deck is in a saved loop"],
+        ["Loop In, Loop Out, Reloop/Exit", "In, Out, Reloop", "Loop row"],
+        ["Auto Beat Loop", "Loop, with its length in beats", "Auto row"],
+        ["Beat Jump", "Jump, with its size in beats", "Jump row"],
+        ["Quantize", "Quantize (1, 1/2, 1/4 or 1/8 beat in Settings)", "Mode row"],
+        ["Slip, Slip Reverse", "Slip, and Rev with Slip on", "Mode and Beat rows"],
+        ["Vinyl mode", "Vinyl", "Mode row"],
+        ["Tempo range 6, 10, 16, WIDE", "The ±% button", "Under the tempo fader"],
+        ["Trim, HI, MID, LOW, Color filter", "Trim, High, Mid, Low, Filter", "Each mixer channel"],
+        ["Headphones Mixing, Level", "Cue/Mst, Phones", "Middle of the mixer"],
+        ["Crossfader assign, curve", "A, Thru, B and Smooth, Cut", "Under the mixer"],
+        ["Beat FX", "Beat FX: echo, reverb, filter sweep, flanger", "Top left"],
+        ["Tag List", "Prepare", "Library, under Collection"],
+        ["Related Tracks", "Related", "Library, under Collection"],
+        ["Preferences, Audio", "Settings (latency, key lock, recording) and Output", "Top right"],
+        ["REC", "Rec: the mix as a WAV file, 16 or 24 bits", "Top row"]]],
+      ["h", "What works differently"],
+      ["ul", [
+        "The stick is read where it is and is never written to. Tracks play from it while it is plugged in; the Copy … to this browser button over the list makes a playlist or a selection work without the stick.",
+        "BPM, key, beat grid, hot cues, memory cues and loops come from the stick, so nothing is analysed again. Music from a plain folder is analysed here, one track at a time, behind the list.",
+        "Cues, loops and grids you change here are kept in this browser, not on the stick. Library, Export the library as rekordbox XML writes them to a file that rekordbox can import. Library, Safe-keeping keeps daily copies and can save everything to one file.",
+        "One tempo for each track. A track whose tempo changes gets the grid of its longest steady part and is marked in the list; elsewhere in that track the beat lines drift.",
+        "A controller is driven by First Loop’s own tables over MIDI, not by rekordbox’s mappings. Equipment, Controller shows which table is in use, has a setup checklist and a two-minute Quick check, and can be taught any control that arrives differently. Platter displays and some lights stay dark.",
+        "Headphone cue needs a choice under Output: Split cue (master in the left ear, cue in the right) works on any stereo output; 4 channels needs the controller’s own sound card chosen as the output device.",
+        "A browser plays sound only after one click or key press on the page. After a reload, click once before using the controller alone; the page says so if it is waiting.",
+        "Key lock rests beyond ±50%, where the pitch follows the tempo again, and while a platter is held or scratched, as on the hardware.",
+        "The waveforms are drawn by First Loop (lows, mids and highs in three colours), not taken from rekordbox. rekordbox’s own small overview is under Info.",
+        "The top row shows the sound output’s sample rate and latency, and counts dropouts; Settings has three latency choices.",
+        "On a small screen, Browse (over the track list) puts the deck controls away so that the list has the room. Workspace, in the top bar, brings back the music-making side of First Loop."]],
+      ["h", "What is not here"],
+      ["ul", [
+        "Sticks that hold only the newer, encrypted library (OneLibrary, earlier Device Library Plus). Export to the stick again from rekordbox so that the Device Library is written too.",
+        "Writing a stick for club players. Preparing a USB for CDJs still needs rekordbox.",
+        "Streaming services, the cloud library, and protected (DRM) files.",
+        "Stems, the sampler, Pad FX and the other pad modes (the pads are hot cues and beat jump), Sound Color FX other than the filter, a microphone or AUX channel, a booth output.",
+        "My Tag, intelligent playlists, phrase analysis, lyrics, video, lighting, DVS and Pro DJ Link.",
+        "Sync between devices. The library lives in this browser on this computer; the saved file from Safe-keeping moves cues and playlists to another one."]],
+      ["p", "If something here is in your way, the Feedback button at the top goes straight to the person who runs this site."]
+    ];
+  }
   // ===== /workspace =====
 
 

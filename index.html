@@ -16349,9 +16349,10 @@
       // what the search looks in: every field, in small letters, accents taken off (rbFold)
       t._t = rbFold(t.title);
       t._a = rbFold(t.artist);
-      t._s = t._t + "\n" + t._a + "\n" + rbFold(t.album) + "\n" + rbFold(t.genre) +
-             "\n" + rbFold(t.comment) + "\n" + String(t.key || "").toLowerCase() + " " + camelot(t.key).toLowerCase() +
-             "\n" + rbFold(t.file) + (t.label || t.year || t.remixer || t.mix ? "\n" + rbFold(t.label) + "\n" + String(t.year || "") + "\n" + rbFold(t.remixer) + "\n" + rbFold(t.mix) : "");
+      t._al = rbFold(t.album); t._g = rbFold(t.genre); t._c = rbFold(t.comment); t._lb = rbFold(t.label);        // kept for sorting by those columns
+      t._s = t._t + "\n" + t._a + "\n" + t._al + "\n" + t._g +
+             "\n" + t._c + "\n" + String(t.key || "").toLowerCase() + " " + camelot(t.key).toLowerCase() +
+             "\n" + rbFold(t.file) + (t.label || t.year || t.remixer || t.mix ? "\n" + t._lb + "\n" + String(t.year || "") + "\n" + rbFold(t.remixer) + "\n" + rbFold(t.mix) : "");
       t._k = camNum(t.key);
       t._w = null;
       return t;
@@ -16836,9 +16837,10 @@
       for(i = 0; i < T.list.length; i++){
         m = T.list[i];
         if(m !== t && m.src && (m.src.kind === "missing" || m.gone) && !isFL(m) && String(m.file).toLowerCase() === name && (!m.size || m.size === t.size)){
-          ["bpm","bpmSrc","grid","key","keySrc","cues","mem","loops","rating","comment","plays","last"].forEach(function(k){
+          ["bpm","bpmSrc","grid","key","keySrc","cues","mem","loops","rating","comment","plays","last","colour","label","rb"].forEach(function(k){
             if(m[k] !== undefined && m[k] !== null && m[k] !== "" && m[k] !== 0) t[k] = m[k];
           });
+          rbRemap(m.id, t.id);
           ["title","artist","album","genre","year"].forEach(function(k){ if(!t[k] && m[k]) t[k] = m[k]; });
           playlists.forEach(function(p){ p.tracks = p.tracks.map(function(x){ return x === m.id ? t.id : x; }); });
           history.forEach(function(h){ h.items.forEach(function(it){ if(it.id === m.id) it.id = t.id; }); });
@@ -17313,10 +17315,10 @@
       added:function(a, b){ return (a.added || 0) - (b.added || 0); },
       plays:function(a, b){ return (a.plays || 0) - (b.plays || 0); },
       colour:function(a, b){ return (a.colour || 9) - (b.colour || 9); },
-      comment:function(a, b){ var x = rbFold(a.comment), y = rbFold(b.comment); return !x === !y ? (x < y ? -1 : (x > y ? 1 : 0)) : (x ? -1 : 1); },
-      genre:function(a, b){ var x = rbFold(a.genre), y = rbFold(b.genre); return !x === !y ? (x < y ? -1 : (x > y ? 1 : 0)) : (x ? -1 : 1); },
-      album:function(a, b){ var x = rbFold(a.album), y = rbFold(b.album); return x < y ? -1 : (x > y ? 1 : 0); },
-      label:function(a, b){ var x = rbFold(a.label), y = rbFold(b.label); return x < y ? -1 : (x > y ? 1 : 0); },
+      comment:function(a, b){ var x = a._c, y = b._c; return !x === !y ? (x < y ? -1 : (x > y ? 1 : 0)) : (x ? -1 : 1); },      // tracks without one go last
+      genre:function(a, b){ var x = a._g, y = b._g; return !x === !y ? (x < y ? -1 : (x > y ? 1 : 0)) : (x ? -1 : 1); },
+      album:function(a, b){ var x = a._al, y = b._al; return x < y ? -1 : (x > y ? 1 : 0); },
+      label:function(a, b){ var x = a._lb, y = b._lb; return x < y ? -1 : (x > y ? 1 : 0); },
       year:function(a, b){ return (parseInt(a.year, 10) || 0) - (parseInt(b.year, 10) || 0); },
       cues:function(a, b){ return cueCount(a) - cueCount(b); }
     };
@@ -22160,6 +22162,8 @@
     //                  time in ms), PCOB (memory cues / hot cues A to C), PCO2 (the same with names, colours and
     //                  hot cues up to H; in the .EXT), PPTH (path), PWAV (400-column preview), PWV6 (1,200-column
     //                  three-band preview; in the .2EX), PSSI (phrases).
+    //   Checked against real files: rekordcrate's complete export, its 3,886-track database and its single
+    //   table pages, python-prodj-link's two artist pages (tests in the scratch folder v33rb, t_parser.js).
     //   The hot cue colour table (62 colours, by code) holds the colours rekordbox shows, as listed in Deep
     //   Symmetry's beat-link (CueList).
     //
@@ -22174,6 +22178,10 @@
     //   BEAT GRIDS. rekordbox stores every beat; this app stores one tempo and the place of the first beat of
     //   a bar. A track with one tempo comes across exactly. A track whose tempo changes gets the grid of its
     //   longest steady stretch, the list marks it, Info says so, and t.rb.var keeps {n, lo, hi, steady, beats}.
+    //
+    //   WHERE IT IS SLOW ON PURPOSE. The database is parsed in a Worker and handed over a thousand tracks at a
+    //   time; the library is filled 400 tracks at a time. Analysis files are read behind, three at once (one
+    //   while a deck plays), the rows on screen first, and a track that is loaded on a deck is read at once.
     //
     //   NOTHING IS WRITTEN TO THE STICK. The folder is asked for with mode "read"; this block never calls
     //   createWritable, removeEntry, move or requestPermission({mode:"readwrite"}) on anything that came from a
@@ -22204,7 +22212,8 @@
     //     sources()             -> [{id, name, kind, state ("ok" | "gone" | "locked" | "partial" | "again"), tracks, playlists,
     //                               folders, history, hotCueTracks, memoryCueTracks, grids, variable, analysisRead, analysisTotal, copied, notFound}]
     //     tree(sourceId)        -> [{node, id, parent, depth, folder, name, tracks}]   the playlist tree, in order
-    //     state()               -> {busy, phase, done, total, analysis:{running, done, total}, copy, last (the last report), sources}
+    //     state()               -> {busy, phase, text, done, total, analysis:{running, done, total, waiting}, copy, last (the last report), sources}
+    //     check(sourceId)       -> Promise<state>     look whether the stick is there, without asking the browser for anything
     //     reconnect(sourceId)   -> Promise<state>     ask for permission again (needs a user gesture) and look
     //     reread(sourceId)      -> Promise<report>    read the database and the analysis files again
     //     remove(sourceId)                              take the stick and its tracks out of the library (the stick is not touched)
@@ -22972,7 +22981,7 @@
       var seen = {};
       function one(i){
         var p = res.tracks[i], lid = "rb" + hashStr(s.id + "|" + rbLow(p.path)), t = T.by[lid], isNew = !t;
-        if(seen[lid]) return;
+        if(seen[lid]){ idOf[p.id] = lid; info.samePath = (info.samePath || 0) + 1; return; }       // two rows of the database for one file: one track, in every playlist either row is in
         seen[lid] = true; idOf[p.id] = lid;
         if(isNew){ t = blankTrack(lid); nFresh++; t.rb = { source:s.id, st:0 }; }
         var rb = t.rb || (t.rb = { source:s.id, st:0 });
@@ -23029,6 +23038,7 @@
       rep.msg = "“" + s.name + "”: " + rbPl(rep.tracks, "track") + " read" + (rep.skipped ? ", " + rbNum(rep.skipped) + " skipped (" + rbReasons(rep.reasons) + ")" : "") +
         ", " + (rep.playlists ? rbPl(rep.playlists, "playlist") : "no playlists") + (rep.folders ? " in " + rbPl(rep.folders, "folder") : "") + (rep.history ? ", " + rbPl(rep.history, "history list") : "") +
         ". Nothing was copied and nothing on the stick was changed.";
+      if(info.samePath) rep.notes.push(info.samePath + (info.samePath === 1 ? " row of the database names a file that another row names too; it is" : " rows of the database name a file that another row names too; they are") + " one track here.");
       s.report = rep;
       RB.ver++;
       return rbSave().then(function(){
@@ -23136,8 +23146,13 @@
       s.contents = handle; s._dirs = {};
       return rbSave().then(function(){ return rbCheck(s, true); }).then(function(st){
         rbTouch();
-        if(st === "ok") rbVerify(s);
-        return st === "ok";
+        if(st !== "ok") return false;
+        return rbVerify(s).then(function(nf){
+          var n = rbSrcTracks(s).length;
+          if(n && nf === n) note("None of the " + rbPl(n, "track") + " of “" + s.name + "” is in that folder. Choose the Contents folder of the same stick (Reconnect asks again).");
+          rbAnlzAdd(rbSrcTracks(s).filter(function(t){ return t.rb.anlz && !t.rb.st; }).map(function(t){ return t.id; }), false);
+          return true;
+        });
       });
     }
     function rbRemove(id){
@@ -23157,8 +23172,10 @@
       var s = RB.by[id];
       if(!s) return Promise.resolve({ ok:false, why:"none", msg:"That stick is not in the library." });
       if(s.kind === "xml" || s.kind === "files" || !s.handle) return Promise.resolve({ ok:false, why:"again", msg:"Choose “" + s.name + "” again to read it again." });
-      rbSrcTracks(s).forEach(function(t){ t.rb.st = 0; });
-      return rbOpen(s.handle);
+      return snapTake("before reading " + s.name + " again", true).then(null, function(){}).then(function(){
+        rbSrcTracks(s).forEach(function(t){ t.rb.st = 0; });
+        return rbOpen(s.handle);
+      });
     }
 
     // ---------- rekordbox: are the audio files on the stick? ----------
@@ -23279,10 +23296,9 @@
       if(t._rbP) return t._rbP;
       t._rbP = rbAnlzRead(s, t).then(function(a){
         delete t._rbP;
-        if(a.fail && a.fail !== "NotFoundError") return false;          // the stick could not be read just now: try again later
-        rbAnlzApply(t, a);
-        saveTrack(t, true); RB.ver++; UI.listDirty = true; UI.infoDirty = true;
-        return true;
+        function take(){ rbAnlzApply(t, a); saveTrack(t, true); RB.ver++; UI.listDirty = true; UI.infoDirty = true; return true; }
+        if(!a.fail) return take();
+        return rbCheck(s, false).then(function(st){ return st === "ok" && a.fail === "NotFoundError" ? take() : false; });      // the stick is away: try again later
       }, function(){ delete t._rbP; return false; });
       return t._rbP;
     }
@@ -23332,15 +23348,18 @@
         A.run++; A.fly[id] = true;
         (function(t2, s2){
           (t2._rbP || rbAnlzRead(s2, t2).then(function(a){
-            if(a.fail && a.fail !== "NotFoundError"){
-              A.errs[a.fail] = (A.errs[a.fail] || 0) + 1;
-              // not a missing file: the stick itself may be gone. Look, and leave this track for later
-              rbCheck(s2, false);
-              return;
+            function take(){
+              if(!rbAnlzApply(t2, a)) A.errs[t2.rb.err] = (A.errs[t2.rb.err] || 0) + 1;
+              rbPuts.push(t2);
+              if(!rbPutT) rbPutT = setTimeout(rbFlush, 700);
             }
-            if(!rbAnlzApply(t2, a)) A.errs[t2.rb.err] = (A.errs[t2.rb.err] || 0) + 1;
-            rbPuts.push(t2);
-            if(!rbPutT) rbPutT = setTimeout(rbFlush, 700);
+            if(!a.fail) return take();
+            // the file could not be opened. Is it this file, or has the stick gone? Only a stick that is still
+            // there has a track without an analysis file; otherwise the track waits for the stick to come back.
+            return rbCheck(s2, false).then(function(st){
+              if(st === "ok" && a.fail === "NotFoundError") return take();
+              A.errs[a.fail] = (A.errs[a.fail] || 0) + 1;
+            });
           })).then(null, function(){}).then(function(){
             A.run--; A.done++; delete A.fly[t2.id];
             if(A.done % 10 === 0 || !A.q.length) emit("job", { kind:"rekordbox", phase:"anlz", done:A.done, total:rbAnlzTotal() });
@@ -23935,6 +23954,17 @@
       return before - PREP.length;
     }
     function prepTracks(){ return PREP.map(function(id){ return T.by[id]; }).filter(Boolean); }
+    // one track took the place of another (a file was added for a track that had none): the lists follow
+    function rbRemap(oldId, newId){
+      var hit = false, i;
+      RB.list.forEach(function(s){
+        (s.nodes || []).concat(s.history || []).forEach(function(n){ for(i = 0; i < n.tracks.length; i++) if(n.tracks[i] === oldId){ n.tracks[i] = newId; hit = true; } });
+      });
+      if(hit){ clearTimeout(rbRemap.t); rbRemap.t = setTimeout(rbSave, 500); }
+      i = PREP.indexOf(oldId);
+      if(i >= 0){ PREP[i] = newId; dbPut("meta", PREP, "prepare"); }
+      RB.ver++;
+    }
 
     // ---------- safe-keeping: snapshots of everything that was typed or set by hand ----------
     // Cues, loops, grids, keys, ratings, comments, colours, tags, the playlists and the Prepare list:
@@ -24173,8 +24203,9 @@
       var s = RB.by[id];
       if(!s) return Promise.resolve(null);
       if(s._st === "again" || !s.handle){ rbDialog(); return Promise.resolve(s._st); }
+      var allGone = s.kind === "split" && s.contents && s._st === "ok" && rbSrcTracks(s).length > 0 && rbSrcTracks(s).every(function(t){ return t.rb.nf; });
       return rbCheck(s, true).then(function(st){
-        if(st === "partial"){
+        if(st === "partial" || allGone){
           if(!window.showDirectoryPicker) return st;
           return window.showDirectoryPicker({ id:"firstloop-rb", mode:"read" }).then(function(h){ return rbAttachContents(id, h).then(function(){ return s._st; }); }, function(){ return st; });
         }
@@ -24733,31 +24764,58 @@
         rbPoll();
       }, function(){ RB.ready = true; });
     }
+    // The app's own backup file carries the playlist trees (not the folder handles: those belong to this
+    // browser) and Prepare. Both work whether or not the DJ area has been opened in this visit.
+    function rbStored(){
+      if(RB.ready) return Promise.resolve({ list:RB.list, prep:PREP });
+      return Promise.all([dbGet("meta", "rb"), dbGet("meta", "prepare")]).then(function(r){ return { list:Array.isArray(r[0]) ? r[0] : [], prep:Array.isArray(r[1]) ? r[1] : [] }; });
+    }
     function rbBackupAdd(o){
-      if(o && RB.list.length) o.rb = RB.list.map(function(s){ var c = rbClean(s); delete c.handle; delete c.contents; delete c.report; return c; });
-      if(o && PREP.length) o.prepare = PREP.slice();
-      return o;
+      if(!o) return o;
+      return rbStored().then(function(st){
+        if(st.list.length) o.rb = st.list.map(function(s){ var c = rbClean(s); delete c.handle; delete c.contents; delete c.report; return c; });
+        if(st.prep.length) o.prepare = st.prep.slice();
+        return o;
+      }, function(){ return o; });
     }
     function rbBackupIn(data){
-      (data && Array.isArray(data.rb) ? data.rb : []).forEach(function(s){
-        if(!s || !s.id || RB.by[s.id]) return;
-        s._st = s.kind === "xml" ? "ok" : "again"; s.nodes = s.nodes || []; s.history = s.history || []; s.shut = s.shut || {};
-        RB.list.push(s); RB.by[s.id] = s;
+      if(!data || (!Array.isArray(data.rb) && !Array.isArray(data.prepare))) return;
+      rbStored().then(function(st){
+        var by = {};
+        st.list.forEach(function(s){ by[s.id] = s; });
+        (data.rb || []).forEach(function(s){
+          if(!s || !s.id || by[s.id]) return;
+          s._st = s.kind === "xml" ? "ok" : "again"; s.nodes = s.nodes || []; s.history = s.history || []; s.shut = s.shut || {};
+          st.list.push(s); by[s.id] = s;
+          if(RB.ready) RB.by[s.id] = s;
+        });
+        (data.prepare || []).forEach(function(id){ if(typeof id === "string" && st.prep.indexOf(id) < 0) st.prep.push(id); });
+        dbPut("meta", st.list.map(rbClean), "rb"); dbPut("meta", st.prep, "prepare");
+        if(RB.ready){ RB.ver++; UI.treeDirty = true; }
       });
-      if(data && Array.isArray(data.prepare)) data.prepare.forEach(function(id){ if(typeof id === "string" && PREP.indexOf(id) < 0) PREP.push(id); });
-      if(data && (data.rb || data.prepare)){ rbSave(); dbPut("meta", PREP, "prepare"); RB.ver++; }
     }
 
     // ---- DJ.library.rekordbox and the other additions ----
+    // what a row from l.list() and l.tracks() says besides what it said before
+    function rbRow(t, o){
+      var c = t.cues, i, s = t.rb ? RB.by[t.rb.source] : null, hot = 0;
+      if(c) for(i = 0; i < 8; i++) if(c[i]) hot++;
+      o.rekordbox = !!s; o.usb = s && s.kind !== "xml" ? s.name : ""; o.available = rbAvail(t);
+      o.colour = t.colour || 0; o.label = t.label || ""; o.comment = t.comment || ""; o.year = t.year || "";
+      o.hotCues = hot; o.memoryCues = t.mem ? t.mem.length : 0; o.loops = t.loops ? t.loops.length : 0;
+      o.grid = !!(t.grid && t.grid.bpm > 0); o.variableTempo = !!(s && t.rb.var);
+      o.duplicate = !!DUP.by[t.id];                 // dupScan() is called once by whoever asks for rows
+      return o;
+    }
     function rbSourceOut(s){
       var c = rbCounts(s);
       return { id:s.id, name:s.name, kind:s.kind, state:s._st || "locked", tracks:c.tracks, playlists:c.playlists, folders:c.folders, history:c.history, hotCueTracks:c.hot, memoryCueTracks:c.mem,
                grids:c.grids, variable:c.variable, analysisRead:c.read, analysisTotal:c.anlz, copied:c.copied, notFound:c.nf, summary:rbSummary(s) };
     }
     var rbAPI = {
-      open:function(h){ return rbOpen(h); },
-      openFiles:function(fl){ return rbOpenFiles(fl); },
-      pick:rbPick,
+      open:function(h){ return init().then(function(){ return rbOpen(h); }); },
+      openFiles:function(fl){ return init().then(function(){ return rbOpenFiles(fl); }); },
+      pick:function(){ return init().then(rbPick); },
       attachContents:rbAttachContents,
       sources:function(){ return RB.list.map(rbSourceOut); },
       tree:function(id){
@@ -24779,7 +24837,7 @@
       report:function(id){ return rbReportText(id); },
       keyNotation:keyNotation,
       dialog:function(){ if(!uiBuilt) init(); rbDialog(); },
-      xml:{ open:function(text, name){ var r = rbXmlOpen(String(text || ""), name); refreshList(); return r; },
+      xml:{ open:function(text, name){ if(!inited) return { ok:false, why:"notready", msg:"Open the DJ area first (DJ.init())." }; var r = rbXmlOpen(String(text || ""), name); refreshList(); return r; },
             match:function(id, handle){ return relocate(handle, id); } }
     };
     // ===== /DJ rekordbox import =====
@@ -24939,12 +24997,9 @@
     function chOK(ch){ ch = +ch; return ch === 1 || ch === 2 || ch === 3 || ch === 4 ? ch : 0; }
     var deckApis = {};
     function rowOut(t){
-      return { id:t.id, title:t.title, artist:t.artist, album:t.album || "", genre:t.genre || "", bpm:t.bpm || 0, key:t.key || "", camelot:camelot(t.key),
+      return rbRow(t, { id:t.id, title:t.title, artist:t.artist, album:t.album || "", genre:t.genre || "", bpm:t.bpm || 0, key:t.key || "", camelot:camelot(t.key),
                duration:t.dur || 0, rating:t.rating || 0, plays:t.plays || 0, added:t.added || 0, analysed:t.analysed === ANALYSER_VERSION,
-               source:t.src ? t.src.kind : "", missing:!!(t.gone || (t.src && t.src.kind === "missing")), free:fmIs(t), licence:fmCode(t),
-               rekordbox:rbIsRb(t), usb:rbIsRb(t) && RB.by[t.rb.source].kind !== "xml" ? RB.by[t.rb.source].name : "", available:rbAvail(t), colour:t.colour || 0, label:t.label || "",
-               comment:t.comment || "", year:t.year || "", hotCues:(t.cues || []).filter(Boolean).length, memoryCues:(t.mem || []).length, loops:(t.loops || []).length,
-               grid:!!(t.grid && t.grid.bpm > 0), variableTempo:!!(t.rb && t.rb.var), duplicate:!!dupScan().by[t.id] };
+               source:t.src ? t.src.kind : "", missing:!!(t.gone || (t.src && t.src.kind === "missing")), free:fmIs(t), licence:fmCode(t) });
     }
     var controller = { active:false, name:"", channels:0 };
     var API = {
@@ -25061,8 +25116,8 @@
       library:{
         search:function(q){ LV.q = String(q || ""); if(UI.q) UI.q.value = LV.q; refreshList(); return LV.rows.length; },
         filter:function(f){ f = f || {}; LV.bpmLo = +f.bpmLo || 0; LV.bpmHi = +f.bpmHi || 0; LV.key = f.key || ""; refreshList(); return LV.rows.length; },
-        list:function(limit){ return (limit ? LV.rows.slice(0, limit) : LV.rows).map(rowOut); },
-        tracks:function(){ return T.list.map(rowOut); },
+        list:function(limit){ dupScan(); return (limit ? LV.rows.slice(0, limit) : LV.rows).map(rowOut); },
+        tracks:function(){ dupScan(); return T.list.map(rowOut); },
         track:function(id){ var t = T.by[id]; return t ? JSON.parse(JSON.stringify(cleanTrack(t))) : null; },
         count:function(){ return T.list.length; },
         select:function(id){ selectId(id, true); return LV.selId; },

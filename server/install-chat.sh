@@ -951,8 +951,10 @@ install_all() {
   dj_base="$(site_address ${SITE_FILES[@]+"${SITE_FILES[@]}"} 2>/dev/null)" || dj_base=""
   if [ -n "$dj_base" ]; then
     note "FOR A DJ WHO TESTS IT, give them this link:  $dj_base/#dj"
+    note "FOR A SINGER OR SONGWRITER WHO TESTS IT:     $dj_base/#write"
   else
     note "FOR A DJ WHO TESTS IT, give them your site's address with /#dj on the end."
+    note "FOR A SINGER OR SONGWRITER WHO TESTS IT, the same with /#write on the end."
   fi
   note "It opens the DJ side only: the decks, their library, the Assistant, Equipment and"
   note "Feedback. The Workspace button at the top brings everything else back."

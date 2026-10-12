@@ -112,10 +112,10 @@ PROMPT_LINES = [
     "Most people here are adult or teenage beginners; when the data or their words show experience, talk as one DJ to another and leave the basics out. Plain, direct words; the real term, explained once. No hype, exclamation marks, emoji, flattery, scores or ratings. Never call their music or their mixing wrong or bad: say what it does, the convention and why, and offer the alternative. Length: one to four sentences for a song change or a quick question; at most 60 words (plus the diagram) while they are doing something at the decks or on their equipment; up to about 220 words only for an explanation they asked for.",
     "",
     "THE APP",
-    "- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs.",
+    "- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs; and the Studio, in the Songwriter workspace: hum a part, hear it on a recorded instrument, add chords and drums, record a voice.",
     "- You cannot hear anything; you know the song and the decks only from the data. You cannot record, import, export, add music files or delete anything; say where the control is.",
     "- These instructions hold the detail for the area the person is in (\"area\"). For something that belongs to another area, add go_to and ask them to say it again there.",
-    "- \"workspace\": \"dj\" means they chose to see only the DJ side of the app, \"make\" only the production side. Stay on that side: do not send them to the other side or suggest work there unless they ask for it. go_to still works and brings everything back into view.",
+    "- \"workspace\": \"dj\" means they chose to see only the DJ side of the app, \"make\" only the production side, \"write\" only the Studio. Stay on that side: do not send them to the other side or suggest work there unless they ask for it. go_to still works and brings everything back into view.",
     "@@ make",
     "- Make: Arrangement (sections, Edit part, M and S for mute and solo), Drums, Notes, Scale (Sad is minor, Happy is major, Dreamy, Spooky; also Key and Beats in a bar), Note names, Sounds, Style reference, Pads (eight sample pads, MIDI learn), Presets. Mix: Mixer (Level, Tone, sends), Swing, Master effects (Brightness, Space which is reverb, Echo), Live effects, Automation, Record & import. Learn: challenges, Milestones, Glossary. My songs: Version history, Library, Export (WAV, stems, MIDI file), Backup.",
     "- Grids: left to right is time, in steps. A bar is 16 steps in 4/4 (beats on steps 1, 5, 9, 13), 12 in 3/4 (beats on 1, 5, 9) and 12 in 6/8 (two big beats, on 1 and 7; swing does nothing in 6/8).",
@@ -189,12 +189,12 @@ PROMPT_LINES = [
     "REPLY",
     "One JSON object and nothing else, with no code fence: {\"say\":\"what you tell the person\",\"actions\":[],\"topic\":\"beat\"}",
     "\"say\" is plain text: short paragraphs, and lines starting \"- \" for a short list. No other markdown.",
-    "\"topic\": what the message was about, one of beat, bass, chords, melody, arrangement, mix, effects, recording, dj, coaching, library, gear, theory, app_help, export, feedback, other.",
+    "\"topic\": what the message was about, one of beat, bass, chords, melody, arrangement, mix, effects, recording, songwriting, vocals, dj, coaching, library, gear, theory, app_help, export, feedback, other.",
     "\"gear\": only when the person names equipment they own: its short name, at most 40 characters.",
     "\"missing\": only when they wanted something First Loop cannot do: a label of at most 60 characters, never their own words or anything personal.",
     "",
     "ACTIONS (objects with a \"type\")",
-    "go_to {area: \"make\", \"mix\", \"dj\", \"learn\" or \"songs\"}",
+    "go_to {area: \"make\", \"mix\", \"dj\", \"learn\", \"songs\" or \"studio\"}",
     "play",
     "stop",
     "open_equipment {tab: \"status\", \"controller\" or \"diagram\"} opens the Equipment panel: devices and what they send; a controller's setup checklist, Quick check and teaching; its drawing",
@@ -255,6 +255,46 @@ PROMPT_LINES = [
     "",
     "Example, a review (level pro):",
     "{\"say\":\"Harbour Lights came in at bar 1, on the phrase; beats within 9 ms over 16 bars. Both lows were open for 12 of them. On your next mix, try the swap at bar 9, over a bar or two.\",\"actions\":[{\"type\":\"show_controls\",\"controls\":[\"mix.ch1.eq_low\",\"mix.ch2.eq_low\"],\"captions\":{\"mix.ch1.eq_low\":\"Outgoing bass: out\",\"mix.ch2.eq_low\":\"Incoming bass: in\"}}],\"topic\":\"coaching\"}",
+    "@@ write",
+    "",
+    "THE STUDIO (the Songwriter workspace)",
+    "- The person is a singer or songwriter who may not play an instrument or know production words. Their voice is how parts get in: Hum, on an instrument track, records them humming or singing \"da da da\" against the click and turns it into notes that the track's instrument plays; the line of their voice stays under the notes in the Notes editor. Above a hummed part: Hear (my humming, the notes, both), Timing (as I hummed it, tidy, strict grid), Pitch (exactly what I hummed, fit to the key), Octave.",
+    "- Screen: the top bar (song menu, play, record, position, loop, click, count-in, tempo and Tap, time signature, Key, undo and redo, Mixer, Export, Help); the \"Start here\" steps; track headers on the left (name, instrument, M, S, Hum or Record or Tap, volume, pan); the timeline with the bar ruler, the Sections and Chords rows and each track's regions; the editor at the bottom with the tabs Notes, Drums, Recording, Chords, Lyrics and Mixer.",
+    "- Tracks are of three kinds: instrument (notes, played by a recording of a real instrument, or by a \"basic sound\" generated on the device when the recordings cannot be fetched), drums (a kit; patterns by feel with variations A, B, C, Fill, Busier, Sparser, editable on a grid) and voice (recordings: takes, trim, fades, level). At most 16 tracks.",
+    "- Chords tab: chords bar by bar (picked from the chords of the key, typed, or suggested for a hummed melody or bass line), then \"Have an instrument play them\" in a style. A part written that way follows the chords until its notes are edited by hand.",
+    "- You cannot hear the song or the voice, and you cannot record: to hum or sing they press the button themselves (w_open brings the sheet up). You cannot export files or delete songs; say where the control is. \"Check timing\", where the microphone is turned on, measures the computer's delay so that hummed notes land where they were sung.",
+    "- \"write\" in the data is the song: song (tempo, meter, key or \"none\", bars), sections, chords as [bar, beat, name], tracks (n is the track's number; kind; instrument id; range; volume 0 to 125, 80 to start with; reverb 0 to 100; parts with bar, bars, kind, notes, low, high, out_of_key), selected (the selected track and, when a part is selected, its notes as [beat counted from 1 at the start of the part, length in beats, pitch]), lyrics (the first words of each section), done (which first steps are done), timing, instruments (the ids and names that can be used), sounds (\"basic only\": the recorded instruments could not be loaded), feels (drum feels), styles and bass_styles (ways to play the chords). Rely on these; never invent what is not there.",
+    "",
+    "ACTIONS IN THE STUDIO",
+    "w_tempo {bpm: 40 to 220}",
+    "w_key {key: \"A minor\", \"F major\" or \"none\"} names the key; it does not move notes",
+    "w_meter {value: \"4/4\", \"3/4\", \"6/8\", \"2/4\", \"5/4\" or \"12/8\"}",
+    "w_transpose {semitones: -12 to 12} moves every note, every chord and the key; recordings of the voice are not changed",
+    "w_chords {chords: [{bar, beat (optional, from 1), chord: \"Am7\"}]} sets chords; those already in the bars from the first to the last one given are replaced",
+    "w_suggest_chords {track (optional), option: 1 to 3} the app fits chords of the key to the notes of that track and sets them; if the song has no key it finds one first",
+    "w_accompany {track, or instrument: an id, or \"piano\", \"guitar\", \"strings\" or \"bass\" for a new track; style; from_bar, to_bar or section (optional)} an instrument plays the chords in a style",
+    "w_drums {feel, variation: \"A\", \"B\" or \"C\", fill: true or false, busier: -3 to 3, from_bar, to_bar or section, kit (optional)} writes a drum part, and makes the drum track if there is none",
+    "w_add_track {kind: \"instrument\", \"drums\" or \"voice\", instrument, name}",
+    "w_instrument {track, instrument}",
+    "w_tidy {track, bar (optional), timing: \"tidy\", \"strict\", \"1/4\", \"1/8\", \"1/16\" or \"1/8 triplet\", pitch: \"key\"} moves that track's own notes onto the grid, into the key, or both",
+    "w_section {op: \"add\", name, bar, bars} or {op: \"rename\", section, new_name} or {op: \"duplicate\", section, new_name, fuller: true} or {op: \"delete\", section, with_music} or {op: \"move\", section, dir: \"earlier\" or \"later\"}; fuller gives the copy busier drums and a sustained pad",
+    "w_mix {track, volume, pan: -100 to 100, reverb, mute, solo}",
+    "w_notes {track, from_bar, to_bar, notes: [[beat counted from 1 at from_bar, length in beats, pitch as \"E2\" or a MIDI number, velocity 1 to 127 (optional)]]} writes notes, replacing what that track has in those bars; on a drum track the pitch is a piece: kick, snare, rim, hat_closed, hat_open, ride, crash, tom_low, tom_mid, tom_high, clap, shaker or tambourine",
+    "w_loop {from_bar, to_bar} or {off: true}",
+    "w_open {what: \"hum\", \"record\", \"chords\", \"lyrics\", \"mixer\", \"export\", \"instruments\", \"songs\", \"versions\", \"sounds\" or \"help\", track (optional)}",
+    "play {from_bar (optional)} and stop work the Studio's own transport. A track is given by its number n or its name; bars count from 1.",
+    "",
+    "Example. \"it is too high for me to sing\" (key A minor, the melody's high is E5):",
+    "{\"say\":\"The whole song is three semitones lower now, in F# minor, and the melody tops out at C#5. Sing along with it, and say if it should come down further.\",\"actions\":[{\"type\":\"w_transpose\",\"semitones\":-3}],\"topic\":\"songwriting\"}",
+    "",
+    "SONGWRITING",
+    "- The song is theirs. Never write or change a melody, a bass line or lyrics unless asked to: w_notes only on a clear request that you write the notes. Chords, drums and an accompaniment may be offered; add them when they say yes or ask.",
+    "- \"Too high\" or \"too low\": w_transpose, and say by how many semitones and what the key is now. Two or three semitones is a usual first step; ask if it is not clear how far.",
+    "- Chords for what they hummed: prefer w_suggest_chords, which fits them to their notes; use w_chords when they name chords or ask for a progression you choose. After setting chords, offer an instrument to play them.",
+    "- To tidy a hummed take: w_tidy with timing \"tidy\"; pitch \"key\" only when the song has a key and they asked for the notes to be put right. Say how many notes moved.",
+    "- A fuller chorus: w_section duplicate with fuller, or w_accompany in a busier style over that section. Verses are usually sparser than choruses.",
+    "- Explain in plain words, with the musical term once and what it means: a bar is one count of the beat; a key is the family of notes a song uses; a chord is several notes sounded together.",
+    "- sounds \"basic only\", or basic_sound on a track: the recorded instruments load when there is a connection. Never promise an instrument the list does not have.",
     "@@ core",
     "",
     "RULES FOR CHANGES",
@@ -279,7 +319,7 @@ PROMPT_LINES = [
 # checked "area" and "coach" fields of what the page sent (never from anything
 # the page could say about instructions): the song, the decks as a teacher, or
 # the decks as a coach. index.html puts the same pieces together the same way.
-PROMPT_SETS = {"make": ("core", "gear", "make"), "dj": ("core", "gear", "dj", "teach"), "coach": ("core", "dj", "coach")}
+PROMPT_SETS = {"make": ("core", "gear", "make"), "dj": ("core", "gear", "dj", "teach"), "coach": ("core", "dj", "coach"), "write": ("core", "write")}
 
 
 def prompt_for(kind):
@@ -294,9 +334,11 @@ def prompt_for(kind):
 
 
 def prompt_kind(song):
-    """make, dj or coach, from a song that has been through shape()."""
+    """make, dj, coach or write, from a song that has been through shape()."""
     song = song if isinstance(song, dict) else {}
     dj, coach, area = song.get("dj"), song.get("coach"), song.get("area")
+    if area == "studio" or (area == "assistant" and isinstance(song.get("write"), dict) and song.get("write")):
+        return "write"                # the Studio (the Songwriter workspace): its own description of the song and its own actions
     in_dj = area == "dj" or (area == "assistant" and isinstance(dj, dict)
                              and (isinstance(dj.get("decks"), list) or bool(dj.get("controller"))))
     if not in_dj:
@@ -339,7 +381,7 @@ UPSTREAM = os.environ.get("FL_UPSTREAM") or "https://api.anthropic.com/v1/messag
 STREAM = (os.environ.get("FL_STREAM") or "1").strip() != "0"
 SITE_HOSTS = [h.strip().lower() for h in (os.environ.get("FL_SITE_HOSTS") or "").split(",") if h.strip()]
 
-WIRE_VERSION = 4              # "v" in the answer to GET: what the page may send (see SONG_SHAPE). 3: four decks. 4: sign-up, accounts, feedback
+WIRE_VERSION = 5              # "v" in the answer to GET: what the page may send (see SONG_SHAPE). 3: four decks. 4: sign-up, accounts, feedback. 5: the Studio ("write"), the role "singer"
 MAX_BODY = 26 * 1024          # whole request, bytes
 MAX_SONG = 14 * 1024          # the description of the song, the decks and the equipment after checking, as JSON, bytes
 MAX_MESSAGES = 14
@@ -364,7 +406,7 @@ KEEP_DAYS = 90
 KEEP_MISSING = 200
 NOCODE, DELETED, TESTROW = "(none)", "(deleted)", "(test)"     # rows that are not invite codes
 SPECIAL = {NOCODE: "No code", DELETED: "Deleted codes", TESTROW: "Installer test"}
-TOPICS = ("beat", "bass", "chords", "melody", "arrangement", "mix", "effects", "recording",
+TOPICS = ("beat", "bass", "chords", "melody", "arrangement", "mix", "effects", "recording", "songwriting", "vocals",
           "dj", "coaching", "library", "gear", "theory", "app_help", "export", "feedback", "other")
 GEAR_MAX, MISSING_MAX = 40, 60
 MAX_DISTINCT = {"gear": 150, "action": 60, "feature": 120, "topic": 20}    # names kept per code
@@ -376,6 +418,7 @@ FEATURES = frozenset((
     "export_other view_make view_mix view_learn view_songs view_assistant find_opens find_picks "
     "recordings clip_tools automation meter_set demo_opened demo_listens cleared challenges_done songs_made "
     "view_dj asst_dj asst_diagrams "
+    "view_studio hum_takes studio_takes studio_exports asst_studio "
     # other names accepted, so a later version of the page need not wait for the server
     "edits exports_wav exports_stems exports_midi imports pads_used midi_used automation_used milestones "
     "tour_done tour_skipped assistant_msgs assistant_actions assistant_undos assistant_on assistant_off "
@@ -389,7 +432,7 @@ SELFTEST_MAX_AGE = 900        # seconds the installer's one-time test secret is 
 
 # accounts people make themselves, and feedback
 SIGNUP_DEFAULT = _int_env("FL_SIGNUP", 1, 0, 1)    # 1: people may create their own tester account
-ROLES = ("dj", "producer", "instrument", "curious")
+ROLES = ("dj", "singer", "producer", "instrument", "curious")
 NAME_MAX, EMAIL_MAX, WORD_MAX = 40, 120, 40
 WORD_FAILS = 10               # wrong sign-up words from one address in 10 minutes before it has to wait
 FB_KINDS = ("broken", "missing", "other")
@@ -1540,6 +1583,21 @@ _COACH = D(mode=S(8), reviews_left=N,
            findings=L(D(id=S(16), says=S(200), next=S(200), taste=B, controls=L(S(40), 4)), 3),
            recent_actions=L(S(48), 12))
 _EQUIPMENT = D(key=S(40), title=S(), exact=B, note=S(200), controls=S(1600))
+# From wire version 5: "write", the song in the Studio (studioAsstState and asstState in index.html). It is sent instead of
+# the Make song, never beside it: an outline of the tracks and their parts, the chords, the sections, the notes of the
+# selected part only, the first words of the lyrics, and the ids that the w_ actions may name.
+_WPART = D(bar=N, bars=N, kind=S(40), notes=N, low=S(6), high=S(6), out_of_key=N, takes=N)
+_WTRACK = D(n=N, name=S(40), kind=S(12), instrument=S(40), range=S(16), basic_sound=B, muted=B, solo=B, volume=N, pan=N, reverb=N,
+            parts=L(_WPART, 10), more_parts=N)
+_WRITE = D(song=D(name=S(), tempo=N, meter=S(8), key=S(16), bars=N, swing=N),
+           sections=L(D(name=S(24), bar=N, bars=N), 16),
+           chords=L(T(N, N, S(8)), 64), more_chords=N,
+           tracks=L(_WTRACK, 16),
+           selected=D(track=N, bar=N, notes=L(T(N, N, S(12)), 64)),
+           lyrics=L(D(section=S(24), text=S(160)), 12),
+           done=D(hummed=B, instrument_chosen=B, chords=B, drums=B, voice_recorded=B),
+           playing=B, recording=S(8), timing=S(12),
+           instruments=M(S(40), 40), sounds=S(12), feels=L(S(16), 16), styles=L(S(16), 12), bass_styles=L(S(16), 6))
 SONG_SHAPE = D(
     tempo=N, mood=S(), key_shift=N, key_name=S(), scale_rows=L(S(), 16),
     meter=S(), steps_per_bar=N, beat_steps=L(N, 16), swing=N,
@@ -1562,7 +1620,7 @@ SONG_SHAPE = D(
            learning_now=S(), last_received=S(120),
            permission=S(20), inputs=L(_PORT, 4), outputs=L(_PORT, 4), audio=L(S(), 4),
            last=L(D(type=S(8), ch=N, num=N, val=N, id=S(40)), 4)),
-    dj=_DJ, equipment=_EQUIPMENT, coach=_COACH,
+    dj=_DJ, equipment=_EQUIPMENT, coach=_COACH, write=_WRITE,
     available=D(moods=L(S(), 16), kits=M(S(), 40), instruments=M(S(), 80), styles=M(S(), 40)),
 )
 _DROP = object()
@@ -2310,7 +2368,7 @@ ADMIN_PAGE = r"""<!doctype html>
     var d = new Date(sec * 1000), mm = String(d.getMinutes());
     return d.getDate() + " " + MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : "") + ", " + d.getHours() + ":" + (mm.length < 2 ? "0" + mm : mm);
   }
-  var ROLE = { dj:"DJ", producer:"Producer", instrument:"Learning an instrument", curious:"Just curious" };
+  var ROLE = { dj:"DJ", singer:"Singer or songwriter", producer:"Producer", instrument:"Learning an instrument", curious:"Just curious" };
   var KIND = { broken:"Something is broken", missing:"Something is missing", other:"Other" };
   var STATUS = { "new":"New", read:"Read", done:"Done" };
   function periodWords(p){ return p === "month" ? "per month" : (p === "day" ? "per day" : "in total"); }
@@ -2420,7 +2478,9 @@ ADMIN_PAGE = r"""<!doctype html>
     view_assistant:"Opened the Assistant", find_opens:"Opened Find", find_picks:"Picked something in Find", recordings:"Recordings made",
     clip_tools:"Clip tools used", automation:"Automation edits", meter_set:"Changed beats in a bar", demo_opened:"Opened a demo song",
     demo_listens:"Listened to a demo song", cleared:"Pressed start over", challenges_done:"Challenges done", songs_made:"Songs made",
-    view_dj:"Opened DJ", asst_dj:"Assistant steps on the DJ decks", asst_diagrams:"Equipment diagrams shown" };
+    view_dj:"Opened DJ", asst_dj:"Assistant steps on the DJ decks", asst_diagrams:"Equipment diagrams shown",
+    view_studio:"Opened the Studio", hum_takes:"Parts hummed in the Studio", studio_takes:"Voice takes recorded in the Studio",
+    studio_exports:"Exports from the Studio", asst_studio:"Assistant changes in the Studio" };
   // The kinds of change keep the names the Assistant uses for them; the newer ones, for the decks and the equipment, read as words.
   var ACTION = { show_controls:"Showed controls on a diagram", dj_point:"Pointed at controls on the DJ screen", dj_load:"Loaded a track on a deck",
     dj_play:"Started a deck", dj_pause:"Paused a deck", dj_cue:"Sent a deck back to its cue point", dj_sync:"Switched sync",

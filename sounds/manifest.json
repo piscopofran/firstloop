@@ -1,0 +1,4909 @@
+{
+ "version": 1,
+ "base": "",
+ "instruments": [
+  {
+   "id": "upright-bass",
+   "name": "Upright bass",
+   "family": "bass",
+   "range": [
+    21,
+    62
+   ],
+   "samples": [
+    {
+     "note": 21,
+     "file": "upright-bass/021_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 21,
+     "file": "upright-bass/021_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 24,
+     "file": "upright-bass/024_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 24,
+     "file": "upright-bass/024_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 27,
+     "file": "upright-bass/027_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 27,
+     "file": "upright-bass/027_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 30,
+     "file": "upright-bass/030_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 30,
+     "file": "upright-bass/030_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 33,
+     "file": "upright-bass/033_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 33,
+     "file": "upright-bass/033_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 36,
+     "file": "upright-bass/036_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 36,
+     "file": "upright-bass/036_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 39,
+     "file": "upright-bass/039_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 39,
+     "file": "upright-bass/039_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 42,
+     "file": "upright-bass/042_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 42,
+     "file": "upright-bass/042_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "upright-bass/045_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 45,
+     "file": "upright-bass/045_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "upright-bass/048_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 48,
+     "file": "upright-bass/048_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "upright-bass/051_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 51,
+     "file": "upright-bass/051_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 54,
+     "file": "upright-bass/054_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 54,
+     "file": "upright-bass/054_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "upright-bass/057_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 57,
+     "file": "upright-bass/057_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "upright-bass/060_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 60,
+     "file": "upright-bass/060_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.18,
+   "gain": -7.0,
+   "bytes": 476944,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Meatbass, https://github.com/sfzinstruments/karoryfer.meatbass",
+   "credit": "",
+   "about": "1958 Otto Rubner double bass, plucked (pizzicato), two dynamic layers."
+  },
+  {
+   "id": "electric-bass",
+   "name": "Electric bass (finger)",
+   "family": "bass",
+   "range": [
+    23,
+    66
+   ],
+   "samples": [
+    {
+     "note": 23,
+     "file": "electric-bass/023_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 23,
+     "file": "electric-bass/023_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 26,
+     "file": "electric-bass/026_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 26,
+     "file": "electric-bass/026_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 29,
+     "file": "electric-bass/029_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 29,
+     "file": "electric-bass/029_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 32,
+     "file": "electric-bass/032_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 32,
+     "file": "electric-bass/032_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 35,
+     "file": "electric-bass/035_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 35,
+     "file": "electric-bass/035_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 38,
+     "file": "electric-bass/038_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 38,
+     "file": "electric-bass/038_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 41,
+     "file": "electric-bass/041_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 41,
+     "file": "electric-bass/041_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 44,
+     "file": "electric-bass/044_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 44,
+     "file": "electric-bass/044_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 47,
+     "file": "electric-bass/047_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 47,
+     "file": "electric-bass/047_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 50,
+     "file": "electric-bass/050_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 50,
+     "file": "electric-bass/050_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 53,
+     "file": "electric-bass/053_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 53,
+     "file": "electric-bass/053_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 56,
+     "file": "electric-bass/056_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 56,
+     "file": "electric-bass/056_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 59,
+     "file": "electric-bass/059_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 59,
+     "file": "electric-bass/059_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 62,
+     "file": "electric-bass/062_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 62,
+     "file": "electric-bass/062_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 64,
+     "file": "electric-bass/064_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 64,
+     "file": "electric-bass/064_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.12,
+   "gain": -4.5,
+   "bytes": 554222,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Black And Blue Basses, https://github.com/sfzinstruments/karoryfer.black-and-blue-basses",
+   "credit": "",
+   "about": "Washburn AB-95 five-string, finger style, neck pickup, recorded direct."
+  },
+  {
+   "id": "electric-bass-pick",
+   "name": "Electric bass (pick)",
+   "family": "bass",
+   "range": [
+    23,
+    64
+   ],
+   "samples": [
+    {
+     "note": 23,
+     "file": "electric-bass-pick/023.mp3",
+     "vel": 100
+    },
+    {
+     "note": 26,
+     "file": "electric-bass-pick/026.mp3",
+     "vel": 100
+    },
+    {
+     "note": 29,
+     "file": "electric-bass-pick/029.mp3",
+     "vel": 100
+    },
+    {
+     "note": 32,
+     "file": "electric-bass-pick/032.mp3",
+     "vel": 100
+    },
+    {
+     "note": 35,
+     "file": "electric-bass-pick/035.mp3",
+     "vel": 100
+    },
+    {
+     "note": 38,
+     "file": "electric-bass-pick/038.mp3",
+     "vel": 100
+    },
+    {
+     "note": 41,
+     "file": "electric-bass-pick/041.mp3",
+     "vel": 100
+    },
+    {
+     "note": 44,
+     "file": "electric-bass-pick/044.mp3",
+     "vel": 100
+    },
+    {
+     "note": 47,
+     "file": "electric-bass-pick/047.mp3",
+     "vel": 100
+    },
+    {
+     "note": 50,
+     "file": "electric-bass-pick/050.mp3",
+     "vel": 100
+    },
+    {
+     "note": 53,
+     "file": "electric-bass-pick/053.mp3",
+     "vel": 100
+    },
+    {
+     "note": 56,
+     "file": "electric-bass-pick/056.mp3",
+     "vel": 100
+    },
+    {
+     "note": 59,
+     "file": "electric-bass-pick/059.mp3",
+     "vel": 100
+    },
+    {
+     "note": 62,
+     "file": "electric-bass-pick/062.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.12,
+   "gain": -9.5,
+   "bytes": 334621,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Black And Blue Basses, https://github.com/sfzinstruments/karoryfer.black-and-blue-basses",
+   "credit": "",
+   "about": "Five-string bass played with a pick, bridge pickup, recorded direct."
+  },
+  {
+   "id": "grand-piano",
+   "name": "Grand piano",
+   "family": "keys",
+   "range": [
+    21,
+    110
+   ],
+   "samples": [
+    {
+     "note": 21,
+     "file": "grand-piano/021_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 21,
+     "file": "grand-piano/021_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 24,
+     "file": "grand-piano/024_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 24,
+     "file": "grand-piano/024_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 27,
+     "file": "grand-piano/027_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 27,
+     "file": "grand-piano/027_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 30,
+     "file": "grand-piano/030_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 30,
+     "file": "grand-piano/030_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 33,
+     "file": "grand-piano/033_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 33,
+     "file": "grand-piano/033_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 36,
+     "file": "grand-piano/036_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 36,
+     "file": "grand-piano/036_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 39,
+     "file": "grand-piano/039_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 39,
+     "file": "grand-piano/039_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 42,
+     "file": "grand-piano/042_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 42,
+     "file": "grand-piano/042_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "grand-piano/045_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 45,
+     "file": "grand-piano/045_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "grand-piano/048_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 48,
+     "file": "grand-piano/048_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "grand-piano/051_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 51,
+     "file": "grand-piano/051_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 54,
+     "file": "grand-piano/054_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 54,
+     "file": "grand-piano/054_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "grand-piano/057_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 57,
+     "file": "grand-piano/057_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "grand-piano/060_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 60,
+     "file": "grand-piano/060_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 63,
+     "file": "grand-piano/063_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 63,
+     "file": "grand-piano/063_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 66,
+     "file": "grand-piano/066_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 66,
+     "file": "grand-piano/066_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "grand-piano/069_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 69,
+     "file": "grand-piano/069_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "grand-piano/072_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 72,
+     "file": "grand-piano/072_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 75,
+     "file": "grand-piano/075_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 75,
+     "file": "grand-piano/075_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 78,
+     "file": "grand-piano/078_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 78,
+     "file": "grand-piano/078_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 81,
+     "file": "grand-piano/081_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 81,
+     "file": "grand-piano/081_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 84,
+     "file": "grand-piano/084_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 84,
+     "file": "grand-piano/084_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 87,
+     "file": "grand-piano/087_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 87,
+     "file": "grand-piano/087_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 90,
+     "file": "grand-piano/090_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 90,
+     "file": "grand-piano/090_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 93,
+     "file": "grand-piano/093_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 93,
+     "file": "grand-piano/093_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 96,
+     "file": "grand-piano/096_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 96,
+     "file": "grand-piano/096_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 99,
+     "file": "grand-piano/099_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 99,
+     "file": "grand-piano/099_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 102,
+     "file": "grand-piano/102_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 102,
+     "file": "grand-piano/102_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 105,
+     "file": "grand-piano/105_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 105,
+     "file": "grand-piano/105_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 108,
+     "file": "grand-piano/108_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 108,
+     "file": "grand-piano/108_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.35,
+   "gain": -10.5,
+   "bytes": 2430770,
+   "licence": "CC BY 3.0",
+   "source": "Salamander Grand Piano V3 by Alexander Holm, https://github.com/sfzinstruments/SalamanderGrandPiano",
+   "credit": "Salamander Grand Piano V3 by Alexander Holm, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Samples were trimmed, level-adjusted and converted to MP3 for First Loop.",
+   "about": "Yamaha C5 grand, two dynamic layers, sampled every minor third."
+  },
+  {
+   "id": "upright-piano",
+   "name": "Upright piano",
+   "family": "keys",
+   "range": [
+    21,
+    111
+   ],
+   "samples": [
+    {
+     "note": 21,
+     "file": "upright-piano/021_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 21,
+     "file": "upright-piano/021_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 25,
+     "file": "upright-piano/025_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 25,
+     "file": "upright-piano/025_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 29,
+     "file": "upright-piano/029_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 29,
+     "file": "upright-piano/029_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 33,
+     "file": "upright-piano/033_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 33,
+     "file": "upright-piano/033_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 37,
+     "file": "upright-piano/037_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 37,
+     "file": "upright-piano/037_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 41,
+     "file": "upright-piano/041_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 41,
+     "file": "upright-piano/041_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "upright-piano/045_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 45,
+     "file": "upright-piano/045_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 49,
+     "file": "upright-piano/049_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 49,
+     "file": "upright-piano/049_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 53,
+     "file": "upright-piano/053_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 53,
+     "file": "upright-piano/053_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "upright-piano/057_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 57,
+     "file": "upright-piano/057_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 61,
+     "file": "upright-piano/061_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 61,
+     "file": "upright-piano/061_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 65,
+     "file": "upright-piano/065_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 65,
+     "file": "upright-piano/065_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "upright-piano/069_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 69,
+     "file": "upright-piano/069_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 73,
+     "file": "upright-piano/073_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 73,
+     "file": "upright-piano/073_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 77,
+     "file": "upright-piano/077_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 77,
+     "file": "upright-piano/077_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 81,
+     "file": "upright-piano/081_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 81,
+     "file": "upright-piano/081_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 85,
+     "file": "upright-piano/085_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 85,
+     "file": "upright-piano/085_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 89,
+     "file": "upright-piano/089_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 89,
+     "file": "upright-piano/089_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 93,
+     "file": "upright-piano/093_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 93,
+     "file": "upright-piano/093_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 97,
+     "file": "upright-piano/097_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 97,
+     "file": "upright-piano/097_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 101,
+     "file": "upright-piano/101_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 101,
+     "file": "upright-piano/101_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 105,
+     "file": "upright-piano/105_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 105,
+     "file": "upright-piano/105_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 109,
+     "file": "upright-piano/109_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 109,
+     "file": "upright-piano/109_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.3,
+   "gain": -7.0,
+   "bytes": 1548869,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Upright piano sampled by Simon Dalzell of Ivy Audio, two dynamic layers, every major third."
+  },
+  {
+   "id": "electric-piano",
+   "name": "Electric piano (Wurlitzer)",
+   "family": "keys",
+   "range": [
+    33,
+    94
+   ],
+   "samples": [
+    {
+     "note": 33,
+     "file": "electric-piano/033_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 33,
+     "file": "electric-piano/033_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 36,
+     "file": "electric-piano/036_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 40,
+     "file": "electric-piano/040_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 41,
+     "file": "electric-piano/041_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "electric-piano/045_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 47,
+     "file": "electric-piano/047_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "electric-piano/051_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 52,
+     "file": "electric-piano/052_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 56,
+     "file": "electric-piano/056_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 56,
+     "file": "electric-piano/056_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 61,
+     "file": "electric-piano/061_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 61,
+     "file": "electric-piano/061_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 64,
+     "file": "electric-piano/064_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 66,
+     "file": "electric-piano/066_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 67,
+     "file": "electric-piano/067_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 68,
+     "file": "electric-piano/068_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 71,
+     "file": "electric-piano/071_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 73,
+     "file": "electric-piano/073_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 73,
+     "file": "electric-piano/073_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 79,
+     "file": "electric-piano/079_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 79,
+     "file": "electric-piano/079_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 85,
+     "file": "electric-piano/085_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 85,
+     "file": "electric-piano/085_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 92,
+     "file": "electric-piano/092_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 92,
+     "file": "electric-piano/092_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.2,
+   "gain": -13.0,
+   "bytes": 415387,
+   "licence": "CC BY 3.0",
+   "source": "Greg Sullivan's E-Pianos: Wurlitzer EP200, https://github.com/sfzinstruments/GregSullivan.E-Pianos",
+   "credit": "Wurlitzer EP200 electric piano samples by Greg Sullivan (http://www.sullivang.net/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Samples were trimmed, level-adjusted and converted to MP3 for First Loop.",
+   "about": "Wurlitzer EP200 reed electric piano, two dynamic layers."
+  },
+  {
+   "id": "steel-guitar",
+   "name": "Acoustic guitar (steel)",
+   "family": "guitar",
+   "range": [
+    40,
+    85
+   ],
+   "samples": [
+    {
+     "note": 40,
+     "file": "steel-guitar/040.mp3",
+     "vel": 100
+    },
+    {
+     "note": 43,
+     "file": "steel-guitar/043.mp3",
+     "vel": 100
+    },
+    {
+     "note": 46,
+     "file": "steel-guitar/046.mp3",
+     "vel": 100
+    },
+    {
+     "note": 49,
+     "file": "steel-guitar/049.mp3",
+     "vel": 100
+    },
+    {
+     "note": 52,
+     "file": "steel-guitar/052.mp3",
+     "vel": 100
+    },
+    {
+     "note": 55,
+     "file": "steel-guitar/055.mp3",
+     "vel": 100
+    },
+    {
+     "note": 58,
+     "file": "steel-guitar/058.mp3",
+     "vel": 100
+    },
+    {
+     "note": 61,
+     "file": "steel-guitar/061.mp3",
+     "vel": 100
+    },
+    {
+     "note": 64,
+     "file": "steel-guitar/064.mp3",
+     "vel": 100
+    },
+    {
+     "note": 68,
+     "file": "steel-guitar/068.mp3",
+     "vel": 100
+    },
+    {
+     "note": 71,
+     "file": "steel-guitar/071.mp3",
+     "vel": 100
+    },
+    {
+     "note": 74,
+     "file": "steel-guitar/074.mp3",
+     "vel": 100
+    },
+    {
+     "note": 80,
+     "file": "steel-guitar/080.mp3",
+     "vel": 100
+    },
+    {
+     "note": 83,
+     "file": "steel-guitar/083.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.25,
+   "gain": -11.5,
+   "bytes": 214863,
+   "licence": "CC0 1.0",
+   "source": "Discord SFZ GM Bank: Acoustic Guitar (steel), 2017 Martin HD28, by Jeff Learman, https://github.com/sfzinstruments/Discord-SFZ-GM-Bank",
+   "credit": "",
+   "about": "2017 Martin HD28 steel-string guitar, single plucked notes, one dynamic layer."
+  },
+  {
+   "id": "electric-guitar",
+   "name": "Electric guitar (clean)",
+   "family": "guitar",
+   "range": [
+    37,
+    88
+   ],
+   "samples": [
+    {
+     "note": 37,
+     "file": "electric-guitar/037_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 37,
+     "file": "electric-guitar/037_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 40,
+     "file": "electric-guitar/040_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 40,
+     "file": "electric-guitar/040_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 42,
+     "file": "electric-guitar/042_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 42,
+     "file": "electric-guitar/042_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "electric-guitar/045_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 45,
+     "file": "electric-guitar/045_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "electric-guitar/048_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 48,
+     "file": "electric-guitar/048_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "electric-guitar/051_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 51,
+     "file": "electric-guitar/051_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 54,
+     "file": "electric-guitar/054_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 54,
+     "file": "electric-guitar/054_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "electric-guitar/057_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 57,
+     "file": "electric-guitar/057_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "electric-guitar/060_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 60,
+     "file": "electric-guitar/060_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 63,
+     "file": "electric-guitar/063_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 63,
+     "file": "electric-guitar/063_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 66,
+     "file": "electric-guitar/066_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 66,
+     "file": "electric-guitar/066_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "electric-guitar/069_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 69,
+     "file": "electric-guitar/069_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "electric-guitar/072_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 72,
+     "file": "electric-guitar/072_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 75,
+     "file": "electric-guitar/075_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 75,
+     "file": "electric-guitar/075_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 78,
+     "file": "electric-guitar/078_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 78,
+     "file": "electric-guitar/078_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 81,
+     "file": "electric-guitar/081_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 81,
+     "file": "electric-guitar/081_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 84,
+     "file": "electric-guitar/084_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 84,
+     "file": "electric-guitar/084_v100.mp3",
+     "vel": 100
+    },
+    {
+     "note": 86,
+     "file": "electric-guitar/086_v50.mp3",
+     "vel": 50
+    },
+    {
+     "note": 86,
+     "file": "electric-guitar/086_v100.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.2,
+   "gain": -2.5,
+   "bytes": 699462,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Emilyguitar, https://github.com/sfzinstruments/karoryfer.emilyguitar",
+   "credit": "",
+   "about": "Epiphone hollow-body with flatwound strings, recorded direct, two dynamic layers."
+  },
+  {
+   "id": "violin",
+   "name": "Violin",
+   "family": "strings",
+   "range": [
+    55,
+    98
+   ],
+   "samples": [
+    {
+     "note": 55,
+     "file": "violin/055_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.71571,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 55,
+     "file": "violin/055_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.10744,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 57,
+     "file": "violin/057_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.50168,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 57,
+     "file": "violin/057_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.93066,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 60,
+     "file": "violin/060_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.08862,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 60,
+     "file": "violin/060_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.97766,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 64,
+     "file": "violin/064_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.12542,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 64,
+     "file": "violin/064_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.21451,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 67,
+     "file": "violin/067_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.53966,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 67,
+     "file": "violin/067_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.77181,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 69,
+     "file": "violin/069_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.1868,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 69,
+     "file": "violin/069_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.18941,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 72,
+     "file": "violin/072_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.79798,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 72,
+     "file": "violin/072_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.94043,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 76,
+     "file": "violin/076_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.70132,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 76,
+     "file": "violin/076_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.89635,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 79,
+     "file": "violin/079_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.95882,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 79,
+     "file": "violin/079_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.80429,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 81,
+     "file": "violin/081_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.04785,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 81,
+     "file": "violin/081_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.00211,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 84,
+     "file": "violin/084_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.06063,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 84,
+     "file": "violin/084_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.77213,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 88,
+     "file": "violin/088_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.40909,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 88,
+     "file": "violin/088_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.98789,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 91,
+     "file": "violin/091_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.80973,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 91,
+     "file": "violin/091_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.14304,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 93,
+     "file": "violin/093_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.9054,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 93,
+     "file": "violin/093_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.97476,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 96,
+     "file": "violin/096_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.5978,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 96,
+     "file": "violin/096_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.56741,
+     "loopEnd": 3.93
+    }
+   ],
+   "loop": true,
+   "release": 0.3,
+   "gain": -12.0,
+   "bytes": 1313976,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo violin, bowed with vibrato, two dynamic layers."
+  },
+  {
+   "id": "violin-pizz",
+   "name": "Violin (pizzicato)",
+   "family": "strings",
+   "range": [
+    55,
+    98
+   ],
+   "samples": [
+    {
+     "note": 55,
+     "file": "violin-pizz/055.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "violin-pizz/057.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "violin-pizz/060.mp3",
+     "vel": 100
+    },
+    {
+     "note": 64,
+     "file": "violin-pizz/064.mp3",
+     "vel": 100
+    },
+    {
+     "note": 67,
+     "file": "violin-pizz/067.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "violin-pizz/069.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "violin-pizz/072.mp3",
+     "vel": 100
+    },
+    {
+     "note": 76,
+     "file": "violin-pizz/076.mp3",
+     "vel": 100
+    },
+    {
+     "note": 79,
+     "file": "violin-pizz/079.mp3",
+     "vel": 100
+    },
+    {
+     "note": 81,
+     "file": "violin-pizz/081.mp3",
+     "vel": 100
+    },
+    {
+     "note": 88,
+     "file": "violin-pizz/088.mp3",
+     "vel": 100
+    },
+    {
+     "note": 93,
+     "file": "violin-pizz/093.mp3",
+     "vel": 100
+    },
+    {
+     "note": 96,
+     "file": "violin-pizz/096.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.2,
+   "gain": -7.0,
+   "bytes": 143664,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo violin, plucked."
+  },
+  {
+   "id": "cello",
+   "name": "Cello",
+   "family": "strings",
+   "range": [
+    36,
+    86
+   ],
+   "samples": [
+    {
+     "note": 36,
+     "file": "cello/036_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.53476,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 36,
+     "file": "cello/036_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.75088,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 39,
+     "file": "cello/039_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.35351,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 39,
+     "file": "cello/039_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.71429,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 42,
+     "file": "cello/042_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.99961,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 42,
+     "file": "cello/042_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.96649,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 45,
+     "file": "cello/045_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.721,
+     "loopEnd": 3.26696
+    },
+    {
+     "note": 45,
+     "file": "cello/045_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.78395,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 48,
+     "file": "cello/048_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.73526,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 48,
+     "file": "cello/048_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.91991,
+     "loopEnd": 4.07687
+    },
+    {
+     "note": 51,
+     "file": "cello/051_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.67243,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 51,
+     "file": "cello/051_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.70143,
+     "loopEnd": 3.55653
+    },
+    {
+     "note": 54,
+     "file": "cello/054_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.7629,
+     "loopEnd": 3.69621
+    },
+    {
+     "note": 54,
+     "file": "cello/054_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.60079,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 57,
+     "file": "cello/057_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.15132,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 57,
+     "file": "cello/057_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.14345,
+     "loopEnd": 3.55998
+    },
+    {
+     "note": 60,
+     "file": "cello/060_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.152,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 60,
+     "file": "cello/060_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.7049,
+     "loopEnd": 3.78265
+    },
+    {
+     "note": 63,
+     "file": "cello/063_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.35898,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 63,
+     "file": "cello/063_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.82261,
+     "loopEnd": 3.75327
+    },
+    {
+     "note": 66,
+     "file": "cello/066_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.31075,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 66,
+     "file": "cello/066_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.09297,
+     "loopEnd": 3.47363
+    },
+    {
+     "note": 69,
+     "file": "cello/069_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.38673,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 69,
+     "file": "cello/069_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.92433,
+     "loopEnd": 3.64107
+    },
+    {
+     "note": 72,
+     "file": "cello/072_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.08864,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 72,
+     "file": "cello/072_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.62698,
+     "loopEnd": 3.07971
+    },
+    {
+     "note": 75,
+     "file": "cello/075_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.49585,
+     "loopEnd": 3.34
+    },
+    {
+     "note": 75,
+     "file": "cello/075_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.26073,
+     "loopEnd": 2.97236
+    },
+    {
+     "note": 78,
+     "file": "cello/078_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.31127,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 78,
+     "file": "cello/078_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.44041,
+     "loopEnd": 3.98
+    },
+    {
+     "note": 81,
+     "file": "cello/081_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.91585,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 81,
+     "file": "cello/081_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.12546,
+     "loopEnd": 3.01193
+    },
+    {
+     "note": 84,
+     "file": "cello/084_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.07385,
+     "loopEnd": 2.6637
+    },
+    {
+     "note": 84,
+     "file": "cello/084_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.82968,
+     "loopEnd": 2.71342
+    }
+   ],
+   "loop": true,
+   "release": 0.3,
+   "gain": -11.5,
+   "bytes": 1309727,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples x bigcat instruments: cello (performed by Kamila Borowiak), https://github.com/sfzinstruments/karoryfer-bigcat.cello",
+   "credit": "",
+   "about": "Solo cello performed by Kamila Borowiak, bowed, two dynamic layers."
+  },
+  {
+   "id": "cello-pizz",
+   "name": "Cello (pizzicato)",
+   "family": "strings",
+   "range": [
+    36,
+    74
+   ],
+   "samples": [
+    {
+     "note": 36,
+     "file": "cello-pizz/036.mp3",
+     "vel": 100
+    },
+    {
+     "note": 39,
+     "file": "cello-pizz/039.mp3",
+     "vel": 100
+    },
+    {
+     "note": 42,
+     "file": "cello-pizz/042.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "cello-pizz/045.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "cello-pizz/048.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "cello-pizz/051.mp3",
+     "vel": 100
+    },
+    {
+     "note": 54,
+     "file": "cello-pizz/054.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "cello-pizz/057.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "cello-pizz/060.mp3",
+     "vel": 100
+    },
+    {
+     "note": 63,
+     "file": "cello-pizz/063.mp3",
+     "vel": 100
+    },
+    {
+     "note": 66,
+     "file": "cello-pizz/066.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "cello-pizz/069.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "cello-pizz/072.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.2,
+   "gain": -4.5,
+   "bytes": 160454,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples x bigcat instruments: cello (performed by Kamila Borowiak), https://github.com/sfzinstruments/karoryfer-bigcat.cello",
+   "credit": "",
+   "about": "Solo cello, plucked."
+  },
+  {
+   "id": "flute",
+   "name": "Flute",
+   "family": "winds",
+   "range": [
+    60,
+    98
+   ],
+   "samples": [
+    {
+     "note": 60,
+     "file": "flute/060.mp3",
+     "vel": 100,
+     "loopStart": 0.82939,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 64,
+     "file": "flute/064.mp3",
+     "vel": 100,
+     "loopStart": 1.13968,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 69,
+     "file": "flute/069.mp3",
+     "vel": 100,
+     "loopStart": 2.2722,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 72,
+     "file": "flute/072.mp3",
+     "vel": 100,
+     "loopStart": 1.1961,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 76,
+     "file": "flute/076.mp3",
+     "vel": 100,
+     "loopStart": 0.86041,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 81,
+     "file": "flute/081.mp3",
+     "vel": 100,
+     "loopStart": 1.069,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 84,
+     "file": "flute/084.mp3",
+     "vel": 100,
+     "loopStart": 1.71517,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 88,
+     "file": "flute/088.mp3",
+     "vel": 100,
+     "loopStart": 0.85478,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 93,
+     "file": "flute/093.mp3",
+     "vel": 100,
+     "loopStart": 2.07837,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 96,
+     "file": "flute/096.mp3",
+     "vel": 100,
+     "loopStart": 1.42896,
+     "loopEnd": 3.67
+    }
+   ],
+   "loop": true,
+   "release": 0.2,
+   "gain": -10.0,
+   "bytes": 495349,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo flute, sustained with vibrato."
+  },
+  {
+   "id": "clarinet",
+   "name": "Clarinet",
+   "family": "winds",
+   "range": [
+    50,
+    91
+   ],
+   "samples": [
+    {
+     "note": 50,
+     "file": "clarinet/050_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.89948,
+     "loopEnd": 3.28998
+    },
+    {
+     "note": 50,
+     "file": "clarinet/050_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.02302,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 53,
+     "file": "clarinet/053_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.75497,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 53,
+     "file": "clarinet/053_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.87921,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 58,
+     "file": "clarinet/058_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.86429,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 58,
+     "file": "clarinet/058_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.09692,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 62,
+     "file": "clarinet/062_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.86771,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 62,
+     "file": "clarinet/062_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.55644,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 65,
+     "file": "clarinet/065_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.76222,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 65,
+     "file": "clarinet/065_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.64596,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 70,
+     "file": "clarinet/070_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.77177,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 70,
+     "file": "clarinet/070_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.95782,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 74,
+     "file": "clarinet/074_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.35079,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 74,
+     "file": "clarinet/074_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.61644,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 77,
+     "file": "clarinet/077_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.48054,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 77,
+     "file": "clarinet/077_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.49245,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 82,
+     "file": "clarinet/082_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.85628,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 82,
+     "file": "clarinet/082_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.95943,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 86,
+     "file": "clarinet/086_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.34472,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 86,
+     "file": "clarinet/086_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.15905,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 89,
+     "file": "clarinet/089_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.07562,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 89,
+     "file": "clarinet/089_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.9105,
+     "loopEnd": 4.2
+    }
+   ],
+   "loop": true,
+   "release": 0.2,
+   "gain": -10.0,
+   "bytes": 954815,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo clarinet, sustained, two dynamic layers."
+  },
+  {
+   "id": "trumpet",
+   "name": "Trumpet",
+   "family": "brass",
+   "range": [
+    53,
+    86
+   ],
+   "samples": [
+    {
+     "note": 53,
+     "file": "trumpet/053_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.21544,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 53,
+     "file": "trumpet/053_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.63356,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 57,
+     "file": "trumpet/057_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.99941,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 57,
+     "file": "trumpet/057_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.58689,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 60,
+     "file": "trumpet/060_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.96637,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 60,
+     "file": "trumpet/060_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.88741,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 63,
+     "file": "trumpet/063_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.82769,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 63,
+     "file": "trumpet/063_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.70125,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 67,
+     "file": "trumpet/067_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.17986,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 67,
+     "file": "trumpet/067_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.46567,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 70,
+     "file": "trumpet/070_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.2456,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 70,
+     "file": "trumpet/070_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.75508,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 74,
+     "file": "trumpet/074_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.69841,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 74,
+     "file": "trumpet/074_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.2019,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 77,
+     "file": "trumpet/077_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.32481,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 77,
+     "file": "trumpet/077_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.50803,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 81,
+     "file": "trumpet/081_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.73045,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 81,
+     "file": "trumpet/081_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.09982,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 84,
+     "file": "trumpet/084_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.09084,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 84,
+     "file": "trumpet/084_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.3017,
+     "loopEnd": 3.96
+    }
+   ],
+   "loop": true,
+   "release": 0.2,
+   "gain": -9.0,
+   "bytes": 855099,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo trumpet, sustained, two dynamic layers."
+  },
+  {
+   "id": "french-horn",
+   "name": "French horn",
+   "family": "brass",
+   "range": [
+    33,
+    62
+   ],
+   "samples": [
+    {
+     "note": 33,
+     "file": "french-horn/033.mp3",
+     "vel": 100,
+     "loopStart": 2.68712,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 36,
+     "file": "french-horn/036.mp3",
+     "vel": 100,
+     "loopStart": 2.26546,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 39,
+     "file": "french-horn/039.mp3",
+     "vel": 100,
+     "loopStart": 2.19537,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 43,
+     "file": "french-horn/043.mp3",
+     "vel": 100,
+     "loopStart": 1.59798,
+     "loopEnd": 3.63
+    },
+    {
+     "note": 46,
+     "file": "french-horn/046.mp3",
+     "vel": 100,
+     "loopStart": 0.70392,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 50,
+     "file": "french-horn/050.mp3",
+     "vel": 100,
+     "loopStart": 1.60227,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 53,
+     "file": "french-horn/053.mp3",
+     "vel": 100,
+     "loopStart": 1.46485,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 57,
+     "file": "french-horn/057.mp3",
+     "vel": 100,
+     "loopStart": 1.73204,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 60,
+     "file": "french-horn/060.mp3",
+     "vel": 100,
+     "loopStart": 0.87603,
+     "loopEnd": 3.93
+    }
+   ],
+   "loop": true,
+   "release": 0.25,
+   "gain": -10.0,
+   "bytes": 326374,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Solo French horn, sustained, low and middle register (up to E-flat above middle C)."
+  },
+  {
+   "id": "tenor-sax",
+   "name": "Tenor saxophone",
+   "family": "winds",
+   "range": [
+    44,
+    90
+   ],
+   "samples": [
+    {
+     "note": 44,
+     "file": "tenor-sax/044_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.21379,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 44,
+     "file": "tenor-sax/044_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.27206,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 46,
+     "file": "tenor-sax/046_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.70687,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 46,
+     "file": "tenor-sax/046_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.92147,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 48,
+     "file": "tenor-sax/048_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.66018,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 48,
+     "file": "tenor-sax/048_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.66218,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 50,
+     "file": "tenor-sax/050_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.53018,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 50,
+     "file": "tenor-sax/050_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.08322,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 52,
+     "file": "tenor-sax/052_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.74147,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 52,
+     "file": "tenor-sax/052_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.91263,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 54,
+     "file": "tenor-sax/054_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.70696,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 54,
+     "file": "tenor-sax/054_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.42971,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 56,
+     "file": "tenor-sax/056_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.1556,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 56,
+     "file": "tenor-sax/056_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.42984,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 58,
+     "file": "tenor-sax/058_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.61327,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 58,
+     "file": "tenor-sax/058_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.82349,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 60,
+     "file": "tenor-sax/060_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.93989,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 60,
+     "file": "tenor-sax/060_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.85408,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 62,
+     "file": "tenor-sax/062_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.49989,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 62,
+     "file": "tenor-sax/062_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.54615,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 64,
+     "file": "tenor-sax/064_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.70222,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 64,
+     "file": "tenor-sax/064_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.02653,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 66,
+     "file": "tenor-sax/066_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.32637,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 66,
+     "file": "tenor-sax/066_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.13077,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 68,
+     "file": "tenor-sax/068_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.30492,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 68,
+     "file": "tenor-sax/068_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.76206,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 70,
+     "file": "tenor-sax/070_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.37893,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 70,
+     "file": "tenor-sax/070_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.84739,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 72,
+     "file": "tenor-sax/072_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.87596,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 72,
+     "file": "tenor-sax/072_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.67333,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 74,
+     "file": "tenor-sax/074_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.44463,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 74,
+     "file": "tenor-sax/074_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.22383,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 76,
+     "file": "tenor-sax/076_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.72785,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 76,
+     "file": "tenor-sax/076_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.75259,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 78,
+     "file": "tenor-sax/078_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.71993,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 78,
+     "file": "tenor-sax/078_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.08222,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 80,
+     "file": "tenor-sax/080_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.31839,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 80,
+     "file": "tenor-sax/080_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.56333,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 82,
+     "file": "tenor-sax/082_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.90698,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 82,
+     "file": "tenor-sax/082_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.99973,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 84,
+     "file": "tenor-sax/084_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.99417,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 84,
+     "file": "tenor-sax/084_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.95154,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 86,
+     "file": "tenor-sax/086_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.7827,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 86,
+     "file": "tenor-sax/086_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.82986,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 88,
+     "file": "tenor-sax/088_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.69937,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 88,
+     "file": "tenor-sax/088_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.13202,
+     "loopEnd": 3.93
+    }
+   ],
+   "loop": true,
+   "release": 0.2,
+   "gain": -12.5,
+   "bytes": 1970760,
+   "licence": "CC0 1.0",
+   "source": "Versilian Community Sample Library, https://github.com/sgossner/VCSL",
+   "credit": "",
+   "about": "Tenor saxophone, sustained without vibrato, two dynamic layers."
+  },
+  {
+   "id": "organ",
+   "name": "Pipe organ (soft stop)",
+   "family": "keys",
+   "range": [
+    36,
+    98
+   ],
+   "samples": [
+    {
+     "note": 36,
+     "file": "organ/036.mp3",
+     "vel": 100,
+     "loopStart": 0.80587,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 39,
+     "file": "organ/039.mp3",
+     "vel": 100,
+     "loopStart": 0.74163,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 42,
+     "file": "organ/042.mp3",
+     "vel": 100,
+     "loopStart": 0.83887,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 45,
+     "file": "organ/045.mp3",
+     "vel": 100,
+     "loopStart": 0.97676,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 48,
+     "file": "organ/048.mp3",
+     "vel": 100,
+     "loopStart": 1.08732,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 51,
+     "file": "organ/051.mp3",
+     "vel": 100,
+     "loopStart": 1.15664,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 54,
+     "file": "organ/054.mp3",
+     "vel": 100,
+     "loopStart": 0.7681,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 57,
+     "file": "organ/057.mp3",
+     "vel": 100,
+     "loopStart": 0.70333,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 60,
+     "file": "organ/060.mp3",
+     "vel": 100,
+     "loopStart": 1.38898,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 63,
+     "file": "organ/063.mp3",
+     "vel": 100,
+     "loopStart": 0.96161,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 66,
+     "file": "organ/066.mp3",
+     "vel": 100,
+     "loopStart": 0.78263,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 69,
+     "file": "organ/069.mp3",
+     "vel": 100,
+     "loopStart": 1.84243,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 72,
+     "file": "organ/072.mp3",
+     "vel": 100,
+     "loopStart": 0.74898,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 75,
+     "file": "organ/075.mp3",
+     "vel": 100,
+     "loopStart": 0.94311,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 78,
+     "file": "organ/078.mp3",
+     "vel": 100,
+     "loopStart": 0.70127,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 81,
+     "file": "organ/081.mp3",
+     "vel": 100,
+     "loopStart": 0.85215,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 84,
+     "file": "organ/084.mp3",
+     "vel": 100,
+     "loopStart": 0.7576,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 87,
+     "file": "organ/087.mp3",
+     "vel": 100,
+     "loopStart": 0.71297,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 90,
+     "file": "organ/090.mp3",
+     "vel": 100,
+     "loopStart": 0.71032,
+     "loopEnd": 4.08
+    },
+    {
+     "note": 93,
+     "file": "organ/093.mp3",
+     "vel": 100,
+     "loopStart": 0.82696,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 96,
+     "file": "organ/096.mp3",
+     "vel": 100,
+     "loopStart": 0.74433,
+     "loopEnd": 4.02
+    }
+   ],
+   "loop": true,
+   "release": 0.3,
+   "gain": -13.5,
+   "bytes": 759292,
+   "licence": "CC0 1.0",
+   "source": "Versilian Community Sample Library, https://github.com/sgossner/VCSL",
+   "credit": "",
+   "about": "Church pipe organ sampled by Simon Dalzell of Ivy Audio, a quiet stop of the third manual."
+  },
+  {
+   "id": "harp",
+   "name": "Harp",
+   "family": "strings",
+   "range": [
+    28,
+    103
+   ],
+   "samples": [
+    {
+     "note": 28,
+     "file": "harp/028.mp3",
+     "vel": 100
+    },
+    {
+     "note": 31,
+     "file": "harp/031.mp3",
+     "vel": 100
+    },
+    {
+     "note": 35,
+     "file": "harp/035.mp3",
+     "vel": 100
+    },
+    {
+     "note": 38,
+     "file": "harp/038.mp3",
+     "vel": 100
+    },
+    {
+     "note": 41,
+     "file": "harp/041.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "harp/045.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "harp/048.mp3",
+     "vel": 100
+    },
+    {
+     "note": 52,
+     "file": "harp/052.mp3",
+     "vel": 100
+    },
+    {
+     "note": 55,
+     "file": "harp/055.mp3",
+     "vel": 100
+    },
+    {
+     "note": 59,
+     "file": "harp/059.mp3",
+     "vel": 100
+    },
+    {
+     "note": 62,
+     "file": "harp/062.mp3",
+     "vel": 100
+    },
+    {
+     "note": 65,
+     "file": "harp/065.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "harp/069.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "harp/072.mp3",
+     "vel": 100
+    },
+    {
+     "note": 76,
+     "file": "harp/076.mp3",
+     "vel": 100
+    },
+    {
+     "note": 79,
+     "file": "harp/079.mp3",
+     "vel": 100
+    },
+    {
+     "note": 83,
+     "file": "harp/083.mp3",
+     "vel": 100
+    },
+    {
+     "note": 86,
+     "file": "harp/086.mp3",
+     "vel": 100
+    },
+    {
+     "note": 89,
+     "file": "harp/089.mp3",
+     "vel": 100
+    },
+    {
+     "note": 93,
+     "file": "harp/093.mp3",
+     "vel": 100
+    },
+    {
+     "note": 95,
+     "file": "harp/095.mp3",
+     "vel": 100
+    },
+    {
+     "note": 98,
+     "file": "harp/098.mp3",
+     "vel": 100
+    },
+    {
+     "note": 101,
+     "file": "harp/101.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.5,
+   "gain": -8.0,
+   "bytes": 886978,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Concert harp, plucked, one dynamic layer."
+  },
+  {
+   "id": "strings",
+   "name": "String ensemble",
+   "family": "strings",
+   "range": [
+    36,
+    86
+   ],
+   "samples": [
+    {
+     "note": 36,
+     "file": "strings/036_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.97465,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 36,
+     "file": "strings/036_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.31608,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 39,
+     "file": "strings/039_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.03834,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 39,
+     "file": "strings/039_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.81422,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 42,
+     "file": "strings/042_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.89095,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 42,
+     "file": "strings/042_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.86553,
+     "loopEnd": 4.05
+    },
+    {
+     "note": 45,
+     "file": "strings/045_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.58948,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 45,
+     "file": "strings/045_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.41585,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 48,
+     "file": "strings/048_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.70633,
+     "loopEnd": 3.66
+    },
+    {
+     "note": 48,
+     "file": "strings/048_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.14129,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 51,
+     "file": "strings/051_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.76497,
+     "loopEnd": 3.93
+    },
+    {
+     "note": 51,
+     "file": "strings/051_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.2832,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 54,
+     "file": "strings/054_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.98011,
+     "loopEnd": 3.9
+    },
+    {
+     "note": 54,
+     "file": "strings/054_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.92567,
+     "loopEnd": 4.14
+    },
+    {
+     "note": 57,
+     "file": "strings/057_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.71993,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 57,
+     "file": "strings/057_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.40188,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 60,
+     "file": "strings/060_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.69234,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 60,
+     "file": "strings/060_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.23313,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 63,
+     "file": "strings/063_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.41327,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 63,
+     "file": "strings/063_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.23971,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 66,
+     "file": "strings/066_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.22447,
+     "loopEnd": 4.02
+    },
+    {
+     "note": 66,
+     "file": "strings/066_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.85218,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 69,
+     "file": "strings/069_v50.mp3",
+     "vel": 50,
+     "loopStart": 1.15807,
+     "loopEnd": 3.96
+    },
+    {
+     "note": 69,
+     "file": "strings/069_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.5083,
+     "loopEnd": 4.2
+    },
+    {
+     "note": 72,
+     "file": "strings/072_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.96288,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 72,
+     "file": "strings/072_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.79567,
+     "loopEnd": 4.17
+    },
+    {
+     "note": 75,
+     "file": "strings/075_v50.mp3",
+     "vel": 50,
+     "loopStart": 0.88726,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 75,
+     "file": "strings/075_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.20179,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 78,
+     "file": "strings/078_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.19365,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 78,
+     "file": "strings/078_v100.mp3",
+     "vel": 100,
+     "loopStart": 0.89032,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 81,
+     "file": "strings/081_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.08206,
+     "loopEnd": 3.87
+    },
+    {
+     "note": 81,
+     "file": "strings/081_v100.mp3",
+     "vel": 100,
+     "loopStart": 1.5307,
+     "loopEnd": 4.11
+    },
+    {
+     "note": 84,
+     "file": "strings/084_v50.mp3",
+     "vel": 50,
+     "loopStart": 2.50771,
+     "loopEnd": 3.99
+    },
+    {
+     "note": 84,
+     "file": "strings/084_v100.mp3",
+     "vel": 100,
+     "loopStart": 2.82805,
+     "loopEnd": 4.05
+    }
+   ],
+   "loop": true,
+   "release": 0.45,
+   "gain": -2.0,
+   "bytes": 1930649,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Cello, viola and violin sections layered, bowed with vibrato, two dynamic layers."
+  },
+  {
+   "id": "strings-pizz",
+   "name": "String ensemble (pizzicato)",
+   "family": "strings",
+   "range": [
+    36,
+    86
+   ],
+   "samples": [
+    {
+     "note": 36,
+     "file": "strings-pizz/036.mp3",
+     "vel": 100
+    },
+    {
+     "note": 39,
+     "file": "strings-pizz/039.mp3",
+     "vel": 100
+    },
+    {
+     "note": 42,
+     "file": "strings-pizz/042.mp3",
+     "vel": 100
+    },
+    {
+     "note": 45,
+     "file": "strings-pizz/045.mp3",
+     "vel": 100
+    },
+    {
+     "note": 48,
+     "file": "strings-pizz/048.mp3",
+     "vel": 100
+    },
+    {
+     "note": 51,
+     "file": "strings-pizz/051.mp3",
+     "vel": 100
+    },
+    {
+     "note": 54,
+     "file": "strings-pizz/054.mp3",
+     "vel": 100
+    },
+    {
+     "note": 57,
+     "file": "strings-pizz/057.mp3",
+     "vel": 100
+    },
+    {
+     "note": 60,
+     "file": "strings-pizz/060.mp3",
+     "vel": 100
+    },
+    {
+     "note": 63,
+     "file": "strings-pizz/063.mp3",
+     "vel": 100
+    },
+    {
+     "note": 66,
+     "file": "strings-pizz/066.mp3",
+     "vel": 100
+    },
+    {
+     "note": 69,
+     "file": "strings-pizz/069.mp3",
+     "vel": 100
+    },
+    {
+     "note": 72,
+     "file": "strings-pizz/072.mp3",
+     "vel": 100
+    },
+    {
+     "note": 75,
+     "file": "strings-pizz/075.mp3",
+     "vel": 100
+    },
+    {
+     "note": 78,
+     "file": "strings-pizz/078.mp3",
+     "vel": 100
+    },
+    {
+     "note": 81,
+     "file": "strings-pizz/081.mp3",
+     "vel": 100
+    },
+    {
+     "note": 84,
+     "file": "strings-pizz/084.mp3",
+     "vel": 100
+    }
+   ],
+   "loop": false,
+   "release": 0.3,
+   "gain": -7.5,
+   "bytes": 246215,
+   "licence": "CC0 1.0",
+   "source": "Versilian Studios Chamber Orchestra 2: Community Edition, https://github.com/sgossner/VSCO-2-CE",
+   "credit": "",
+   "about": "Cello, viola and violin sections layered, plucked."
+  }
+ ],
+ "kits": [
+  {
+   "id": "studio-kit",
+   "name": "Studio kit (sticks)",
+   "bytes": 1755154,
+   "gain": 0.0,
+   "licence": "CC0 1.0",
+   "source": "Virtuosity Drums by Versilian Studios and Karoryfer Samples, https://github.com/sfzinstruments/virtuosity_drums; Versilian Community Sample Library, https://github.com/sgossner/VCSL",
+   "credit": "",
+   "pieces": {
+    "kick": [
+     "studio-kit/kick_v100_1.mp3",
+     "studio-kit/kick_v100_2.mp3",
+     "studio-kit/kick_v100_3.mp3"
+    ],
+    "snare": [
+     "studio-kit/snare_v100_1.mp3",
+     "studio-kit/snare_v100_2.mp3",
+     "studio-kit/snare_v100_3.mp3"
+    ],
+    "rim": [
+     "studio-kit/rim_v100_1.mp3",
+     "studio-kit/rim_v100_2.mp3",
+     "studio-kit/rim_v100_3.mp3"
+    ],
+    "rimshot": [
+     "studio-kit/rimshot_v100_1.mp3",
+     "studio-kit/rimshot_v100_2.mp3",
+     "studio-kit/rimshot_v100_3.mp3"
+    ],
+    "hat_closed": [
+     "studio-kit/hat_closed_v100_1.mp3",
+     "studio-kit/hat_closed_v100_2.mp3",
+     "studio-kit/hat_closed_v100_3.mp3"
+    ],
+    "hat_open": [
+     "studio-kit/hat_open_v100_1.mp3",
+     "studio-kit/hat_open_v100_2.mp3",
+     "studio-kit/hat_open_v100_3.mp3"
+    ],
+    "hat_pedal": [
+     "studio-kit/hat_pedal_v100_1.mp3",
+     "studio-kit/hat_pedal_v100_2.mp3",
+     "studio-kit/hat_pedal_v100_3.mp3"
+    ],
+    "tom_low": [
+     "studio-kit/tom_low_v100_1.mp3",
+     "studio-kit/tom_low_v100_2.mp3",
+     "studio-kit/tom_low_v100_3.mp3"
+    ],
+    "tom_high": [
+     "studio-kit/tom_high_v100_1.mp3",
+     "studio-kit/tom_high_v100_2.mp3",
+     "studio-kit/tom_high_v100_3.mp3"
+    ],
+    "ride": [
+     "studio-kit/ride_v100_1.mp3",
+     "studio-kit/ride_v100_2.mp3",
+     "studio-kit/ride_v100_3.mp3"
+    ],
+    "ride_bell": [
+     "studio-kit/ride_bell_v100_1.mp3",
+     "studio-kit/ride_bell_v100_2.mp3",
+     "studio-kit/ride_bell_v100_3.mp3"
+    ],
+    "crash": [
+     "studio-kit/crash_v100_1.mp3",
+     "studio-kit/crash_v100_2.mp3",
+     "studio-kit/crash_v100_3.mp3"
+    ],
+    "tom_mid": [
+     "studio-kit/tom_high_v100_1.mp3",
+     "studio-kit/tom_high_v100_2.mp3",
+     "studio-kit/tom_high_v100_3.mp3"
+    ],
+    "shaker": [
+     "perc/shaker_v100_1.mp3",
+     "perc/shaker_v100_2.mp3",
+     "perc/shaker_v100_3.mp3",
+     "perc/shaker_v100_4.mp3"
+    ],
+    "tambourine": [
+     "perc/tambourine_v100_1.mp3"
+    ],
+    "clap": [
+     "perc/clap_v100_1.mp3",
+     "perc/clap_v100_2.mp3",
+     "perc/clap_v100_3.mp3",
+     "perc/clap_v100_4.mp3"
+    ]
+   },
+   "layers": {
+    "kick": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/kick_v50_1.mp3",
+       "studio-kit/kick_v50_2.mp3",
+       "studio-kit/kick_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/kick_v100_1.mp3",
+       "studio-kit/kick_v100_2.mp3",
+       "studio-kit/kick_v100_3.mp3"
+      ]
+     }
+    ],
+    "snare": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/snare_v50_1.mp3",
+       "studio-kit/snare_v50_2.mp3",
+       "studio-kit/snare_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/snare_v100_1.mp3",
+       "studio-kit/snare_v100_2.mp3",
+       "studio-kit/snare_v100_3.mp3"
+      ]
+     }
+    ],
+    "rim": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/rim_v50_1.mp3",
+       "studio-kit/rim_v50_2.mp3",
+       "studio-kit/rim_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/rim_v100_1.mp3",
+       "studio-kit/rim_v100_2.mp3",
+       "studio-kit/rim_v100_3.mp3"
+      ]
+     }
+    ],
+    "rimshot": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/rimshot_v50_1.mp3",
+       "studio-kit/rimshot_v50_2.mp3",
+       "studio-kit/rimshot_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/rimshot_v100_1.mp3",
+       "studio-kit/rimshot_v100_2.mp3",
+       "studio-kit/rimshot_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_closed": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/hat_closed_v50_1.mp3",
+       "studio-kit/hat_closed_v50_2.mp3",
+       "studio-kit/hat_closed_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/hat_closed_v100_1.mp3",
+       "studio-kit/hat_closed_v100_2.mp3",
+       "studio-kit/hat_closed_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_open": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/hat_open_v50_1.mp3",
+       "studio-kit/hat_open_v50_2.mp3",
+       "studio-kit/hat_open_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/hat_open_v100_1.mp3",
+       "studio-kit/hat_open_v100_2.mp3",
+       "studio-kit/hat_open_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_pedal": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/hat_pedal_v50_1.mp3",
+       "studio-kit/hat_pedal_v50_2.mp3",
+       "studio-kit/hat_pedal_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/hat_pedal_v100_1.mp3",
+       "studio-kit/hat_pedal_v100_2.mp3",
+       "studio-kit/hat_pedal_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_low": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/tom_low_v50_1.mp3",
+       "studio-kit/tom_low_v50_2.mp3",
+       "studio-kit/tom_low_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/tom_low_v100_1.mp3",
+       "studio-kit/tom_low_v100_2.mp3",
+       "studio-kit/tom_low_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_high": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/tom_high_v50_1.mp3",
+       "studio-kit/tom_high_v50_2.mp3",
+       "studio-kit/tom_high_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/tom_high_v100_1.mp3",
+       "studio-kit/tom_high_v100_2.mp3",
+       "studio-kit/tom_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "ride": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/ride_v50_1.mp3",
+       "studio-kit/ride_v50_2.mp3",
+       "studio-kit/ride_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/ride_v100_1.mp3",
+       "studio-kit/ride_v100_2.mp3",
+       "studio-kit/ride_v100_3.mp3"
+      ]
+     }
+    ],
+    "ride_bell": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/ride_bell_v50_1.mp3",
+       "studio-kit/ride_bell_v50_2.mp3",
+       "studio-kit/ride_bell_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/ride_bell_v100_1.mp3",
+       "studio-kit/ride_bell_v100_2.mp3",
+       "studio-kit/ride_bell_v100_3.mp3"
+      ]
+     }
+    ],
+    "crash": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/crash_v50_1.mp3",
+       "studio-kit/crash_v50_2.mp3",
+       "studio-kit/crash_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/crash_v100_1.mp3",
+       "studio-kit/crash_v100_2.mp3",
+       "studio-kit/crash_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_mid": [
+     {
+      "vel": 50,
+      "files": [
+       "studio-kit/tom_high_v50_1.mp3",
+       "studio-kit/tom_high_v50_2.mp3",
+       "studio-kit/tom_high_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "studio-kit/tom_high_v100_1.mp3",
+       "studio-kit/tom_high_v100_2.mp3",
+       "studio-kit/tom_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "shaker": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/shaker_v100_1.mp3",
+       "perc/shaker_v100_2.mp3",
+       "perc/shaker_v100_3.mp3",
+       "perc/shaker_v100_4.mp3"
+      ]
+     }
+    ],
+    "tambourine": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/tambourine_v50_1.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/tambourine_v100_1.mp3"
+      ]
+     }
+    ],
+    "clap": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/clap_v100_1.mp3",
+       "perc/clap_v100_2.mp3",
+       "perc/clap_v100_3.mp3",
+       "perc/clap_v100_4.mp3"
+      ]
+     }
+    ]
+   },
+   "absent": [],
+   "aliases": {
+    "tom_mid": "tom_high"
+   },
+   "about": "Club-size jazz kit played with sticks by Austin McMahon: close microphones plus overheads, dry and tight. Two toms."
+  },
+  {
+   "id": "big-kit",
+   "name": "Big kit (sticks)",
+   "bytes": 1866466,
+   "gain": 0.0,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Big Rusty Drums, https://github.com/sfzinstruments/karoryfer.big-rusty-drums; Versilian Community Sample Library, https://github.com/sgossner/VCSL; Virtuosity Drums by Versilian Studios and Karoryfer Samples, https://github.com/sfzinstruments/virtuosity_drums",
+   "credit": "",
+   "pieces": {
+    "kick": [
+     "big-kit/kick_v100_1.mp3",
+     "big-kit/kick_v100_2.mp3",
+     "big-kit/kick_v100_3.mp3"
+    ],
+    "snare": [
+     "big-kit/snare_v100_1.mp3",
+     "big-kit/snare_v100_2.mp3",
+     "big-kit/snare_v100_3.mp3"
+    ],
+    "rim": [
+     "big-kit/rim_v100_1.mp3",
+     "big-kit/rim_v100_2.mp3",
+     "big-kit/rim_v100_3.mp3"
+    ],
+    "rimshot": [
+     "big-kit/rimshot_v100_1.mp3",
+     "big-kit/rimshot_v100_2.mp3",
+     "big-kit/rimshot_v100_3.mp3"
+    ],
+    "hat_closed": [
+     "big-kit/hat_closed_v100_1.mp3",
+     "big-kit/hat_closed_v100_2.mp3",
+     "big-kit/hat_closed_v100_3.mp3"
+    ],
+    "hat_open": [
+     "big-kit/hat_open_v100_1.mp3",
+     "big-kit/hat_open_v100_2.mp3",
+     "big-kit/hat_open_v100_3.mp3"
+    ],
+    "hat_pedal": [
+     "big-kit/hat_pedal_v100_1.mp3",
+     "big-kit/hat_pedal_v100_2.mp3",
+     "big-kit/hat_pedal_v100_3.mp3"
+    ],
+    "tom_low": [
+     "big-kit/tom_low_v100_1.mp3",
+     "big-kit/tom_low_v100_2.mp3",
+     "big-kit/tom_low_v100_3.mp3"
+    ],
+    "tom_mid": [
+     "big-kit/tom_mid_v100_1.mp3",
+     "big-kit/tom_mid_v100_2.mp3",
+     "big-kit/tom_mid_v100_3.mp3"
+    ],
+    "tom_high": [
+     "big-kit/tom_high_v100_1.mp3",
+     "big-kit/tom_high_v100_2.mp3",
+     "big-kit/tom_high_v100_3.mp3"
+    ],
+    "ride": [
+     "big-kit/ride_v100_1.mp3",
+     "big-kit/ride_v100_2.mp3",
+     "big-kit/ride_v100_3.mp3"
+    ],
+    "ride_bell": [
+     "big-kit/ride_bell_v100_1.mp3",
+     "big-kit/ride_bell_v100_2.mp3",
+     "big-kit/ride_bell_v100_3.mp3"
+    ],
+    "crash": [
+     "big-kit/crash_v100_1.mp3",
+     "big-kit/crash_v100_2.mp3",
+     "big-kit/crash_v100_3.mp3"
+    ],
+    "shaker": [
+     "perc/shaker_v100_1.mp3",
+     "perc/shaker_v100_2.mp3",
+     "perc/shaker_v100_3.mp3",
+     "perc/shaker_v100_4.mp3"
+    ],
+    "tambourine": [
+     "perc/tambourine_v100_1.mp3"
+    ],
+    "clap": [
+     "perc/clap_v100_1.mp3",
+     "perc/clap_v100_2.mp3",
+     "perc/clap_v100_3.mp3",
+     "perc/clap_v100_4.mp3"
+    ]
+   },
+   "layers": {
+    "kick": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/kick_v50_1.mp3",
+       "big-kit/kick_v50_2.mp3",
+       "big-kit/kick_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/kick_v100_1.mp3",
+       "big-kit/kick_v100_2.mp3",
+       "big-kit/kick_v100_3.mp3"
+      ]
+     }
+    ],
+    "snare": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/snare_v50_1.mp3",
+       "big-kit/snare_v50_2.mp3",
+       "big-kit/snare_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/snare_v100_1.mp3",
+       "big-kit/snare_v100_2.mp3",
+       "big-kit/snare_v100_3.mp3"
+      ]
+     }
+    ],
+    "rim": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/rim_v50_1.mp3",
+       "big-kit/rim_v50_2.mp3",
+       "big-kit/rim_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/rim_v100_1.mp3",
+       "big-kit/rim_v100_2.mp3",
+       "big-kit/rim_v100_3.mp3"
+      ]
+     }
+    ],
+    "rimshot": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/rimshot_v50_1.mp3",
+       "big-kit/rimshot_v50_2.mp3",
+       "big-kit/rimshot_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/rimshot_v100_1.mp3",
+       "big-kit/rimshot_v100_2.mp3",
+       "big-kit/rimshot_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_closed": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/hat_closed_v50_1.mp3",
+       "big-kit/hat_closed_v50_2.mp3",
+       "big-kit/hat_closed_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/hat_closed_v100_1.mp3",
+       "big-kit/hat_closed_v100_2.mp3",
+       "big-kit/hat_closed_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_open": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/hat_open_v50_1.mp3",
+       "big-kit/hat_open_v50_2.mp3",
+       "big-kit/hat_open_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/hat_open_v100_1.mp3",
+       "big-kit/hat_open_v100_2.mp3",
+       "big-kit/hat_open_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_pedal": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/hat_pedal_v50_1.mp3",
+       "big-kit/hat_pedal_v50_2.mp3",
+       "big-kit/hat_pedal_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/hat_pedal_v100_1.mp3",
+       "big-kit/hat_pedal_v100_2.mp3",
+       "big-kit/hat_pedal_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_low": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/tom_low_v50_1.mp3",
+       "big-kit/tom_low_v50_2.mp3",
+       "big-kit/tom_low_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/tom_low_v100_1.mp3",
+       "big-kit/tom_low_v100_2.mp3",
+       "big-kit/tom_low_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_mid": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/tom_mid_v50_1.mp3",
+       "big-kit/tom_mid_v50_2.mp3",
+       "big-kit/tom_mid_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/tom_mid_v100_1.mp3",
+       "big-kit/tom_mid_v100_2.mp3",
+       "big-kit/tom_mid_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_high": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/tom_high_v50_1.mp3",
+       "big-kit/tom_high_v50_2.mp3",
+       "big-kit/tom_high_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/tom_high_v100_1.mp3",
+       "big-kit/tom_high_v100_2.mp3",
+       "big-kit/tom_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "ride": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/ride_v50_1.mp3",
+       "big-kit/ride_v50_2.mp3",
+       "big-kit/ride_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/ride_v100_1.mp3",
+       "big-kit/ride_v100_2.mp3",
+       "big-kit/ride_v100_3.mp3"
+      ]
+     }
+    ],
+    "ride_bell": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/ride_bell_v50_1.mp3",
+       "big-kit/ride_bell_v50_2.mp3",
+       "big-kit/ride_bell_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/ride_bell_v100_1.mp3",
+       "big-kit/ride_bell_v100_2.mp3",
+       "big-kit/ride_bell_v100_3.mp3"
+      ]
+     }
+    ],
+    "crash": [
+     {
+      "vel": 50,
+      "files": [
+       "big-kit/crash_v50_1.mp3",
+       "big-kit/crash_v50_2.mp3",
+       "big-kit/crash_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "big-kit/crash_v100_1.mp3",
+       "big-kit/crash_v100_2.mp3",
+       "big-kit/crash_v100_3.mp3"
+      ]
+     }
+    ],
+    "shaker": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/shaker_v100_1.mp3",
+       "perc/shaker_v100_2.mp3",
+       "perc/shaker_v100_3.mp3",
+       "perc/shaker_v100_4.mp3"
+      ]
+     }
+    ],
+    "tambourine": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/tambourine_v50_1.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/tambourine_v100_1.mp3"
+      ]
+     }
+    ],
+    "clap": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/clap_v100_1.mp3",
+       "perc/clap_v100_2.mp3",
+       "perc/clap_v100_3.mp3",
+       "perc/clap_v100_4.mp3"
+      ]
+     }
+    ]
+   },
+   "absent": [],
+   "aliases": {},
+   "about": "Large 1980s kit with a 24 inch kick and deep toms, close microphones plus overheads: a rounder, roomier sound."
+  },
+  {
+   "id": "brush-kit",
+   "name": "Brush kit",
+   "bytes": 1418344,
+   "gain": 0.0,
+   "licence": "CC0 1.0",
+   "source": "Karoryfer Samples: Swirly Drums, https://github.com/sfzinstruments/karoryfer.swirly-drums; Versilian Community Sample Library, https://github.com/sgossner/VCSL; Virtuosity Drums by Versilian Studios and Karoryfer Samples, https://github.com/sfzinstruments/virtuosity_drums",
+   "credit": "",
+   "pieces": {
+    "kick": [
+     "brush-kit/kick_v100_1.mp3",
+     "brush-kit/kick_v100_2.mp3",
+     "brush-kit/kick_v100_3.mp3"
+    ],
+    "snare": [
+     "brush-kit/snare_v100_1.mp3",
+     "brush-kit/snare_v100_2.mp3",
+     "brush-kit/snare_v100_3.mp3"
+    ],
+    "rim": [
+     "brush-kit/rim_v100_1.mp3",
+     "brush-kit/rim_v100_2.mp3",
+     "brush-kit/rim_v100_3.mp3"
+    ],
+    "hat_closed": [
+     "brush-kit/hat_closed_v100_1.mp3",
+     "brush-kit/hat_closed_v100_2.mp3",
+     "brush-kit/hat_closed_v100_3.mp3"
+    ],
+    "hat_open": [
+     "brush-kit/hat_open_v100_1.mp3",
+     "brush-kit/hat_open_v100_2.mp3",
+     "brush-kit/hat_open_v100_3.mp3"
+    ],
+    "hat_pedal": [
+     "brush-kit/hat_pedal_v100_1.mp3",
+     "brush-kit/hat_pedal_v100_2.mp3",
+     "brush-kit/hat_pedal_v100_3.mp3"
+    ],
+    "tom_low": [
+     "brush-kit/tom_low_v100_1.mp3",
+     "brush-kit/tom_low_v100_2.mp3",
+     "brush-kit/tom_low_v100_3.mp3"
+    ],
+    "tom_mid": [
+     "brush-kit/tom_mid_v100_1.mp3",
+     "brush-kit/tom_mid_v100_2.mp3",
+     "brush-kit/tom_mid_v100_3.mp3"
+    ],
+    "tom_high": [
+     "brush-kit/tom_high_v100_1.mp3",
+     "brush-kit/tom_high_v100_2.mp3",
+     "brush-kit/tom_high_v100_3.mp3"
+    ],
+    "ride": [
+     "brush-kit/ride_v100_1.mp3",
+     "brush-kit/ride_v100_2.mp3",
+     "brush-kit/ride_v100_3.mp3"
+    ],
+    "crash": [
+     "brush-kit/crash_v100_1.mp3",
+     "brush-kit/crash_v100_2.mp3",
+     "brush-kit/crash_v100_3.mp3"
+    ],
+    "shaker": [
+     "perc/shaker_v100_1.mp3",
+     "perc/shaker_v100_2.mp3",
+     "perc/shaker_v100_3.mp3",
+     "perc/shaker_v100_4.mp3"
+    ],
+    "tambourine": [
+     "perc/tambourine_v100_1.mp3"
+    ],
+    "clap": [
+     "perc/clap_v100_1.mp3",
+     "perc/clap_v100_2.mp3",
+     "perc/clap_v100_3.mp3",
+     "perc/clap_v100_4.mp3"
+    ]
+   },
+   "layers": {
+    "kick": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/kick_v50_1.mp3",
+       "brush-kit/kick_v50_2.mp3",
+       "brush-kit/kick_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/kick_v100_1.mp3",
+       "brush-kit/kick_v100_2.mp3",
+       "brush-kit/kick_v100_3.mp3"
+      ]
+     }
+    ],
+    "snare": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/snare_v50_1.mp3",
+       "brush-kit/snare_v50_2.mp3",
+       "brush-kit/snare_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/snare_v100_1.mp3",
+       "brush-kit/snare_v100_2.mp3",
+       "brush-kit/snare_v100_3.mp3"
+      ]
+     }
+    ],
+    "rim": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/rim_v50_1.mp3",
+       "brush-kit/rim_v50_2.mp3",
+       "brush-kit/rim_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/rim_v100_1.mp3",
+       "brush-kit/rim_v100_2.mp3",
+       "brush-kit/rim_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_closed": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/hat_closed_v50_1.mp3",
+       "brush-kit/hat_closed_v50_2.mp3",
+       "brush-kit/hat_closed_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/hat_closed_v100_1.mp3",
+       "brush-kit/hat_closed_v100_2.mp3",
+       "brush-kit/hat_closed_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_open": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/hat_open_v50_1.mp3",
+       "brush-kit/hat_open_v50_2.mp3",
+       "brush-kit/hat_open_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/hat_open_v100_1.mp3",
+       "brush-kit/hat_open_v100_2.mp3",
+       "brush-kit/hat_open_v100_3.mp3"
+      ]
+     }
+    ],
+    "hat_pedal": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/hat_pedal_v50_1.mp3",
+       "brush-kit/hat_pedal_v50_2.mp3",
+       "brush-kit/hat_pedal_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/hat_pedal_v100_1.mp3",
+       "brush-kit/hat_pedal_v100_2.mp3",
+       "brush-kit/hat_pedal_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_low": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/tom_low_v50_1.mp3",
+       "brush-kit/tom_low_v50_2.mp3",
+       "brush-kit/tom_low_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/tom_low_v100_1.mp3",
+       "brush-kit/tom_low_v100_2.mp3",
+       "brush-kit/tom_low_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_mid": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/tom_mid_v50_1.mp3",
+       "brush-kit/tom_mid_v50_2.mp3",
+       "brush-kit/tom_mid_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/tom_mid_v100_1.mp3",
+       "brush-kit/tom_mid_v100_2.mp3",
+       "brush-kit/tom_mid_v100_3.mp3"
+      ]
+     }
+    ],
+    "tom_high": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/tom_high_v50_1.mp3",
+       "brush-kit/tom_high_v50_2.mp3",
+       "brush-kit/tom_high_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/tom_high_v100_1.mp3",
+       "brush-kit/tom_high_v100_2.mp3",
+       "brush-kit/tom_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "ride": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/ride_v50_1.mp3",
+       "brush-kit/ride_v50_2.mp3",
+       "brush-kit/ride_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/ride_v100_1.mp3",
+       "brush-kit/ride_v100_2.mp3",
+       "brush-kit/ride_v100_3.mp3"
+      ]
+     }
+    ],
+    "crash": [
+     {
+      "vel": 50,
+      "files": [
+       "brush-kit/crash_v50_1.mp3",
+       "brush-kit/crash_v50_2.mp3",
+       "brush-kit/crash_v50_3.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "brush-kit/crash_v100_1.mp3",
+       "brush-kit/crash_v100_2.mp3",
+       "brush-kit/crash_v100_3.mp3"
+      ]
+     }
+    ],
+    "shaker": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/shaker_v100_1.mp3",
+       "perc/shaker_v100_2.mp3",
+       "perc/shaker_v100_3.mp3",
+       "perc/shaker_v100_4.mp3"
+      ]
+     }
+    ],
+    "tambourine": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/tambourine_v50_1.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/tambourine_v100_1.mp3"
+      ]
+     }
+    ],
+    "clap": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/clap_v100_1.mp3",
+       "perc/clap_v100_2.mp3",
+       "perc/clap_v100_3.mp3",
+       "perc/clap_v100_4.mp3"
+      ]
+     }
+    ]
+   },
+   "absent": [],
+   "aliases": {},
+   "about": "Small kit played with brushes, a marching bass drum as the kick, with a little of the room: soft and warm."
+  },
+  {
+   "id": "hand-percussion",
+   "name": "Hand percussion",
+   "bytes": 359744,
+   "gain": 0.0,
+   "licence": "CC0 1.0",
+   "source": "Versilian Community Sample Library, https://github.com/sgossner/VCSL; Virtuosity Drums by Versilian Studios and Karoryfer Samples, https://github.com/sfzinstruments/virtuosity_drums",
+   "credit": "",
+   "pieces": {
+    "shaker": [
+     "perc/shaker_v100_1.mp3",
+     "perc/shaker_v100_2.mp3",
+     "perc/shaker_v100_3.mp3",
+     "perc/shaker_v100_4.mp3"
+    ],
+    "tambourine": [
+     "perc/tambourine_v100_1.mp3"
+    ],
+    "tambourine_shake": [
+     "perc/tambourine_shake_v100_1.mp3",
+     "perc/tambourine_shake_v100_2.mp3",
+     "perc/tambourine_shake_v100_3.mp3",
+     "perc/tambourine_shake_v100_4.mp3"
+    ],
+    "clap": [
+     "perc/clap_v100_1.mp3",
+     "perc/clap_v100_2.mp3",
+     "perc/clap_v100_3.mp3",
+     "perc/clap_v100_4.mp3"
+    ],
+    "conga_high": [
+     "perc/conga_high_v100_1.mp3",
+     "perc/conga_high_v100_2.mp3",
+     "perc/conga_high_v100_3.mp3"
+    ],
+    "conga_low": [
+     "perc/conga_low_v100_1.mp3",
+     "perc/conga_low_v100_2.mp3",
+     "perc/conga_low_v100_3.mp3"
+    ],
+    "bongo_high": [
+     "perc/bongo_high_v100_1.mp3",
+     "perc/bongo_high_v100_2.mp3",
+     "perc/bongo_high_v100_3.mp3"
+    ],
+    "bongo_low": [
+     "perc/bongo_low_v100_1.mp3",
+     "perc/bongo_low_v100_2.mp3",
+     "perc/bongo_low_v100_3.mp3"
+    ],
+    "cajon_low": [
+     "perc/cajon_low_v100_1.mp3",
+     "perc/cajon_low_v100_2.mp3"
+    ],
+    "cajon_high": [
+     "perc/cajon_high_v100_1.mp3",
+     "perc/cajon_high_v100_2.mp3"
+    ],
+    "cabasa": [
+     "perc/cabasa_v100_1.mp3",
+     "perc/cabasa_v100_2.mp3",
+     "perc/cabasa_v100_3.mp3"
+    ],
+    "cowbell": [
+     "perc/cowbell_v100_1.mp3",
+     "perc/cowbell_v100_2.mp3"
+    ]
+   },
+   "layers": {
+    "shaker": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/shaker_v100_1.mp3",
+       "perc/shaker_v100_2.mp3",
+       "perc/shaker_v100_3.mp3",
+       "perc/shaker_v100_4.mp3"
+      ]
+     }
+    ],
+    "tambourine": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/tambourine_v50_1.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/tambourine_v100_1.mp3"
+      ]
+     }
+    ],
+    "tambourine_shake": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/tambourine_shake_v100_1.mp3",
+       "perc/tambourine_shake_v100_2.mp3",
+       "perc/tambourine_shake_v100_3.mp3",
+       "perc/tambourine_shake_v100_4.mp3"
+      ]
+     }
+    ],
+    "clap": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/clap_v100_1.mp3",
+       "perc/clap_v100_2.mp3",
+       "perc/clap_v100_3.mp3",
+       "perc/clap_v100_4.mp3"
+      ]
+     }
+    ],
+    "conga_high": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/conga_high_v50_1.mp3",
+       "perc/conga_high_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/conga_high_v100_1.mp3",
+       "perc/conga_high_v100_2.mp3",
+       "perc/conga_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "conga_low": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/conga_low_v50_1.mp3",
+       "perc/conga_low_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/conga_low_v100_1.mp3",
+       "perc/conga_low_v100_2.mp3",
+       "perc/conga_low_v100_3.mp3"
+      ]
+     }
+    ],
+    "bongo_high": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/bongo_high_v50_1.mp3",
+       "perc/bongo_high_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/bongo_high_v100_1.mp3",
+       "perc/bongo_high_v100_2.mp3",
+       "perc/bongo_high_v100_3.mp3"
+      ]
+     }
+    ],
+    "bongo_low": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/bongo_low_v50_1.mp3",
+       "perc/bongo_low_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/bongo_low_v100_1.mp3",
+       "perc/bongo_low_v100_2.mp3",
+       "perc/bongo_low_v100_3.mp3"
+      ]
+     }
+    ],
+    "cajon_low": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/cajon_low_v50_1.mp3",
+       "perc/cajon_low_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/cajon_low_v100_1.mp3",
+       "perc/cajon_low_v100_2.mp3"
+      ]
+     }
+    ],
+    "cajon_high": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/cajon_high_v50_1.mp3",
+       "perc/cajon_high_v50_2.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/cajon_high_v100_1.mp3",
+       "perc/cajon_high_v100_2.mp3"
+      ]
+     }
+    ],
+    "cabasa": [
+     {
+      "vel": 100,
+      "files": [
+       "perc/cabasa_v100_1.mp3",
+       "perc/cabasa_v100_2.mp3",
+       "perc/cabasa_v100_3.mp3"
+      ]
+     }
+    ],
+    "cowbell": [
+     {
+      "vel": 50,
+      "files": [
+       "perc/cowbell_v50_1.mp3"
+      ]
+     },
+     {
+      "vel": 100,
+      "files": [
+       "perc/cowbell_v100_1.mp3",
+       "perc/cowbell_v100_2.mp3"
+      ]
+     }
+    ]
+   },
+   "absent": [
+    "kick",
+    "snare",
+    "rim",
+    "hat_closed",
+    "hat_open",
+    "tom_low",
+    "tom_mid",
+    "tom_high",
+    "ride",
+    "crash"
+   ],
+   "about": "Shaker, tambourine, claps, congas, bongos, cajon, cabasa and cowbell. Not a drum kit: it has no kick, snare, hats, toms or cymbals."
+  }
+ ],
+ "format": {
+  "audio": "MP3 (LAME VBR, with the LAME header that makes decoders drop the encoder padding), 44.1 kHz",
+  "lead": "0: after decodeAudioData the note starts at sample 0 of the buffer (measured in Chromium)",
+  "gain": "dB to apply to the instrument or kit so that all of them are equally loud (-21 LUFS for a loud mid-range note, kits -27 LUFS for a loud snare); never above 0, so one note cannot clip: add your own master gain",
+  "vel": "nominal velocity of the dynamic layer (50 = soft, 100 = loud): pick the layer nearest to the played velocity, then scale its level for the velocities in between",
+  "loop": "instrument \"loop\": true means its samples carry \"loopStart\" and \"loopEnd\" (seconds into the decoded file): set source.loop = true, source.loopStart, source.loopEnd and stop the note with a gain ramp of \"release\" seconds. A sample without them is a one-shot. Ignoring the loop points is safe: every file ends with a fade.",
+  "range": "MIDI notes the instrument is meant to play; no note in it is more than 3 semitones from a sample of every layer",
+  "kits": "\"pieces\" holds the loud hits (round robins: play them in turn or at random); \"layers\" optionally adds a soft layer (vel 50) per piece; \"absent\" lists contract pieces a kit does not have"
+ },
+ "lead": 0
+}

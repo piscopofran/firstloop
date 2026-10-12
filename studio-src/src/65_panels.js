@@ -54,7 +54,7 @@
           S.flags.picked = true;
           if(t0){
             var was = ENG.inst[t0.inst], generic = !was || t0.name === was.name || /^(Instrument|Chords|Bass|Piano|Guitar|Strings|Drums)$/.test(t0.name);
-            t0.inst = id; if(generic && !d.kit) t0.name = d.name.replace(/\s*\(.*\)$/, "").slice(0, 32);
+            t0.inst = id; t0.fam = d.kit ? "" : d.family; if(generic && !d.kit) t0.name = d.name.replace(/\s*\(.*\)$/, "").slice(0, 32);
             // what she hummed is put where the new instrument plays
             var jobs = t0.regions.filter(function(r){ return r.hum && !r.hum.edited; }).map(function(r){ return humRedo(r.id); });
             Promise.all(jobs).then(function(){ chordFollow(); commit("instrument: " + d.name); engSync(); refresh(true); });

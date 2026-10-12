@@ -88,5 +88,7 @@ rep('''  function wsFromRole(role){
     if(role !== "dj" || wsChosen) return;''', '''  function wsFromRole(role){
     if(role === "singer" && !wsChosen){ wsSet("write", { quiet:true }); say("Songwriter workspace: the Studio. Hum a part, hear it on an instrument, record your voice. The Workspace button brings the DJ area and the rest back."); return; }
     if(role !== "dj" || wsChosen) return;''')
+rep('''    if(acctOpen === "signup" && wsIs("dj") && !acctE.role.value) acctE.role.value = "dj";''', '''    if(acctOpen === "signup" && wsIs("dj") && !acctE.role.value) acctE.role.value = "dj";
+    if(acctOpen === "signup" && wsIs("write") && !acctE.role.value) acctE.role.value = "singer";''')
 open(p, 'w', encoding='utf-8').write(s)
 print('hooks2 applied, bytes added', len(s) - n0)

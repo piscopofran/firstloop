@@ -32607,6 +32607,7 @@
     if(!acctE) return;
     // in the DJ workspace the form starts with "DJ" chosen
     if(acctOpen === "signup" && wsIs("dj") && !acctE.role.value) acctE.role.value = "dj";
+    if(acctOpen === "signup" && wsIs("write") && !acctE.role.value) acctE.role.value = "singer";
     try {
       if(acctOpen === "signup") acctE.name.focus({ preventScroll:true });
       else if(acctOpen === "ready") acctE.copy.focus({ preventScroll:true });
@@ -34292,10 +34293,10 @@
         if(!prevSame){
           // after silence or a consonant: the level rises before the detector is sure of a pitch. Walk back
           // (at most 45 ms) to where the level was still within 14 dB of the note's own.
-          fineThr = g.db - 14; k = g.a; var lim = Math.max(0, g.a - Math.round(0.045 / hop));
+          fineThr = g.db - 9; k = g.a; var lim = Math.max(0, g.a - Math.round(0.045 / hop));
           while(k > lim && dbv[k - 1] >= fineThr && dbv[k - 1] <= dbv[k] + 1.5 && cl[k - 1] >= 0.3 && F.hf[k - 1] < 0.5) k--;
-          tA = half + k * hop - 0.006;
-        } else if(g.cut) tA = half + g.a * hop - 0.004;
+          tA = half + k * hop - 0.001;
+        } else if(g.cut) tA = half + g.a * hop + 0.002;
         g.t = Math.max(0, tA); g.e = Math.min(out.dur, tB);
       });
       for(i = 0; i < notes.length - 1; i++) if(notes[i].e > notes[i + 1].t) notes[i].e = notes[i + 1].t;
@@ -34502,7 +34503,20 @@
       }
       return out;
     }
-    return { analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
+    // ---- how far a recorded note is from the pitch it is filed under ----
+    // x: a stretch of the recording after its attack; f0: the pitch it should have. Returns { cents (sharp is positive), clarity }.
+    function tuneOf(x, sr, f0){
+      var D = Math.max(1, Math.floor(sr / (f0 * 110))), i, j;
+      if(D > 1){ var m = Math.floor(x.length / D), y = new Float32Array(m), s; for(i = 0; i < m; i++){ s = 0; for(j = 0; j < D; j++) s += x[i * D + j]; y[i] = s / D; } x = y; sr = sr / D; }
+      var per = sr / f0, lo = Math.floor(per / Math.pow(2, 1.2 / 12)), hi = Math.ceil(per * Math.pow(2, 1.2 / 12)), N = Math.min(x.length - hi - 2, Math.round(Math.max(0.1 * sr, 30 * per)));
+      if(N < per * 6) return { cents:null, clarity:0 };
+      var best = -1, bl = 0, c = new Float64Array(hi + 2), l, sx, e1, e2, a, b;
+      for(l = lo - 1; l <= hi + 1; l++){ sx = 0; e1 = 0; e2 = 0; for(i = 0; i < N; i++){ a = x[i]; b = x[i + l]; sx += a * b; e1 += a * a; e2 += b * b; } c[l] = sx / Math.sqrt(e1 * e2 + 1e-20); if(l >= lo && l <= hi && c[l] > best){ best = c[l]; bl = l; } }
+      if(best < 0.5 || bl === lo || bl === hi) return { cents:null, clarity:best };
+      var d = 0.5 * (c[bl - 1] - c[bl + 1]) / (c[bl - 1] - 2 * c[bl] + c[bl + 1]);
+      return { cents:1200 * Math.log((sr / (bl + d)) / f0) / LOG2, clarity:best };
+    }
+    return { tuneOf:tuneOf, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
              frames:frames, track:track, fitKey:fitKey, chooseGrid:chooseGrid, hz2m:hz2m, m2hz:m2hz, SCALES:SCALES };
   }
     // ---------- Studio: the song and where it is kept ----------
@@ -34536,13 +34550,13 @@
       var used = {}; S.tracks.forEach(function(t){ used[t.color] = (used[t.color] || 0) + 1; });
       var c = 0, best = 1e9; TRACK_COLORS.forEach(function(_, i){ if((used[i] || 0) < best){ best = used[i] || 0; c = i; } });
       return { id:uid("t"), kind:kind, name:name || (kind === "drums" ? "Drums" : kind === "audio" ? "Voice" : "Instrument"), color:c,
-               inst:inst || (kind === "drums" ? "basic:kit" : kind === "audio" ? "" : "basic:piano"),
+               inst:inst || (kind === "drums" ? "basic:kit" : kind === "audio" ? "" : "basic:piano"), fam:kind === "inst" && ENG.inst[inst] ? ENG.inst[inst].family : "",
                vol:0.8, pan:0, mute:false, solo:false, send:kind === "drums" ? 0.08 : 0.18, eq:[0, 0, 0], oct:0, regions:[] };
     }
     // anything read from a file or a backup goes through here before it is trusted
     function fixSong(s){
-      if(!s || typeof s !== "object") return null;
-      var o = newSong(String(s.name || "Song").slice(0, 60)), SIGS = { "4/4":1, "3/4":1, "6/8":1, "2/4":1, "5/4":1, "12/8":1 };
+      if(!s || typeof s !== "object" || Array.isArray(s)) return null;
+      var o = newSong((typeof s.name === "string" && s.name.trim() ? s.name : "Song").slice(0, 60)), SIGS = { "4/4":1, "3/4":1, "6/8":1, "2/4":1, "5/4":1, "12/8":1 };
       o.id = typeof s.id === "string" && /^[\w-]{3,40}$/.test(s.id) ? s.id : o.id;
       o.tempo = clamp(Math.round(+s.tempo || 100), 40, 220);
       if(Array.isArray(s.sig) && SIGS[s.sig[0] + "/" + s.sig[1]]) o.sig = [s.sig[0] | 0, s.sig[1] | 0];
@@ -34554,20 +34568,20 @@
       if(s.loop && s.loop.b > s.loop.a) o.loop = { on:!!s.loop.on, a:Math.max(0, Math.round(s.loop.a)), b:Math.round(s.loop.b) };
       else o.loop = { on:false, a:0, b:bt * 4 };
       (Array.isArray(s.sections) ? s.sections : []).slice(0, 64).forEach(function(q){
-        if(q && q.len > 0) o.sections.push({ id:String(q.id || uid("c")), name:String(q.name || "Section").slice(0, 24), bar:Math.max(0, q.bar | 0), len:Math.max(1, q.len | 0) });
+        if(q && q.len > 0) o.sections.push({ id:/^[\w-]{1,40}$/.test(String(q.id)) ? String(q.id) : uid("c"), name:(typeof q.name === "string" && q.name ? q.name : "Section").slice(0, 24), bar:clamp(q.bar | 0, 0, 990), len:clamp(q.len | 0, 1, 400) });
       });
       o.sections.sort(function(a, b){ return a.bar - b.bar; });
       if(s.lyrics && typeof s.lyrics === "object") Object.keys(s.lyrics).slice(0, 80).forEach(function(k){ if(/^[\w-]{1,40}$/.test(k) && typeof s.lyrics[k] === "string" && s.lyrics[k]) o.lyrics[k] = s.lyrics[k].slice(0, 6000); });
       if(s.flags && typeof s.flags === "object") ["picked", "guided"].forEach(function(k){ if(s.flags[k]) o.flags[k] = true; });
       (Array.isArray(s.chords) ? s.chords : []).slice(0, 2000).forEach(function(c){
-        if(c && c.t >= 0 && c.root >= 0 && c.root < 12) o.chords.push({ t:Math.round(c.t), root:c.root | 0, q:String(c.q || "maj").slice(0, 6) });
+        if(c && c.t >= 0 && c.root >= 0 && c.root < 12) o.chords.push({ t:Math.round(c.t), root:c.root | 0, q:/^[a-z0-9]{1,5}$/.test(String(c.q)) ? String(c.q) : "maj" });
       });
       o.chords.sort(function(a, b){ return a.t - b.t; });
       var pats = s.pats && typeof s.pats === "object" ? s.pats : {};
       (Array.isArray(s.tracks) ? s.tracks : []).slice(0, MAXTRACKS).forEach(function(t){
         if(!t || ["inst", "drums", "audio"].indexOf(t.kind) < 0) return;
-        var n = { id:String(t.id || uid("t")), kind:t.kind, name:String(t.name || "Track").slice(0, 32), color:((t.color | 0) % TRACK_COLORS.length + TRACK_COLORS.length) % TRACK_COLORS.length,
-                  inst:String(t.inst || "").slice(0, 64), vol:clamp(t.vol === undefined ? 0.8 : +t.vol || 0, 0, 1.25), pan:clamp(+t.pan || 0, -1, 1), mute:!!t.mute, solo:!!t.solo,
+        var n = { id:String(t.id || uid("t")), kind:t.kind, name:(typeof t.name === "string" && t.name ? t.name : "Track").slice(0, 32), color:((t.color | 0) % TRACK_COLORS.length + TRACK_COLORS.length) % TRACK_COLORS.length,
+                  inst:(typeof t.inst === "string" ? t.inst : "").slice(0, 64), fam:String(t.fam || "").slice(0, 12), vol:clamp(typeof t.vol === "number" && isFinite(t.vol) ? t.vol : 0.8, 0, 1.25), pan:clamp(+t.pan || 0, -1, 1), mute:!!t.mute, solo:!!t.solo,
                   send:clamp(+t.send || 0, 0, 1), eq:[0, 1, 2].map(function(i){ return clamp(+(t.eq || [])[i] || 0, -12, 12); }), oct:clamp(t.oct | 0, -3, 3), regions:[] };
         (Array.isArray(t.regions) ? t.regions : []).slice(0, 400).forEach(function(r){
           if(!r || !(r.l > 0) || !(r.s >= 0)) return;
@@ -35027,7 +35041,7 @@
         var bass = id === "basic:bass", gtr = id === "basic:guitar";
         var tau0 = clamp((bass ? 1.6 : gtr ? 1.3 : 2.4) * Math.sqrt(261.6 / f0), 0.35, bass ? 3 : 5), len = Math.min(bass ? 3.2 : 6, tau0 * 3.6);
         n = Math.round(len * sr); out = new Float32Array(n);
-        var N = Math.max(1, Math.min(bass ? 14 : 26, Math.floor(0.42 * sr / f0))), B = bass ? 0.00012 : gtr ? 0.00006 : 0.00035 * Math.pow(f0 / 261.6, 0.6);
+        var N = Math.max(1, Math.min(bass ? 14 : 26, Math.floor(0.42 * sr / f0))), B = bass ? 0.00003 : gtr ? 0.00002 : 0.00003 * Math.pow(f0 / 261.6, 0.5);
         for(k = 1; k <= N; k++){
           var fk = k * f0 * Math.sqrt(1 + B * k * k); if(fk > 0.45 * sr) break;
           var comb = Math.abs(Math.sin(Math.PI * k / (gtr ? 5.3 : bass ? 6.2 : 7.7))) + 0.12;
@@ -35042,11 +35056,12 @@
         var fd = Math.round(sr * 0.05); for(i = 0; i < fd; i++) out[n - 1 - i] *= i / fd;
       } else {
         // held sounds: an attack, then a stretch that repeats without a seam (a whole number of cycles of everything in it)
-        var voice = id === "basic:voice", flute = id === "basic:flute", loopSec = flute ? 0.8 : 1.2, M = Math.max(1, Math.round(f0 * loopSec)), Ls = Math.round(M * sr / f0);
+        var voice = id === "basic:voice", flute = id === "basic:flute", loopSec = flute ? 0.8 : (f0 < 140 ? 2.4 : 1.2), M = Math.max(1, Math.round(f0 * loopSec)), Ls = Math.round(M * sr / f0);
         var f = M * sr / Ls, attS = Math.round(sr * (flute ? 0.07 : voice ? 0.12 : 0.22));
         note = 69 + 12 * Math.log(f / 440) / Math.LN2;
         n = attS + Ls + 64; out = new Float32Array(n);
-        var parts = flute ? [[0, 1]] : [[-3, 0.5], [0, 0.6], [2, 0.5], [5, 0.3]];      // whole cycles more or fewer in the loop: slow beating that still closes
+        // whole cycles more or fewer in the loop: slow beating that still closes, a few cents either side of the note
+        var kd = Math.max(1, Math.round(M * 0.0028)), parts = flute ? [[0, 1]] : [[-kd, 0.5], [0, 0.7], [kd, 0.5]];
         var maxH = Math.min(flute ? 5 : voice ? 18 : 22, Math.floor(0.42 * sr / f));
         parts.forEach(function(pt){
           var fp = (M + pt[0]) * sr / Ls;
@@ -35325,7 +35340,7 @@
     function standIn(t){
       var d = ENG.inst[t.inst];
       if(t.kind === "drums") return "basic:kit";
-      var fam = d ? d.family : null, b = BASIC.filter(function(x){ return x.family === fam; })[0];
+      var fam = d ? d.family : (t.fam || null), b = BASIC.filter(function(x){ return x.family === fam; })[0];
       return b ? b.id : "basic:piano";
     }
     function fileBytes(rel){
@@ -35413,14 +35428,22 @@
           return true;
         });
       } else {
+        var autoTune = d.def.tuning !== "keep" && !/(grand|upright)[-_ ]?piano/.test(id);
         d.def.samples.forEach(function(s){
           if(!s || !s.file || !(s.note >= 0)) return;
           total++;
           jobs.push(loadFile(s).then(function(buf){
-            var z = { note:+s.note + (+s.tune || 0) / 100, vel:s.vel | 0 || 100, buf:buf, loop:null, gainDb:+s.gain || 0, off:clamp(+(s.offset !== undefined ? s.offset : (d.def.lead !== undefined ? d.def.lead : lead)) || 0, 0, 1) };
+            var z = { note:+s.note + (+s.tune || 0) / 100, nominal:+s.note, vel:s.vel | 0 || 100, buf:buf, loop:null, gainDb:+s.gain || 0, off:clamp(+(s.offset !== undefined ? s.offset : (d.def.lead !== undefined ? d.def.lead : lead)) || 0, 0, 1) };
             if(d.loop && s.loopEnd > s.loopStart) z.loop = [+s.loopStart, +s.loopEnd];
             else if(d.loop && Array.isArray(s.loop) && s.loop[1] > s.loop[0]) z.loop = [+s.loop[0], +s.loop[1]];
-            d.zones.push(z); tick();
+            d.zones.push(z);
+            // a recording is seldom exactly on its note: where the manifest does not say by how much, it is measured once
+            // (not for acoustic pianos, whose stretched tuning is meant)
+            if(s.tune === undefined && autoTune && typeof dspRun === "function"){
+              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round(0.75 * buf.sampleRate)));
+              return dspRun("tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
+            }
+            tick();
           }, function(){ tick(); }));
         });
         d.p = Promise.all(jobs).then(function(){ if(!d.zones.length) throw new Error("no files"); d.zones.sort(function(a, b){ return a.note - b.note || a.vel - b.vel; }); return true; });
@@ -35454,11 +35477,12 @@
     }
     function pickZone(d, note, vel){
       var zs = d.zones, best = null, bd = 1e9, i, dd;
-      for(i = 0; i < zs.length; i++){ dd = Math.abs(zs[i].note - note); if(dd < bd - 1e-6){ bd = dd; best = zs[i]; } }
+      for(i = 0; i < zs.length; i++){ dd = Math.abs((zs[i].nominal === undefined ? zs[i].note : zs[i].nominal) - note); if(dd < bd - 1e-6){ bd = dd; best = zs[i]; } }
       if(!best) return null;
       // among the zones at that note: the loudness layer nearest to how hard the note is played
       var pick = best, pv = 1e9;
-      for(i = 0; i < zs.length; i++) if(Math.abs(zs[i].note - best.note) < 0.01){ dd = Math.abs(zs[i].vel - vel); if(dd < pv){ pv = dd; pick = zs[i]; } }
+      var nb = best.nominal === undefined ? best.note : best.nominal;
+      for(i = 0; i < zs.length; i++) if(Math.abs((zs[i].nominal === undefined ? zs[i].note : zs[i].nominal) - nb) < 0.01){ dd = Math.abs(zs[i].vel - vel); if(dd < pv){ pv = dd; pick = zs[i]; } }
       return pick;
     }
 
@@ -36145,11 +36169,26 @@
           var lat = H.lat.sec, bleed = !!(bl && bl.heard >= 2);
           // on speakers the count itself measures the round trip, which is exactly the number wanted
           if(bleed && !H.lat.measured){ lat = bl.delay; latStore(bl.delay); }
+          // the clicks are known exactly, so what the microphone caught of them is taken out before listening for notes
+          if(bleed){ try { clickCancel(rec.x, rec.sr, startIn, H, bl.delay); } catch(e3){ if(testMode) console.error(e3); } }
           return dspRun("analyse", [rec.x, rec.sr, { bleed:bleed && o.backing === "song" }]).then(function(an){
             return humLand(H, rec, an, lat, startIn, bleed);
           });
         });
       })["catch"](function(e){ HUM = null; emit("record", { kind:"hum", state:"failed" }); if(o.done) o.done({ ok:false, why:"The take could not be read." }); if(testMode) console.error(e); return null; });
+    }
+    function clickCancel(x, sr, startIn, H, delay){
+      var bt = barTicks(), pt = pulseTicks(), sub = S.sig[1] === 8 && pt !== beatTicks() ? beatTicks() : pt, from = -H.count * bt, to = H.o.bars * bt, tick, hi = clickBuf(ENG.ctx, true).getChannelData(0), lo = clickBuf(ENG.ctx, false).getChannelData(0), n = 0;
+      for(tick = from; tick < to; tick += sub){
+        var c = tick % bt === 0 ? hi : lo, at = Math.round((startIn + tickSec(tick) + delay) * sr), best = 0, bk = 0, k, i, sxy, sxx = 0, L = c.length;
+        if(at < 4 || at + L + 4 > x.length) continue;
+        for(i = 0; i < L; i++) sxx += c[i] * c[i];
+        for(k = -3; k <= 3; k++){ sxy = 0; for(i = 0; i < L; i++) sxy += x[at + k + i] * c[i]; if(Math.abs(sxy) > Math.abs(best)){ best = sxy; bk = k; } }
+        var g = best / sxx; if(Math.abs(g) < 0.002) continue;
+        for(i = 0; i < L; i++) x[at + bk + i] -= g * c[i];
+        n++;
+      }
+      return n;
     }
     function humLand(H, rec, an, lat, startIn, bleed){
       var o = H.o, t = trackById(H.t), out = { ok:false, bleed:bleed, clipped:an.clipped, measured:H.lat.measured || bleed };
@@ -36710,7 +36749,7 @@
       if(!UI.built) return;
       var E = UI.e, total = E.main.clientHeight, minArr = 120, rw = UI.root.clientWidth;
       UI.root.dataset.w = rw >= 1180 ? "l" : rw >= 1000 ? "m" : "s";
-      if(!UI.edH) UI.edH = Math.round(clamp(total * 0.46, 200, 420));
+      if(!UI.edH) UI.edH = Math.round(clamp(total * 0.52, 220, 460));
       var h = UI.edOpen ? clamp(UI.edH, 150, Math.max(150, total - minArr)) : 30;
       E.ed.style.height = h + "px"; E.ed.dataset.open = UI.edOpen ? "true" : "false";
       E.edFold.textContent = UI.edOpen ? "Hide" : "Show";
@@ -37962,12 +38001,12 @@
       var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
       if(bar.dataset.for === sig) return; bar.dataset.for = sig; bar.textContent = "";
       function redo(label){ humRedo(r.id).then(function(res){ if(res){ commit(label); if(res.early) tell(res.early + (res.early === 1 ? " note was" : " notes were") + " sung before the part begins and left out."); } }); }
-      var g = el("div", "st-grp"); g.appendChild(el("span", "st-humtitle", "From your voice")); bar.appendChild(g);
-      g = el("div", "st-grp"); g.appendChild(lbl("Hear"));
-      var hear = seg([["voice", "My voice"], ["notes", "The notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
+      bar.title = "This part came from your voice. These choices are worked out again from the same take.";
+      var g = el("div", "st-grp"); g.appendChild(lbl("Hear"));
+      var hear = seg([["voice", "My voice"], ["notes", "Notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
       hear.id = "sthear"; g.appendChild(hear); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Timing"));
-      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict grid", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
+      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
       tm.id = "sttiming"; g.appendChild(tm); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Pitch"));
       var pm = seg([["semi", "As hummed", "Each note is the nearest note to what you sang"], ["key", "Fit to key", "Notes outside the song’s key move to the nearest one inside it; they are marked with a corner"]], h.pitch, function(v){
@@ -37975,8 +38014,8 @@
         h.pitch = v; redo("pitch: " + (v === "key" ? "fit to the key" : "as hummed")); }, "Pitch");
       pm.id = "stpitch"; g.appendChild(pm); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Octave"));
-      g.appendChild(tbtn("", "Lower", "One octave lower", function(){ h.octave = clamp(h.octave - 1, -4, 4); redo("octave lower"); }));
-      g.appendChild(tbtn("", "Higher", "One octave higher", function(){ h.octave = clamp(h.octave + 1, -4, 4); redo("octave higher"); }));
+      g.appendChild(tbtn("", "−", "One octave lower", function(){ h.octave = clamp(h.octave - 1, -4, 4); redo("octave lower"); }));
+      g.appendChild(tbtn("", "+", "One octave higher", function(){ h.octave = clamp(h.octave + 1, -4, 4); redo("octave higher"); }));
       bar.appendChild(g);
       if(h.edited) bar.appendChild(el("span", "st-note", "Notes were changed by hand: a choice here writes them afresh from the humming."));
       bar.appendChild(el("span", "st-flex"));
@@ -38164,12 +38203,18 @@
     }
     function drumNotes(feelId, vari, bars, withFill){
       var fl = FEELS.filter(function(x){ return x.id === feelId; })[0] || FEELS[0], v = fl.vars[clamp(vari | 0, 0, fl.vars.length - 1)], plan = beatPlan(), notes = [], bt = barTicks();
+      // a bar of two or three beats is made from the four-beat pattern: its first beat, and the beats that carry the backbeat
+      var back2 = ["snare", "rim", "clap"].some(function(pc){ return /[xXo-]/.test(cellOf(v[0][pc], 1, fl.sub)); });
+      if(plan.beats.length === 3 && !back2) plan = { beats:[0, 2, 3] };
+      if(plan.beats.length === 2 && !back2) plan = { beats:[0, 2], compound:plan.compound };
       var beatLen = plan.compound ? PPQ * 1.5 : beatTicks(), bar, b, k;
       for(bar = 0; bar < bars; bar++){
-        var src = withFill && bar === bars - 1 && bars > 1 ? fl.fill : v[bar % v.length];
+        var isFill = withFill && bar === bars - 1 && bars > 1, src = isFill ? fl.fill : v[bar % v.length];
+        // a fill happens at the end of its four beats: a shorter bar takes those
+        var beats = !isFill || plan.beats.length >= 4 ? plan.beats : plan.beats.length === 3 ? [0, 2, 3] : [2, 3];
         Object.keys(src).forEach(function(pc){
           if(!DRUM[pc] || !src[pc]) return;
-          plan.beats.forEach(function(sb, bi){
+          beats.forEach(function(sb, bi){
             var cell = cellOf(src[pc], sb, fl.sub), sub = fl.sub;
             if(plan.compound && sub === 4){ cell = tripletCell(cell, /hat|ride|shaker/.test(pc)); sub = 3; }
             for(k = 0; k < sub; k++){
@@ -38416,14 +38461,16 @@
             } else {
               // walking: the root, two notes of the chord, then a step into the next root
               var step = bi === 0 ? root : bi === 1 ? third : bi === nb - 1 ? fifth : (bi % 2 ? third + (third - root <= 3 ? 4 : 3) : fifth);
-              if(lastBeat && nxt){ var nr = near(nxt.root, root); step = nr === root ? fifth : nr > root ? nr - 1 : nr + 1; }
+              if(lastBeat && nxt && s > sg.t){ var nr = near(nxt.root, root); step = nr === root ? fifth : nr > root ? nr - 1 : nr + 1; }
               put(s, pt * 0.92, bi === 0 ? 98 : 86, step);
             }
           }
           return;
         }
         var v = voicing(c, centre, prev); prev = v;
-        var low = near(c.root, centre - 19), wide = [low, low + 7].concat(v.map(function(p){ return p + (p - low < 12 ? 12 : 0); })).sort(function(x, y){ return x - y; });
+        // the bass note of the chord stays the lowest note, also on an instrument with little room below
+        var lowR = fit(near(c.root, centre - 19)); if(lowR >= v[0]){ if(lowR - 12 >= lo) lowR -= 12; else v = v.map(function(p0){ return p0 <= lowR ? p0 + 12 : p0; }).sort(function(x, y){ return x - y; }); }
+        var low = lowR, wide = [low, low + 7].concat(v.map(function(p){ return p + (p - low < 12 ? 12 : 0); })).sort(function(x, y){ return x - y; });
         function chord(at, l, vel, which, stagger){ (which || v).forEach(function(p, j){ put(at + (stagger || 0) * j, l, vel - (j ? 4 : 0), p); }); }
         if(style === "held") chord(sg.t, end - sg.t, 82);
         else if(style === "pad"){ put(sg.t, end - sg.t + 20, 66, low + 12); v.forEach(function(p, j){ put(sg.t, end - sg.t + 20, 70 - j * 2, p + (j === 0 ? 12 : 0)); }); }
@@ -38529,7 +38576,7 @@
       outs.push(p1);
       for(i = 0; i < 2; i++){
         // another reading: what the earlier ones chose costs a little, so that it differs where the melody allows
-        outs.forEach(function(pa){ pa.forEach(function(ci, bar2){ pen[bar2] = pen[bar2] || {}; pen[bar2][ci] = (pen[bar2][ci] || 0) + 0.45; }); });
+        outs.forEach(function(pa){ pa.forEach(function(ci, bar2){ pen[bar2] = pen[bar2] || {}; pen[bar2][ci] = (pen[bar2][ci] || 0) + 0.9; }); });
         var pn = best(pen); if(!outs.some(function(o){ return o.join() === pn.join(); })) outs.push(pn);
       }
       return outs.map(function(pa){ return pa.map(function(ci, bar2){ return { t:a + bar2 * bt, root:cands[ci].root, q:cands[ci].q, num:cands[ci].num }; }); });
@@ -38752,7 +38799,7 @@
           S.flags.picked = true;
           if(t0){
             var was = ENG.inst[t0.inst], generic = !was || t0.name === was.name || /^(Instrument|Chords|Bass|Piano|Guitar|Strings|Drums)$/.test(t0.name);
-            t0.inst = id; if(generic && !d.kit) t0.name = d.name.replace(/\s*\(.*\)$/, "").slice(0, 32);
+            t0.inst = id; t0.fam = d.kit ? "" : d.family; if(generic && !d.kit) t0.name = d.name.replace(/\s*\(.*\)$/, "").slice(0, 32);
             // what she hummed is put where the new instrument plays
             var jobs = t0.regions.filter(function(r){ return r.hum && !r.hum.edited; }).map(function(r){ return humRedo(r.id); });
             Promise.all(jobs).then(function(){ chordFollow(); commit("instrument: " + d.name); engSync(); refresh(true); });
@@ -39676,7 +39723,7 @@
           var t = trk(a.track); if(!t || t.kind === "audio") return skip("there is no instrument or drum track " + show(a.track));
           var d = inst(a.instrument !== undefined ? a.instrument : a.id, t.kind === "drums"); if(!d) return skip("there is no " + (t.kind === "drums" ? "kit" : "instrument") + " called " + show(a.instrument));
           if(t.inst === d.id) return out.changes.push("“" + t.name + "” already plays on " + d.name);
-          var was = instName(t.inst); t.inst = d.id; S.flags.picked = true;
+          var was = instName(t.inst); t.inst = d.id; t.fam = d.kit ? "" : d.family; S.flags.picked = true;
           // parts that follow the chords are written for the new instrument's range and manner
           t.regions.forEach(function(r){ if(r.gen && !stylesFor(t).some(function(x){ return x[0] === r.gen.style; })) r.gen.style = styleDefault(t); });
           chordFollow();
@@ -39724,7 +39771,8 @@
           if(!t) return skip(a.track !== undefined ? "there is no instrument track " + show(a.track) : "no instrument track is selected; say which track");
           var timing = a.timing === undefined ? "" : String(a.timing).toLowerCase(), grid = ({ "1/4":PPQ, "1/8":PPQ / 2, "1/16":PPQ / 4, "1/8t":PPQ / 3, "1/8 triplet":PPQ / 3, "1/16t":PPQ / 6 })[timing] || 0;
           if(timing && !grid && ["tidy", "strict", "grid"].indexOf(timing) < 0) return skip("timing can be tidy, strict, 1/4, 1/8, 1/16 or 1/8 triplet, not " + show(a.timing));
-          var fitKey2 = a.pitch !== undefined && /key|scale/i.test(String(a.pitch)); if(fitKey2 && !scaleOf()) return skip("the song has no key yet, so notes cannot be fitted to it; set the key first");
+          var fitKey2 = a.pitch !== undefined && /key|scale/i.test(String(a.pitch));
+          if(fitKey2 && !scaleOf()){ fitKey2 = false; skip("the song has no key yet, so notes cannot be fitted to it; set the key first"); if(!timing) return; }
           if(!timing && !fitKey2) return skip("say what to tidy: timing, pitch, or both");
           var only = a.bar !== undefined ? barOf(a.bar) : null, moved = 0, fitted = 0, parts = 0, done = {};
           t.regions.forEach(function(r){

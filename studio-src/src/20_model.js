@@ -29,13 +29,13 @@
       var used = {}; S.tracks.forEach(function(t){ used[t.color] = (used[t.color] || 0) + 1; });
       var c = 0, best = 1e9; TRACK_COLORS.forEach(function(_, i){ if((used[i] || 0) < best){ best = used[i] || 0; c = i; } });
       return { id:uid("t"), kind:kind, name:name || (kind === "drums" ? "Drums" : kind === "audio" ? "Voice" : "Instrument"), color:c,
-               inst:inst || (kind === "drums" ? "basic:kit" : kind === "audio" ? "" : "basic:piano"),
+               inst:inst || (kind === "drums" ? "basic:kit" : kind === "audio" ? "" : "basic:piano"), fam:kind === "inst" && ENG.inst[inst] ? ENG.inst[inst].family : "",
                vol:0.8, pan:0, mute:false, solo:false, send:kind === "drums" ? 0.08 : 0.18, eq:[0, 0, 0], oct:0, regions:[] };
     }
     // anything read from a file or a backup goes through here before it is trusted
     function fixSong(s){
-      if(!s || typeof s !== "object") return null;
-      var o = newSong(String(s.name || "Song").slice(0, 60)), SIGS = { "4/4":1, "3/4":1, "6/8":1, "2/4":1, "5/4":1, "12/8":1 };
+      if(!s || typeof s !== "object" || Array.isArray(s)) return null;
+      var o = newSong((typeof s.name === "string" && s.name.trim() ? s.name : "Song").slice(0, 60)), SIGS = { "4/4":1, "3/4":1, "6/8":1, "2/4":1, "5/4":1, "12/8":1 };
       o.id = typeof s.id === "string" && /^[\w-]{3,40}$/.test(s.id) ? s.id : o.id;
       o.tempo = clamp(Math.round(+s.tempo || 100), 40, 220);
       if(Array.isArray(s.sig) && SIGS[s.sig[0] + "/" + s.sig[1]]) o.sig = [s.sig[0] | 0, s.sig[1] | 0];
@@ -47,20 +47,20 @@
       if(s.loop && s.loop.b > s.loop.a) o.loop = { on:!!s.loop.on, a:Math.max(0, Math.round(s.loop.a)), b:Math.round(s.loop.b) };
       else o.loop = { on:false, a:0, b:bt * 4 };
       (Array.isArray(s.sections) ? s.sections : []).slice(0, 64).forEach(function(q){
-        if(q && q.len > 0) o.sections.push({ id:String(q.id || uid("c")), name:String(q.name || "Section").slice(0, 24), bar:Math.max(0, q.bar | 0), len:Math.max(1, q.len | 0) });
+        if(q && q.len > 0) o.sections.push({ id:/^[\w-]{1,40}$/.test(String(q.id)) ? String(q.id) : uid("c"), name:(typeof q.name === "string" && q.name ? q.name : "Section").slice(0, 24), bar:clamp(q.bar | 0, 0, 990), len:clamp(q.len | 0, 1, 400) });
       });
       o.sections.sort(function(a, b){ return a.bar - b.bar; });
       if(s.lyrics && typeof s.lyrics === "object") Object.keys(s.lyrics).slice(0, 80).forEach(function(k){ if(/^[\w-]{1,40}$/.test(k) && typeof s.lyrics[k] === "string" && s.lyrics[k]) o.lyrics[k] = s.lyrics[k].slice(0, 6000); });
       if(s.flags && typeof s.flags === "object") ["picked", "guided"].forEach(function(k){ if(s.flags[k]) o.flags[k] = true; });
       (Array.isArray(s.chords) ? s.chords : []).slice(0, 2000).forEach(function(c){
-        if(c && c.t >= 0 && c.root >= 0 && c.root < 12) o.chords.push({ t:Math.round(c.t), root:c.root | 0, q:String(c.q || "maj").slice(0, 6) });
+        if(c && c.t >= 0 && c.root >= 0 && c.root < 12) o.chords.push({ t:Math.round(c.t), root:c.root | 0, q:/^[a-z0-9]{1,5}$/.test(String(c.q)) ? String(c.q) : "maj" });
       });
       o.chords.sort(function(a, b){ return a.t - b.t; });
       var pats = s.pats && typeof s.pats === "object" ? s.pats : {};
       (Array.isArray(s.tracks) ? s.tracks : []).slice(0, MAXTRACKS).forEach(function(t){
         if(!t || ["inst", "drums", "audio"].indexOf(t.kind) < 0) return;
-        var n = { id:String(t.id || uid("t")), kind:t.kind, name:String(t.name || "Track").slice(0, 32), color:((t.color | 0) % TRACK_COLORS.length + TRACK_COLORS.length) % TRACK_COLORS.length,
-                  inst:String(t.inst || "").slice(0, 64), vol:clamp(t.vol === undefined ? 0.8 : +t.vol || 0, 0, 1.25), pan:clamp(+t.pan || 0, -1, 1), mute:!!t.mute, solo:!!t.solo,
+        var n = { id:String(t.id || uid("t")), kind:t.kind, name:(typeof t.name === "string" && t.name ? t.name : "Track").slice(0, 32), color:((t.color | 0) % TRACK_COLORS.length + TRACK_COLORS.length) % TRACK_COLORS.length,
+                  inst:(typeof t.inst === "string" ? t.inst : "").slice(0, 64), fam:String(t.fam || "").slice(0, 12), vol:clamp(typeof t.vol === "number" && isFinite(t.vol) ? t.vol : 0.8, 0, 1.25), pan:clamp(+t.pan || 0, -1, 1), mute:!!t.mute, solo:!!t.solo,
                   send:clamp(+t.send || 0, 0, 1), eq:[0, 1, 2].map(function(i){ return clamp(+(t.eq || [])[i] || 0, -12, 12); }), oct:clamp(t.oct | 0, -3, 3), regions:[] };
         (Array.isArray(t.regions) ? t.regions : []).slice(0, 400).forEach(function(r){
           if(!r || !(r.l > 0) || !(r.s >= 0)) return;

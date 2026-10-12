@@ -385,10 +385,10 @@
         if(!prevSame){
           // after silence or a consonant: the level rises before the detector is sure of a pitch. Walk back
           // (at most 45 ms) to where the level was still within 14 dB of the note's own.
-          fineThr = g.db - 14; k = g.a; var lim = Math.max(0, g.a - Math.round(0.045 / hop));
+          fineThr = g.db - 9; k = g.a; var lim = Math.max(0, g.a - Math.round(0.045 / hop));
           while(k > lim && dbv[k - 1] >= fineThr && dbv[k - 1] <= dbv[k] + 1.5 && cl[k - 1] >= 0.3 && F.hf[k - 1] < 0.5) k--;
-          tA = half + k * hop - 0.006;
-        } else if(g.cut) tA = half + g.a * hop - 0.004;
+          tA = half + k * hop - 0.001;
+        } else if(g.cut) tA = half + g.a * hop + 0.002;
         g.t = Math.max(0, tA); g.e = Math.min(out.dur, tB);
       });
       for(i = 0; i < notes.length - 1; i++) if(notes[i].e > notes[i + 1].t) notes[i].e = notes[i + 1].t;
@@ -595,6 +595,19 @@
       }
       return out;
     }
-    return { analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
+    // ---- how far a recorded note is from the pitch it is filed under ----
+    // x: a stretch of the recording after its attack; f0: the pitch it should have. Returns { cents (sharp is positive), clarity }.
+    function tuneOf(x, sr, f0){
+      var D = Math.max(1, Math.floor(sr / (f0 * 110))), i, j;
+      if(D > 1){ var m = Math.floor(x.length / D), y = new Float32Array(m), s; for(i = 0; i < m; i++){ s = 0; for(j = 0; j < D; j++) s += x[i * D + j]; y[i] = s / D; } x = y; sr = sr / D; }
+      var per = sr / f0, lo = Math.floor(per / Math.pow(2, 1.2 / 12)), hi = Math.ceil(per * Math.pow(2, 1.2 / 12)), N = Math.min(x.length - hi - 2, Math.round(Math.max(0.1 * sr, 30 * per)));
+      if(N < per * 6) return { cents:null, clarity:0 };
+      var best = -1, bl = 0, c = new Float64Array(hi + 2), l, sx, e1, e2, a, b;
+      for(l = lo - 1; l <= hi + 1; l++){ sx = 0; e1 = 0; e2 = 0; for(i = 0; i < N; i++){ a = x[i]; b = x[i + l]; sx += a * b; e1 += a * a; e2 += b * b; } c[l] = sx / Math.sqrt(e1 * e2 + 1e-20); if(l >= lo && l <= hi && c[l] > best){ best = c[l]; bl = l; } }
+      if(best < 0.5 || bl === lo || bl === hi) return { cents:null, clarity:best };
+      var d = 0.5 * (c[bl - 1] - c[bl + 1]) / (c[bl - 1] - 2 * c[bl] + c[bl + 1]);
+      return { cents:1200 * Math.log((sr / (bl + d)) / f0) / LOG2, clarity:best };
+    }
+    return { tuneOf:tuneOf, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
              frames:frames, track:track, fitKey:fitKey, chooseGrid:chooseGrid, hz2m:hz2m, m2hz:m2hz, SCALES:SCALES };
   }

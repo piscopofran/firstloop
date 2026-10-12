@@ -147,4 +147,25 @@ function wav(x, sr){
   for(let i = 0; i < x.length; i++) b.writeInt16LE(Math.round(Math.max(-1, Math.min(1, x[i])) * 32767), 44 + i * 2);
   return b;
 }
-module.exports = { sing, addNoise, backing, mix, gain, melody, wav, rng, m2hz, rmsOf, activeRms };
+// a laptop's built-in microphone: little below 250 Hz, a peak around 3 kHz, nothing much above 7 kHz, and its own hiss
+function biquad(x, sr, type, f0, Q){
+  const w = 2 * Math.PI * f0 / sr, c = Math.cos(w), al = Math.sin(w) / (2 * Q); let b0, b1, b2, a0 = 1 + al, a1 = -2 * c, a2 = 1 - al;
+  if(type === 'hp'){ b0 = (1 + c) / 2; b1 = -(1 + c); b2 = (1 + c) / 2; } else if(type === 'lp'){ b0 = (1 - c) / 2; b1 = 1 - c; b2 = (1 - c) / 2; } else { b0 = 1 + al * 2; b1 = -2 * c; b2 = 1 - al * 2; }
+  const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+  for(let i = 0; i < x.length; i++){ const v = (b0 * x[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2) / a0; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v; }
+  return y;
+}
+function laptop(x, sr, snrDb){
+  let y = biquad(biquad(x, sr, 'hp', 250, 0.7), sr, 'hp', 250, 0.7); y = biquad(y, sr, 'pk', 3000, 1.2); y = biquad(biquad(y, sr, 'lp', 7000, 0.7), sr, 'lp', 7000, 0.7);
+  return addNoise(y, sr, snrDb === undefined ? 24 : snrDb, 31);
+}
+// the metronome coming out of the speakers into the microphone: the app's own click on every beat, high on the bar
+function clickBleed(len, sr, bpm, start){
+  const y = new Float32Array(len), beat = 60 / bpm;
+  for(let k = 0; (start || 0) + k * beat < len / sr; k++){
+    const a = Math.round(((start || 0) + k * beat) * sr), f = k % 4 === 0 ? 1568 : 1046.5, n = Math.round(sr * 0.03);
+    for(let i = 0; i < n && a + i < len; i++){ const e = Math.exp(-i / sr * 160) * Math.min(1, i / 8); y[a + i] += e * (Math.sin(2 * Math.PI * f * i / sr) + 0.3 * Math.sin(2 * Math.PI * f * 2.76 * i / sr)) * 0.6; }
+  }
+  return y;
+}
+module.exports = { sing, addNoise, backing, mix, gain, melody, wav, rng, m2hz, rmsOf, activeRms, laptop, clickBleed, biquad };

@@ -350,7 +350,7 @@
       if(!UI.built) return;
       var E = UI.e, total = E.main.clientHeight, minArr = 120, rw = UI.root.clientWidth;
       UI.root.dataset.w = rw >= 1180 ? "l" : rw >= 1000 ? "m" : "s";
-      if(!UI.edH) UI.edH = Math.round(clamp(total * 0.46, 200, 420));
+      if(!UI.edH) UI.edH = Math.round(clamp(total * 0.52, 220, 460));
       var h = UI.edOpen ? clamp(UI.edH, 150, Math.max(150, total - minArr)) : 30;
       E.ed.style.height = h + "px"; E.ed.dataset.open = UI.edOpen ? "true" : "false";
       E.edFold.textContent = UI.edOpen ? "Hide" : "Show";

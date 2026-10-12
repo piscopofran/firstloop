@@ -217,12 +217,12 @@
       var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
       if(bar.dataset.for === sig) return; bar.dataset.for = sig; bar.textContent = "";
       function redo(label){ humRedo(r.id).then(function(res){ if(res){ commit(label); if(res.early) tell(res.early + (res.early === 1 ? " note was" : " notes were") + " sung before the part begins and left out."); } }); }
-      var g = el("div", "st-grp"); g.appendChild(el("span", "st-humtitle", "From your voice")); bar.appendChild(g);
-      g = el("div", "st-grp"); g.appendChild(lbl("Hear"));
-      var hear = seg([["voice", "My voice"], ["notes", "The notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
+      bar.title = "This part came from your voice. These choices are worked out again from the same take.";
+      var g = el("div", "st-grp"); g.appendChild(lbl("Hear"));
+      var hear = seg([["voice", "My voice"], ["notes", "Notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
       hear.id = "sthear"; g.appendChild(hear); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Timing"));
-      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict grid", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
+      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
       tm.id = "sttiming"; g.appendChild(tm); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Pitch"));
       var pm = seg([["semi", "As hummed", "Each note is the nearest note to what you sang"], ["key", "Fit to key", "Notes outside the song’s key move to the nearest one inside it; they are marked with a corner"]], h.pitch, function(v){
@@ -230,8 +230,8 @@
         h.pitch = v; redo("pitch: " + (v === "key" ? "fit to the key" : "as hummed")); }, "Pitch");
       pm.id = "stpitch"; g.appendChild(pm); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Octave"));
-      g.appendChild(tbtn("", "Lower", "One octave lower", function(){ h.octave = clamp(h.octave - 1, -4, 4); redo("octave lower"); }));
-      g.appendChild(tbtn("", "Higher", "One octave higher", function(){ h.octave = clamp(h.octave + 1, -4, 4); redo("octave higher"); }));
+      g.appendChild(tbtn("", "−", "One octave lower", function(){ h.octave = clamp(h.octave - 1, -4, 4); redo("octave lower"); }));
+      g.appendChild(tbtn("", "+", "One octave higher", function(){ h.octave = clamp(h.octave + 1, -4, 4); redo("octave higher"); }));
       bar.appendChild(g);
       if(h.edited) bar.appendChild(el("span", "st-note", "Notes were changed by hand: a choice here writes them afresh from the humming."));
       bar.appendChild(el("span", "st-flex"));
@@ -419,12 +419,18 @@
     }
     function drumNotes(feelId, vari, bars, withFill){
       var fl = FEELS.filter(function(x){ return x.id === feelId; })[0] || FEELS[0], v = fl.vars[clamp(vari | 0, 0, fl.vars.length - 1)], plan = beatPlan(), notes = [], bt = barTicks();
+      // a bar of two or three beats is made from the four-beat pattern: its first beat, and the beats that carry the backbeat
+      var back2 = ["snare", "rim", "clap"].some(function(pc){ return /[xXo-]/.test(cellOf(v[0][pc], 1, fl.sub)); });
+      if(plan.beats.length === 3 && !back2) plan = { beats:[0, 2, 3] };
+      if(plan.beats.length === 2 && !back2) plan = { beats:[0, 2], compound:plan.compound };
       var beatLen = plan.compound ? PPQ * 1.5 : beatTicks(), bar, b, k;
       for(bar = 0; bar < bars; bar++){
-        var src = withFill && bar === bars - 1 && bars > 1 ? fl.fill : v[bar % v.length];
+        var isFill = withFill && bar === bars - 1 && bars > 1, src = isFill ? fl.fill : v[bar % v.length];
+        // a fill happens at the end of its four beats: a shorter bar takes those
+        var beats = !isFill || plan.beats.length >= 4 ? plan.beats : plan.beats.length === 3 ? [0, 2, 3] : [2, 3];
         Object.keys(src).forEach(function(pc){
           if(!DRUM[pc] || !src[pc]) return;
-          plan.beats.forEach(function(sb, bi){
+          beats.forEach(function(sb, bi){
             var cell = cellOf(src[pc], sb, fl.sub), sub = fl.sub;
             if(plan.compound && sub === 4){ cell = tripletCell(cell, /hat|ride|shaker/.test(pc)); sub = 3; }
             for(k = 0; k < sub; k++){
@@ -671,14 +677,16 @@
             } else {
               // walking: the root, two notes of the chord, then a step into the next root
               var step = bi === 0 ? root : bi === 1 ? third : bi === nb - 1 ? fifth : (bi % 2 ? third + (third - root <= 3 ? 4 : 3) : fifth);
-              if(lastBeat && nxt){ var nr = near(nxt.root, root); step = nr === root ? fifth : nr > root ? nr - 1 : nr + 1; }
+              if(lastBeat && nxt && s > sg.t){ var nr = near(nxt.root, root); step = nr === root ? fifth : nr > root ? nr - 1 : nr + 1; }
               put(s, pt * 0.92, bi === 0 ? 98 : 86, step);
             }
           }
           return;
         }
         var v = voicing(c, centre, prev); prev = v;
-        var low = near(c.root, centre - 19), wide = [low, low + 7].concat(v.map(function(p){ return p + (p - low < 12 ? 12 : 0); })).sort(function(x, y){ return x - y; });
+        // the bass note of the chord stays the lowest note, also on an instrument with little room below
+        var lowR = fit(near(c.root, centre - 19)); if(lowR >= v[0]){ if(lowR - 12 >= lo) lowR -= 12; else v = v.map(function(p0){ return p0 <= lowR ? p0 + 12 : p0; }).sort(function(x, y){ return x - y; }); }
+        var low = lowR, wide = [low, low + 7].concat(v.map(function(p){ return p + (p - low < 12 ? 12 : 0); })).sort(function(x, y){ return x - y; });
         function chord(at, l, vel, which, stagger){ (which || v).forEach(function(p, j){ put(at + (stagger || 0) * j, l, vel - (j ? 4 : 0), p); }); }
         if(style === "held") chord(sg.t, end - sg.t, 82);
         else if(style === "pad"){ put(sg.t, end - sg.t + 20, 66, low + 12); v.forEach(function(p, j){ put(sg.t, end - sg.t + 20, 70 - j * 2, p + (j === 0 ? 12 : 0)); }); }
@@ -784,7 +792,7 @@
       outs.push(p1);
       for(i = 0; i < 2; i++){
         // another reading: what the earlier ones chose costs a little, so that it differs where the melody allows
-        outs.forEach(function(pa){ pa.forEach(function(ci, bar2){ pen[bar2] = pen[bar2] || {}; pen[bar2][ci] = (pen[bar2][ci] || 0) + 0.45; }); });
+        outs.forEach(function(pa){ pa.forEach(function(ci, bar2){ pen[bar2] = pen[bar2] || {}; pen[bar2][ci] = (pen[bar2][ci] || 0) + 0.9; }); });
         var pn = best(pen); if(!outs.some(function(o){ return o.join() === pn.join(); })) outs.push(pn);
       }
       return outs.map(function(pa){ return pa.map(function(ci, bar2){ return { t:a + bar2 * bt, root:cands[ci].root, q:cands[ci].q, num:cands[ci].num }; }); });

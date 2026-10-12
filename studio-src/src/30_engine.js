@@ -51,7 +51,7 @@
         var bass = id === "basic:bass", gtr = id === "basic:guitar";
         var tau0 = clamp((bass ? 1.6 : gtr ? 1.3 : 2.4) * Math.sqrt(261.6 / f0), 0.35, bass ? 3 : 5), len = Math.min(bass ? 3.2 : 6, tau0 * 3.6);
         n = Math.round(len * sr); out = new Float32Array(n);
-        var N = Math.max(1, Math.min(bass ? 14 : 26, Math.floor(0.42 * sr / f0))), B = bass ? 0.00012 : gtr ? 0.00006 : 0.00035 * Math.pow(f0 / 261.6, 0.6);
+        var N = Math.max(1, Math.min(bass ? 14 : 26, Math.floor(0.42 * sr / f0))), B = bass ? 0.00003 : gtr ? 0.00002 : 0.00003 * Math.pow(f0 / 261.6, 0.5);
         for(k = 1; k <= N; k++){
           var fk = k * f0 * Math.sqrt(1 + B * k * k); if(fk > 0.45 * sr) break;
           var comb = Math.abs(Math.sin(Math.PI * k / (gtr ? 5.3 : bass ? 6.2 : 7.7))) + 0.12;
@@ -66,11 +66,12 @@
         var fd = Math.round(sr * 0.05); for(i = 0; i < fd; i++) out[n - 1 - i] *= i / fd;
       } else {
         // held sounds: an attack, then a stretch that repeats without a seam (a whole number of cycles of everything in it)
-        var voice = id === "basic:voice", flute = id === "basic:flute", loopSec = flute ? 0.8 : 1.2, M = Math.max(1, Math.round(f0 * loopSec)), Ls = Math.round(M * sr / f0);
+        var voice = id === "basic:voice", flute = id === "basic:flute", loopSec = flute ? 0.8 : (f0 < 140 ? 2.4 : 1.2), M = Math.max(1, Math.round(f0 * loopSec)), Ls = Math.round(M * sr / f0);
         var f = M * sr / Ls, attS = Math.round(sr * (flute ? 0.07 : voice ? 0.12 : 0.22));
         note = 69 + 12 * Math.log(f / 440) / Math.LN2;
         n = attS + Ls + 64; out = new Float32Array(n);
-        var parts = flute ? [[0, 1]] : [[-3, 0.5], [0, 0.6], [2, 0.5], [5, 0.3]];      // whole cycles more or fewer in the loop: slow beating that still closes
+        // whole cycles more or fewer in the loop: slow beating that still closes, a few cents either side of the note
+        var kd = Math.max(1, Math.round(M * 0.0028)), parts = flute ? [[0, 1]] : [[-kd, 0.5], [0, 0.7], [kd, 0.5]];
         var maxH = Math.min(flute ? 5 : voice ? 18 : 22, Math.floor(0.42 * sr / f));
         parts.forEach(function(pt){
           var fp = (M + pt[0]) * sr / Ls;
@@ -349,7 +350,7 @@
     function standIn(t){
       var d = ENG.inst[t.inst];
       if(t.kind === "drums") return "basic:kit";
-      var fam = d ? d.family : null, b = BASIC.filter(function(x){ return x.family === fam; })[0];
+      var fam = d ? d.family : (t.fam || null), b = BASIC.filter(function(x){ return x.family === fam; })[0];
       return b ? b.id : "basic:piano";
     }
     function fileBytes(rel){
@@ -437,14 +438,22 @@
           return true;
         });
       } else {
+        var autoTune = d.def.tuning !== "keep" && !/(grand|upright)[-_ ]?piano/.test(id);
         d.def.samples.forEach(function(s){
           if(!s || !s.file || !(s.note >= 0)) return;
           total++;
           jobs.push(loadFile(s).then(function(buf){
-            var z = { note:+s.note + (+s.tune || 0) / 100, vel:s.vel | 0 || 100, buf:buf, loop:null, gainDb:+s.gain || 0, off:clamp(+(s.offset !== undefined ? s.offset : (d.def.lead !== undefined ? d.def.lead : lead)) || 0, 0, 1) };
+            var z = { note:+s.note + (+s.tune || 0) / 100, nominal:+s.note, vel:s.vel | 0 || 100, buf:buf, loop:null, gainDb:+s.gain || 0, off:clamp(+(s.offset !== undefined ? s.offset : (d.def.lead !== undefined ? d.def.lead : lead)) || 0, 0, 1) };
             if(d.loop && s.loopEnd > s.loopStart) z.loop = [+s.loopStart, +s.loopEnd];
             else if(d.loop && Array.isArray(s.loop) && s.loop[1] > s.loop[0]) z.loop = [+s.loop[0], +s.loop[1]];
-            d.zones.push(z); tick();
+            d.zones.push(z);
+            // a recording is seldom exactly on its note: where the manifest does not say by how much, it is measured once
+            // (not for acoustic pianos, whose stretched tuning is meant)
+            if(s.tune === undefined && autoTune && typeof dspRun === "function"){
+              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round(0.75 * buf.sampleRate)));
+              return dspRun("tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
+            }
+            tick();
           }, function(){ tick(); }));
         });
         d.p = Promise.all(jobs).then(function(){ if(!d.zones.length) throw new Error("no files"); d.zones.sort(function(a, b){ return a.note - b.note || a.vel - b.vel; }); return true; });
@@ -478,11 +487,12 @@
     }
     function pickZone(d, note, vel){
       var zs = d.zones, best = null, bd = 1e9, i, dd;
-      for(i = 0; i < zs.length; i++){ dd = Math.abs(zs[i].note - note); if(dd < bd - 1e-6){ bd = dd; best = zs[i]; } }
+      for(i = 0; i < zs.length; i++){ dd = Math.abs((zs[i].nominal === undefined ? zs[i].note : zs[i].nominal) - note); if(dd < bd - 1e-6){ bd = dd; best = zs[i]; } }
       if(!best) return null;
       // among the zones at that note: the loudness layer nearest to how hard the note is played
       var pick = best, pv = 1e9;
-      for(i = 0; i < zs.length; i++) if(Math.abs(zs[i].note - best.note) < 0.01){ dd = Math.abs(zs[i].vel - vel); if(dd < pv){ pv = dd; pick = zs[i]; } }
+      var nb = best.nominal === undefined ? best.note : best.nominal;
+      for(i = 0; i < zs.length; i++) if(Math.abs((zs[i].nominal === undefined ? zs[i].note : zs[i].nominal) - nb) < 0.01){ dd = Math.abs(zs[i].vel - vel); if(dd < pv){ pv = dd; pick = zs[i]; } }
       return pick;
     }
 

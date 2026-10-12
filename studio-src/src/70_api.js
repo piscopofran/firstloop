@@ -193,7 +193,7 @@
           var t = trk(a.track); if(!t || t.kind === "audio") return skip("there is no instrument or drum track " + show(a.track));
           var d = inst(a.instrument !== undefined ? a.instrument : a.id, t.kind === "drums"); if(!d) return skip("there is no " + (t.kind === "drums" ? "kit" : "instrument") + " called " + show(a.instrument));
           if(t.inst === d.id) return out.changes.push("“" + t.name + "” already plays on " + d.name);
-          var was = instName(t.inst); t.inst = d.id; S.flags.picked = true;
+          var was = instName(t.inst); t.inst = d.id; t.fam = d.kit ? "" : d.family; S.flags.picked = true;
           // parts that follow the chords are written for the new instrument's range and manner
           t.regions.forEach(function(r){ if(r.gen && !stylesFor(t).some(function(x){ return x[0] === r.gen.style; })) r.gen.style = styleDefault(t); });
           chordFollow();
@@ -241,7 +241,8 @@
           if(!t) return skip(a.track !== undefined ? "there is no instrument track " + show(a.track) : "no instrument track is selected; say which track");
           var timing = a.timing === undefined ? "" : String(a.timing).toLowerCase(), grid = ({ "1/4":PPQ, "1/8":PPQ / 2, "1/16":PPQ / 4, "1/8t":PPQ / 3, "1/8 triplet":PPQ / 3, "1/16t":PPQ / 6 })[timing] || 0;
           if(timing && !grid && ["tidy", "strict", "grid"].indexOf(timing) < 0) return skip("timing can be tidy, strict, 1/4, 1/8, 1/16 or 1/8 triplet, not " + show(a.timing));
-          var fitKey2 = a.pitch !== undefined && /key|scale/i.test(String(a.pitch)); if(fitKey2 && !scaleOf()) return skip("the song has no key yet, so notes cannot be fitted to it; set the key first");
+          var fitKey2 = a.pitch !== undefined && /key|scale/i.test(String(a.pitch));
+          if(fitKey2 && !scaleOf()){ fitKey2 = false; skip("the song has no key yet, so notes cannot be fitted to it; set the key first"); if(!timing) return; }
           if(!timing && !fitKey2) return skip("say what to tidy: timing, pitch, or both");
           var only = a.bar !== undefined ? barOf(a.bar) : null, moved = 0, fitted = 0, parts = 0, done = {};
           t.regions.forEach(function(r){

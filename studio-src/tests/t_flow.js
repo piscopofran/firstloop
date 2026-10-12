@@ -22,7 +22,7 @@ const shot = process.argv.includes('--shots');
   await S('03-hum-sheet');
   // simulated round trip of 48 ms, known to the app as measured
   const LAT = 0.048;
-  await p.evaluate(l => STUDIO._t.latStore(l), LAT);
+  await p.evaluate(l => { STUDIO._t.MIC.label = 'test input'; return STUDIO._t.latStore(l); }, LAT);
   const bass = L.tune([[40, 1], [40, 0.5], [43, 0.5], [45, 1], [40, 1], [47, 1.5], [45, 0.5], [43, 1], [40, 1], [45, 1], [45, 1], [43, 1], [40, 1], [38, 2], [40, 2]], 100, { voice:'hum' });
   const idB = await L.prep(p, bass.x, bass.sr);
   await p.click('#sthumgo');

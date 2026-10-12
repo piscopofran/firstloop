@@ -11,16 +11,16 @@ module.exports = { LIB };
 
 function score(truth, notes){
   // each sung note is looked for among the detected ones: nearest start within 110 ms
-  const used = new Set(); let ok = 0, found = 0; const errs = [], miss = [];
+  const used = new Set(); let ok = 0, found = 0; const errs = [], miss = [], cents = [];
   for(const t of truth){
     let best = -1, bd = 0.11;
     notes.forEach((n, i) => { if(used.has(i)) return; const d = Math.abs(n.t - t.t); if(d < bd){ bd = d; best = i; } });
     if(best < 0){ miss.push(t); continue; }
-    used.add(best); found++; errs.push(notes[best].t - t.t);
+    used.add(best); found++; errs.push(notes[best].t - t.t); cents.push(Math.abs(notes[best].p - (t.m + (t.tune || 0) / 100)) * 100);
     if(notes[best].n === Math.round(t.m + (t.tune || 0))) ok++; else miss.push(Object.assign({ got: notes[best].n, gotp: notes[best].p }, t));
   }
   const abs = errs.map(Math.abs).sort((a, b) => a - b);
-  return { n: truth.length, ok, found, extra: notes.length - used.size, med: abs.length ? abs[abs.length >> 1] : 0, p90: abs.length ? abs[Math.floor(abs.length * 0.9)] : 0,
+  return { n: truth.length, ok, found, extra: notes.length - used.size, det: notes.length, cents, errs, med: abs.length ? abs[abs.length >> 1] : 0, p90: abs.length ? abs[Math.floor(abs.length * 0.9)] : 0,
            bias: errs.length ? errs.reduce((a, b) => a + b, 0) / errs.length : 0, miss };
 }
 const C = 60;
@@ -78,6 +78,21 @@ add('hard', 'speaker bleed -18 dB, legato scale', SG.melody(TUNES.scale, 100), {
 add('hard', 'clipped (x6 into full scale)', SG.melody(TUNES.tune, 100), { style: 'da' }, x => SG.gain(x, 6, true));
 add('hard', 'very quiet (-46 dBFS peak) + faint noise', SG.melody(TUNES.tune, 100), { style: 'da' }, (x, sr) => SG.gain(SG.addNoise(x, sr, 28), 0.012));
 add('hard', 'fast 160 eighths, vibrato-less, noise 20', SG.melody(TUNES.eighths, 160), { style: 'da' }, (x, sr) => SG.addNoise(x, sr, 20));
+// ---- v34: the ranges of a man and a woman, a laptop's microphone, the metronome in the room ----
+add('clean', 'baritone ah A2-A3, da, 96', SG.melody(tr(TUNES.tune, -15), 96), { style: 'da', voice: 'ah' });
+add('clean', 'bass voice E2-E3 legato ah, 84', SG.melody(tr(TUNES.scale, -20), 84), { style: 'legato', voice: 'ah' });
+add('clean', 'tenor oo C3-C4, da, 110', SG.melody(tr(TUNES.tune, -12), 110), { style: 'da', voice: 'oo' });
+add('clean', 'alto ee G3-G4 legato, 100', SG.melody(tr(TUNES.scale, -5), 100), { style: 'legato', voice: 'ee' });
+add('clean', 'woman humming a bass line an octave up (G3), 92', SG.melody(tr(TUNES.bass, 12), 92), { style: 'da', voice: 'hum' });
+add('clean', 'glides between notes 80 ms, eighths, 120', SG.melody(TUNES.eighths, 120), { style: 'legato', porta: 0.08 });
+add('hard', 'laptop microphone, woman da tune, 100', SG.melody(TUNES.tune, 100), { style: 'da' }, (x, sr) => SG.laptop(x, sr, 24));
+add('hard', 'laptop microphone, man E2-E3 hum legato (fundamental lost), 84', SG.melody(tr(TUNES.scale, -20), 84), { style: 'legato', voice: 'hum' }, (x, sr) => SG.laptop(x, sr, 24));
+add('hard', 'laptop microphone, low hum bass line G2, 90', SG.melody(TUNES.bass, 90), { style: 'da', voice: 'hum' }, (x, sr) => SG.laptop(x, sr, 22));
+add('hard', 'laptop microphone + vibrato + breath, soprano', SG.melody(tr(TUNES.scale, 9), 92, { gate: 0.85 }), { style: 'stacc', vib: { rate: 5.6, cents: 35, delay: 0.12 }, breath: 0.8 }, (x, sr) => SG.laptop(x, sr, 22));
+add('hard', 'metronome bleed -12 dB, da tune, 100', SG.melody(TUNES.tune, 100), { style: 'da' }, (x, sr) => SG.mix(x, SG.clickBleed(x.length, sr, 100, 0.4), -12));
+add('hard', 'metronome bleed -6 dB, legato scale, 100', SG.melody(TUNES.scale, 100), { style: 'legato' }, (x, sr) => SG.mix(x, SG.clickBleed(x.length, sr, 100, 0.4), -6));
+add('hard', 'metronome bleed -10 dB + laptop microphone, hum bass', SG.melody(TUNES.bass, 90), { style: 'da', voice: 'hum' }, (x, sr) => SG.laptop(SG.mix(x, SG.clickBleed(x.length, sr, 90, 0.4), -10), sr, 24));
+add('hard', 'metronome and song bleed -18 dB + noise 20 dB, vibrato tune', SG.melody(TUNES.tune, 100), { style: 'da', vib: { rate: 5.5, cents: 30, delay: 0.1 } }, (x, sr) => SG.addNoise(SG.mix(x, SG.backing(x.length, sr, 100), -18), sr, 20));
 // bleed flag passed per case
 for(const c of cases){ if(c.post && typeof c.post !== 'function'){ c.ao = c.post; c.post = null; } }
 cases.forEach(c => { const a = arguments; });
@@ -95,7 +110,7 @@ function run(){
     // a singer who is off concert pitch as a whole is judged on her own melody: the nearest semitones to what she sang, after her own offset
     const sc = score(truth, an.notes);
     rows.push({ c, sc, ms, an, dur: x.length / s.sr });
-    const T = tot[c.group]; T.n += sc.n; T.ok += sc.ok; T.found += sc.found; T.extra += sc.extra;
+    const T = tot[c.group]; T.n += sc.n; T.ok += sc.ok; T.found += sc.found; T.extra += sc.extra; T.det = (T.det || 0) + sc.det; T.cents = (T.cents || []).concat(sc.cents); T.on = (T.on || []).concat(sc.errs.map(Math.abs));
     for(const t of truth){ /* collected below */ }
     T.errs.push({ med: sc.med, n: sc.found });
   }
@@ -116,6 +131,12 @@ if(require.main === module){
     const T = tot[g];
     const meds = rows.filter(r => r.c.group === g).map(r => r.sc.med).sort((a, b) => a - b);
     console.log('TOTAL ' + g + ': pitch ' + T.ok + '/' + T.n + ' = ' + (100 * T.ok / T.n).toFixed(1) + '%   found ' + T.found + '   extra ' + T.extra + '   median of onset medians ' + (meds[meds.length >> 1] * 1000).toFixed(1) + ' ms, worst case median ' + (meds[meds.length - 1] * 1000).toFixed(1) + ' ms');
+  }
+  const med = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[b.length >> 1] : 0; }, p90 = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? b[Math.floor(b.length * 0.9)] : 0; };
+  for(const g of ['clean', 'hard']){
+    const T = tot[g];
+    console.log('SUMMARY ' + g + ': notes sung ' + T.n + ', detected ' + T.det + ', correct ' + T.ok + '  recall ' + (100 * T.ok / T.n).toFixed(1) + '%  precision ' + (100 * T.ok / T.det).toFixed(1) + '%  pitch error median ' + med(T.cents).toFixed(1) + ' cents (p90 ' + p90(T.cents).toFixed(1) + ')  onset error median ' + (1000 * med(T.on)).toFixed(1) + ' ms (p90 ' + (1000 * p90(T.on)).toFixed(1) + ')');
+    console.log((100 * T.ok / T.n >= (g === 'clean' ? 95 : 85) && 100 * T.ok / T.det >= (g === 'clean' ? 95 : 85) ? 'PASS ' : 'FAIL ') + g + ' input: at least ' + (g === 'clean' ? 95 : 85) + '% of notes right, both ways');
   }
   // nothing from breath, room noise or silence
   const sr = 44100, R = SG.rng(5), len = sr * 6;

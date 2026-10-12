@@ -238,11 +238,26 @@
           var lat = H.lat.sec, bleed = !!(bl && bl.heard >= 2);
           // on speakers the count itself measures the round trip, which is exactly the number wanted
           if(bleed && !H.lat.measured){ lat = bl.delay; latStore(bl.delay); }
+          // the clicks are known exactly, so what the microphone caught of them is taken out before listening for notes
+          if(bleed){ try { clickCancel(rec.x, rec.sr, startIn, H, bl.delay); } catch(e3){ if(testMode) console.error(e3); } }
           return dspRun("analyse", [rec.x, rec.sr, { bleed:bleed && o.backing === "song" }]).then(function(an){
             return humLand(H, rec, an, lat, startIn, bleed);
           });
         });
       })["catch"](function(e){ HUM = null; emit("record", { kind:"hum", state:"failed" }); if(o.done) o.done({ ok:false, why:"The take could not be read." }); if(testMode) console.error(e); return null; });
+    }
+    function clickCancel(x, sr, startIn, H, delay){
+      var bt = barTicks(), pt = pulseTicks(), sub = S.sig[1] === 8 && pt !== beatTicks() ? beatTicks() : pt, from = -H.count * bt, to = H.o.bars * bt, tick, hi = clickBuf(ENG.ctx, true).getChannelData(0), lo = clickBuf(ENG.ctx, false).getChannelData(0), n = 0;
+      for(tick = from; tick < to; tick += sub){
+        var c = tick % bt === 0 ? hi : lo, at = Math.round((startIn + tickSec(tick) + delay) * sr), best = 0, bk = 0, k, i, sxy, sxx = 0, L = c.length;
+        if(at < 4 || at + L + 4 > x.length) continue;
+        for(i = 0; i < L; i++) sxx += c[i] * c[i];
+        for(k = -3; k <= 3; k++){ sxy = 0; for(i = 0; i < L; i++) sxy += x[at + k + i] * c[i]; if(Math.abs(sxy) > Math.abs(best)){ best = sxy; bk = k; } }
+        var g = best / sxx; if(Math.abs(g) < 0.002) continue;
+        for(i = 0; i < L; i++) x[at + bk + i] -= g * c[i];
+        n++;
+      }
+      return n;
     }
     function humLand(H, rec, an, lat, startIn, bleed){
       var o = H.o, t = trackById(H.t), out = { ok:false, bleed:bleed, clipped:an.clipped, measured:H.lat.measured || bleed };

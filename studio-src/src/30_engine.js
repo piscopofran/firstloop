@@ -450,8 +450,8 @@
             // a recording is seldom exactly on its note: where the manifest does not say by how much, it is measured once
             // (not for acoustic pianos, whose stretched tuning is meant)
             if(s.tune === undefined && autoTune && typeof dspRun === "function"){
-              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round(0.75 * buf.sampleRate)));
-              return dspRun("tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
+              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round((d.loop ? 1.35 : 0.75) * buf.sampleRate)));
+              return dspRun(d.loop ? "tuneLong" : "tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
             }
             tick();
           }, function(){ tick(); }));

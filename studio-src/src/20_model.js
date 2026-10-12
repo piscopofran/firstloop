@@ -84,7 +84,7 @@
               np.notes.sort(function(a, b){ return a.s - b.s || a.p - b.p; });
               o.pats[q.pat] = np;
             }
-            if(r.hum && r.hum.take) q.hum = { take:String(r.hum.take), timing:["raw", "tidy", "strict"].indexOf(r.hum.timing) >= 0 ? r.hum.timing : "tidy", pitch:r.hum.pitch === "key" ? "key" : "semi",
+            if(r.hum && r.hum.take) q.hum = { take:String(r.hum.take), timing:["raw", "feel", "tidy", "strict"].indexOf(r.hum.timing) >= 0 ? r.hum.timing : "tidy", pitch:r.hum.pitch === "key" ? "key" : "semi",
                                               octave:clamp(r.hum.octave | 0, -4, 4), origin:+r.hum.origin || 0, grid:r.hum.grid | 0, edited:!!r.hum.edited,
                                               shift:clamp(r.hum.shift | 0, -6, 6), semi:clamp(r.hum.semi | 0, -24, 24) };
             if(r.drum && typeof r.drum === "object" && r.drum.feel) q.drum = { feel:String(r.drum.feel).slice(0, 16), vari:clamp(r.drum.vari | 0, 0, 2), fill:!!r.drum.fill, edited:!!r.drum.edited };
@@ -191,7 +191,10 @@
       saveSoon();
       if(typeof selFix === "function") selFix();
       if(typeof engSync === "function") engSync();
-      refresh();
+      // the song is a new object now: everything on the screen that held on to a track or a region is built again
+      if(typeof toolSig !== "undefined") toolSig = "";
+      if(UI.e && UI.e.humbar) UI.e.humbar.dataset["for"] = "";
+      refresh(true);
     }
 
     // ---- songs: list, open, new, rename, duplicate, delete, versions ----

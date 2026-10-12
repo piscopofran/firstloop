@@ -274,7 +274,7 @@
         origin = Math.max(0, an.notes[0].t - 0.02);
         sugT = dsp().suggestTempo(an.notes);
         var endS = an.notes[an.notes.length - 1].t + an.notes[an.notes.length - 1].d - origin;
-        len = Math.max(bt, Math.ceil(secTick(endS) / bt) * bt);
+        len = Math.max(bt, Math.ceil((secTick(endS) - PPQ / 4) / bt) * bt);   // a last note held a little over the bar line does not add a bar
       } else {
         // a pick-up: notes sung in the last beat before the bar belong to the part; it then starts a bar earlier
         var early = an.notes.filter(function(n){ return n.t < origin - tickSec(PPQ / 8) && n.t > origin - tickSec(bt); });
@@ -301,7 +301,7 @@
       return takeInfo(f.r.hum.take).then(function(ti){
         if(!ti || !ti.an) return false;
         var last = ti.an.notes[ti.an.notes.length - 1], bt = barTicks();
-        f.r.l = Math.max(bt, Math.ceil(secTick(last.t + last.d - sug.origin) / bt) * bt); patOf(f.r).len = f.r.l;
+        f.r.l = Math.max(bt, Math.ceil((secTick(last.t + last.d - sug.origin) - PPQ / 4) / bt) * bt); patOf(f.r).len = f.r.l;
         humApply(f.t, f.r, ti.an); clearUnder(f.t, f.r); growBars();
         commit("set the tempo from the humming"); return true;
       });

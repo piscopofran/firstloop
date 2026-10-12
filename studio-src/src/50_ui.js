@@ -1,6 +1,6 @@
     // ---------- Studio: the screen (shell, transport, arrangement) ----------
     var UI = { built:false, root:null, e:{}, sel:{ track:null, region:null, section:null }, tab:"notes", edH:0, edOpen:true, col:null, headSig:"", follow:true, kbd:false, midiSeen:false, pops:[] };
-    var ARR = { ppt:0.045, rowH:56, rulerH:22, secH:20, chordH:20, view:null, drag:null };
+    var ARR = { ppt:0.045, rowH:48, rulerH:22, secH:20, chordH:20, view:null, drag:null };
     var ICON = {
       play:"M7 4.5v15l13-7.5z", stop:"M6 6h12v12H6z", rec:"M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", start:"M6 5h2v14H6zM20 5v14L9 12z",
       loop:"M17 2l4 4-4 4V7H7a3 3 0 0 0-3 3v2H2v-2a5 5 0 0 1 5-5h10zM7 22l-4-4 4-4v3h10a3 3 0 0 0 3-3v-2h2v2a5 5 0 0 1-5 5H7z",
@@ -329,6 +329,8 @@
       try { new MutationObserver(function(){ UI.col = null; refresh(); }).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] }); } catch(e){}
       root.addEventListener("dragover", function(e){ if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0){ e.preventDefault(); } });
       root.addEventListener("drop", function(e){ var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f){ e.preventDefault(); fileDropped(f); } });
+      // back on line: look for the recorded instruments again, and fetch what the song was waiting for
+      window.addEventListener("online", function(){ if(ENG.manifestState === "failed"){ ENG.manifestP = null; ENG.manifestState = "none"; loadManifest().then(function(){ engSync(); paintHeads(true); }); } else { Object.keys(ENG.inst).forEach(function(k){ if(ENG.inst[k].state === "failed") ENG.inst[k].state = "none"; }); engSync(); } });
       on("save", paintSave); on("instload", function(){ paintHeadsSoon(); }); on("instruments", function(){ paintHeadsSoon(); });
       on("transport", function(){ paintBar(); });
       buildEditors();
@@ -561,7 +563,7 @@
       // a region being dragged is drawn where it would land
       if(ARR.drag && ARR.drag.ghosts) ARR.drag.ghosts.forEach(function(g){ var ti = S.tracks.indexOf(g.t); c.globalAlpha = 0.75; drawRegion(c, g.t, g.r, arrX(g.s, sl), top + ti * ARR.rowH - st + 3, g.l * ppt, ARR.rowH - 7, w, true); c.globalAlpha = 1; });
       // loop shading over the lanes
-      if(S.loop.on){ c.fillStyle = alpha(C.accent, 0.06); c.fillRect(arrX(S.loop.a, sl), top, (S.loop.b - S.loop.a) * ppt, h - top); }
+      if(S.loop.on){ c.fillStyle = alpha(C.accent, 0.06); c.fillRect(arrX(S.loop.a, sl), top, (S.loop.b - S.loop.a) * ppt, Math.max(0, Math.min(h - top, S.tracks.length * ARR.rowH - st))); }
       c.restore();
       // ruler
       c.fillStyle = C.surface; c.fillRect(0, 0, w, top);

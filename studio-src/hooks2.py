@@ -19,12 +19,10 @@ WRITE_LINES = ''.join('    ' + json.dumps(l, ensure_ascii=False) + ',\n' for l i
 ANCHOR = '    "@@ core",\n    "",\n    "RULES FOR CHANGES",\n'
 rep(ANCHOR, WRITE_LINES + ANCHOR)
 rep('"- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs.",',
-    '"- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs; and the Studio, in the Songwriter workspace: hum a part, hear it on a recorded instrument, add chords and drums, record a voice.",')
+    '"- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs; Studio (Songwriter workspace): hum parts onto instruments.",')
 rep('means they chose to see only the DJ side of the app, \\"make\\" only the production side. Stay on that side:',
-    'means they chose to see only the DJ side of the app, \\"make\\" only the production side, \\"write\\" only the Studio. Stay on that side:')
+    'means they chose to see only the DJ side of the app, \\"make\\" only the production side, \\"write\\" the Studio. Stay on that side:')
 rep('"go_to {area: \\"make\\", \\"mix\\", \\"dj\\", \\"learn\\" or \\"songs\\"}",', '"go_to {area: \\"make\\", \\"mix\\", \\"dj\\", \\"learn\\", \\"songs\\" or \\"studio\\"}",')
-rep('one of beat, bass, chords, melody, arrangement, mix, effects, recording, dj, coaching, library, gear, theory, app_help, export, feedback, other.",',
-    'one of beat, bass, chords, melody, arrangement, mix, effects, recording, songwriting, vocals, dj, coaching, library, gear, theory, app_help, export, feedback, other.",')
 rep('  // called name (core, gear, make, dj, teach, coach), and one request is sent', '  // called name (core, gear, make, dj, teach, coach, write), and one request is sent')
 rep('  var ASST_PROMPT_SETS = { make:["core","gear","make"], dj:["core","gear","dj","teach"], coach:["core","dj","coach"] };',
     '  var ASST_PROMPT_SETS = { make:["core","gear","make"], dj:["core","gear","dj","teach"], coach:["core","dj","coach"], write:["core","write"] };')

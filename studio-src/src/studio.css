@@ -113,7 +113,7 @@
   .st-hrow.st-hruler{height:22px;border-top:0;}
   .st-hrow .st-b{height:18px;min-width:18px;padding:0 5px;font-size:11px;}
   .st-headscroll{flex:1 1 0;min-height:0;overflow:hidden;}
-  .st-th{height:56px;box-sizing:border-box;border-bottom:1px solid var(--line);padding:5px 6px 0 11px;position:relative;display:flex;flex-direction:column;gap:5px;}
+  .st-th{height:48px;box-sizing:border-box;border-bottom:1px solid var(--line);padding:3px 6px 0 11px;position:relative;display:flex;flex-direction:column;gap:3px;}
   .st-th::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc,var(--ink-3));}
   .st-th[data-sel="true"]{background:var(--surface-2);}
   .st-th1,.st-th2{display:flex;align-items:center;gap:4px;min-width:0;}

@@ -214,7 +214,7 @@
     function paintHumbar(){
       var E = UI.e, f = rollRegion(), bar = E.humbar, show = UI.tab === "notes" && f && f.r.hum;
       bar.hidden = !show; if(!show){ bar.dataset.for = ""; return; }
-      var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
+      var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.grid, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
       if(bar.dataset.for === sig) return; bar.dataset.for = sig; bar.textContent = "";
       function redo(label){ humRedo(r.id).then(function(res){ if(res){ commit(label); if(res.early) tell(res.early + (res.early === 1 ? " note was" : " notes were") + " sung before the part begins and left out."); } }); }
       bar.title = "This part came from your voice. These choices are worked out again from the same take.";
@@ -222,8 +222,10 @@
       var hear = seg([["voice", "My voice"], ["notes", "Notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
       hear.id = "sthear"; g.appendChild(hear); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Timing"));
-      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
-      tm.id = "sttiming"; g.appendChild(tm); bar.appendChild(g);
+      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["feel", "Half way", "Note starts move half way to the grid: tidier, with your own feel kept"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
+      tm.id = "sttiming"; g.appendChild(tm);
+      var gs = sel("", [[0, "Grid: auto"], [PPQ, "1/4"], [PPQ / 2, "1/8"], [PPQ / 4, "1/16"], [PPQ / 3, "1/8 triplet"], [PPQ / 6, "1/16 triplet"]], h.grid || 0, "The grid the timing choices use. Auto picks the coarsest one your notes sit on.", function(v){ h.grid = +v; redo("grid of the hummed part"); });
+      gs.id = "sthumgrid"; gs.disabled = h.timing === "raw"; g.appendChild(gs); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Pitch"));
       var pm = seg([["semi", "As hummed", "Each note is the nearest note to what you sang"], ["key", "Fit to key", "Notes outside the song’s key move to the nearest one inside it; they are marked with a corner"]], h.pitch, function(v){
         if(v === "key" && !scaleOf()){ tell("The song has no key yet. Choose one with the Key button at the top; the notes will then fit to it."); return; }

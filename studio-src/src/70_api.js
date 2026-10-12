@@ -491,6 +491,7 @@
   }
   // ---- the entry points: all that exists of the Studio until it is opened ----
   function studio(){ if(!STUDIO){ STUDIO = studioMake(); if(STUDIO._t) window.STUDIO = STUDIO; } return STUDIO; }      // (the tests reach it through window when the address says ?fltest)
+  try { if(/[?&]fltest/.test(window.location.search)) window.__flStudio = { made:function(){ return !!STUDIO; } }; } catch(e){}
   function studioOnView(v){
     if(v === "studio"){ studio()._show(); }
     else if(STUDIO) STUDIO._hide();
@@ -520,13 +521,14 @@
       tabs.insertBefore(tab, tabs.firstChild);
     }
     if(typeof palAdd === "function"){
+      var TAB = ['.viewtab[data-view="studio"]'];
       var X = function(fn){ return { run:function(){ setView("studio"); fn && setTimeout(fn, 250); }, ws:"write" }; };
       palAdd("gostudio", "Go to the Studio", "Songwriter", "studio, songwriter, write a song, compose, singer, hum, real instruments, piano roll, arrange, vocals, lyrics", "top", ['.viewtab[data-view="studio"]'], X(null));
-      palAdd("sthum", "Hum a part", "Studio", "hum, sing, whistle, voice to notes, bass line, melody, microphone, pitch", "top", ["#strec"], X(function(){ var b = document.getElementById("strec"); if(b) b.click(); }));
-      palAdd("stchords", "Chords", "Studio", "chords, harmony, progression, accompaniment, piano, guitar, strum, suggest chords", "top", ["#sttab-chords"], X(function(){ var b = document.getElementById("sttab-chords"); if(b) b.click(); }));
-      palAdd("stlyrics", "Lyrics", "Studio", "lyrics, words, text, verse, chorus", "top", ["#sttab-lyrics"], X(function(){ var b = document.getElementById("sttab-lyrics"); if(b) b.click(); }));
-      palAdd("stmix", "Mixer (Studio)", "Studio", "mixer, volume, pan, reverb, level, mute, solo, tone", "top", ["#stmixer"], X(function(){ var b = document.getElementById("stmixer"); if(b && b.getAttribute("aria-pressed") !== "true") b.click(); }));
-      palAdd("stexport", "Export the song (Studio)", "Studio", "export, wav, stems, midi, song file, save, download, bounce", "top", ["#stexport"], X(function(){ var b = document.getElementById("stexport"); if(b) b.click(); }));
-      palAdd("sthelp", "How the Studio works", "Studio", "help, shortcuts, keys, how, guide, timing, latency", "top", ["#sthelp"], X(function(){ var b = document.getElementById("sthelp"); if(b) b.click(); }));
+      palAdd("sthum", "Hum a part", "Studio", "hum, sing, whistle, voice to notes, bass line, melody, microphone, pitch", "top", TAB, X(function(){ var b = document.getElementById("strec"); if(b) b.click(); }));
+      palAdd("stchords", "Chords", "Studio", "chords, harmony, progression, accompaniment, piano, guitar, strum, suggest chords", "top", TAB, X(function(){ var b = document.getElementById("sttab-chords"); if(b) b.click(); }));
+      palAdd("stlyrics", "Lyrics", "Studio", "lyrics, words, text, verse, chorus", "top", TAB, X(function(){ var b = document.getElementById("sttab-lyrics"); if(b) b.click(); }));
+      palAdd("stmix", "Mixer (Studio)", "Studio", "mixer, volume, pan, reverb, level, mute, solo, tone", "top", TAB, X(function(){ var b = document.getElementById("stmixer"); if(b && b.getAttribute("aria-pressed") !== "true") b.click(); }));
+      palAdd("stexport", "Export the song (Studio)", "Studio", "export, wav, stems, midi, song file, save, download, bounce", "top", TAB, X(function(){ var b = document.getElementById("stexport"); if(b) b.click(); }));
+      palAdd("sthelp", "How the Studio works", "Studio", "help, shortcuts, keys, how, guide, timing, latency", "top", TAB, X(function(){ var b = document.getElementById("sthelp"); if(b) b.click(); }));
     }
   })();

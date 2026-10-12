@@ -457,7 +457,7 @@
       res.octave = oct;
       var starts = src.map(function(q){ return (q.t - origin) * tps; });
       var g = 0, shift = 0;
-      if(o.timing === "tidy" || o.timing === "strict"){
+      if(o.timing === "tidy" || o.timing === "strict" || o.timing === "feel"){
         g = o.grid || chooseGrid(starts, ppq);
         var f = gridFit(starts, g);
         if(f.R > 0.5 && Math.abs(f.shift) <= g * 0.34) shift = f.shift;        // a steady lead or lag comes out first
@@ -466,7 +466,8 @@
       var notes = [];
       for(i = 0; i < src.length; i++){
         var q = src[i], s = starts[i], l = q.d * tps, p = q.n, moved = 0;
-        if(g){
+        if(g && o.timing === "feel") s = Math.round(s + (Math.round((s - shift) / g) * g - s) * 0.5);      // half way to the grid: tidier, still hers
+        else if(g){
           s = Math.round((s - shift) / g) * g;
           if(o.timing === "strict") l = Math.max(g, Math.round(l / g) * g);
         } else s = Math.round(s);
@@ -608,6 +609,18 @@
       var d = 0.5 * (c[bl - 1] - c[bl + 1]) / (c[bl - 1] - 2 * c[bl] + c[bl + 1]);
       return { cents:1200 * Math.log((sr / (bl + d)) / f0) / LOG2, clarity:best };
     }
-    return { tuneOf:tuneOf, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
+    // a held note (bowed, blown): the middle of several readings through its first second and a bit, so that a
+    // scooped attack or vibrato does not decide where the note is taken to be
+    function tuneLong(x, sr, f0){
+      var step = Math.round(0.11 * sr), got = [], cl = [], k, m;
+      for(k = 0; k < 10 && k * step + Math.round(0.14 * sr) < x.length; k++){
+        m = tuneOf(x.subarray(k * step), sr, f0);
+        if(m && m.cents !== null && m.clarity >= 0.85){ got.push(m.cents); cl.push(m.clarity); }
+      }
+      if(got.length < 2) return tuneOf(x, sr, f0);
+      got.sort(function(p, q){ return p - q; }); cl.sort(function(p, q){ return p - q; });
+      return { cents:(got[(got.length - 1) >> 1] + got[got.length >> 1]) / 2, clarity:cl[cl.length >> 1] };
+    }
+    return { tuneOf:tuneOf, tuneLong:tuneLong, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
              frames:frames, track:track, fitKey:fitKey, chooseGrid:chooseGrid, hz2m:hz2m, m2hz:m2hz, SCALES:SCALES };
   }

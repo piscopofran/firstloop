@@ -2542,7 +2542,7 @@
   .st-hrow.st-hruler{height:22px;border-top:0;}
   .st-hrow .st-b{height:18px;min-width:18px;padding:0 5px;font-size:11px;}
   .st-headscroll{flex:1 1 0;min-height:0;overflow:hidden;}
-  .st-th{height:56px;box-sizing:border-box;border-bottom:1px solid var(--line);padding:5px 6px 0 11px;position:relative;display:flex;flex-direction:column;gap:5px;}
+  .st-th{height:48px;box-sizing:border-box;border-bottom:1px solid var(--line);padding:3px 6px 0 11px;position:relative;display:flex;flex-direction:column;gap:3px;}
   .st-th::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc,var(--ink-3));}
   .st-th[data-sel="true"]{background:var(--surface-2);}
   .st-th1,.st-th2{display:flex;align-items:center;gap:4px;min-width:0;}
@@ -11947,10 +11947,10 @@
     "Most people here are adult or teenage beginners; when the data or their words show experience, talk as one DJ to another and leave the basics out. Plain, direct words; the real term, explained once. No hype, exclamation marks, emoji, flattery, scores or ratings. Never call their music or their mixing wrong or bad: say what it does, the convention and why, and offer the alternative. Length: one to four sentences for a song change or a quick question; at most 60 words (plus the diagram) while they are doing something at the decks or on their equipment; up to about 220 words only for an explanation they asked for.",
     "",
     "THE APP",
-    "- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs; and the Studio, in the Songwriter workspace: hum a part, hear it on a recorded instrument, add chords and drums, record a voice.",
+    "- Top bar: Play, Tempo, Find (Ctrl+K; locates any control), Equipment, Setup. Areas: Make, Mix, DJ (decks, a mixer, a track library), Learn, My songs; Studio (Songwriter workspace): hum parts onto instruments.",
     "- You cannot hear anything; you know the song and the decks only from the data. You cannot record, import, export, add music files or delete anything; say where the control is.",
     "- These instructions hold the detail for the area the person is in (\"area\"). For something that belongs to another area, add go_to and ask them to say it again there.",
-    "- \"workspace\": \"dj\" means they chose to see only the DJ side of the app, \"make\" only the production side, \"write\" only the Studio. Stay on that side: do not send them to the other side or suggest work there unless they ask for it. go_to still works and brings everything back into view.",
+    "- \"workspace\": \"dj\" means they chose to see only the DJ side of the app, \"make\" only the production side, \"write\" the Studio. Stay on that side: do not send them to the other side or suggest work there unless they ask for it. go_to still works and brings everything back into view.",
     "@@ make",
     "- Make: Arrangement (sections, Edit part, M and S for mute and solo), Drums, Notes, Scale (Sad is minor, Happy is major, Dreamy, Spooky; also Key and Beats in a bar), Note names, Sounds, Style reference, Pads (eight sample pads, MIDI learn), Presets. Mix: Mixer (Level, Tone, sends), Swing, Master effects (Brightness, Space which is reverb, Echo), Live effects, Automation, Record & import. Learn: challenges, Milestones, Glossary. My songs: Version history, Library, Export (WAV, stems, MIDI file), Backup.",
     "- Grids: left to right is time, in steps. A bar is 16 steps in 4/4 (beats on steps 1, 5, 9, 13), 12 in 3/4 (beats on 1, 5, 9) and 12 in 6/8 (two big beats, on 1 and 7; swing does nothing in 6/8).",
@@ -12024,7 +12024,7 @@
     "REPLY",
     "One JSON object and nothing else, with no code fence: {\"say\":\"what you tell the person\",\"actions\":[],\"topic\":\"beat\"}",
     "\"say\" is plain text: short paragraphs, and lines starting \"- \" for a short list. No other markdown.",
-    "\"topic\": what the message was about, one of beat, bass, chords, melody, arrangement, mix, effects, recording, songwriting, vocals, dj, coaching, library, gear, theory, app_help, export, feedback, other.",
+    "\"topic\": what the message was about, one of beat, bass, chords, melody, arrangement, mix, effects, recording, dj, coaching, library, gear, theory, app_help, export, feedback, other.",
     "\"gear\": only when the person names equipment they own: its short name, at most 40 characters.",
     "\"missing\": only when they wanted something First Loop cannot do: a label of at most 60 characters, never their own words or anything personal.",
     "",
@@ -12099,6 +12099,7 @@
     "- Chords tab: chords bar by bar (picked from the chords of the key, typed, or suggested for a hummed melody or bass line), then \"Have an instrument play them\" in a style. A part written that way follows the chords until its notes are edited by hand.",
     "- You cannot hear the song or the voice, and you cannot record: to hum or sing they press the button themselves (w_open brings the sheet up). You cannot export files or delete songs; say where the control is. \"Check timing\", where the microphone is turned on, measures the computer's delay so that hummed notes land where they were sung.",
     "- \"write\" in the data is the song: song (tempo, meter, key or \"none\", bars), sections, chords as [bar, beat, name], tracks (n is the track's number; kind; instrument id; range; volume 0 to 125, 80 to start with; reverb 0 to 100; parts with bar, bars, kind, notes, low, high, out_of_key), selected (the selected track and, when a part is selected, its notes as [beat counted from 1 at the start of the part, length in beats, pitch]), lyrics (the first words of each section), done (which first steps are done), timing, instruments (the ids and names that can be used), sounds (\"basic only\": the recorded instruments could not be loaded), feels (drum feels), styles and bass_styles (ways to play the chords). Rely on these; never invent what is not there.",
+    "- In the Studio \"topic\" may also be songwriting or vocals.",
     "",
     "ACTIONS IN THE STUDIO",
     "w_tempo {bpm: 40 to 220}",
@@ -34365,7 +34366,7 @@
       res.octave = oct;
       var starts = src.map(function(q){ return (q.t - origin) * tps; });
       var g = 0, shift = 0;
-      if(o.timing === "tidy" || o.timing === "strict"){
+      if(o.timing === "tidy" || o.timing === "strict" || o.timing === "feel"){
         g = o.grid || chooseGrid(starts, ppq);
         var f = gridFit(starts, g);
         if(f.R > 0.5 && Math.abs(f.shift) <= g * 0.34) shift = f.shift;        // a steady lead or lag comes out first
@@ -34374,7 +34375,8 @@
       var notes = [];
       for(i = 0; i < src.length; i++){
         var q = src[i], s = starts[i], l = q.d * tps, p = q.n, moved = 0;
-        if(g){
+        if(g && o.timing === "feel") s = Math.round(s + (Math.round((s - shift) / g) * g - s) * 0.5);      // half way to the grid: tidier, still hers
+        else if(g){
           s = Math.round((s - shift) / g) * g;
           if(o.timing === "strict") l = Math.max(g, Math.round(l / g) * g);
         } else s = Math.round(s);
@@ -34516,7 +34518,19 @@
       var d = 0.5 * (c[bl - 1] - c[bl + 1]) / (c[bl - 1] - 2 * c[bl] + c[bl + 1]);
       return { cents:1200 * Math.log((sr / (bl + d)) / f0) / LOG2, clarity:best };
     }
-    return { tuneOf:tuneOf, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
+    // a held note (bowed, blown): the middle of several readings through its first second and a bit, so that a
+    // scooped attack or vibrato does not decide where the note is taken to be
+    function tuneLong(x, sr, f0){
+      var step = Math.round(0.11 * sr), got = [], cl = [], k, m;
+      for(k = 0; k < 10 && k * step + Math.round(0.14 * sr) < x.length; k++){
+        m = tuneOf(x.subarray(k * step), sr, f0);
+        if(m && m.cents !== null && m.clarity >= 0.85){ got.push(m.cents); cl.push(m.clarity); }
+      }
+      if(got.length < 2) return tuneOf(x, sr, f0);
+      got.sort(function(p, q){ return p - q; }); cl.sort(function(p, q){ return p - q; });
+      return { cents:(got[(got.length - 1) >> 1] + got[got.length >> 1]) / 2, clarity:cl[cl.length >> 1] };
+    }
+    return { tuneOf:tuneOf, tuneLong:tuneLong, analyse:analyse, cleanup:cleanup, suggestKey:suggestKey, suggestTempo:suggestTempo, clickDelay:clickDelay, peaks:peaks,
              frames:frames, track:track, fitKey:fitKey, chooseGrid:chooseGrid, hz2m:hz2m, m2hz:m2hz, SCALES:SCALES };
   }
     // ---------- Studio: the song and where it is kept ----------
@@ -34605,7 +34619,7 @@
               np.notes.sort(function(a, b){ return a.s - b.s || a.p - b.p; });
               o.pats[q.pat] = np;
             }
-            if(r.hum && r.hum.take) q.hum = { take:String(r.hum.take), timing:["raw", "tidy", "strict"].indexOf(r.hum.timing) >= 0 ? r.hum.timing : "tidy", pitch:r.hum.pitch === "key" ? "key" : "semi",
+            if(r.hum && r.hum.take) q.hum = { take:String(r.hum.take), timing:["raw", "feel", "tidy", "strict"].indexOf(r.hum.timing) >= 0 ? r.hum.timing : "tidy", pitch:r.hum.pitch === "key" ? "key" : "semi",
                                               octave:clamp(r.hum.octave | 0, -4, 4), origin:+r.hum.origin || 0, grid:r.hum.grid | 0, edited:!!r.hum.edited,
                                               shift:clamp(r.hum.shift | 0, -6, 6), semi:clamp(r.hum.semi | 0, -24, 24) };
             if(r.drum && typeof r.drum === "object" && r.drum.feel) q.drum = { feel:String(r.drum.feel).slice(0, 16), vari:clamp(r.drum.vari | 0, 0, 2), fill:!!r.drum.fill, edited:!!r.drum.edited };
@@ -34712,7 +34726,10 @@
       saveSoon();
       if(typeof selFix === "function") selFix();
       if(typeof engSync === "function") engSync();
-      refresh();
+      // the song is a new object now: everything on the screen that held on to a track or a region is built again
+      if(typeof toolSig !== "undefined") toolSig = "";
+      if(UI.e && UI.e.humbar) UI.e.humbar.dataset["for"] = "";
+      refresh(true);
     }
 
     // ---- songs: list, open, new, rename, duplicate, delete, versions ----
@@ -35440,8 +35457,8 @@
             // a recording is seldom exactly on its note: where the manifest does not say by how much, it is measured once
             // (not for acoustic pianos, whose stretched tuning is meant)
             if(s.tune === undefined && autoTune && typeof dspRun === "function"){
-              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round(0.75 * buf.sampleRate)));
-              return dspRun("tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
+              var ch = buf.getChannelData(0), a0 = Math.min(ch.length, Math.round((z.off + 0.09) * buf.sampleRate)), part = ch.slice(a0, Math.min(ch.length, a0 + Math.round((d.loop ? 1.35 : 0.75) * buf.sampleRate)));
+              return dspRun(d.loop ? "tuneLong" : "tuneOf", [part, buf.sampleRate, 440 * Math.pow(2, (z.nominal - 69) / 12)]).then(function(m){ if(m && m.cents !== null && m.clarity >= 0.85 && Math.abs(m.cents) >= 2.5 && Math.abs(m.cents) <= 45){ z.note = z.nominal + m.cents / 100; z.tuned = m.cents; } tick(); }, function(){ tick(); });
             }
             tick();
           }, function(){ tick(); }));
@@ -36205,7 +36222,7 @@
         origin = Math.max(0, an.notes[0].t - 0.02);
         sugT = dsp().suggestTempo(an.notes);
         var endS = an.notes[an.notes.length - 1].t + an.notes[an.notes.length - 1].d - origin;
-        len = Math.max(bt, Math.ceil(secTick(endS) / bt) * bt);
+        len = Math.max(bt, Math.ceil((secTick(endS) - PPQ / 4) / bt) * bt);   // a last note held a little over the bar line does not add a bar
       } else {
         // a pick-up: notes sung in the last beat before the bar belong to the part; it then starts a bar earlier
         var early = an.notes.filter(function(n){ return n.t < origin - tickSec(PPQ / 8) && n.t > origin - tickSec(bt); });
@@ -36232,7 +36249,7 @@
       return takeInfo(f.r.hum.take).then(function(ti){
         if(!ti || !ti.an) return false;
         var last = ti.an.notes[ti.an.notes.length - 1], bt = barTicks();
-        f.r.l = Math.max(bt, Math.ceil(secTick(last.t + last.d - sug.origin) / bt) * bt); patOf(f.r).len = f.r.l;
+        f.r.l = Math.max(bt, Math.ceil((secTick(last.t + last.d - sug.origin) - PPQ / 4) / bt) * bt); patOf(f.r).len = f.r.l;
         humApply(f.t, f.r, ti.an); clearUnder(f.t, f.r); growBars();
         commit("set the tempo from the humming"); return true;
       });
@@ -36399,7 +36416,7 @@
     function recordingNow(){ return HUM ? "hum" : AREC ? "audio" : NREC ? "notes" : ""; }
     // ---------- Studio: the screen (shell, transport, arrangement) ----------
     var UI = { built:false, root:null, e:{}, sel:{ track:null, region:null, section:null }, tab:"notes", edH:0, edOpen:true, col:null, headSig:"", follow:true, kbd:false, midiSeen:false, pops:[] };
-    var ARR = { ppt:0.045, rowH:56, rulerH:22, secH:20, chordH:20, view:null, drag:null };
+    var ARR = { ppt:0.045, rowH:48, rulerH:22, secH:20, chordH:20, view:null, drag:null };
     var ICON = {
       play:"M7 4.5v15l13-7.5z", stop:"M6 6h12v12H6z", rec:"M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", start:"M6 5h2v14H6zM20 5v14L9 12z",
       loop:"M17 2l4 4-4 4V7H7a3 3 0 0 0-3 3v2H2v-2a5 5 0 0 1 5-5h10zM7 22l-4-4 4-4v3h10a3 3 0 0 0 3-3v-2h2v2a5 5 0 0 1-5 5H7z",
@@ -36728,6 +36745,8 @@
       try { new MutationObserver(function(){ UI.col = null; refresh(); }).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] }); } catch(e){}
       root.addEventListener("dragover", function(e){ if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0){ e.preventDefault(); } });
       root.addEventListener("drop", function(e){ var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f){ e.preventDefault(); fileDropped(f); } });
+      // back on line: look for the recorded instruments again, and fetch what the song was waiting for
+      window.addEventListener("online", function(){ if(ENG.manifestState === "failed"){ ENG.manifestP = null; ENG.manifestState = "none"; loadManifest().then(function(){ engSync(); paintHeads(true); }); } else { Object.keys(ENG.inst).forEach(function(k){ if(ENG.inst[k].state === "failed") ENG.inst[k].state = "none"; }); engSync(); } });
       on("save", paintSave); on("instload", function(){ paintHeadsSoon(); }); on("instruments", function(){ paintHeadsSoon(); });
       on("transport", function(){ paintBar(); });
       buildEditors();
@@ -36960,7 +36979,7 @@
       // a region being dragged is drawn where it would land
       if(ARR.drag && ARR.drag.ghosts) ARR.drag.ghosts.forEach(function(g){ var ti = S.tracks.indexOf(g.t); c.globalAlpha = 0.75; drawRegion(c, g.t, g.r, arrX(g.s, sl), top + ti * ARR.rowH - st + 3, g.l * ppt, ARR.rowH - 7, w, true); c.globalAlpha = 1; });
       // loop shading over the lanes
-      if(S.loop.on){ c.fillStyle = alpha(C.accent, 0.06); c.fillRect(arrX(S.loop.a, sl), top, (S.loop.b - S.loop.a) * ppt, h - top); }
+      if(S.loop.on){ c.fillStyle = alpha(C.accent, 0.06); c.fillRect(arrX(S.loop.a, sl), top, (S.loop.b - S.loop.a) * ppt, Math.max(0, Math.min(h - top, S.tracks.length * ARR.rowH - st))); }
       c.restore();
       // ruler
       c.fillStyle = C.surface; c.fillRect(0, 0, w, top);
@@ -37998,7 +38017,7 @@
     function paintHumbar(){
       var E = UI.e, f = rollRegion(), bar = E.humbar, show = UI.tab === "notes" && f && f.r.hum;
       bar.hidden = !show; if(!show){ bar.dataset.for = ""; return; }
-      var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
+      var r = f.r, h = r.hum, sug = UI.humSug && UI.humSug.region === r.id ? UI.humSug : null, sig = [r.id, h.timing, h.grid, h.pitch, h.octave, h.edited, sug ? JSON.stringify(sug.key || 0) + JSON.stringify(sug.tempo || 0) : "", audition ? audition.mode : "", keyName(S.key)].join("|");
       if(bar.dataset.for === sig) return; bar.dataset.for = sig; bar.textContent = "";
       function redo(label){ humRedo(r.id).then(function(res){ if(res){ commit(label); if(res.early) tell(res.early + (res.early === 1 ? " note was" : " notes were") + " sung before the part begins and left out."); } }); }
       bar.title = "This part came from your voice. These choices are worked out again from the same take.";
@@ -38006,8 +38025,10 @@
       var hear = seg([["voice", "My voice"], ["notes", "Notes"], ["both", "Both"]], audition && audition.region === r.id ? audition.mode : "", function(v){ if(audition && audition.mode === v){ auditionStop(); paintHumbar(); return; } humHear(r.id, v).then(function(){ bar.dataset.for = ""; paintHumbar(); paintBar(); }); }, "Hear");
       hear.id = "sthear"; g.appendChild(hear); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Timing"));
-      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
-      tm.id = "sttiming"; g.appendChild(tm); bar.appendChild(g);
+      var tm = seg([["raw", "As hummed", "Every note starts exactly where you sang it"], ["feel", "Half way", "Note starts move half way to the grid: tidier, with your own feel kept"], ["tidy", "Tidy", "Note starts move to the nearest sensible step; lengths stay as sung"], ["strict", "Strict", "Starts and lengths both sit on the grid, as written music would"]], h.timing, function(v){ h.timing = v; redo("timing: " + v); }, "Timing");
+      tm.id = "sttiming"; g.appendChild(tm);
+      var gs = sel("", [[0, "Grid: auto"], [PPQ, "1/4"], [PPQ / 2, "1/8"], [PPQ / 4, "1/16"], [PPQ / 3, "1/8 triplet"], [PPQ / 6, "1/16 triplet"]], h.grid || 0, "The grid the timing choices use. Auto picks the coarsest one your notes sit on.", function(v){ h.grid = +v; redo("grid of the hummed part"); });
+      gs.id = "sthumgrid"; gs.disabled = h.timing === "raw"; g.appendChild(gs); bar.appendChild(g);
       g = el("div", "st-grp"); g.appendChild(lbl("Pitch"));
       var pm = seg([["semi", "As hummed", "Each note is the nearest note to what you sang"], ["key", "Fit to key", "Notes outside the song’s key move to the nearest one inside it; they are marked with a corner"]], h.pitch, function(v){
         if(v === "key" && !scaleOf()){ tell("The song has no key yet. Choose one with the Key button at the top; the notes will then fit to it."); return; }
@@ -39392,6 +39413,7 @@
       on("instload", function(d){ if(IB && IB.rowState && ENG.inst[d.id]) IB.rowState(ENG.inst[d.id]); });
       on("instruments", function(){ if(IB) IB.paint(); });
       on("audition", function(){ paintBar(); });
+      on("transport", function(){ if(UI.root.dataset.phone === "true") refresh(); });
       try { UI.mqPhone = window.matchMedia("(max-width:699.98px)"); UI.mqPhone.addEventListener("change", function(){ refresh(true); }); } catch(e){ UI.mqPhone = null; }
     }
     var stepSig = "", phoneSig = "";
@@ -40021,6 +40043,7 @@
   }
   // ---- the entry points: all that exists of the Studio until it is opened ----
   function studio(){ if(!STUDIO){ STUDIO = studioMake(); if(STUDIO._t) window.STUDIO = STUDIO; } return STUDIO; }      // (the tests reach it through window when the address says ?fltest)
+  try { if(/[?&]fltest/.test(window.location.search)) window.__flStudio = { made:function(){ return !!STUDIO; } }; } catch(e){}
   function studioOnView(v){
     if(v === "studio"){ studio()._show(); }
     else if(STUDIO) STUDIO._hide();
@@ -40050,14 +40073,15 @@
       tabs.insertBefore(tab, tabs.firstChild);
     }
     if(typeof palAdd === "function"){
+      var TAB = ['.viewtab[data-view="studio"]'];
       var X = function(fn){ return { run:function(){ setView("studio"); fn && setTimeout(fn, 250); }, ws:"write" }; };
       palAdd("gostudio", "Go to the Studio", "Songwriter", "studio, songwriter, write a song, compose, singer, hum, real instruments, piano roll, arrange, vocals, lyrics", "top", ['.viewtab[data-view="studio"]'], X(null));
-      palAdd("sthum", "Hum a part", "Studio", "hum, sing, whistle, voice to notes, bass line, melody, microphone, pitch", "top", ["#strec"], X(function(){ var b = document.getElementById("strec"); if(b) b.click(); }));
-      palAdd("stchords", "Chords", "Studio", "chords, harmony, progression, accompaniment, piano, guitar, strum, suggest chords", "top", ["#sttab-chords"], X(function(){ var b = document.getElementById("sttab-chords"); if(b) b.click(); }));
-      palAdd("stlyrics", "Lyrics", "Studio", "lyrics, words, text, verse, chorus", "top", ["#sttab-lyrics"], X(function(){ var b = document.getElementById("sttab-lyrics"); if(b) b.click(); }));
-      palAdd("stmix", "Mixer (Studio)", "Studio", "mixer, volume, pan, reverb, level, mute, solo, tone", "top", ["#stmixer"], X(function(){ var b = document.getElementById("stmixer"); if(b && b.getAttribute("aria-pressed") !== "true") b.click(); }));
-      palAdd("stexport", "Export the song (Studio)", "Studio", "export, wav, stems, midi, song file, save, download, bounce", "top", ["#stexport"], X(function(){ var b = document.getElementById("stexport"); if(b) b.click(); }));
-      palAdd("sthelp", "How the Studio works", "Studio", "help, shortcuts, keys, how, guide, timing, latency", "top", ["#sthelp"], X(function(){ var b = document.getElementById("sthelp"); if(b) b.click(); }));
+      palAdd("sthum", "Hum a part", "Studio", "hum, sing, whistle, voice to notes, bass line, melody, microphone, pitch", "top", TAB, X(function(){ var b = document.getElementById("strec"); if(b) b.click(); }));
+      palAdd("stchords", "Chords", "Studio", "chords, harmony, progression, accompaniment, piano, guitar, strum, suggest chords", "top", TAB, X(function(){ var b = document.getElementById("sttab-chords"); if(b) b.click(); }));
+      palAdd("stlyrics", "Lyrics", "Studio", "lyrics, words, text, verse, chorus", "top", TAB, X(function(){ var b = document.getElementById("sttab-lyrics"); if(b) b.click(); }));
+      palAdd("stmix", "Mixer (Studio)", "Studio", "mixer, volume, pan, reverb, level, mute, solo, tone", "top", TAB, X(function(){ var b = document.getElementById("stmixer"); if(b && b.getAttribute("aria-pressed") !== "true") b.click(); }));
+      palAdd("stexport", "Export the song (Studio)", "Studio", "export, wav, stems, midi, song file, save, download, bounce", "top", TAB, X(function(){ var b = document.getElementById("stexport"); if(b) b.click(); }));
+      palAdd("sthelp", "How the Studio works", "Studio", "help, shortcuts, keys, how, guide, timing, latency", "top", TAB, X(function(){ var b = document.getElementById("sthelp"); if(b) b.click(); }));
     }
   })();
   // ===== /Studio =====

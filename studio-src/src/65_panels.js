@@ -647,6 +647,7 @@
       on("instload", function(d){ if(IB && IB.rowState && ENG.inst[d.id]) IB.rowState(ENG.inst[d.id]); });
       on("instruments", function(){ if(IB) IB.paint(); });
       on("audition", function(){ paintBar(); });
+      on("transport", function(){ if(UI.root.dataset.phone === "true") refresh(); });
       try { UI.mqPhone = window.matchMedia("(max-width:699.98px)"); UI.mqPhone.addEventListener("change", function(){ refresh(true); }); } catch(e){ UI.mqPhone = null; }
     }
     var stepSig = "", phoneSig = "";

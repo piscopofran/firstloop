@@ -47,6 +47,6 @@ function tune(steps, bpm, so){ const notes = SG.melody(steps, bpm, { start:0, ga
 const T = (p, fn, arg) => p.evaluate(fn, arg);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let pass = 0, fail = 0; const fails = [];
-function ok(c, name, extra){ if(c){ pass++; console.log('PASS ' + name + (extra ? '  [' + extra + ']' : '')); } else { fail++; fails.push(name); console.log('FAIL ' + name + (extra ? '  [' + extra + ']' : '')); } }
+function ok(c, name, extra){ if(typeof c === 'string'){ const t = c; c = name; name = t; } if(c){ pass++; console.log('PASS ' + name + (extra ? '  [' + extra + ']' : '')); } else { fail++; fails.push(name); console.log('FAIL ' + name + (extra ? '  [' + extra + ']' : '')); } }
 function done(errs){ if(errs && errs.length){ console.log('page errors:\n' + errs.join('\n')); } console.log('\n' + pass + ' passed, ' + fail + ' failed' + (errs ? ', ' + errs.length + ' page errors' : '')); if(fails.length) console.log('failed: ' + fails.join(' | ')); process.exitCode = fail || (errs && errs.length) ? 1 : 0; }
 module.exports = { open, fakeMic, feed, prep, fire, tune, T, sleep, ok, done, SG, f32b64, counts:() => ({ pass, fail }) };

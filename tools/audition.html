@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First Loop: sound library audition</title>
+<link rel="icon" href="data:,">
+<!--
+  Maintainer page, not linked from the app. It plays every instrument and kit of sounds/manifest.json
+  the way the manifest says a player should, so problems can be heard quickly.
+
+  Open it through a web server (fetch does not work from file://):
+      cd <repo> && python3 -m http.server 8034      then   http://localhost:8034/tools/audition.html
+  Another library location:  audition.html?base=https://cdn.jsdelivr.net/gh/piscopofran/firstloop@main/sounds/
+
+  tools/render-audition.js drives the same code with an OfflineAudioContext (window.FLAudition) and
+  writes WAV files plus the list of notes that were scheduled; tools/check-sounds.py measures them.
+
+  The player in this file is the reference for the manifest fields:
+    samples[].note / vel / file     nearest dynamic layer, then nearest note, playbackRate = 2^((midi - note) / 12)
+    samples[].loopStart / loopEnd   seconds into the decoded buffer; present on held instruments ("loop": true)
+    release                         seconds of gain ramp after the note ends
+    gain                            dB applied per instrument / kit (never above 0)
+    kits[].pieces / layers          round robins played in turn; "layers" adds a soft layer (vel 50)
+-->
+<style>
+  :root { --bg:#f4f4f3; --panel:#fff; --line:#d9d9d6; --ink:#1d1d1b; --mute:#6b6b67; --acc:#2f5fd0; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1b1b1a; --panel:#232322; --line:#3a3a38; --ink:#e9e9e6; --mute:#a0a09b; --acc:#8fb0ff; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+  header { padding:14px 16px 10px; border-bottom:1px solid var(--line); }
+  h1 { font-size:15px; font-weight:600; margin:0 0 2px; }
+  header p { margin:0; color:var(--mute); }
+  main { padding:12px 16px 40px; max-width:1100px; }
+  h2 { font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--mute); margin:18px 0 6px; }
+  .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0 0; }
+  table { border-collapse:collapse; width:100%; background:var(--panel); border:1px solid var(--line); }
+  th, td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th { font-weight:600; color:var(--mute); font-size:12px; }
+  tr:last-child td { border-bottom:0; }
+  td.num { text-align:right; white-space:nowrap; }
+  td.src { color:var(--mute); font-size:12px; max-width:320px; }
+  button { font:inherit; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:3px 9px; cursor:pointer; }
+  button:hover { border-color:var(--mute); }
+  button.on { border-color:var(--acc); color:var(--acc); }
+  input[type=range] { width:140px; vertical-align:middle; }
+  #status { color:var(--mute); min-height:1.4em; }
+  .wrap { overflow-x:auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sound library audition</h1>
+  <p>Every instrument and kit in <code id="where">sounds/manifest.json</code>, played as the manifest describes. Maintainer page; the app does not link here.</p>
+  <div class="bar">
+    <button id="stop">Stop</button>
+    <label>Level <input id="vol" type="range" min="0" max="24" step="1" value="12"> <span id="volv">+12 dB</span></label>
+    <label><input id="soft" type="checkbox"> soft layer</label>
+    <span id="status"></span>
+  </div>
+</header>
+<main>
+  <h2>Instruments</h2>
+  <div class="wrap"><table id="insts"><thead><tr><th>Instrument</th><th>Range</th><th>Samples</th><th>Size</th><th>Gain</th><th>Play</th><th>Source and licence</th></tr></thead><tbody></tbody></table></div>
+  <h2>Kits</h2>
+  <div class="wrap"><table id="kits"><thead><tr><th>Kit</th><th>Pieces</th><th>Size</th><th>Gain</th><th>Play</th><th>Source and licence</th></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+(function () {
+  "use strict";
+  var qs = new URLSearchParams(location.search);
+  var BASE = qs.get("base") || "../sounds/";
+  if (BASE.charAt(BASE.length - 1) !== "/") BASE += "/";
+  var NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  function noteName(n) { return NAMES[n % 12] + (Math.floor(n / 12) - 1); }
+  function dbToLin(d) { return Math.pow(10, d / 20); }
+
+  var manifest = null;
+  var cache = {};            // file -> Promise<AudioBuffer>
+  var decodeCtx = null;      // any context can decode; buffers are shared between contexts
+
+  function loadManifest() {
+    if (manifest) return Promise.resolve(manifest);
+    return fetch(BASE + "manifest.json").then(function (r) {
+      if (!r.ok) throw new Error("manifest.json: HTTP " + r.status);
+      return r.json();
+    }).then(function (m) { manifest = m; return m; });
+  }
+  function loadFile(file) {
+    if (!cache[file]) {
+      cache[file] = fetch(BASE + (manifest.base || "") + file).then(function (r) {
+        if (!r.ok) throw new Error(file + ": HTTP " + r.status);
+        return r.arrayBuffer();
+      }).then(function (ab) {
+        if (!decodeCtx) decodeCtx = new OfflineAudioContext(2, 44100, 44100);
+        return decodeCtx.decodeAudioData(ab);
+      });
+    }
+    return cache[file];
+  }
+  function loadAll(files) { return Promise.all(files.map(loadFile)); }
+  function instFiles(inst) { return inst.samples.map(function (s) { return s.file; }); }
+  function kitFiles(kit) {
+    var seen = {}, out = [];
+    function add(f) { if (!seen[f]) { seen[f] = 1; out.push(f); } }
+    Object.keys(kit.pieces).forEach(function (p) { kit.pieces[p].forEach(add); });
+    Object.keys(kit.layers || {}).forEach(function (p) { kit.layers[p].forEach(function (l) { l.files.forEach(add); }); });
+    return out;
+  }
+
+  // ---- the reference player -------------------------------------------------------------------
+  // Picks the dynamic layer nearest to vel, then the sample nearest to the note (ties: the lower).
+  function pickSample(inst, midi, vel) {
+    var layers = {}, k, best = null, bestV = null;
+    inst.samples.forEach(function (s) { layers[s.vel] = 1; });
+    for (k in layers) if (bestV === null || Math.abs(k - vel) < Math.abs(bestV - vel)) bestV = +k;
+    inst.samples.forEach(function (s) {
+      if (s.vel !== bestV) return;
+      if (!best || Math.abs(s.note - midi) < Math.abs(best.note - midi)) best = s;
+    });
+    return best;
+  }
+  // Schedules one note. Returns what was scheduled (used by the offline measurements).
+  function playNote(ctx, dest, inst, buffers, midi, when, dur, vel) {
+    var s = pickSample(inst, midi, vel);
+    var buf = buffers[s.file];
+    var src = ctx.createBufferSource();
+    var g = ctx.createGain();
+    var rate = Math.pow(2, (midi - s.note) / 12);
+    var rel = Math.max(0.02, inst.release || 0.2);
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    if (typeof s.loopStart === "number" && typeof s.loopEnd === "number") {
+      src.loop = true; src.loopStart = s.loopStart; src.loopEnd = s.loopEnd;
+    }
+    // level: instrument gain, and the played velocity relative to the layer's nominal velocity
+    var level = dbToLin(inst.gain || 0) * Math.pow(vel / s.vel, 1.2);
+    g.gain.setValueAtTime(level, when);
+    g.gain.setValueAtTime(level, when + dur);
+    g.gain.linearRampToValueAtTime(0, when + dur + rel);
+    src.connect(g); g.connect(dest);
+    src.start(when);
+    src.stop(when + dur + rel + 0.02);
+    return { t: when, midi: midi, dur: dur, vel: vel, sample: s.note, file: s.file, shift: midi - s.note, rate: rate,
+             loopStart: s.loopStart, loopEnd: s.loopEnd, release: rel };
+  }
+  function playHit(ctx, dest, kit, buffers, piece, when, vel, rr) {
+    var files = kit.pieces[piece], layerVel = 100;
+    if (!files) return null;
+    if (kit.layers && kit.layers[piece] && vel < 75 && kit.layers[piece].length > 1) { files = kit.layers[piece][0].files; layerVel = kit.layers[piece][0].vel; }
+    var n = rr[piece] = (rr[piece] || 0) + 1;
+    var file = files[n % files.length];
+    var src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = buffers[file];
+    g.gain.value = dbToLin(kit.gain || 0) * Math.pow(vel / layerVel, 1.2);
+    src.connect(g); g.connect(dest);
+    src.start(when);
+    return { t: when, piece: piece, vel: vel, file: file };
+  }
+
+  // ---- what is played ---------------------------------------------------------------------------
+  function isHeld(inst) { return !!inst.loop; }
+  function midRoot(inst) {
+    var lo = inst.range[0], hi = inst.range[1];
+    var r = Math.round((lo + hi) / 2) - 6;
+    r = r - ((r % 12) + 12) % 12;                    // a C
+    while (r < lo) r += 12;
+    while (r + 16 > hi) r -= 12;
+    return Math.max(lo, r);
+  }
+  // Returns [{midi, t, dur, vel}] for one of: scale, chord, phrase, hold
+  function material(inst, what, vel) {
+    var lo = inst.range[0], hi = inst.range[1], ev = [], n, t = 0, held = isHeld(inst), root = midRoot(inst), k;
+    if (what === "scale") {
+      // notes do not overlap (the next one starts after the release), so each can be measured on its own
+      var len = held ? 0.6 : 0.5, step = len + (inst.release || 0.2) + 0.04;
+      for (n = lo; n <= hi; n++) { ev.push({ midi: n, t: t, dur: len, vel: vel }); t += step; }
+    } else if (what === "chord") {
+      var ch = [0, 7, 12, 16].map(function (d) { return root + d; }).filter(function (m) { return m <= hi; });
+      for (k = 0; k < ch.length; k++) ev.push({ midi: ch[k], t: 0, dur: held ? 6.0 : 3.0, vel: vel });
+      var ch2 = [5, 9, 12, 17].map(function (d) { return root + d - (root + 17 > hi ? 12 : 0); }).filter(function (m) { return m >= lo && m <= hi; });
+      for (k = 0; k < ch2.length; k++) ev.push({ midi: ch2[k], t: (held ? 6.6 : 3.4) + 0.012 * k, dur: held ? 4.0 : 3.0, vel: vel });
+    } else if (what === "phrase") {
+      // a short tune with repeated notes, a leap and a long last note; steps of an eighth at 100 bpm
+      var e = 0.3, tune = [[0, 1], [0, 1], [4, 1], [7, 2], [9, 1], [7, 1], [4, 2], [5, 1], [4, 1], [2, 1], [-1, 1], [0, 2], [12, 1], [11, 1], [7, 2], [4, 1], [2, 1], [0, 6]];
+      tune.forEach(function (x, i) {
+        var m = root + x[0];
+        if (m < lo) m += 12;
+        if (m > hi) m -= 12;
+        ev.push({ midi: m, t: t, dur: x[1] * e * 0.92, vel: (i % 4 === 0) ? vel : Math.round(vel * 0.86) });
+        t += x[1] * e;
+      });
+    } else if (what === "hold") {
+      // every sample of the loud layer at its own pitch, held for several passes of its loop
+      var top = 0; inst.samples.forEach(function (s) { if (s.vel > top) top = s.vel; });
+      inst.samples.forEach(function (s) {
+        if (s.vel !== top) return;
+        ev.push({ midi: s.note, t: t, dur: 9.0, vel: s.vel });
+        t += 9.8;
+      });
+    }
+    return ev;
+  }
+  function scheduleInst(ctx, dest, inst, buffers, what, t0, vel) {
+    return material(inst, what, vel).map(function (e) { return playNote(ctx, dest, inst, buffers, e.midi, t0 + e.t, e.dur, e.vel); });
+  }
+  // Two bars of groove, a tom fill, and a last bar with a crash; sixteenths at 96 bpm.
+  function beat(kit) {
+    var P = kit.pieces, s = 60 / 96 / 4, ev = [], i, bar;
+    function hit(piece, step, vel) { if (P[piece]) ev.push({ piece: piece, t: step * s, vel: vel }); }
+    if (!P.kick) {        // hand percussion: a pattern over its own pieces
+      for (bar = 0; bar < 4; bar++) for (i = 0; i < 16; i++) {
+        var st = bar * 16 + i;
+        hit("shaker", st, i % 4 === 0 ? 100 : (i % 2 === 0 ? 80 : 60));
+        if (i === 0 || i === 6 || i === 10) hit("conga_low", st, i === 0 ? 100 : 80);
+        if (i === 3 || i === 7 || i === 12 || i === 14) hit("conga_high", st, i === 12 ? 100 : 70);
+        if (i === 4 || i === 12) hit("clap", st, 100);
+        if (bar % 2 === 1 && (i === 2 || i === 11)) hit("bongo_high", st, 85);
+        if (bar % 2 === 1 && (i === 9)) hit("bongo_low", st, 85);
+        if (i === 0 && bar === 2) hit("cowbell", st, 90);
+        if (bar === 3 && i % 4 === 2) hit("tambourine", st, 90);
+        if (bar >= 2 && (i === 0 || i === 8)) hit("cajon_low", st, 100);
+        if (bar >= 2 && (i === 5 || i === 13)) hit("cajon_high", st, 80);
+        if (bar === 3 && i % 2 === 1) hit("cabasa", st, 80);
+        if (bar === 1 && i % 2 === 0) hit("tambourine_shake", st, 75);
+      }
+      return { events: ev, length: 64 * s + 2 };
+    }
+    for (bar = 0; bar < 4; bar++) for (i = 0; i < 16; i++) {
+      var q = bar * 16 + i, fill = (bar === 1 && i >= 12) || (bar === 3 && i >= 8);
+      if (bar === 2 && P.ride) { if (i % 2 === 0) hit("ride", q, i % 4 === 0 ? 100 : 70); }
+      else if (!fill) { if (i % 2 === 0) hit("hat_closed", q, i % 4 === 0 ? 100 : 65); else if (i % 4 === 3) hit("hat_closed", q, 50); }
+      if (i === 0 || i === 10 || (i === 7 && bar % 2 === 1)) hit("kick", q, i === 0 ? 110 : 90);
+      if (!fill && (i === 4 || i === 12)) hit("snare", q, 100);
+      if (!fill && i === 9 && bar === 0) hit("snare", q, 50);
+      if (bar === 0 && i === 14) hit("hat_open", q, 90);
+      if (bar === 2 && i === 4) hit("rim", q, 100);
+      if (bar === 2 && i === 12) hit("rim", q, 100);
+      if (bar === 2 && i % 4 === 2) hit("shaker", q, 80);
+      if (bar === 1 && i === 12) hit("snare", q, 80);
+      if (bar === 1 && i === 13) hit("snare", q, 60);
+      if (bar === 1 && i === 14) hit("tom_high", q, 100);
+      if (bar === 1 && i === 15) hit("tom_low", q, 100);
+      if (bar === 3 && i >= 8) hit(["snare", "snare", "tom_high", "tom_high", "tom_mid", "tom_mid", "tom_low", "tom_low"][i - 8], q, 70 + 5 * (i - 8));
+    }
+    hit("crash", 32, 100); hit("crash", 64, 110); hit("kick", 64, 110);
+    hit("tambourine", 68, 100); hit("clap", 72, 100); hit("clap", 76, 100);
+    return { events: ev, length: 64 * s + 5 };
+  }
+  function scheduleKit(ctx, dest, kit, buffers, t0) {
+    var b = beat(kit), rr = {};
+    return { length: b.length, hits: b.events.map(function (e) { return playHit(ctx, dest, kit, buffers, e.piece, t0 + e.t, e.vel, rr); }).filter(Boolean) };
+  }
+  // one hit of every piece, loud then soft, 0.8 s apart
+  function pieces(kit) {
+    var ev = [], t = 0;
+    Object.keys(kit.pieces).forEach(function (p) {
+      var n = kit.pieces[p].length, i;
+      for (i = 0; i < n; i++) { ev.push({ piece: p, t: t, vel: 100 }); t += 0.5; }
+      if (kit.layers && kit.layers[p] && kit.layers[p].length > 1) { ev.push({ piece: p, t: t, vel: 50 }); t += 0.5; }
+      t += 0.5;
+    });
+    return { events: ev, length: t + 4 };
+  }
+
+  function buffersFor(files) {
+    return loadAll(files).then(function (bufs) { var m = {}; files.forEach(function (f, i) { m[f] = bufs[i]; }); return m; });
+  }
+
+  // ---- offline rendering (used by tools/render-audition.js) -----------------------------------------
+  function wavBase64(buf) {
+    var n = buf.length, ch = buf.numberOfChannels, out = new Uint8Array(44 + n * ch * 2), dv = new DataView(out.buffer), i, c, o = 44;
+    function str(p, s) { for (var k = 0; k < s.length; k++) out[p + k] = s.charCodeAt(k); }
+    str(0, "RIFF"); dv.setUint32(4, 36 + n * ch * 2, true); str(8, "WAVEfmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true);
+    dv.setUint16(22, ch, true); dv.setUint32(24, buf.sampleRate, true); dv.setUint32(28, buf.sampleRate * ch * 2, true);
+    dv.setUint16(32, ch * 2, true); dv.setUint16(34, 16, true); str(36, "data"); dv.setUint32(40, n * ch * 2, true);
+    var d = []; for (c = 0; c < ch; c++) d.push(buf.getChannelData(c));
+    var peak = 0;
+    for (c = 0; c < ch; c++) for (i = 0; i < n; i++) { var a = Math.abs(d[c][i]); if (a > peak) peak = a; }
+    for (i = 0; i < n; i++) for (c = 0; c < ch; c++) { var v = Math.max(-1, Math.min(1, d[c][i])); dv.setInt16(o, Math.round(v * 32767), true); o += 2; }
+    var bin = "", CH = 0x8000;
+    for (i = 0; i < out.length; i += CH) bin += String.fromCharCode.apply(null, out.subarray(i, i + CH));
+    return { b64: btoa(bin), peak: peak };
+  }
+  function renderOffline(id, what, opts) {
+    opts = opts || {};
+    return loadManifest().then(function (m) {
+      var inst = m.instruments.filter(function (i) { return i.id === id; })[0];
+      var kit = m.kits.filter(function (k) { return k.id === id; })[0];
+      if (inst) {
+        return buffersFor(instFiles(inst)).then(function (bufs) {
+          var ev = material(inst, what, opts.vel || 100), end = 0;
+          ev.forEach(function (e) { end = Math.max(end, e.t + e.dur); });
+          var ctx = new OfflineAudioContext(2, Math.ceil((end + 1.5) * 44100), 44100);
+          var notes = scheduleInst(ctx, ctx.destination, inst, bufs, what, 0.1, opts.vel || 100);
+          return ctx.startRendering().then(function (buf) { var w = wavBase64(buf); return { wav: w.b64, peak: w.peak, notes: notes, gain: inst.gain }; });
+        });
+      }
+      return buffersFor(kitFiles(kit)).then(function (bufs) {
+        var b = what === "pieces" ? pieces(kit) : beat(kit);
+        var ctx = new OfflineAudioContext(2, Math.ceil((b.length + 0.2) * 44100), 44100), rr = {};
+        var hits = b.events.map(function (e) { return playHit(ctx, ctx.destination, kit, bufs, e.piece, 0.1 + e.t, e.vel, rr); }).filter(Boolean);
+        return ctx.startRendering().then(function (buf) { var w = wavBase64(buf); return { wav: w.b64, peak: w.peak, hits: hits, gain: kit.gain }; });
+      });
+    });
+  }
+  // decodes every file and reports what the browser's decoder returns (length, channels, first sample above 1 % and 10 % of the peak)
+  function decodeReport(files) {
+    return loadManifest().then(function () {
+      var out = [], i = 0;
+      function next() {
+        if (i >= files.length) return out;
+        var f = files[i++];
+        return fetch(BASE + f).then(function (r) { return r.arrayBuffer(); }).then(function (ab) {
+          if (!decodeCtx) decodeCtx = new OfflineAudioContext(2, 44100, 44100);
+          return decodeCtx.decodeAudioData(ab);
+        }).then(function (buf) {
+          var n = buf.length, chs = [], c, k, peak = 0, f40 = -1, f20 = -1;
+          for (c = 0; c < buf.numberOfChannels; c++) chs.push(buf.getChannelData(c));
+          for (c = 0; c < chs.length; c++) for (k = 0; k < n; k++) { var a = Math.abs(chs[c][k]); if (a > peak) peak = a; }
+          for (k = 0; k < n && f20 < 0; k++) for (c = 0; c < chs.length; c++) {
+            var v = Math.abs(chs[c][k]);
+            if (f40 < 0 && v >= peak * 0.01) f40 = k;
+            if (v >= peak * 0.1) { f20 = k; break; }
+          }
+          out.push({ file: f, length: n, channels: chs.length, sampleRate: buf.sampleRate, peak: peak, first40: f40, first20: f20 });
+        }, function (e) { out.push({ file: f, error: String(e) }); }).then(next);
+      }
+      return next();
+    });
+  }
+  window.FLAudition = { loadManifest: loadManifest, renderOffline: renderOffline, decodeReport: decodeReport, material: material, beat: beat,
+                        pickSample: pickSample, instFiles: instFiles, kitFiles: kitFiles };
+
+  // ---- the page ---------------------------------------------------------------------------------------
+  var live = null, master = null, volNode = null, statusEl = document.getElementById("status");
+  function status(t) { statusEl.textContent = t; }
+  function audio() {
+    if (!live) {
+      live = new (window.AudioContext || window.webkitAudioContext)();
+      volNode = live.createGain();
+      var lim = live.createDynamicsCompressor();          // a safety limiter for the page, after the level control
+      lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.1;
+      volNode.connect(lim); lim.connect(live.destination);
+      master = live.createGain(); master.connect(volNode);
+      setVol();
+    }
+    if (live.state === "suspended") live.resume();
+    return live;
+  }
+  function setVol() {
+    var v = +document.getElementById("vol").value;
+    document.getElementById("volv").textContent = "+" + v + " dB";
+    if (volNode) volNode.gain.value = dbToLin(v);
+  }
+  function stopAll() {
+    if (!live) return;
+    var old = master;
+    old.gain.setTargetAtTime(0, live.currentTime, 0.02);
+    master = live.createGain();
+    master.connect(volNode);
+    setTimeout(function () { try { old.disconnect(); } catch (e) {} }, 300);
+    status("");
+  }
+  function vel() { return document.getElementById("soft").checked ? 50 : 100; }
+  function playInst(inst, what) {
+    var ctx = audio(); stopAll();
+    status("Loading " + inst.name + " (" + (inst.bytes / 1e6).toFixed(2) + " MB)");
+    var t0 = performance.now();
+    buffersFor(instFiles(inst)).then(function (bufs) {
+      var notes = scheduleInst(ctx, master, inst, bufs, what, ctx.currentTime + 0.08, vel());
+      status(inst.name + ": " + what + ", " + notes.length + " notes; loaded in " + Math.round(performance.now() - t0) + " ms");
+    }).catch(function (e) { status("Could not load " + inst.name + ": " + e.message); });
+  }
+  function playKit(kit, what) {
+    var ctx = audio(); stopAll();
+    status("Loading " + kit.name);
+    buffersFor(kitFiles(kit)).then(function (bufs) {
+      var rr = {}, b = what === "pieces" ? pieces(kit) : beat(kit), t0 = ctx.currentTime + 0.08;
+      b.events.forEach(function (e) { playHit(ctx, master, kit, bufs, e.piece, t0 + e.t, e.vel, rr); });
+      status(kit.name + ": " + what);
+    }).catch(function (e) { status("Could not load " + kit.name + ": " + e.message); });
+  }
+  function td(text, cls) { var c = document.createElement("td"); if (cls) c.className = cls; c.textContent = text; return c; }
+  function btn(label, fn) { var b = document.createElement("button"); b.textContent = label; b.addEventListener("click", fn); return b; }
+  function build(m) {
+    var tb = document.querySelector("#insts tbody"), kb = document.querySelector("#kits tbody");
+    m.instruments.forEach(function (inst) {
+      var tr = document.createElement("tr"), play = document.createElement("td");
+      tr.appendChild(td(inst.name + (inst.loop ? " (held)" : "")));
+      tr.appendChild(td(noteName(inst.range[0]) + " to " + noteName(inst.range[1])));
+      tr.appendChild(td(String(inst.samples.length), "num"));
+      tr.appendChild(td((inst.bytes / 1e6).toFixed(2) + " MB", "num"));
+      tr.appendChild(td((inst.gain || 0) + " dB", "num"));
+      ["scale", "chord", "phrase"].forEach(function (w) { play.appendChild(btn(w.charAt(0).toUpperCase() + w.slice(1), function () { playInst(inst, w); })); play.appendChild(document.createTextNode(" ")); });
+      if (inst.loop) play.appendChild(btn("Long notes", function () { playInst(inst, "hold"); }));
+      tr.appendChild(play);
+      tr.appendChild(td(inst.source + " (" + inst.licence + ")", "src"));
+      tb.appendChild(tr);
+    });
+    m.kits.forEach(function (kit) {
+      var tr = document.createElement("tr"), play = document.createElement("td");
+      tr.appendChild(td(kit.name));
+      tr.appendChild(td(Object.keys(kit.pieces).join(", "), "src"));
+      tr.appendChild(td((kit.bytes / 1e6).toFixed(2) + " MB", "num"));
+      tr.appendChild(td((kit.gain || 0) + " dB", "num"));
+      play.appendChild(btn("Beat", function () { playKit(kit, "beat"); })); play.appendChild(document.createTextNode(" "));
+      play.appendChild(btn("Each piece", function () { playKit(kit, "pieces"); }));
+      tr.appendChild(play);
+      tr.appendChild(td(kit.source + " (" + kit.licence + ")", "src"));
+      kb.appendChild(tr);
+    });
+  }
+  document.getElementById("stop").addEventListener("click", stopAll);
+  document.getElementById("vol").addEventListener("input", setVol);
+  document.getElementById("where").textContent = BASE + "manifest.json";
+  loadManifest().then(build).catch(function (e) { status("Could not read the manifest: " + e.message + ". Open this page through a web server, not from a file."); });
+})();
+</script>
+</body>
+</html>

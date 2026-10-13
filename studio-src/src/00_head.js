@@ -55,6 +55,25 @@
     function btn(cls, text, title, fn){ var b = el("button", cls, text); b.type = "button"; if(title) b.title = title; if(fn) b.addEventListener("click", fn); return b; }
     function noteName(p){ return NOTE_NAMES[((p % 12) + 12) % 12] + (Math.floor(p / 12) - 1); }
     function keyName(k){ return !k || k.root === null || k.root === undefined || k.scale === "none" ? "No key" : NOTE_NAMES[k.root] + (k.scale === "minor" ? " minor" : " major"); }
-    function tell(m){ try { say(m); } catch(e){} }
+    function tell(m){ try { say(m); } catch(e){} if(typeof phToast === "function") phToast(m); }
+    // What kind of device this is. A phone or a tablet is a first-class place to work, with its own layout
+    // (66_phone.js) of the same song and the same engine; what differs underneath (sound that needs a tap, the
+    // silent switch, headphones, memory) is in 45_mobile.js. Tests may put __flTestMob on the window to stand in.
+    var MOB = (function(){
+      var ua = String(navigator.userAgent || ""), mtp = navigator.maxTouchPoints || 0, coarse = false, tm = testMode && window.__flTestMob ? window.__flTestMob : {};
+      try { coarse = window.matchMedia("(any-pointer:coarse)").matches; } catch(e){}
+      var m = { ios:/iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && mtp > 1), android:/Android/i.test(ua), touch:mtp > 0 || coarse, ua:ua };
+      m.handheld = m.ios || m.android || (m.touch && /Mobile|Tablet/i.test(ua));
+      Object.keys(tm).forEach(function(k){ m[k] = tm[k]; });
+      // a phone has a few hundred megabytes for a page: fewer voices at once, instruments held in mono, a cap on the canvases
+      m.lean = !!(m.handheld || tm.lean);
+      return m;
+    })();
+    // the phone layout: a narrow window, or a touch screen that is narrow or low (a phone on its side)
+    function phoneWant(){
+      var w = window.innerWidth || 0, h = window.innerHeight || 0;
+      return w < 700 || (MOB.touch && (w < 1000 || h < 500));
+    }
+    function phoneOn(){ return !!(UI && UI.root && UI.root.dataset.phone === "true"); }
     var DSP = null;
     function dsp(){ return DSP || (DSP = stDspLib()); }

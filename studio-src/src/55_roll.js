@@ -37,13 +37,13 @@
       var f = rollRegion(), host = ROLL.host; if(!f) return;
       var p = patOf(f.r), lo = 127, hi = 0, L = rollLen(f);
       ROLL.ppt = clamp((host.clientWidth - ROLL.keysW - 24) / L, 0.02, 1.2);
-      if(p && p.notes.length){ p.notes.forEach(function(n){ if(n.p < lo) lo = n.p; if(n.p > hi) hi = n.p; }); ROLL.rowH = clamp(Math.floor((host.clientHeight - ROLL.rulerH - ROLL.velH - 16) / (hi - lo + 5)), 8, 22); }
+      if(p && p.notes.length){ p.notes.forEach(function(n){ if(n.p < lo) lo = n.p; if(n.p > hi) hi = n.p; }); ROLL.rowH = clamp(Math.floor((host.clientHeight - ROLL.rulerH - ROLL.velH - 16) / (hi - lo + 5)), phoneOn() ? 16 : 8, phoneOn() ? 30 : 22); }
       ROLL.view.paint(); host.scrollLeft = 0; rollCentre(f); ROLL.view.ask();
     }
     function rollZoom(fz, p, axis){
       var host = ROLL.host;
       if(axis === "y"){
-        var pitch = rollP(p.y, host.scrollTop) ; ROLL.rowH = clamp(Math.round(ROLL.rowH * (fz > 1 ? 1.15 : 0.87)), 7, 26);
+        var pitch = rollP(p.y, host.scrollTop) ; ROLL.rowH = clamp(Math.round(ROLL.rowH * (fz > 1 ? 1.15 : 0.87)), phoneOn() ? 14 : 7, phoneOn() ? 34 : 26);
         ROLL.view.paint(); host.scrollTop = Math.max(0, ROLL.rulerH + (127 - pitch) * ROLL.rowH - p.y); ROLL.view.ask(); return;
       }
       var u = rollU(p.x, host.scrollLeft); ROLL.ppt = clamp(ROLL.ppt * fz, 0.015, 1.6);
@@ -140,6 +140,7 @@
       if(px >= K && px <= w){ c.strokeStyle = C.ink; c.beginPath(); c.moveTo(px, RH); c.lineTo(px, gh); c.stroke(); }
       c.restore();
       // velocity lane
+      if(VH > 0){
       c.fillStyle = C.surface; c.fillRect(0, gh, w, VH); c.strokeStyle = C.line2; c.beginPath(); c.moveTo(0, gh + 0.5); c.lineTo(w, gh + 0.5); c.stroke();
       c.save(); c.beginPath(); c.rect(K, gh + 1, w - K, VH - 1); c.clip();
       c.strokeStyle = C.line; c.beginPath(); c.moveTo(K, gh + 6 + (VH - 12) * 0.5 + 0.5); c.lineTo(w, gh + 6 + (VH - 12) * 0.5 + 0.5); c.stroke();
@@ -150,6 +151,7 @@
       }
       c.restore();
       c.fillStyle = C.surface; c.fillRect(0, gh + 1, K, VH - 1); c.fillStyle = C.ink3; c.font = "600 10px " + FONT; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Velocity", 8, gh + VH / 2);
+      }
       // ruler
       c.fillStyle = C.surface; c.fillRect(0, 0, w, RH); c.strokeStyle = C.line2; c.beginPath(); c.moveTo(0, RH + 0.5); c.lineTo(w, RH + 0.5); c.stroke();
       c.save(); c.beginPath(); c.rect(K, 0, w - K, RH); c.clip();
@@ -183,6 +185,7 @@
       }
       c.restore();
       c.strokeStyle = C.line2; c.beginPath(); c.moveTo(K + 0.5, 0); c.lineTo(K + 0.5, h); c.stroke();
+      if(PH.loupe) phLoupePaint();
     }
 
     // ---- the pointer in the note editor ----
@@ -215,6 +218,7 @@
       var f = rollRegion(), host = ROLL.host; if(!f) return null;
       var sl = host.scrollLeft, st = host.scrollTop, r = f.r, t = f.t, pat = patOf(r), gh = host.clientHeight - ROLL.velH, base = r.s;
       closePops(); rollFocus();
+      if(phoneOn()) return phRollDown(p, e, f);
       // ruler: playhead, or a drag for the loop
       if(p.y < ROLL.rulerH){
         if(p.x < ROLL.keysW) return null;
@@ -318,7 +322,7 @@
       };
     }
     function rollDbl(p, e){
-      var f = rollRegion(), host = ROLL.host; if(!f || p.x < ROLL.keysW || p.y < ROLL.rulerH || p.y > host.clientHeight - ROLL.velH) return;
+      var f = rollRegion(), host = ROLL.host; if(phoneOn() || !f || p.x < ROLL.keysW || p.y < ROLL.rulerH || p.y > host.clientHeight - ROLL.velH) return;
       var hit = rollNoteAt(p, host.scrollLeft, host.scrollTop), pat = patOf(f.r);
       if(hit){ pat.notes.splice(pat.notes.indexOf(hit.n), 1); ROLL.sel = []; noteEdited(f); commit("delete note"); return; }
       if(ROLL.tool === "pencil") return;
@@ -372,6 +376,7 @@
         return done("join notes end to start");
       }
       if(what === "length"){ if(!need()) return false; sel.forEach(function(n){ n.l = arg || g; }); return done("set note length"); }
+      if(what === "stretch"){ if(!need()) return false; var mnl = Math.min(g, PPQ / 8); if(arg < 0 && !sel.some(function(n){ return n.l > mnl; })) return false; sel.forEach(function(n){ n.l = Math.max(mnl, n.l + arg); }); ROLL.lastLen = sel[0].l; return done(arg > 0 ? "longer notes" : "shorter notes"); }
       if(what === "split"){
         // at the playhead where it crosses a note, otherwise each selected note in half
         if(!need()) return false;

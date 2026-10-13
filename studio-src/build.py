@@ -5,7 +5,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 idx = sys.argv[1]
 s = open(idx, encoding='utf-8').read()
 js = ''.join(open(f, encoding='utf-8').read().rstrip('\n') + '\n' for f in sorted(glob.glob(os.path.join(here, 'src', '*.js'))))
-css = open(os.path.join(here, 'src', 'studio.css'), encoding='utf-8').read().rstrip('\n') + '\n'
+css = ''.join(open(f, encoding='utf-8').read().rstrip('\n') + '\n' for f in sorted(glob.glob(os.path.join(here, 'src', '*.css'))))
 CS, CE = '  /* ===== Studio (css) ===== */\n', '  /* ===== /Studio (css) ===== */\n'
 JS, JE = '  // ===== Studio =====\n', '  // ===== /Studio =====\n'
 if not js.startswith(JS): raise SystemExit('js must start with the marker')

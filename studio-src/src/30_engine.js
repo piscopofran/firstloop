@@ -4,7 +4,7 @@
     // (per track: tone, volume, pan, reverb send; then the master limiter) is built by one function for the live
     // context and for an offline one, and notes are put into either by the same code, at whole sample frames.
     var ENG = { ctx:null, G:null, ready:null, manifest:null, manifestState:"none", base:"", inst:{}, kits:{}, limiterOK:false, mods:null, note:"" };
-    var MAXV = 56, LOOKAHEAD = 0.16, LIM_LOOK = 0.005;
+    var MAXV = MOB.lean ? 32 : 56, LOOKAHEAD = 0.16, LIM_LOOK = 0.005;
     var DRUM = { kick:36, rim:37, snare:38, clap:39, tom_low:45, tom_mid:47, tom_high:50, hat_closed:42, hat_open:46, ride:51, crash:49, tambourine:54, shaker:70,
                  rimshot:40, hat_pedal:44, ride_bell:53, cowbell:56, tambourine_shake:58, bongo_high:60, bongo_low:61, conga_high:63, conga_low:64, cabasa:69, cajon_high:76, cajon_low:77 };
     // the rows every kit shows, top to bottom; a kit that has more pieces (a pedal hat, congas) gets rows for those too
@@ -195,7 +195,7 @@
       });
     }
     function loadModules(ctx){
-      if(!ctx.audioWorklet || typeof window.AudioWorkletNode !== "function") return Promise.resolve(false);
+      if(!ctx.audioWorklet || typeof window.AudioWorkletNode !== "function" || (typeof TEST !== "undefined" && TEST.noWorklet)) return Promise.resolve(false);
       var src = "(" + limiterWorklet.toString() + ")();(" + recorderWorklet.toString() + ")();", url;
       try { url = URL.createObjectURL(new Blob([src], { type:"text/javascript" })); } catch(e){ url = null; }
       var p = url ? ctx.audioWorklet.addModule(url) : Promise.reject();
@@ -278,8 +278,13 @@
       if(ENG.ready) return ENG.ready;
       var Ctx = window.AudioContext || window.webkitAudioContext;
       if(!Ctx){ ENG.note = "This browser has no Web Audio, so the Studio cannot make sound."; ENG.ready = Promise.resolve(false); return ENG.ready; }
-      ENG.ctx = new Ctx({ latencyHint:"interactive" });
+      // the rate is whatever the device runs at (44.1 kHz, 48 kHz, 16 or 24 kHz with a Bluetooth headset on a phone): nothing below assumes one
+      try { ENG.ctx = new Ctx(TEST.sampleRate ? { latencyHint:"interactive", sampleRate:TEST.sampleRate } : { latencyHint:"interactive" }); }
+      catch(e0){ try { ENG.ctx = new Ctx(); } catch(e1){ ENG.note = "This browser could not start its sound."; ENG.ready = Promise.resolve(false); return ENG.ready; } }
+      if(typeof ctxWatch === "function") ctxWatch(ENG.ctx);
+      var made = ENG.ctx;
       ENG.ready = loadModules(ENG.ctx).then(function(ok){
+        if(made !== ENG.ctx) return ENG.ready;          // the context was made afresh meanwhile (a phone after an interruption)
         ENG.limiterOK = ok; ENG.mods = ok;
         ENG.G = buildGraph(ENG.ctx, true);
         engSync();
@@ -370,12 +375,19 @@
         try { var p = ENG.ctx.decodeAudioData(ab.slice(0), res, rej); if(p && p["catch"]) p["catch"](rej); } catch(e){ rej(e); }
       });
     }
+    // a phone holds instruments in mono: half the memory of a stereo piano or kit; pan and the room still give width
+    function leanBuf(buf){
+      if(!MOB.lean || !buf || buf.numberOfChannels < 2) return buf;
+      var n = buf.length, a = buf.getChannelData(0), b = buf.getChannelData(1), m = ENG.ctx.createBuffer(1, n, buf.sampleRate), d = m.getChannelData(0), i;
+      for(i = 0; i < n; i++) d[i] = 0.5 * (a[i] + b[i]);
+      return m;
+    }
     function loadFile(s){
       // "file" first, "file2" if the browser cannot decode the first
       var names = [s.file, s.file2].filter(Boolean);
       function go(i){
         if(i >= names.length) return Promise.reject(new Error("no file"));
-        return fileBytes(names[i]).then(decode)["catch"](function(){ return go(i + 1); });
+        return fileBytes(names[i]).then(decode).then(leanBuf)["catch"](function(){ return go(i + 1); });
       }
       return go(0);
     }
@@ -439,7 +451,9 @@
         });
       } else {
         var autoTune = d.def.tuning !== "keep" && !/(grand|upright)[-_ ]?piano/.test(id);
-        d.def.samples.forEach(function(s){
+        var mid = d.range ? (d.range[0] + d.range[1]) / 2 : 60, order = d.def.samples.slice().sort(function(x, y){ return ((y && y.vel) || 100) - ((x && x.vel) || 100) || Math.abs(((x && x.note) || 0) - mid) - Math.abs(((y && y.note) || 0) - mid); });
+        if(!MOB.lean) order = d.def.samples;
+        order.forEach(function(s){
           if(!s || !s.file || !(s.note >= 0)) return;
           total++;
           jobs.push(loadFile(s).then(function(buf){
@@ -510,8 +524,11 @@
     }
     // a note of known length. Returns the voice.
     function playNote(G, t, pitch, vel, when, dur){
-      var id = soundFor(t), d = ENG.inst[id]; if(!d || d.kit || d.state !== "ready") return null;
-      var n = trackNodes(G, t), ctx = G.ctx, p = pitch + 12 * (t.oct || 0), z = pickZone(d, p, vel); if(!z) return null;
+      var id = soundFor(t), d = ENG.inst[id], p = pitch + 12 * (t.oct || 0), z = null, own = ENG.inst[t.inst];
+      // while an instrument is still arriving, a note whose own recording is here already is played with it
+      if(G.live && own && own !== d && !own.kit && own.state === "loading" && own.zones.length){ z = pickZone(own, p, vel); if(z && Math.abs((z.nominal === undefined ? z.note : z.nominal) - p) <= 2.5) d = own; else z = null; }
+      if(!d || d.kit || (d.state !== "ready" && !z)) return null;
+      var n = trackNodes(G, t), ctx = G.ctx; if(!z) z = pickZone(d, p, vel); if(!z) return null;
       when = frameTime(ctx, Math.max(when, 0));
       claim(G, when);
       var src = ctx.createBufferSource(), g = ctx.createGain(), cut = velCut(vel, false), rate = Math.pow(2, (p - z.note) / 12), node = src;
@@ -660,9 +677,10 @@
     function loadTakes(){
       // decode the recordings the song places on its timeline
       if(!S || !ENG.ctx) return Promise.resolve();
-      var ids = {}; S.tracks.forEach(function(t){ if(t.kind === "audio") t.regions.forEach(function(r){ var id = r.takes[r.act]; if(id && !audioBufs[id]) ids[id] = 1; }); });
+      var ids = {}, want = {}; S.tracks.forEach(function(t){ t.regions.forEach(function(r){ if(r.hum) want[r.hum.take] = 1; if(t.kind !== "audio") return; var id = r.takes[r.act]; want[id] = 1; if(id && !audioBufs[id]) ids[id] = 1; }); });
+      if(MOB.lean) Object.keys(audioBufs).forEach(function(id){ if(!want[id]) delete audioBufs[id]; });
       return Promise.all(Object.keys(ids).map(function(id){
-        return dbGet("audio", id).then(function(a){
+        return takeGet(id).then(function(a){
           if(!a || !a.pcm) return;
           var f = new Float32Array(a.pcm.length), i; for(i = 0; i < f.length; i++) f[i] = a.pcm[i] / 32768;
           audioBufs[id] = bufFrom(ENG.ctx, f, a.sr);
@@ -790,7 +808,7 @@
           var timeOf = function(tk){ return tickSec(tk - from); };
           scheduleSpan(G, from, to, timeOf, { first:true, until:o.cut ? to : undefined, only:o.only || null });
           if(o.click) scheduleClicks(G, from, to, timeOf, 1);
-          return oc.startRendering().then(function(buf){
+          return startRender(oc).then(function(buf){
             if(!G.lookFrames) return buf;
             // the limiter looks ahead: take its delay off the front so the file starts where the song does
             var out = oc.createBuffer(2, buf.length - G.lookFrames, sr), c;
@@ -798,6 +816,12 @@
             return out;
           });
         });
+      });
+    }
+    function startRender(oc){
+      return new Promise(function(res, rej){
+        oc.oncomplete = function(e){ res(e.renderedBuffer); };
+        try { var p = oc.startRendering(); if(p && p.then) p.then(res, rej); } catch(e){ rej(e); }
       });
     }
     function wavBytes(chans, sr, bits){

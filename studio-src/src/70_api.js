@@ -423,16 +423,18 @@
       if(!UI.built) return;
       closePops();
       if(HUM){ humCancel(); recStripEnd(); } else if(recordingNow()){ stopAnyRecording(); recStripEnd(); }
+      if(PH.cap) phCapEnd();
       micMeterStop(); clearInterval(HS.timer);
       if(TR.playing) transportStop(); auditionStop(); kbAllOff();
       if(S && saveTimer) saveNowS();
+      phSync(); keeperPause(); wakeSet(false);
     }
     function backupOut(){
       // every song, and its recordings while they are of a size a backup file can carry
       return dbAll("songs").then(function(rows){
         if(!rows.length) return null;
         var ids = {}; rows.forEach(function(r){ var s = fixSong(r.data); if(s) takesOf(s).forEach(function(id){ ids[id] = r.id; }); });
-        return Promise.all(Object.keys(ids).map(function(id){ return dbGet("audio", id); })).then(function(as){
+        return Promise.all(Object.keys(ids).map(function(id){ return takeGet(id); })).then(function(as){
           as = as.filter(Boolean); var total = 0; as.forEach(function(a){ total += a.pcm.byteLength; });
           var keep = total <= 48 * 1048576;
           return { v:1, songs:rows.map(function(r){ return { id:r.id, name:r.name, updated:r.updated, created:r.created, data:r.data }; }),
@@ -485,6 +487,10 @@
       rollDo:rollDo, select:select, showTab:showTab, refresh:refresh, layout:layout, chordNotes:chordNotes, chordPart:chordPart, chordFollow:chordFollow, chordSet:chordSet, suggestChords:suggestChords, parseChord:parseChord,
       keyChords:keyChords, chordTones:chordTones, drumNotes:drumNotes, drumPreset:drumPreset, drumDensity:drumDensity, drumRows:drumRows, stylesFor:stylesFor, CHORD_STYLES:CHORD_STYLES, BASS_STYLES:BASS_STYLES,
       instBrowser:instBrowser, exportSheet:exportSheet, exportMix:exportMix, exportStems:exportStems, exportMidi:exportMidi, exportProject:exportProject, startWith:startWith, stepState:stepState, boot:boot,
+      MOB:MOB, PH:PH, UNL:UNL, HP:HP, STO:STO, PREF:PREF, WAKE:WAKE, INST:INST, HS:HS, TK:TK, ARR:ARR, memTakes:memTakes, phoneOn:phoneOn, phoneWant:phoneWant, phGo:phGo, phCap:phCap, phShare:phShare, phCheck:phCheck, phAsst:phAsst,
+      micOpen:micOpen, micClose:micClose, micLive:micLive, micModes:micModes, recMime:recMime, recBegin:recBegin, recEnd:recEnd, engRebuild:engRebuild, audioUnlock:audioUnlock, routeDetect:routeDetect, hpState:hpState, recPlan:recPlan,
+      storageInfo:storageInfo, takeRetry:takeRetry, shareOrSave:shareOrSave, shareFile:shareFile, copyDue:copyDue, vvApply:vvApply, unloadUnused:unloadUnused, wakeSet:wakeSet, keeperStart:keeperStart, rollDown:rollDown, regionAt:regionAt,
+      get REC_UI(){ return REC_UI; }, get saveState(){ return saveState; },
       scaleOf:scaleOf, inScale:inScale, barTicks:barTicks, tickSec:tickSec, secTick:secTick, songTicks:songTicks, dbGet:dbGet, dbAll:dbAll, auditionInst:auditionInst, genTone:genTone, genDrum:genDrum, levels:levels
     };
     return API;

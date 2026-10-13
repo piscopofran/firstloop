@@ -7,13 +7,21 @@
       click:"M12 2l5 20H7zM11 8h2v8h-2z", undo:"M9 5L3 11l6 6v-4h5a4 4 0 0 1 0 8h-3v2h3a6 6 0 0 0 0-12H9z", redo:"M15 5l6 6-6 6v-4h-5a4 4 0 0 0 0 8h3v2h-3a6 6 0 0 1 0-12h5z",
       mic:"M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11v1a6 6 0 0 0 5 5.9V21h2v-3.1A6 6 0 0 0 18 12v-1h-2v1a4 4 0 0 1-8 0v-1z",
       plus:"M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z", pointer:"M5 3l14 8-6 2-2 6z", pencil:"M4 20l1-5L16 4l4 4L9 19zM14 6l4 4", keys:"M3 6h18v12H3zM8 6v7M12 6v7M16 6v7",
-      more:"M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z", down:"M6 9l6 6 6-6z", x:"M6 6l12 12M18 6L6 18"
+      more:"M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z", down:"M6 9l6 6 6-6z", x:"M6 6l12 12M18 6L6 18",
+      // the phone layout's own (drawn as lines)
+      back:"M15 5l-7 7 7 7", fwd:"M9 5l7 7-7 7", up:"M12 19V5M6 11l6-6 6 6", dn:"M12 5v14M6 13l6 6 6-6", left:"M19 12H5M11 6l-6 6 6 6", right:"M5 12h14M13 6l6 6-6 6",
+      share:"M12 15V3M8 7l4-4 4 4M5 12v8h14v-8", chat:"M4 5h16v11H9l-5 4z", split:"M12 3v18M4 8h5v8H4zM15 8h5v8h-5z", lasso:"M4 6h3M10 6h4M17 6h3M4 18h3M10 18h4M17 18h3M4 6v3M4 13v5M20 6v3M20 13v5",
+      fit:"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5", shorter:"M4 8h9v8H4zM21 12h-5M18 10l-2 2 2 2", longer:"M4 8h9v8H4zM15 12h6M19 10l2 2-2 2",
+      ear:"M4 10v4h4l5 4V6L8 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11", trash:"M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13", check:"M5 12l5 5 9-10", list:"M4 6h16M4 12h16M4 18h16",
+      head:"M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v6H5zM16 14h3v6h-3z", sliders:"M6 4v16M12 4v16M18 4v16M4 9h4M10 14h4M16 8h4", text:"M5 6h14M5 10h14M5 14h9M5 18h11",
+      grid:"M4 5h16v14H4zM4 12h16M9.3 5v14M14.6 5v14", tracks:"M4 6h10M4 12h16M4 18h7"
     };
+    var ICON_LINE = { pencil:1, keys:1, x:1, back:1, fwd:1, up:1, dn:1, left:1, right:1, share:1, chat:1, split:1, lasso:1, fit:1, shorter:1, longer:1, ear:1, trash:1, check:1, list:1, head:1, sliders:1, text:1, grid:1, tracks:1 };
     function ico(name, stroke){
       var s = document.createElementNS("http://www.w3.org/2000/svg", "svg"), p = document.createElementNS("http://www.w3.org/2000/svg", "path");
       s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); s.setAttribute("class", "st-ico" + (stroke ? " line" : "")); p.setAttribute("d", ICON[name]); s.appendChild(p); return s;
     }
-    function ibtn(cls, icon, label, title, fn){ var b = btn("st-b " + (cls || ""), null, title || label, fn); b.setAttribute("aria-label", label); b.appendChild(ico(icon, icon === "pencil" || icon === "keys" || icon === "x")); return b; }
+    function ibtn(cls, icon, label, title, fn){ var b = btn("st-b " + (cls || ""), null, title || label, fn); b.setAttribute("aria-label", label); b.appendChild(ico(icon, !!ICON_LINE[icon])); return b; }
     function tbtn(cls, text, title, fn){ return btn("st-b " + (cls || ""), text, title, fn); }
     function colors(){
       if(UI.col) return UI.col;
@@ -48,6 +56,11 @@
     }
     function popOver(anchor, build, o){
       o = o || {};
+      // on a phone there is no room beside a button: what would float there comes up from the bottom instead
+      if(phoneOn()) return sheet(o.title || (o.label ? String(o.label).charAt(0).toUpperCase() + String(o.label).slice(1) : ""), function(body, close){
+        body.className += " st-popbody " + (o.cls || ""); build(body, close);
+        if(o.select){ var fi = body.querySelector("input"); if(fi) fi.setAttribute("autofocus", ""); }
+      }, { cls:"st-popsheet", onClose:o.onClose });
       closePops();
       var pop = el("div", "st-pop " + (o.cls || "")), back = anchor && anchor.focus ? anchor : null;
       pop.setAttribute("role", o.role || "dialog"); if(o.label) pop.setAttribute("aria-label", o.label);
@@ -104,7 +117,8 @@
       build(body, close, sh);
       (o.inside ? UI.root : document.body).appendChild(back);
       UI.pops.push(close);
-      var f = sh.querySelector("[autofocus]") || x; try { f.focus({ preventScroll:true }); } catch(e2){}
+      if(phoneOn()) phArm();
+      var f = sh.querySelector("[autofocus]") || x; try { f.focus({ preventScroll:true }); if(f !== x && f.select) f.select(); } catch(e2){}
       return close;
     }
     function askText(anchor, label, value, done){
@@ -147,7 +161,7 @@
       V.paint = function(){
         V.need = false;
         if(!S || !UI.root || document.body.dataset.view !== "studio" || !host.clientWidth) return;
-        var w = host.clientWidth, h = host.clientHeight, dpr = window.devicePixelRatio || 1;
+        var w = host.clientWidth, h = host.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, MOB.lean ? 2 : 8);
         if(w !== V.w || h !== V.h || dpr !== V.dpr){ V.w = w; V.h = h; V.dpr = dpr; V.cv.width = Math.max(1, Math.round(w * dpr)); V.cv.height = Math.max(1, Math.round(h * dpr)); V.cv.style.width = w + "px"; V.cv.style.height = h + "px"; }
         var c = o.content(); V.sp.style.width = Math.round(c.w) + "px"; V.sp.style.height = Math.round(c.h) + "px";
         V.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -159,7 +173,7 @@
       host.addEventListener("scroll", function(){ if(o.onScroll) o.onScroll(host.scrollLeft, host.scrollTop); V.ask(); }, { passive:true });
       try { new ResizeObserver(V.ask).observe(host); } catch(e){ window.addEventListener("resize", V.ask); }
       function pt(e){ var r = V.cv.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; }
-      var touches = {}, pinch = null, drag = null, pan = null;
+      var touches = {}, pinch = null, drag = null, pan = null, tapAt = null;
       V.cv.addEventListener("pointerdown", function(e){
         if(e.button > 0) return;
         var p = pt(e);
@@ -167,7 +181,7 @@
           touches[e.pointerId] = p;
           var ids = Object.keys(touches);
           if(ids.length === 2){
-            if(drag && drag.cancel) drag.cancel(); drag = null; pan = null;
+            if(drag && drag.cancel) drag.cancel(); drag = null; pan = null; tapAt = null;
             var a = touches[ids[0]], b = touches[ids[1]];
             pinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, cx:(a.x + b.x) / 2, cy:(a.y + b.y) / 2, sl:host.scrollLeft, st:host.scrollTop };
             return;
@@ -176,6 +190,8 @@
         try { V.cv.setPointerCapture(e.pointerId); } catch(err){}
         drag = o.down ? o.down(p, e) : null;
         if(!drag && e.pointerType === "touch") pan = { x:p.x, y:p.y, sl:host.scrollLeft, st:host.scrollTop };
+        // a press that does not move and is let go soon is a tap (the phone layout works by taps)
+        tapAt = !drag && o.tap ? { x:p.x, y:p.y, t:performance.now(), id:e.pointerId } : null;
         if(drag || pan) e.preventDefault();
       });
       V.cv.addEventListener("pointermove", function(e){
@@ -190,6 +206,7 @@
             return;
           }
         }
+        if(tapAt && Math.hypot(p.x - tapAt.x, p.y - tapAt.y) > 9) tapAt = null;
         if(drag){ if(drag.move) drag.move(p, e); }
         else if(pan){ host.scrollLeft = pan.sl + pan.x - p.x; host.scrollTop = pan.st + pan.y - p.y; }
         else if(o.hover){ var cur = o.hover(p, e); V.cv.style.cursor = cur || ""; }
@@ -197,11 +214,12 @@
       function end(e){
         var p = pt(e);
         if(e.pointerType === "touch"){ delete touches[e.pointerId]; if(pinch){ if(Object.keys(touches).length < 2) pinch = null; return; } }
-        var d = drag; drag = null; pan = null;
+        var d = drag, tp = tapAt; drag = null; pan = null; tapAt = null;
         if(d && d.up) d.up(p, e);
+        if(tp && tp.id === e.pointerId && performance.now() - tp.t < 700) o.tap(p, e);
       }
       V.cv.addEventListener("pointerup", end);
-      V.cv.addEventListener("pointercancel", function(e){ delete touches[e.pointerId]; pinch = null; pan = null; var d = drag; drag = null; if(d && d.cancel) d.cancel(); });
+      V.cv.addEventListener("pointercancel", function(e){ delete touches[e.pointerId]; pinch = null; pan = null; tapAt = null; var d = drag; drag = null; if(d && d.cancel) d.cancel(); });
       V.cv.addEventListener("dblclick", function(e){ if(o.dbl) o.dbl(pt(e), e); });
       V.cv.addEventListener("contextmenu", function(e){ if(o.menu){ e.preventDefault(); o.menu(pt(e), e); } });
       V.cv.addEventListener("pointerleave", function(){ if(o.leave) o.leave(); });
@@ -289,7 +307,7 @@
       hr3.appendChild(el("span", "st-l", "Chords")); hr3.appendChild(el("span", "st-flex")); hr3.appendChild(E.chordsB);
       ht.appendChild(hr1); ht.appendChild(hr2); ht.appendChild(hr3); heads.appendChild(ht);
       E.headScroll = el("div", "st-headscroll"); E.headList = el("div", "st-headlist"); E.headScroll.appendChild(E.headList); heads.appendChild(E.headScroll);
-      E.addTrack = btn("st-addtrack", null, "Add a track: an instrument, drums, or your voice", function(){ instBrowser(E.addTrack, null); }); E.addTrack.id = "staddtrack";
+      E.addTrack = btn("st-addtrack", null, "Add a track: an instrument, drums, or your voice", function(){ if(phoneOn()) phAddTrack(); else instBrowser(E.addTrack, null); }); E.addTrack.id = "staddtrack";
       E.addTrack.appendChild(ico("plus")); E.addTrack.appendChild(el("span", "", "Add track"));
       arr.appendChild(heads);
       E.tl = el("div", "st-tl"); E.tl.id = "sttl"; E.tl.tabIndex = 0; E.tl.setAttribute("aria-label", "Timeline. Arrow keys move the selected region; Enter opens it.");
@@ -319,7 +337,7 @@
       // -- recording strip (count-in, level) --
       E.recbar = el("div", "st-recbar"); E.recbar.hidden = true; E.recbar.setAttribute("role", "status"); root.appendChild(E.recbar);
 
-      ARR.view = CanvasView(E.tl, { content:arrContent, paint:arrPaint, down:arrDown, hover:arrHover, dbl:arrDbl, zoom:function(f, p){ arrZoom(f, p.x); }, menu:arrMenu,
+      ARR.view = CanvasView(E.tl, { content:arrContent, paint:arrPaint, down:arrDown, hover:arrHover, dbl:arrDbl, zoom:function(f, p){ arrZoom(f, p.x); }, menu:arrMenu, tap:function(p, e){ if(phoneOn()) phArrTap(p, e); },
         onScroll:function(sl, st){ E.headList.style.transform = "translateY(" + (-st) + "px)"; } });
       E.tl.addEventListener("keydown", arrKeys);
       splitDrag();
@@ -335,6 +353,7 @@
       on("transport", function(){ paintBar(); });
       buildEditors();
       buildExtras();
+      mobileInit();
     }
     function sectionBarAtPlayhead(){ var bar = Math.floor(TR.pos / barTicks()); return sectionAt(bar) ? undefined : bar; }
     function setSig(v){
@@ -350,6 +369,7 @@
     function lastTab(){ var f = UI.sel.region && findRegion(UI.sel.region); return f ? (f.t.kind === "drums" ? "drums" : f.t.kind === "audio" ? "take" : "notes") : "notes"; }
     function layout(){
       if(!UI.built) return;
+      phSync();
       var E = UI.e, total = E.main.clientHeight, minArr = 120, rw = UI.root.clientWidth;
       UI.root.dataset.w = rw >= 1180 ? "l" : rw >= 1000 ? "m" : "s";
       if(!UI.edH) UI.edH = Math.round(clamp(total * 0.52, 220, 460));
@@ -374,7 +394,7 @@
       if(refreshRaf) return;
       refreshRaf = window.requestAnimationFrame(function(){
         refreshRaf = 0; var f = refreshFull; refreshFull = false;
-        paintBar(); paintHeads(f); paintEmpty(); ARR.view.ask(); paintEditor(f); paintSave(); paintExtras();
+        paintBar(); paintHeads(f); paintEmpty(); ARR.view.ask(); paintEditor(f); paintSave(); paintExtras(); if(phoneOn()) phPaint(f);
       });
     }
     function paintSave(){
@@ -406,6 +426,7 @@
       var a = posText(Math.max(0, tk)), b = timeText(tickSec(Math.max(0, tk)));
       if(E.posBar.textContent !== a) E.posBar.textContent = a;
       if(E.posTime.textContent !== b) E.posTime.textContent = b;
+      phPos(a, b);
     }
     var headTimer = 0;
     function paintHeadsSoon(){ clearTimeout(headTimer); headTimer = setTimeout(function(){ paintHeads(true); }, 60); }
@@ -430,10 +451,10 @@
       emit("select", { track:trackId, region:regionId || null });
       refresh(ch);
     }
-    function showTab(tab){ UI.tab = tab; UI.edOpen = true; layout(); refresh(true); }
+    function showTab(tab){ UI.tab = tab; UI.edOpen = true; if(phoneOn()){ phShowTab(tab); return; } layout(); refresh(true); }
     function paintHeads(full){
       if(!S || !UI.built) return;
-      var E = UI.e, sig = S.tracks.map(function(t){ return t.id + t.kind; }).join("|");
+      var E = UI.e, sig = (phoneOn() ? "P" : "D") + S.tracks.map(function(t){ return t.id + t.kind; }).join("|");
       if(sig !== UI.headSig || full){
         UI.headSig = sig; E.headList.textContent = "";
         E.th = {};
@@ -458,6 +479,7 @@
       E.addTrack.hidden = S.tracks.length >= MAXTRACKS;
     }
     function buildHead(t){
+      if(phoneOn()) return phHead(t);
       var E = UI.e, h = { el:el("div", "st-th") }, top = el("div", "st-th1"), bot = el("div", "st-th2");
       h.el.dataset.id = t.id; h.el.dataset.kind = t.kind; h.el.id = "stth-" + t.id;
       h.name = btn("st-thname", t.name, "Rename this track", function(){ select(t.id, UI.sel.track === t.id ? UI.sel.region : null); askText(h.name, "Track name", t.name, function(v){ t.name = v.slice(0, 32); commit("rename track"); }); });
@@ -681,6 +703,7 @@
     function arrDown(p, e){
       var host = UI.e.tl, sl = host.scrollLeft, st = host.scrollTop, bt = barTicks(), tick = arrTick(p.x, sl);
       closePops();
+      if(phoneOn()) return null;
       try { host.focus({ preventScroll:true }); } catch(err){}
       // ruler: click puts the playhead, a drag marks the loop
       if(p.y < ARR.rulerH){
@@ -755,6 +778,7 @@
       };
     }
     function arrDbl(p){
+      if(phoneOn()) return;
       var host = UI.e.tl, sl = host.scrollLeft, st = host.scrollTop, bt = barTicks(), tick = arrTick(p.x, sl);
       if(p.y < ARR.rulerH) return;
       if(p.y < ARR.rulerH + ARR.secH){
@@ -778,6 +802,7 @@
       return r;
     }
     function arrMenu(p){
+      if(phoneOn()) return;
       var host = UI.e.tl, r = host.getBoundingClientRect(), hit = regionAt(p, host.scrollLeft, host.scrollTop), anchor = { left:r.left + p.x, right:r.left + p.x, top:r.top + p.y, bottom:r.top + p.y };
       if(p.y < arrTop() && p.y >= ARR.rulerH && p.y < ARR.rulerH + ARR.secH){ var sq = secAt(p, host.scrollLeft); if(sq){ UI.sel.section = sq.q.id; refresh(); sectionMenu(anchor, sq.q.id); } return; }
       if(hit && hit.r){ select(hit.t.id, hit.r.id); regionMenu(anchor); }
@@ -867,11 +892,12 @@
         h.meter.firstChild.style.transform = "scaleX(" + pct.toFixed(3) + ")"; h.meter.dataset.hot = hold > 0.98 ? "true" : "false";
       });
       if(typeof mixerMeters === "function") mixerMeters(lv, zero);
+      phMixMeters(lv, zero);
     }
 
     // ---- the empty song ----
     function paintEmpty(){
-      var E = UI.e, show = !S.tracks.length;
+      var E = UI.e, show = !S.tracks.length && !phoneOn();
       if(show === !E.empty.hidden && (!show || E.empty.firstChild)) return;
       E.empty.hidden = !show; UI.root.dataset.empty = show ? "true" : "false";
       if(!show){ E.empty.textContent = ""; return; }

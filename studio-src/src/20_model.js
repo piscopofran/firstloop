@@ -217,6 +217,7 @@
       try { window.localStorage.setItem("firstloop.studio.last", S.id); } catch(e){}
       if(typeof selClear === "function") selClear();
       if(typeof engSync === "function") engSync();
+      if(MOB.lean && typeof unloadUnused === "function") unloadUnused();      // a phone lets go of the last song's instruments
       emit("song", { id:S.id, name:S.name });
       refresh(true);
     }

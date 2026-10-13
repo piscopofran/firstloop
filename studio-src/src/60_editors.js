@@ -9,11 +9,11 @@
       E.rollWrap = el("div", "st-rollwrap"); E.kbHost = el("div", "st-kbhost"); E.kbHost.hidden = true;
       ROLL.host = el("div", "st-roll"); ROLL.host.tabIndex = 0; ROLL.host.id = "stroll"; ROLL.host.setAttribute("aria-label", "Note editor. Arrow keys move the selected notes; the Edit menu lists everything that can be done.");
       E.rollWrap.appendChild(ROLL.host); E.rollWrap.appendChild(E.kbHost); b.appendChild(E.rollWrap);
-      ROLL.view = CanvasView(ROLL.host, { content:rollContent, paint:rollPaint, down:rollDown, hover:rollHover, dbl:rollDbl, zoom:rollZoom });
+      ROLL.view = CanvasView(ROLL.host, { content:rollContent, paint:rollPaint, down:rollDown, hover:rollHover, dbl:rollDbl, zoom:rollZoom, tap:function(p, e){ if(phoneOn()) phRollTap(p, e); } });
       DG.host = el("div", "st-drum"); DG.host.tabIndex = 0; DG.host.id = "stdrum"; DG.host.setAttribute("aria-label", "Drum grid"); b.appendChild(DG.host);
-      DG.view = CanvasView(DG.host, { content:drumContent, paint:drumPaint, down:drumDown, hover:function(p){ return p.y > DG.rulerH ? "pointer" : ""; }, zoom:function(f, p){ var u = (p.x - DG.nameW + DG.host.scrollLeft) / DG.ppt; DG.ppt = clamp(DG.ppt * f, 0.04, 0.6); DG.view.paint(); DG.host.scrollLeft = Math.max(0, u * DG.ppt + DG.nameW - p.x); DG.view.ask(); } });
+      DG.view = CanvasView(DG.host, { content:drumContent, paint:drumPaint, down:drumDown, hover:function(p){ return p.y > DG.rulerH ? "pointer" : ""; }, tap:function(p, e){ if(phoneOn()) phDrumTap(p, e); }, zoom:function(f, p){ var u = (p.x - DG.nameW + DG.host.scrollLeft) / DG.ppt; DG.ppt = clamp(DG.ppt * f, 0.04, 0.6); DG.view.paint(); DG.host.scrollLeft = Math.max(0, u * DG.ppt + DG.nameW - p.x); DG.view.ask(); } });
       TK.host = el("div", "st-take"); TK.host.tabIndex = 0; TK.host.id = "sttake"; TK.host.setAttribute("aria-label", "Recording editor"); b.appendChild(TK.host);
-      TK.view = CanvasView(TK.host, { content:takeContent, paint:takePaint, down:takeDown, hover:takeHover, zoom:function(f, p){ var f0 = selRegion(); if(!f0) return; var u = (p.x + TK.host.scrollLeft) / TK.ppt; TK.ppt = clamp(TK.ppt * f, 0.01, 1); TK.view.paint(); TK.host.scrollLeft = Math.max(0, u * TK.ppt - p.x); TK.view.ask(); } });
+      TK.view = CanvasView(TK.host, { content:takeContent, paint:takePaint, down:takeDown, hover:takeHover, tap:function(p, e){ if(phoneOn()) phTakeTap(p, e); }, zoom:function(f, p){ var f0 = selRegion(); if(!f0) return; var u = (p.x + TK.host.scrollLeft) / TK.ppt; TK.ppt = clamp(TK.ppt * f, 0.01, 1); TK.view.paint(); TK.host.scrollLeft = Math.max(0, u * TK.ppt - p.x); TK.view.ask(); } });
       E.chordsEl = el("div", "st-chords"); E.chordsEl.id = "stchords"; b.appendChild(E.chordsEl);
       E.lyricsEl = el("div", "st-lyrics"); E.lyricsEl.id = "stlyrics"; b.appendChild(E.lyricsEl);
       E.mixEl = el("div", "st-mix"); E.mixEl.id = "stmix"; b.appendChild(E.mixEl);
@@ -208,6 +208,7 @@
       if(T.allp) T.allp.setAttribute("aria-pressed", DG.all ? "true" : "false");
       if(T.tap){ T.tap.textContent = NREC ? "Stop tapping" : "Tap a rhythm"; T.tap.dataset.on = NREC ? "true" : "false"; }
       if(T.recb){ T.recb.textContent = AREC ? "Stop" : "Record"; T.recb.dataset.on = AREC ? "true" : "false"; }
+      if(phoneOn()) phBars();
     }
 
     // ---- the strip over the notes of a hummed part: hear it, and the three choices ----
@@ -261,9 +262,9 @@
       c.clearRect(0, 0, w, h); c.fillStyle = C.bg; c.fillRect(0, 0, w, h);
       if(!f){ c.fillStyle = C.ink3; c.font = "500 12.5px " + FONT; c.textAlign = "center"; c.textBaseline = "middle"; var t0 = selTrack(); c.fillText(t0 && t0.kind === "drums" ? "Double-click the drum track’s lane above to start a region." : "Select a region of a drum track to see its hits here.", w / 2, h / 2); return; }
       var r = f.r, t = f.t, pat = patOf(r), L = rollLen(f), col = trackColor(t), bt = barTicks(), bq = beatTicks(), g = DG.grid, ppt = DG.ppt, NW = DG.nameW, RH = DG.rulerH, rowH = DG.rowH, base = r.s;
-      if(DG.forRegion !== r.id){ DG.forRegion = r.id; DG.ppt = ppt = clamp((DG.host.clientWidth - NW - 24) / Math.min(L, bt * 4), 0.05, 0.5); if(g * ppt < 9) DG.grid = g = PPQ / 2; }
+      if(DG.forRegion !== r.id){ DG.forRegion = r.id; DG.ppt = ppt = phoneOn() ? clamp(Math.max(30 / g, (DG.host.clientWidth - NW - 8) / bt), 0.05, 0.6) : clamp((DG.host.clientWidth - NW - 24) / Math.min(L, bt * 4), 0.05, 0.5); if(g * ppt < 9) DG.grid = g = PPQ / 2; }
       DG.rows = drumRows(t, pat, DG.all);
-      DG.rowH = rowH = clamp(Math.floor((h - RH - 4) / Math.max(1, DG.rows.length)), 15, 24);
+      DG.rowH = rowH = phoneOn() ? clamp(Math.floor((h - RH - 4) / Math.max(1, DG.rows.length)), 34, 46) : clamp(Math.floor((h - RH - 4) / Math.max(1, DG.rows.length)), 15, 24);
       var d = ENG.inst[soundFor(t)], has = function(pc){ return !d || !d.pieces || d.state !== "ready" || kitHas(d, pc) || kitHas(d, DRUM_ALT[pc]); };
       c.save(); c.beginPath(); c.rect(NW, RH, w - NW, h - RH); c.clip();
       var u0 = Math.max(0, (NW - NW + sl) / ppt), u1 = Math.min(L, (w - NW + sl) / ppt), cellW = g * ppt;
@@ -311,6 +312,7 @@
       var sl = host.scrollLeft, st = host.scrollTop, r = f.r, pat = patOf(r), g = DG.grid;
       DG.rows = drumRows(f.t, pat, DG.all);
       closePops(); try { host.focus({ preventScroll:true }); } catch(err){}
+      if(phoneOn() && (p.y < DG.rulerH || p.x >= DG.nameW)) return null;        // on a phone a hit is a tap; a drag moves the grid
       if(p.y < DG.rulerH){ if(p.x > DG.nameW) setPos(Math.max(0, r.s + Math.round((p.x - DG.nameW + sl) / DG.ppt / g) * g)); return null; }
       var row = Math.floor((p.y - DG.rulerH + st) / DG.rowH); if(row < 0 || row >= DG.rows.length) return null;
       var pitch = DRUM[DG.rows[row]];
@@ -534,6 +536,14 @@
       c.moveTo(x0, h - 3); c.lineTo(x0 + secTick(r.fi || 0) * ppt, RH + 4); c.moveTo(x1 - secTick(r.fo || 0) * ppt, RH + 4); c.lineTo(x1, h - 3); c.stroke(); c.lineWidth = 1;
       c.fillStyle = C.ink; c.fillRect(x0 + secTick(r.fi || 0) * ppt - 4, RH + 1, 8, 8); c.fillRect(x1 - secTick(r.fo || 0) * ppt - 4, RH + 1, 8, 8);
       c.fillStyle = col; c.fillRect(x0 - 1, RH, 3, h - RH); c.fillRect(x1 - 2, RH, 3, h - RH);
+      if(phoneOn()){
+        // the two ends, as grips: drag one to trim the start or the end
+        [[x0, 1], [x1, -1]].forEach(function(gp){
+          var gx = gp[0] - (gp[1] > 0 ? 3 : 15), gy = mid - 30;
+          c.fillStyle = C.ink; c.beginPath(); rr(c, gx, gy, 18, 60, 6); c.fill();
+          c.strokeStyle = C.bg; c.lineWidth = 1.5; c.beginPath(); c.moveTo(gx + 6.5, gy + 20); c.lineTo(gx + 6.5, gy + 40); c.moveTo(gx + 11.5, gy + 20); c.lineTo(gx + 11.5, gy + 40); c.stroke(); c.lineWidth = 1;
+        });
+      }
       c.fillStyle = C.surface; c.fillRect(0, 0, w, RH); c.strokeStyle = C.line2; c.beginPath(); c.moveTo(0, RH + 0.5); c.lineTo(w, RH + 0.5); c.stroke();
       c.font = "500 10.5px " + FONT; c.textBaseline = "middle"; c.textAlign = "left";
       for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0) continue; c.strokeStyle = C.ink3; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, RH); c.stroke(); c.fillStyle = C.ink2; c.fillText(String(k + 1), x + 4, 7); }
@@ -542,6 +552,12 @@
     function takeHit(p){
       var f = takeRegion(); if(!f) return "";
       var r = f.r, G = takeGeom(f), sl = TK.host.scrollLeft, x0 = (r.s - G.t0) * TK.ppt - sl, x1 = (r.s + r.l - G.t0) * TK.ppt - sl, fi = x0 + secTick(r.fi || 0) * TK.ppt, fo = x1 - secTick(r.fo || 0) * TK.ppt;
+      if(phoneOn()){
+        // a finger: the ends answer to a wide stripe; fades are set from the buttons, not dragged
+        if(p.y < 26) return "ruler";
+        var dl = Math.abs(p.x - x0 - 6), dr = Math.abs(p.x - x1 + 6);
+        return dl < 26 && dl <= dr ? "l" : dr < 26 ? "r" : "";
+      }
       if(p.y > 20 && p.y < 34 && Math.abs(p.x - fi) < 8) return "fi";
       if(p.y > 20 && p.y < 34 && Math.abs(p.x - fo) < 8) return "fo";
       if(Math.abs(p.x - x0) < 6) return "l";
@@ -553,6 +569,7 @@
       var f = takeRegion(); if(!f) return null;
       var r = f.r, G = takeGeom(f), host = TK.host, kind = takeHit(p), o = { s:r.s, l:r.l, off:r.off || 0, fi:r.fi || 0, fo:r.fo || 0 }, ch = false, ti = takeCache[r.takes[r.act]];
       function tk(q){ return G.t0 + (q.x + host.scrollLeft) / TK.ppt; }
+      if(phoneOn() && (!kind || kind === "ruler")) return null;
       if(!kind || kind === "ruler"){ setPos(Math.max(0, e.shiftKey ? Math.round(tk(p)) : Math.round(tk(p) / (PPQ / 4)) * (PPQ / 4))); return null; }
       return {
         move:function(q, ev){

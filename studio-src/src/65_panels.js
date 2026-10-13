@@ -18,7 +18,7 @@
     AUD.winds = AUD.strings; AUD.voice = AUD.strings;
     var IB = null;
     function auditionInst(id){
-      return ensureEngine().then(function(ok){ if(!ok) return false; resume(); return loadInst(id); }).then(function(ok){
+      return ensureEngine().then(function(ok){ if(!ok) return false; resume(); if(MOB.lean){ var dk = ENG.inst[id]; if(dk) dk.keep = true; unloadUnused(); if(dk) dk.keep = false; } return loadInst(id); }).then(function(ok){
         var d = ENG.inst[id]; if(!ok || !d || d.state !== "ready"){ tell("That sound could not be loaded just now."); return false; }
         if(TR.playing) transportStop(); auditionStop(); if(ENG.G) silence(ENG.G, undefined, true);
         var G = ENG.G, t0 = G.ctx.currentTime + 0.06, beat = 0.6, tr = audTrack(id);
@@ -111,7 +111,7 @@
         IB.rowState = rowState;
         cols.appendChild(nav); cols.appendChild(list); body.appendChild(cols); body.appendChild(foot);
         paint();
-      }, { cls:"st-inst", id:"stinst", onClose:function(){ IB = null; if(ENG.G && !TR.playing) silence(ENG.G); } });
+      }, { cls:"st-inst", id:"stinst", onClose:function(){ IB = null; if(ENG.G && !TR.playing) silence(ENG.G); if(MOB.lean) setTimeout(unloadUnused, 400); } });
     }
     function soundsSheet(){
       loadManifest().then(function(){
@@ -136,7 +136,7 @@
     }
     function micMeterStart(){
       // the microphone open and listening, without keeping anything
-      return latLoad().then(micOpen).then(function(){ MIC.meterOnly = true; MIC.level = 0; MIC.on = true; MIC.node.port.postMessage({ on:true }); return true; });
+      return latLoad().then(micOpen).then(function(){ MIC.meterOnly = true; MIC.level = 0; MIC.on = true; micGate(true); return true; });
     }
     function micMeterStop(){ if(MIC.meterOnly){ MIC.meterOnly = false; micClose(); } }
     function latWords(){
@@ -191,6 +191,7 @@
       o = o || {};
       var t = trackById(trackId); if(!t || t.kind !== "inst") return;
       if(recordingNow()) return;
+      if(phoneOn()){ phCap({ kind:"hum", track:trackId, at:o.at, bars:o.bars, msg:o.msg }); return; }
       if(TR.playing) transportStop();
       var bt = barTicks(), at = o.at !== undefined ? o.at : Math.floor(TR.pos / bt) * bt, others = S.tracks.some(function(x){ return x !== t && x.regions.length > 0; }), started = false;
       var bars = o.bars !== undefined && [0, 2, 4, 8].indexOf(o.bars) >= 0 ? o.bars : HS.bars, backing = others ? (HS.backing || "song") : "click", first = !anyHum() && !S.flags.guided;
@@ -294,6 +295,7 @@
     }
     function recordAudio(trackId){
       var t = trackById(trackId); if(!t || t.kind !== "audio" || recordingNow()) return;
+      if(phoneOn()){ phCap({ kind:"voice", track:trackId }); return; }
       if(TR.playing) transportStop();
       var bt = barTicks(), at = Math.floor(TR.pos / bt) * bt, started = false;
       sheet("Record on " + t.name, function(body, close){
@@ -340,6 +342,7 @@
       ], { label:"Song" });
     }
     function songsSheet(){
+      if(phoneOn()){ closePops(); phGo("home"); return; }
       sheet("Your songs", function(body, close){
         var list = el("div", "st-list"); body.appendChild(list);
         function paint(){
@@ -443,7 +446,7 @@
     function anIn(an){ if(!an || typeof an !== "object" || !Array.isArray(an.notes)) return null; var o = {}; Object.keys(an).forEach(function(k){ o[k] = an[k]; }); o.contour = new Float32Array(Array.isArray(an.contour) ? an.contour.slice(0, 400000) : []); return o; }
     function takesOf(s){ var ids = {}; s.tracks.forEach(function(t){ t.regions.forEach(function(r){ (r.takes || []).forEach(function(id){ ids[id] = 1; }); if(r.hum) ids[r.hum.take] = 1; }); }); return Object.keys(ids); }
     function audioOut(ids){
-      return Promise.all(ids.map(function(id){ return dbGet("audio", id); })).then(function(rows){
+      return Promise.all(ids.map(function(id){ return takeGet(id); })).then(function(rows){
         return rows.filter(Boolean).map(function(a){ return { id:a.id, sr:a.sr, name:a.name, kind:a.kind, lat:a.lat || 0, made:a.made, an:anOut(a.an), pcm:b64(new Uint8Array(a.pcm.buffer, a.pcm.byteOffset, a.pcm.byteLength)) }; });
       });
     }
@@ -503,6 +506,7 @@
       return projectOut(withAudio).then(function(o){ count("studio_exports"); var txt = JSON.stringify(o); return offerFile(new Blob([txt], { type:"application/json" }), fileBase() + ".flsong").then(function(){ return { bytes:txt.length }; }); });
     }
     function exportSheet(){
+      if(phoneOn()){ phShare(); return; }
       sheet("Export “" + S.name + "”", function(body){
         var status = el("p", "st-status", ""); status.setAttribute("role", "status"); status.id = "stexstatus";
         var busy = false, btns = [];
@@ -538,21 +542,23 @@
       }, { id:"stexportsheet", cls:"st-export" });
     }
     function pickFile(accept, fn){
-      var i = el("input"); i.type = "file"; i.accept = accept; i.style.display = "none";
+      var i = el("input"); i.type = "file"; if(accept) i.accept = accept; i.style.display = "none";
       i.addEventListener("change", function(){ var f = i.files && i.files[0]; if(i.parentNode) i.parentNode.removeChild(i); if(f) fn(f); });
       document.body.appendChild(i); i.click();
     }
-    function openFilePick(){ pickFile(".flsong,.json,.mid,.midi,audio/*", fileDropped); }
+    function fileText(file){ return file.text ? file.text() : new Promise(function(res, rej){ var fr = new FileReader(); fr.onload = function(){ res(String(fr.result)); }; fr.onerror = rej; fr.readAsText(file); }); }
+    function fileBuf(file){ return file.arrayBuffer ? file.arrayBuffer() : new Promise(function(res, rej){ var fr = new FileReader(); fr.onload = function(){ res(fr.result); }; fr.onerror = rej; fr.readAsArrayBuffer(file); }); }
+    function openFilePick(){ pickFile(MOB.handheld ? "" : ".flsong,.json,.mid,.midi,audio/*", fileDropped); }
     function fileDropped(file){
       var name = String(file.name || ""), base = name.replace(/\.[^.]+$/, "").slice(0, 60);
       if(/\.(mid|midi)$/i.test(name)){
-        return file.arrayBuffer().then(function(ab){
+        return fileBuf(file).then(function(ab){
           var s = midiIn(new Uint8Array(ab), base); if(!s){ tell("That MIDI file could not be read."); return; }
           return listSongs().then(function(rows){ s.name = uniqueSongName(s.name, rows); return dbPut("songs", { id:s.id, name:s.name, updated:Date.now(), created:Date.now(), data:s }); }).then(function(){ return openSong(s.id); }).then(function(){ tell("Opened as a new song. The tracks play on basic sounds: choose an instrument for each."); });
         });
       }
-      if(/\.(flsong|json)$/i.test(name)){
-        return file.text().then(function(txt){
+      if(/\.(flsong|json)(\.txt)?$/i.test(name) || (/\.txt$/i.test(name) || !/\.[a-z0-9]{1,5}$/i.test(name)) && !/^audio\//.test(file.type || "")){
+        return fileText(file).then(function(txt){
           var o = null; try { o = JSON.parse(txt); } catch(e){}
           return projectIn(o).then(function(id){ if(!id){ tell("That is not a song file from the Studio."); return; } return openSong(id).then(function(){ tell("Opened “" + S.name + "” as a new song."); }); });
         });
@@ -565,6 +571,7 @@
 
     // ---- help ----
     function helpSheet(){
+      if(phoneOn()){ phHelp(); return; }
       sheet("How the Studio works", function(body){
         function h(t){ body.appendChild(el("h3", "", t)); }
         function p(t){ body.appendChild(el("p", "", t)); }
@@ -642,15 +649,13 @@
       E.steps = el("div", "st-steps"); E.steps.id = "ststeps"; E.steps.hidden = true; E.steps.setAttribute("role", "group"); E.steps.setAttribute("aria-label", "Start here");
       root.insertBefore(E.steps, E.main);
       root.insertBefore(E.recbar, E.main);
-      E.phone = el("div", "st-phone"); E.phone.id = "stphone"; root.appendChild(E.phone);
       on("record", onRecordEvent);
+      on("record", function(d){ if(PH.cap && d.kind === "hum" && d.state === "listening" && PH.cap.state !== "listening"){ PH.cap.state = "listening"; phCapPaint(); } });
       on("instload", function(d){ if(IB && IB.rowState && ENG.inst[d.id]) IB.rowState(ENG.inst[d.id]); });
       on("instruments", function(){ if(IB) IB.paint(); });
-      on("audition", function(){ paintBar(); });
-      on("transport", function(){ if(UI.root.dataset.phone === "true") refresh(); });
-      try { UI.mqPhone = window.matchMedia("(max-width:699.98px)"); UI.mqPhone.addEventListener("change", function(){ refresh(true); }); } catch(e){ UI.mqPhone = null; }
+      on("audition", function(){ paintBar(); if(phoneOn()) phBars(); });
     }
-    var stepSig = "", phoneSig = "";
+    var stepSig = "";
     function paintExtras(){
       var E = UI.e; if(!E.steps) return;
       var st = stepState(), off = false; try { off = window.localStorage.getItem(STEPS_KEY) === "off"; } catch(e){}
@@ -672,35 +677,6 @@
         var x = ibtn("quiet", "x", "Hide Start here", "Hide these steps. Help, at the top right, explains everything they do.", function(){ try { window.localStorage.setItem(STEPS_KEY, "off"); } catch(e){} stepSig = ""; paintExtras(); layout(); });
         E.steps.appendChild(x);
       }
-      // the small screen: hum, pick the instrument, listen
-      var phone = !!(UI.mqPhone && UI.mqPhone.matches);
-      UI.root.dataset.phone = phone ? "true" : "false";
-      if(!phone) return;
-      var psig = S.id + S.name + "|" + S.tracks.map(function(t){ return t.id + t.name + t.inst + t.regions.length + (ENG.inst[t.inst] ? ENG.inst[t.inst].state : ""); }).join("|") + "|" + (TR.playing ? 1 : 0);
-      if(psig === phoneSig) return; phoneSig = psig;
-      var P = E.phone; P.textContent = "";
-      P.appendChild(el("h2", "", S.name));
-      P.appendChild(line("st-lead", "On a phone the Studio captures ideas: hum a part, choose its instrument, listen. Arranging, chords, drums and editing need a larger screen."));
-      var big = el("div", "st-phacts");
-      var hb = btn("st-phbig rec", null, "", function(){ var it = S.tracks.filter(function(t){ return t.kind === "inst"; }); var s0 = selTrack(); if(s0 && s0.kind === "inst") humSheet(s0.id); else if(it.length && !hasNotes(it[it.length - 1])) humSheet(it[it.length - 1].id); else startWith("hum"); });
-      hb.id = "stphhum"; hb.appendChild(ico("mic")); hb.appendChild(el("span", "", S.tracks.length ? "Hum another part" : "Hum a part"));
-      var pb = btn("st-phbig", null, "", function(){ transportToggle(); }); pb.id = "stphplay"; pb.appendChild(ico(TR.playing ? "stop" : "play")); pb.appendChild(el("span", "", TR.playing ? "Stop" : "Play"));
-      big.appendChild(hb); big.appendChild(pb); P.appendChild(big);
-      var list = el("div", "st-list");
-      S.tracks.forEach(function(t){
-        var row = el("div", "st-lrow"), txt = el("div", "st-ibtxt"); row.style.setProperty("--tc", trackColor(t)); row.dataset.sel = UI.sel.track === t.id ? "true" : "false";
-        txt.appendChild(el("b", "", t.name)); txt.appendChild(el("span", "", t.kind === "audio" ? "Recording" : instName(soundFor(t)) + (t.regions.length ? "" : ", nothing on it yet")));
-        row.appendChild(txt);
-        if(t.kind !== "audio") row.appendChild(tbtn("", "Instrument", "", function(){ instBrowser(row, t.id); }));
-        if(t.kind === "inst") row.appendChild(tbtn("", "Hum", "", function(){ select(t.id, null); humSheet(t.id); }));
-        row.addEventListener("click", function(e){ if(!e.target.closest("button")) select(t.id, null); });
-        list.appendChild(row);
-      });
-      if(S.tracks.length) P.appendChild(list);
-      var acts = el("div", "st-acts");
-      acts.appendChild(tbtn("", "Save as a song file", "To carry on at a computer: open the file in the Studio there", function(){ exportProject(true).then(function(){ tell("Song file saved. Open it in the Studio on a computer to carry on."); }); }));
-      acts.appendChild(tbtn("", "Your songs", "", function(){ songsSheet(); }));
-      P.appendChild(acts);
     }
 
     // ---- the keyboard ----

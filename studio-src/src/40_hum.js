@@ -28,62 +28,167 @@
     }
 
     // ---- the microphone ----
+    // Three ways of keeping what it hears, tried in this order: a recorder on the audio thread (exact to the sample),
+    // the older ScriptProcessor (where a worklet cannot be loaded), and the browser's own MediaRecorder decoded
+    // afterwards (where neither is there). All three end as the same thing: samples at a known rate, kept as 16-bit
+    // PCM beside the song, so nothing later depends on which container a browser records in.
+    function micChunk(x, f){
+      if(!MIC.on) return;
+      var i, m = 0, ctx = ENG.ctx;
+      if(MIC.meterOnly){ for(i = 0; i < x.length; i += 4){ var v0 = Math.abs(x[i]); if(v0 > m) m = v0; } MIC.level = Math.max(m, MIC.level * 0.86); return; }
+      if(MIC.frame0 === null) MIC.frame0 = f;
+      // a block that went missing is filled with silence, so that time stays true
+      var want = MIC.frame0 + MIC.len;
+      if(f !== null && f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
+      MIC.chunks.push(x); MIC.len += x.length;
+      for(i = 0; i < x.length; i += 4){ var v = Math.abs(x[i]); if(v > m) m = v; }
+      MIC.level = Math.max(m, MIC.level * 0.86);
+      if(m > MIC.peak) MIC.peak = m;
+      if(MIC.cap && MIC.len > MIC.cap && MIC.onCap){ var cb = MIC.onCap; MIC.onCap = null; setTimeout(cb, 0); }
+    }
+    function recMime(){
+      // what this browser's recorder can write: WebM/Opus in Chrome and Firefox, MP4/AAC in Safari
+      var MR = window.MediaRecorder, list = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/aac", "audio/ogg;codecs=opus", "audio/wav"], i;
+      if(!MR || typeof MR.isTypeSupported !== "function") return "";
+      for(i = 0; i < list.length; i++){ try { if(MR.isTypeSupported(list[i])) return list[i]; } catch(e){} }
+      return "";
+    }
+    function micModes(){
+      var ctx = ENG.ctx, out = [];
+      if(ENG.mods) out.push("worklet");
+      if(ctx && typeof ctx.createScriptProcessor === "function") out.push("script");
+      if(typeof window.MediaRecorder === "function") out.push("recorder");
+      if(TEST.micMode && out.indexOf(TEST.micMode) >= 0) out = [TEST.micMode];
+      return out;
+    }
     function micOpen(){
       return ensureEngine().then(function(ok){
         if(!ok) throw new Error("noaudio");
-        if(!ENG.mods) throw new Error("noworklet");
+        if(!micModes().length) throw new Error("noworklet");
         return resume();
       }).then(function(){
-        if(MIC.node) return true;
+        if(MIC.src) return true;
         var ctx = ENG.ctx;
-        function wire(srcNode, label){
-          MIC.src = srcNode; MIC.label = label || "";
-          MIC.node = new AudioWorkletNode(ctx, "fl-studio-rec", { numberOfInputs:1, numberOfOutputs:1, channelCount:1, channelCountMode:"explicit" });
-          MIC.sink = ctx.createGain(); MIC.sink.gain.value = 0;
-          srcNode.connect(MIC.node); MIC.node.connect(MIC.sink); MIC.sink.connect(ctx.destination);
-          MIC.node.port.onmessage = function(e){
-            if(!MIC.on) return;
-            var x = e.data.x, f = e.data.f, i, m = 0;
-            if(MIC.meterOnly){ for(i = 0; i < x.length; i += 4){ var v0 = Math.abs(x[i]); if(v0 > m) m = v0; } MIC.level = Math.max(m, MIC.level * 0.86); return; }
-            if(MIC.frame0 === null) MIC.frame0 = f;
-            // a block that went missing is filled with silence, so that time stays true
-            var want = MIC.frame0 + MIC.len;
-            if(f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
-            MIC.chunks.push(x); MIC.len += x.length;
-            for(i = 0; i < x.length; i += 4){ var v = Math.abs(x[i]); if(v > m) m = v; }
-            MIC.level = Math.max(m, MIC.level * 0.86);
-            if(m > MIC.peak) MIC.peak = m;
-          };
+        function wire(srcNode, label, stream){
+          var modes = micModes(), k;
+          MIC.src = srcNode; MIC.label = label || ""; MIC.mode = "";
+          MIC.sink = ctx.createGain(); MIC.sink.gain.value = 0; MIC.sink.connect(ctx.destination);
+          // the level and the line of her voice while she hums are read here, whichever way the samples are kept
+          try { MIC.an = ctx.createAnalyser(); MIC.an.fftSize = 4096; MIC.an.smoothingTimeConstant = 0; srcNode.connect(MIC.an); } catch(e0){ MIC.an = null; }
+          for(k = 0; k < modes.length && !MIC.mode; k++){
+            try {
+              if(modes[k] === "worklet"){
+                MIC.node = new AudioWorkletNode(ctx, "fl-studio-rec", { numberOfInputs:1, numberOfOutputs:1, channelCount:1, channelCountMode:"explicit" });
+                srcNode.connect(MIC.node); MIC.node.connect(MIC.sink);
+                MIC.node.port.onmessage = function(e){ micChunk(e.data.x, e.data.f); };
+              } else if(modes[k] === "script"){
+                var sp = ctx.createScriptProcessor(TEST.spSize || 2048, 1, 1), first = true;
+                sp.onaudioprocess = function(e){
+                  if(!MIC.on){ first = true; return; }
+                  var ch = e.inputBuffer.getChannelData(0), x = new Float32Array(ch.length); x.set(ch);
+                  // the callback is told when its output will be heard; what it is handed was heard two blocks before that
+                  var f = first ? Math.round((e.playbackTime || ctx.currentTime) * ctx.sampleRate) - 2 * ch.length : null; first = false;
+                  micChunk(x, f);
+                };
+                srcNode.connect(sp); sp.connect(MIC.sink); MIC.node = sp;
+              } else {
+                var st = stream; if(!st){ MIC.msd = ctx.createMediaStreamDestination(); srcNode.connect(MIC.msd); st = MIC.msd.stream; }
+                MIC.rec = { stream:st, mr:null, parts:[], t0:0, mime:recMime() }; MIC.node = null;
+              }
+              MIC.mode = modes[k];
+            } catch(e1){ MIC.node = null; }
+          }
+          if(!MIC.mode){ micClose(); throw new Error("noworklet"); }
+          emit("mic", { open:true, mode:MIC.mode, label:MIC.label });
           return true;
         }
-        if(TEST.micNode) return wire(TEST.micNode(ctx), "test input");
+        if(TEST.micNode) return wire(TEST.micNode(ctx), "test input", null);
         if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("nomic");
+        if(typeof micBefore === "function") micBefore();
         // music, not a call: the browser's echo canceller, noise gate and automatic level all damage a sung note
+        // (a phone honours these only in part; what it actually gave is kept in MIC.settings for the phone check)
         return navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1 } }).then(function(stream){
           MIC.stream = stream;
           var tr = stream.getAudioTracks()[0];
-          return wire(ctx.createMediaStreamSource(stream), tr ? tr.label : "");
-        });
+          try { MIC.settings = tr && tr.getSettings ? tr.getSettings() : null; } catch(e2){ MIC.settings = null; }
+          // a call, Siri or another app taking the microphone ends the track: what was recorded so far is kept
+          if(tr) tr.onended = function(){ if(MIC.stream === stream && typeof micLost === "function") micLost(); };
+          return wire(ctx.createMediaStreamSource(stream), tr ? tr.label : "", stream);
+        }, function(e){ if(typeof micAfter === "function") micAfter(); throw e; });
       });
     }
+    function micGate(on){
+      if(MIC.mode === "worklet" && MIC.node) MIC.node.port.postMessage({ on:on });
+      else if(MIC.mode === "recorder" && MIC.rec){
+        var R = MIC.rec;
+        if(on && !MIC.meterOnly && !R.mr){
+          R.parts = []; R.t0 = ENG.ctx.currentTime;
+          try { R.mr = R.mime ? new MediaRecorder(R.stream, { mimeType:R.mime }) : new MediaRecorder(R.stream); } catch(e){ R.mr = new MediaRecorder(R.stream); }
+          R.mr.ondataavailable = function(e){ if(e.data && e.data.size) R.parts.push(e.data); };
+          R.mr.onstart = function(){ R.t0 = ENG.ctx.currentTime; };
+          R.mr.start(1000);
+        }
+      }
+      // where no chunks arrive on the page (the recorder), the level is read from the analyser
+      clearInterval(MIC.lvTimer); MIC.lvTimer = 0;
+      if(on && MIC.mode === "recorder") MIC.lvTimer = setInterval(function(){ var l = micLive(true); if(l){ MIC.level = Math.max(l.peak, MIC.level * 0.86); if(!MIC.meterOnly && l.peak > MIC.peak) MIC.peak = l.peak; } }, 50);
+    }
     function micClose(){
-      MIC.on = false;
-      try { if(MIC.node){ MIC.node.port.postMessage({ on:false }); MIC.src.disconnect(); MIC.node.disconnect(); MIC.sink.disconnect(); } } catch(e){}
-      try { if(MIC.stream) MIC.stream.getTracks().forEach(function(t){ t.stop(); }); } catch(e2){}
-      MIC.stream = MIC.src = MIC.node = MIC.sink = null;
+      var had = !!MIC.src;
+      MIC.on = false; clearInterval(MIC.lvTimer); MIC.lvTimer = 0;
+      try { micGate(false); } catch(e0){}
+      try { if(MIC.rec && MIC.rec.mr && MIC.rec.mr.state !== "inactive"){ MIC.rec.mr.ondataavailable = null; MIC.rec.mr.onstop = null; MIC.rec.mr.stop(); } } catch(e3){}
+      try { if(MIC.src) MIC.src.disconnect(); if(MIC.node){ MIC.node.disconnect(); if(MIC.node.onaudioprocess) MIC.node.onaudioprocess = null; } if(MIC.sink) MIC.sink.disconnect(); if(MIC.msd) MIC.msd.disconnect(); } catch(e){}
+      try { if(MIC.stream) MIC.stream.getTracks().forEach(function(t){ t.onended = null; t.stop(); }); } catch(e2){}
+      MIC.stream = MIC.src = MIC.node = MIC.sink = MIC.an = MIC.rec = MIC.msd = null; MIC.mode = ""; MIC.cap = 0; MIC.onCap = null;
+      if(had){ if(typeof micAfter === "function") micAfter(); emit("mic", { open:false }); }
     }
     function micWhy(e){
-      var n = e && (e.name || e.message) || "";
+      var n = e && (e.name || e.message) || "", ph = MOB.handheld;
       if(/noworklet|noaudio/.test(n)) return "This browser cannot record here. Chrome, Edge, Safari and Firefox of the last few years can.";
-      if(/nomic|NotFound|Overconstrained/.test(n)) return "No microphone was found. Plug one in, or check the computer's sound settings.";
-      if(/NotAllowed|Permission|Security/.test(n)) return "The browser did not allow the microphone. Allow it for this page (the icon beside the address), then press the button again.";
-      return "The microphone could not be opened. Close other programs that are using it, then try again.";
+      if(/nomic|NotFound|Overconstrained/.test(n)) return ph ? "No microphone was found. If a headset is connected, check that it is switched on." : "No microphone was found. Plug one in, or check the computer's sound settings.";
+      if(/NotAllowed|Permission|Security/.test(n)) return ph ? "The microphone is not allowed for this page. Allow it in the browser’s settings for this site, then press the button again. On an iPhone: the page menu beside the address, Website Settings, Microphone."
+        : "The browser did not allow the microphone. Allow it for this page (the icon beside the address), then press the button again.";
+      return ph ? "The microphone could not be opened. Another app may be using it (a call, a voice message). Close that, then try again." : "The microphone could not be opened. Close other programs that are using it, then try again.";
     }
-    function recBegin(){ MIC.meterOnly = false; MIC.chunks = []; MIC.len = 0; MIC.frame0 = null; MIC.peak = 0; MIC.on = true; MIC.node.port.postMessage({ on:true }); }
+    // the level and the pitch of what the microphone hears this moment: { peak, db, midi (0 when no clear note), clarity }
+    function micLive(levelOnly){
+      var an = MIC.an; if(!an || !ENG.ctx) return null;
+      var n = an.fftSize, b = micLive.buf && micLive.buf.length === n ? micLive.buf : (micLive.buf = new Float32Array(n)), i, pk = 0, e = 0, v;
+      if(an.getFloatTimeDomainData) an.getFloatTimeDomainData(b);
+      else { var u = micLive.u8 && micLive.u8.length === n ? micLive.u8 : (micLive.u8 = new Uint8Array(n)); an.getByteTimeDomainData(u); for(i = 0; i < n; i++) b[i] = (u[i] - 128) / 128; }
+      var tail = Math.min(n, Math.round(ENG.ctx.sampleRate * 0.05));
+      for(i = n - tail; i < n; i++){ v = b[i]; if(v < 0) v = -v; if(v > pk) pk = v; e += v * v; }
+      var out = { peak:pk, db:10 * Math.log(Math.max(1e-12, e / tail)) / Math.LN10, midi:0, clarity:0 };
+      if(levelOnly || out.db < -52) return out;
+      try {
+        var F = dsp().frames(b, ENG.ctx.sampleRate), T = F.n ? dsp().track(F) : null, k = F.n - 1;
+        if(T && T.cl[k] >= 0.6 && T.pm[k] >= 33 && T.pm[k] <= 100){ out.midi = T.pm[k]; out.clarity = T.cl[k]; }
+      } catch(e2){}
+      return out;
+    }
+    function recBegin(){ MIC.meterOnly = false; MIC.chunks = []; MIC.len = 0; MIC.frame0 = null; MIC.peak = 0; MIC.level = 0; MIC.on = true; micGate(true); }
+    // resolves with what was recorded: { x, sr, frame0, peak }
     function recEnd(){
-      MIC.on = false; if(MIC.node) MIC.node.port.postMessage({ on:false });
+      var R = MIC.rec, ctx = ENG.ctx, mode = MIC.mode;
+      MIC.on = false; try { micGate(false); } catch(e0){}
+      if(mode === "recorder" && R && R.mr){
+        var mr = R.mr, peak = MIC.peak; R.mr = null;
+        return new Promise(function(res, rej){
+          mr.onstop = function(){
+            var blob = new Blob(R.parts, { type:mr.mimeType || R.mime || "" }); R.parts = [];
+            var ab = blob.arrayBuffer ? blob.arrayBuffer() : new Promise(function(r2, j2){ var fr = new FileReader(); fr.onload = function(){ r2(fr.result); }; fr.onerror = j2; fr.readAsArrayBuffer(blob); });
+            ab.then(decode).then(function(buf){
+              var n = buf.length, x = new Float32Array(n), c, i, d;
+              for(c = 0; c < buf.numberOfChannels; c++){ d = buf.getChannelData(c); for(i = 0; i < n; i++) x[i] += d[i] / buf.numberOfChannels; }
+              res({ x:x, sr:buf.sampleRate, frame0:Math.round(R.t0 * buf.sampleRate), peak:peak, mode:"recorder", mime:blob.type });
+            }, rej);
+          };
+          try { if(mr.state !== "inactive") mr.stop(); else mr.onstop(); } catch(e){ rej(e); }
+        });
+      }
       var x = new Float32Array(MIC.len), p = 0; MIC.chunks.forEach(function(c){ x.set(c, p); p += c.length; }); MIC.chunks = [];
-      return { x:x, sr:ENG.ctx.sampleRate, frame0:MIC.frame0 || 0, peak:MIC.peak };
+      return Promise.resolve({ x:x, sr:ctx.sampleRate, frame0:MIC.frame0 || 0, peak:MIC.peak, mode:mode });
     }
 
     // ---- latency: the time between a sound leaving the app and coming back through the microphone ----
@@ -115,28 +220,51 @@
         if(onStep) for(i = 0; i < n; i++) (function(k){ setTimeout(function(){ onStep(k + 1, n); }, (t0 - ctx.currentTime + k * gap) * 1000); })(i);
         return new Promise(function(done){
           setTimeout(function(){
-            var r = recEnd(), rel = times.map(function(t){ return t - r.frame0 / r.sr; }), click = clickBuf(ctx, true).getChannelData(0);
-            dspRun("clickDelay", [r.x, r.sr, rel, click, 0.45]).then(function(d){
-              if(d && d.delay > 0.001){ res = { ok:true, sec:d.delay, heard:d.heard, of:d.of }; return latStore(d.delay).then(function(){ done(res); }); }
-              done({ ok:false, level:r.peak });
-            }, function(){ done({ ok:false }); });
+            recEnd().then(function(r){
+              var rel = times.map(function(t){ return t - r.frame0 / r.sr; }), click = clickBuf(ctx, true).getChannelData(0);
+              return dspRun("clickDelay", [r.x, r.sr, rel, click, 0.45]).then(function(d){
+                if(d && d.delay > 0.001){ res = { ok:true, sec:d.delay, heard:d.heard, of:d.of }; return latStore(d.delay).then(function(){ done(res); }); }
+                done({ ok:false, level:r.peak });
+              });
+            })["catch"](function(){ done({ ok:false }); });
           }, (t0 - ctx.currentTime + n * gap + 0.55) * 1000);
         });
       })["catch"](function(e){ return { ok:false, why:micWhy(e) }; }).then(function(r){ micClose(); return r; });
     }
 
+    // while something is recorded: how loud the song and the click play (quietly on a phone's own speaker, which the
+    // microphone beside it hears); null puts both back
+    function recLevels(o){
+      if(!ENG.G) return;
+      var now = ENG.ctx.currentTime;
+      try { ENG.G.music.gain.setTargetAtTime(o && o.music !== undefined ? o.music : 1, now, 0.02); ENG.G.click.gain.setTargetAtTime(o && o.click !== undefined ? o.click : 1, now, 0.02); } catch(e){}
+    }
     // ---- takes ----
+    // a take that the device would not store (no room, storage blocked) stays here until the page closes
+    var memTakes = {};
+    function takePut(rec){
+      return (TEST.failAudio ? Promise.reject(new Error("test")) : dbPut("audio", rec)).then(function(){ delete memTakes[rec.id]; return true; }, function(){
+        memTakes[rec.id] = rec; emit("takelost", { id:rec.id });
+        tell("This take could not be stored on this device (no room, or storage is blocked). It is kept until the page closes: save a copy of the song now, from Share.");
+        return false;
+      });
+    }
+    function takeRetry(){
+      // try once more to store what is only in memory
+      return Promise.all(Object.keys(memTakes).map(function(id){ return takePut(memTakes[id]); })).then(function(){ return Object.keys(memTakes).length; });
+    }
+    function takeGet(id){ return memTakes[id] ? Promise.resolve(memTakes[id]) : dbGet("audio", id); }
     function takeSave(x, sr, meta){
       var pcm = new Int16Array(x.length), i, v; for(i = 0; i < x.length; i++){ v = x[i]; v = v < -1 ? -1 : (v > 1 ? 1 : v); pcm[i] = Math.round(v * 32767); }
       var rec = { id:uid("a"), song:S.id, sr:sr, pcm:pcm, an:meta.an || null, name:meta.name || "Take", made:Date.now(), lat:meta.lat || 0, kind:meta.kind || "audio" };
       takeCache[rec.id] = { an:rec.an, sr:sr, len:x.length, peaks:dsp().peaks(x, Math.max(1, Math.round(sr / 200))), lat:rec.lat, name:rec.name, made:rec.made };
       if(ENG.ctx) audioBufs[rec.id] = bufFrom(ENG.ctx, x, sr);
-      return dbPut("audio", rec).then(function(){ return rec.id; });
+      return takePut(rec).then(function(){ if(typeof storageNote === "function") storageNote("take"); return rec.id; });
     }
     function takeInfo(id){
       // analysis and waveform of a take, read once
       if(takeCache[id]) return Promise.resolve(takeCache[id]);
-      return dbGet("audio", id).then(function(a){
+      return takeGet(id).then(function(a){
         if(!a || !a.pcm) return null;
         var f = new Float32Array(a.pcm.length), i; for(i = 0; i < f.length; i++) f[i] = a.pcm[i] / 32768;
         takeCache[id] = { an:a.an, sr:a.sr, len:f.length, peaks:dsp().peaks(f, Math.max(1, Math.round(a.sr / 200))), lat:a.lat || 0, name:a.name, made:a.made };
@@ -145,7 +273,7 @@
       });
     }
     function takeFloat(id){
-      return dbGet("audio", id).then(function(a){ if(!a || !a.pcm) return null; var f = new Float32Array(a.pcm.length), i; for(i = 0; i < f.length; i++) f[i] = a.pcm[i] / 32768; return { x:f, sr:a.sr, rec:a }; });
+      return takeGet(id).then(function(a){ if(!a || !a.pcm) return null; var f = new Float32Array(a.pcm.length), i; for(i = 0; i < f.length; i++) f[i] = a.pcm[i] / 32768; return { x:f, sr:a.sr, rec:a }; });
     }
     function takeAnalyse(id, o){
       // listen to a take that has not been listened to yet (a recorded voice that is to become notes)
@@ -154,7 +282,7 @@
         return dspRun("analyse", [t.x, t.sr, o || {}]).then(function(an){
           t.rec.an = slimAn(an);
           if(takeCache[id]) takeCache[id].an = t.rec.an;
-          return dbPut("audio", t.rec).then(function(){ return t.rec.an; });
+          return takePut(t.rec).then(function(){ return t.rec.an; });
         });
       });
     }
@@ -200,7 +328,7 @@
         var lat = latNow();
         HUM = { o:o, t:t.id, at:at, free:free, lat:lat, state:"count" };
         var count = free ? 0 : Math.max(1, S.countIn || 1), len = free ? 0 : o.bars * bt;
-        if(ENG.G) ENG.G.music.gain.setTargetAtTime(o.backing === "song" ? 0.5 : 1, ENG.ctx.currentTime, 0.02);
+        recLevels({ music:o.backing === "song" ? (o.musicVol === undefined ? 0.5 : o.musicVol) : 1, click:o.clickVol });
         recBegin();
         var p;
         if(free){
@@ -214,18 +342,18 @@
     }
     function humCancel(){
       if(!HUM) return;
-      HUM = null; try { recEnd(); } catch(e){} micClose(); transportStop();
-      if(ENG.G) ENG.G.music.gain.setTargetAtTime(1, ENG.ctx.currentTime, 0.02);
+      HUM = null; try { recEnd()["catch"](function(){}); } catch(e){} micClose(); transportStop();
+      recLevels(null);
       emit("record", { kind:"hum", state:"cancelled" });
     }
     function humFinish(){
       if(!HUM || HUM.state === "done") return Promise.resolve(null);
       var H = HUM, o = H.o; H.state = "done";
       // let the last note ring into the microphone for a moment
-      return new Promise(function(r){ setTimeout(r, H.free ? 60 : 260); }).then(function(){
-        var rec = recEnd(), endTick = H.free ? 0 : H.at + o.bars * barTicks();
+      return new Promise(function(r){ setTimeout(r, H.free ? 60 : 260); }).then(recEnd).then(function(rec){
+        var endTick = H.free ? 0 : H.at + o.bars * barTicks();
         micClose(); if(TR.playing) transportStop(true); TR.pos = H.at;
-        if(ENG.G) ENG.G.music.gain.setTargetAtTime(1, ENG.ctx.currentTime, 0.02);
+        recLevels(null);
         emit("record", { kind:"hum", state:"listening" });
         var t0rec = rec.frame0 / rec.sr, startIn = H.startAt - t0rec, bleedP = Promise.resolve(null);
         if(!H.free){
@@ -358,6 +486,9 @@
       if(TR.playing) transportStop(true);
       return latLoad().then(micOpen).then(function(){
         AREC = { t:trackId, at:at, lat:latNow() };
+        recLevels({ music:o.musicVol === undefined ? 1 : o.musicVol, click:o.clickVol });
+        // a phone has room for a take of some minutes, not for an hour left running
+        if(MOB.lean){ MIC.cap = Math.round(ENG.ctx.sampleRate * (TEST.takeCap || 480)); MIC.onCap = function(){ tell("That is as long as one take can be on a phone: eight minutes. It was stopped and kept."); if(REC_UI) REC_UI.stop(); else audioRecStop(); }; }
         recBegin();
         return transportPlay({ from:at, countIn:S.countIn || 0, record:{ kind:"audio" } }).then(function(){ AREC.startAt = TR.startAt; emit("record", { kind:"audio", state:"count", track:trackId, at:at }); return true; });
       })["catch"](function(e){ AREC = null; micClose(); throw new Error(micWhy(e)); });
@@ -366,8 +497,8 @@
       if(!AREC) return Promise.resolve(null);
       var A = AREC; AREC = null;
       var endTick = Math.max(A.at + PPQ, transportTick());
-      return new Promise(function(r){ setTimeout(r, 120); }).then(function(){
-        var rec = recEnd(), t = trackById(A.t); micClose(); transportStop(true); TR.pos = A.at; refreshPlayhead();
+      return new Promise(function(r){ setTimeout(r, 120); }).then(recEnd).then(function(rec){
+        var t = trackById(A.t); micClose(); transportStop(true); TR.pos = A.at; refreshPlayhead(); recLevels(null);
         var startIn = A.startAt - rec.frame0 / rec.sr + A.lat.sec;
         if(!t || rec.x.length < rec.sr * 0.3 || startIn >= rec.x.length / rec.sr){ emit("record", { kind:"audio", state:"empty" }); return null; }
         return takeSave(rec.x, rec.sr, { name:"Take", lat:A.lat.sec, kind:"audio" }).then(function(id){
@@ -389,7 +520,7 @@
     // an audio file dropped in or chosen: becomes a take at the playhead
     function audioImport(trackId, file){
       var t = trackById(trackId); if(!t || t.kind !== "audio") return Promise.resolve(null);
-      return ensureEngine().then(function(){ return file.arrayBuffer(); }).then(decode).then(function(buf){
+      return ensureEngine().then(function(){ return fileBuf(file); }).then(decode).then(function(buf){
         var n = buf.length, x = new Float32Array(n), c, i;
         for(c = 0; c < buf.numberOfChannels; c++){ var d = buf.getChannelData(c); for(i = 0; i < n; i++) x[i] += d[i] / buf.numberOfChannels; }
         if(n > buf.sampleRate * 600) throw new Error("long");

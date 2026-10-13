@@ -506,17 +506,17 @@
 
     // ---- recordings: the picture of a take ----
     function takeContent(){ var f = takeRegion(); return { w:f ? (f.r.l + barTicks() * 2) * TK.ppt + 40 : 0, h:10 }; }
-    function takeGeom(f){ return { t0:Math.max(0, f.r.s - barTicks()) }; }
+    function takeGeom(f){ return { t0:phoneOn() ? f.r.s - Math.round(26 / TK.ppt) : Math.max(0, f.r.s - barTicks()) }; }
     function takePaint(c, w, h, sl){
       var C = colors(), f = takeRegion();
       c.clearRect(0, 0, w, h); c.fillStyle = C.bg; c.fillRect(0, 0, w, h);
       if(!f){ c.fillStyle = C.ink3; c.font = "500 12.5px " + FONT; c.textAlign = "center"; c.textBaseline = "middle"; var t0 = selTrack(); c.fillText(t0 && t0.kind === "audio" ? "Press Record to sing onto this track, or bring in a sound file." : "Select a recording on a voice track to see it here.", w / 2, h / 2); return; }
       var r = f.r, t = f.t, col = trackColor(t), G = takeGeom(f), ppt = TK.ppt, bt = barTicks(), RH = 20, x, k;
-      if(TK.forRegion !== r.id){ TK.forRegion = r.id; TK.ppt = ppt = clamp((TK.host.clientWidth - 30) / (r.l + bt * 2), 0.01, 0.6); }
+      if(TK.forRegion !== r.id){ TK.forRegion = r.id; TK.ppt = ppt = clamp((TK.host.clientWidth - (phoneOn() ? 60 : 30)) / (r.l + (phoneOn() ? 0 : bt * 2)), 0.01, 0.6); G = takeGeom(f); }
       function X(tick){ return (tick - G.t0) * ppt - sl; }
       var x0 = X(r.s), x1 = X(r.s + r.l), mid = RH + (h - RH) / 2, amp = (h - RH) / 2 - 8;
       c.fillStyle = C.surface; c.fillRect(x0, RH, x1 - x0, h - RH);
-      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0) continue; c.strokeStyle = C.line2; c.beginPath(); c.moveTo(x, RH); c.lineTo(x, h); c.stroke(); }
+      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0 || k < 0) continue; c.strokeStyle = C.line2; c.beginPath(); c.moveTo(x, RH); c.lineTo(x, h); c.stroke(); }
       var ti = takeCache[r.takes[r.act]];
       if(!ti) takeInfo(r.takes[r.act]).then(function(v){ if(v) takeAsk(); });
       else {
@@ -534,7 +534,7 @@
       // fades and the ends that can be pulled
       c.strokeStyle = C.ink; c.lineWidth = 1.2; c.beginPath();
       c.moveTo(x0, h - 3); c.lineTo(x0 + secTick(r.fi || 0) * ppt, RH + 4); c.moveTo(x1 - secTick(r.fo || 0) * ppt, RH + 4); c.lineTo(x1, h - 3); c.stroke(); c.lineWidth = 1;
-      c.fillStyle = C.ink; c.fillRect(x0 + secTick(r.fi || 0) * ppt - 4, RH + 1, 8, 8); c.fillRect(x1 - secTick(r.fo || 0) * ppt - 4, RH + 1, 8, 8);
+      if(!phoneOn()){ c.fillStyle = C.ink; c.fillRect(x0 + secTick(r.fi || 0) * ppt - 4, RH + 1, 8, 8); c.fillRect(x1 - secTick(r.fo || 0) * ppt - 4, RH + 1, 8, 8); }
       c.fillStyle = col; c.fillRect(x0 - 1, RH, 3, h - RH); c.fillRect(x1 - 2, RH, 3, h - RH);
       if(phoneOn()){
         // the two ends, as grips: drag one to trim the start or the end
@@ -546,7 +546,7 @@
       }
       c.fillStyle = C.surface; c.fillRect(0, 0, w, RH); c.strokeStyle = C.line2; c.beginPath(); c.moveTo(0, RH + 0.5); c.lineTo(w, RH + 0.5); c.stroke();
       c.font = "500 10.5px " + FONT; c.textBaseline = "middle"; c.textAlign = "left";
-      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0) continue; c.strokeStyle = C.ink3; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, RH); c.stroke(); c.fillStyle = C.ink2; c.fillText(String(k + 1), x + 4, 7); }
+for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0 || k < 0) continue; c.strokeStyle = C.ink3; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, RH); c.stroke(); c.fillStyle = C.ink2; c.fillText(String(k + 1), x + 4, 7); }
       var ph = Math.round(X(TK.phTick === null ? TR.pos : TK.phTick)) + 0.5; if(ph >= 0 && ph <= w){ c.strokeStyle = C.ink; c.beginPath(); c.moveTo(ph, 12); c.lineTo(ph, h); c.stroke(); }
     }
     function takeHit(p){

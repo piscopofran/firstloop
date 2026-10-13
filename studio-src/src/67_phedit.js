@@ -621,7 +621,7 @@
       if(hasKey){
         var row = el("div", "sp-chgrid");
         keyChords().forEach(function(c){ var b = btn("st-chord", null, "", function(){ choose(c.root, c.q); }); b.dataset.chord = chordName(c); b.appendChild(el("b", "", chordName(c))); b.appendChild(el("span", "", c.num)); row.appendChild(b); });
-        pal.appendChild(row);
+        pal.insertBefore(el("div", "sp-listh", "Chords of " + keyName(S.key)), null); pal.appendChild(row);
         var cur2 = chordAt(selTick);
         if(cur2){
           pal.appendChild(el("div", "sp-listh", "Colour of " + NOTE_NAMES[cur2.root]));
@@ -631,7 +631,6 @@
             b.setAttribute("aria-pressed", cur2.q === v[0] ? "true" : "false"); row2.appendChild(b); });
           pal.appendChild(row2);
         }
-        pal.appendChild(el("div", "sp-listh", "Chords of " + keyName(S.key)));
       } else {
         pal.appendChild(line("st-note", "With a key chosen, the list is the seven chords that belong together. Without one, every chord is here."));
         var kb = el("div", "sp-two");

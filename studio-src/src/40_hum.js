@@ -39,7 +39,7 @@
       if(MIC.frame0 === null) MIC.frame0 = f;
       // a block that went missing is filled with silence, so that time stays true
       var want = MIC.frame0 + MIC.len;
-      if(f !== null && f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
+      if(f !== null && !MIC.loose && f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
       MIC.chunks.push(x); MIC.len += x.length;
       for(i = 0; i < x.length; i += 4){ var v = Math.abs(x[i]); if(v > m) m = v; }
       MIC.level = Math.max(m, MIC.level * 0.86);
@@ -82,15 +82,15 @@
                 srcNode.connect(MIC.node); MIC.node.connect(MIC.sink);
                 MIC.node.port.onmessage = function(e){ micChunk(e.data.x, e.data.f); };
               } else if(modes[k] === "script"){
-                var sp = ctx.createScriptProcessor(TEST.spSize || 2048, 1, 1), first = true;
+                var sp = ctx.createScriptProcessor(TEST.spSize || 2048, 1, 1);
                 sp.onaudioprocess = function(e){
-                  if(!MIC.on){ first = true; return; }
+                  if(!MIC.on) return;
                   var ch = e.inputBuffer.getChannelData(0), x = new Float32Array(ch.length); x.set(ch);
-                  // the callback is told when its output will be heard; what it is handed was heard two blocks before that
-                  var f = first ? Math.round((e.playbackTime || ctx.currentTime) * ctx.sampleRate) - 2 * ch.length : null; first = false;
-                  micChunk(x, f);
+                  // the callback is told when its output will be heard; what it is handed was heard two blocks before that.
+                  // Only the first block's time is used (blocks follow one another; their reported times jitter).
+                  micChunk(x, Math.round((e.playbackTime || ctx.currentTime) * ctx.sampleRate) - 2 * ch.length);
                 };
-                srcNode.connect(sp); sp.connect(MIC.sink); MIC.node = sp;
+                srcNode.connect(sp); sp.connect(MIC.sink); MIC.node = sp; MIC.loose = true;
               } else {
                 var st = stream; if(!st){ MIC.msd = ctx.createMediaStreamDestination(); srcNode.connect(MIC.msd); st = MIC.msd.stream; }
                 MIC.rec = { stream:st, mr:null, parts:[], t0:0, mime:recMime() }; MIC.node = null;
@@ -140,7 +140,7 @@
       try { if(MIC.rec && MIC.rec.mr && MIC.rec.mr.state !== "inactive"){ MIC.rec.mr.ondataavailable = null; MIC.rec.mr.onstop = null; MIC.rec.mr.stop(); } } catch(e3){}
       try { if(MIC.src) MIC.src.disconnect(); if(MIC.node){ MIC.node.disconnect(); if(MIC.node.onaudioprocess) MIC.node.onaudioprocess = null; } if(MIC.sink) MIC.sink.disconnect(); if(MIC.msd) MIC.msd.disconnect(); } catch(e){}
       try { if(MIC.stream) MIC.stream.getTracks().forEach(function(t){ t.onended = null; t.stop(); }); } catch(e2){}
-      MIC.stream = MIC.src = MIC.node = MIC.sink = MIC.an = MIC.rec = MIC.msd = null; MIC.mode = ""; MIC.cap = 0; MIC.onCap = null;
+      MIC.stream = MIC.src = MIC.node = MIC.sink = MIC.an = MIC.rec = MIC.msd = null; MIC.mode = ""; MIC.cap = 0; MIC.onCap = null; MIC.loose = false;
       if(had){ if(typeof micAfter === "function") micAfter(); emit("mic", { open:false }); }
     }
     function micWhy(e){

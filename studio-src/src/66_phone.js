@@ -472,7 +472,7 @@
           phList(body, more, close);
         }
         paint();
-      }, { id:"sptrack" });
+      }, { id:"sptrack", onClose:function(){ setTimeout(function(){ var h = UI.e.th && UI.e.th[id]; if(h && !UI.pops.length && (!document.activeElement || document.activeElement === document.body)){ try { h.el.querySelector("button").focus({ preventScroll:true }); } catch(e){} } }, 0); } });
     }
     // the part of a track under the playhead, else its first
     function phRegionNear(t){

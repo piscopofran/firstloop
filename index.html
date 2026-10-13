@@ -2870,6 +2870,7 @@
   .sp-toast[data-on="true"]{opacity:1;transform:none;pointer-events:auto;}
   .st[data-screen="home"] .sp-toast{bottom:calc(14px + env(safe-area-inset-bottom,0px));}
   .st[data-notebar="on"] .sp-toast{bottom:calc(190px + env(safe-area-inset-bottom,0px));}
+  .st[data-res="on"] .sp-toast{bottom:auto;top:calc(56px + env(safe-area-inset-top,0px));}
   .st[data-cap="on"] .sp-toast{z-index:13;bottom:calc(96px + env(safe-area-inset-bottom,0px));}
 
   /* the phone's own pages */
@@ -3021,7 +3022,8 @@
   .sp-chbar i{position:absolute;right:6px;bottom:6px;font-style:normal;font-size:12.5px;font-weight:600;color:var(--ink-2);}
   .sp-chbar[aria-pressed="true"]{background:var(--sel);box-shadow:inset 0 -3px 0 var(--accent);}
   .sp-chpal{flex:1 1 0;min-height:0;overflow:auto;padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;}
-  .sp-chhead{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .sp-chhead{display:flex;align-items:center;gap:12px;margin-bottom:0;}
+  .sp-chpal > .sp-listh{padding-top:10px;}
   .sp-chhead b{font-size:16px;flex:none;}
   .sp-chhead .st-seg{flex:1 1 0;}
   .sp-chgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
@@ -3123,7 +3125,9 @@
     .st[data-phone="true"] .sp-navb .st-ico{display:none;}
     .st[data-phone="true"] .sp-tr{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px));}
     .st[data-phone="true"] .sp-play,.st[data-phone="true"] .sp-rec,.st[data-phone="true"] .sp-chip,.st[data-phone="true"] .sp-pos{height:44px;}
-    .st[data-phone="true"] .sp-pos{flex-direction:row;align-items:baseline;gap:10px;}
+    .st[data-phone="true"] .sp-pos{flex-direction:row;align-items:center;gap:10px;}
+    .st[data-phone="true"][data-screen="edit"]:not([data-tab="lyrics"]) > .sp-tools{position:absolute;top:env(safe-area-inset-top,0px);left:calc(184px + env(safe-area-inset-left,0px));right:calc(180px + env(safe-area-inset-right,0px));height:44px;padding:0 4px;border:0;background:transparent;z-index:3;}
+    .st[data-phone="true"][data-screen="edit"]:not([data-tab="lyrics"]) .sp-title{flex:0 0 136px;margin-right:auto;}
     .st[data-phone="true"][data-screen="edit"][data-notebar="on"] > .st-main,.st[data-phone="true"][data-screen="edit"][data-res="on"] > .st-main{margin-right:0;}
     .st[data-phone="true"] .sp-notebar{grid-template-columns:repeat(10,1fr);}
     .st[data-phone="true"] .sp-nb{min-height:46px;border-bottom:0;}
@@ -36401,7 +36405,7 @@
       if(MIC.frame0 === null) MIC.frame0 = f;
       // a block that went missing is filled with silence, so that time stays true
       var want = MIC.frame0 + MIC.len;
-      if(f !== null && f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
+      if(f !== null && !MIC.loose && f > want && f - want < ctx.sampleRate){ MIC.chunks.push(new Float32Array(f - want)); MIC.len += f - want; }
       MIC.chunks.push(x); MIC.len += x.length;
       for(i = 0; i < x.length; i += 4){ var v = Math.abs(x[i]); if(v > m) m = v; }
       MIC.level = Math.max(m, MIC.level * 0.86);
@@ -36444,15 +36448,15 @@
                 srcNode.connect(MIC.node); MIC.node.connect(MIC.sink);
                 MIC.node.port.onmessage = function(e){ micChunk(e.data.x, e.data.f); };
               } else if(modes[k] === "script"){
-                var sp = ctx.createScriptProcessor(TEST.spSize || 2048, 1, 1), first = true;
+                var sp = ctx.createScriptProcessor(TEST.spSize || 2048, 1, 1);
                 sp.onaudioprocess = function(e){
-                  if(!MIC.on){ first = true; return; }
+                  if(!MIC.on) return;
                   var ch = e.inputBuffer.getChannelData(0), x = new Float32Array(ch.length); x.set(ch);
-                  // the callback is told when its output will be heard; what it is handed was heard two blocks before that
-                  var f = first ? Math.round((e.playbackTime || ctx.currentTime) * ctx.sampleRate) - 2 * ch.length : null; first = false;
-                  micChunk(x, f);
+                  // the callback is told when its output will be heard; what it is handed was heard two blocks before that.
+                  // Only the first block's time is used (blocks follow one another; their reported times jitter).
+                  micChunk(x, Math.round((e.playbackTime || ctx.currentTime) * ctx.sampleRate) - 2 * ch.length);
                 };
-                srcNode.connect(sp); sp.connect(MIC.sink); MIC.node = sp;
+                srcNode.connect(sp); sp.connect(MIC.sink); MIC.node = sp; MIC.loose = true;
               } else {
                 var st = stream; if(!st){ MIC.msd = ctx.createMediaStreamDestination(); srcNode.connect(MIC.msd); st = MIC.msd.stream; }
                 MIC.rec = { stream:st, mr:null, parts:[], t0:0, mime:recMime() }; MIC.node = null;
@@ -36502,7 +36506,7 @@
       try { if(MIC.rec && MIC.rec.mr && MIC.rec.mr.state !== "inactive"){ MIC.rec.mr.ondataavailable = null; MIC.rec.mr.onstop = null; MIC.rec.mr.stop(); } } catch(e3){}
       try { if(MIC.src) MIC.src.disconnect(); if(MIC.node){ MIC.node.disconnect(); if(MIC.node.onaudioprocess) MIC.node.onaudioprocess = null; } if(MIC.sink) MIC.sink.disconnect(); if(MIC.msd) MIC.msd.disconnect(); } catch(e){}
       try { if(MIC.stream) MIC.stream.getTracks().forEach(function(t){ t.onended = null; t.stop(); }); } catch(e2){}
-      MIC.stream = MIC.src = MIC.node = MIC.sink = MIC.an = MIC.rec = MIC.msd = null; MIC.mode = ""; MIC.cap = 0; MIC.onCap = null;
+      MIC.stream = MIC.src = MIC.node = MIC.sink = MIC.an = MIC.rec = MIC.msd = null; MIC.mode = ""; MIC.cap = 0; MIC.onCap = null; MIC.loose = false;
       if(had){ if(typeof micAfter === "function") micAfter(); emit("mic", { open:false }); }
     }
     function micWhy(e){
@@ -39211,17 +39215,17 @@
 
     // ---- recordings: the picture of a take ----
     function takeContent(){ var f = takeRegion(); return { w:f ? (f.r.l + barTicks() * 2) * TK.ppt + 40 : 0, h:10 }; }
-    function takeGeom(f){ return { t0:Math.max(0, f.r.s - barTicks()) }; }
+    function takeGeom(f){ return { t0:phoneOn() ? f.r.s - Math.round(26 / TK.ppt) : Math.max(0, f.r.s - barTicks()) }; }
     function takePaint(c, w, h, sl){
       var C = colors(), f = takeRegion();
       c.clearRect(0, 0, w, h); c.fillStyle = C.bg; c.fillRect(0, 0, w, h);
       if(!f){ c.fillStyle = C.ink3; c.font = "500 12.5px " + FONT; c.textAlign = "center"; c.textBaseline = "middle"; var t0 = selTrack(); c.fillText(t0 && t0.kind === "audio" ? "Press Record to sing onto this track, or bring in a sound file." : "Select a recording on a voice track to see it here.", w / 2, h / 2); return; }
       var r = f.r, t = f.t, col = trackColor(t), G = takeGeom(f), ppt = TK.ppt, bt = barTicks(), RH = 20, x, k;
-      if(TK.forRegion !== r.id){ TK.forRegion = r.id; TK.ppt = ppt = clamp((TK.host.clientWidth - 30) / (r.l + bt * 2), 0.01, 0.6); }
+      if(TK.forRegion !== r.id){ TK.forRegion = r.id; TK.ppt = ppt = clamp((TK.host.clientWidth - (phoneOn() ? 60 : 30)) / (r.l + (phoneOn() ? 0 : bt * 2)), 0.01, 0.6); G = takeGeom(f); }
       function X(tick){ return (tick - G.t0) * ppt - sl; }
       var x0 = X(r.s), x1 = X(r.s + r.l), mid = RH + (h - RH) / 2, amp = (h - RH) / 2 - 8;
       c.fillStyle = C.surface; c.fillRect(x0, RH, x1 - x0, h - RH);
-      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0) continue; c.strokeStyle = C.line2; c.beginPath(); c.moveTo(x, RH); c.lineTo(x, h); c.stroke(); }
+      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0 || k < 0) continue; c.strokeStyle = C.line2; c.beginPath(); c.moveTo(x, RH); c.lineTo(x, h); c.stroke(); }
       var ti = takeCache[r.takes[r.act]];
       if(!ti) takeInfo(r.takes[r.act]).then(function(v){ if(v) takeAsk(); });
       else {
@@ -39239,7 +39243,7 @@
       // fades and the ends that can be pulled
       c.strokeStyle = C.ink; c.lineWidth = 1.2; c.beginPath();
       c.moveTo(x0, h - 3); c.lineTo(x0 + secTick(r.fi || 0) * ppt, RH + 4); c.moveTo(x1 - secTick(r.fo || 0) * ppt, RH + 4); c.lineTo(x1, h - 3); c.stroke(); c.lineWidth = 1;
-      c.fillStyle = C.ink; c.fillRect(x0 + secTick(r.fi || 0) * ppt - 4, RH + 1, 8, 8); c.fillRect(x1 - secTick(r.fo || 0) * ppt - 4, RH + 1, 8, 8);
+      if(!phoneOn()){ c.fillStyle = C.ink; c.fillRect(x0 + secTick(r.fi || 0) * ppt - 4, RH + 1, 8, 8); c.fillRect(x1 - secTick(r.fo || 0) * ppt - 4, RH + 1, 8, 8); }
       c.fillStyle = col; c.fillRect(x0 - 1, RH, 3, h - RH); c.fillRect(x1 - 2, RH, 3, h - RH);
       if(phoneOn()){
         // the two ends, as grips: drag one to trim the start or the end
@@ -39251,7 +39255,7 @@
       }
       c.fillStyle = C.surface; c.fillRect(0, 0, w, RH); c.strokeStyle = C.line2; c.beginPath(); c.moveTo(0, RH + 0.5); c.lineTo(w, RH + 0.5); c.stroke();
       c.font = "500 10.5px " + FONT; c.textBaseline = "middle"; c.textAlign = "left";
-      for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0) continue; c.strokeStyle = C.ink3; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, RH); c.stroke(); c.fillStyle = C.ink2; c.fillText(String(k + 1), x + 4, 7); }
+for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 0.5; if(x < 0 || k < 0) continue; c.strokeStyle = C.ink3; c.beginPath(); c.moveTo(x, 9); c.lineTo(x, RH); c.stroke(); c.fillStyle = C.ink2; c.fillText(String(k + 1), x + 4, 7); }
       var ph = Math.round(X(TK.phTick === null ? TR.pos : TK.phTick)) + 0.5; if(ph >= 0 && ph <= w){ c.strokeStyle = C.ink; c.beginPath(); c.moveTo(ph, 12); c.lineTo(ph, h); c.stroke(); }
     }
     function takeHit(p){
@@ -39738,7 +39742,7 @@
           ensureEngine().then(function(){ loadInst(id); });
           S.flags.picked = true;
           if(t0){
-            var was = ENG.inst[t0.inst], generic = !was || t0.name === was.name || /^(Instrument|Chords|Bass|Piano|Guitar|Strings|Drums)$/.test(t0.name);
+            var was = ENG.inst[t0.inst], generic = !was || t0.name === was.name || t0.name === was.name.replace(/\s*\(.*\)$/, "") || /^(Instrument|Chords|Bass|Piano|Guitar|Strings|Drums)$/.test(t0.name);
             t0.inst = id; t0.fam = d.kit ? "" : d.family; if(generic && !d.kit) t0.name = d.name.replace(/\s*\(.*\)$/, "").slice(0, 32);
             // what she hummed is put where the new instrument plays
             var jobs = t0.regions.filter(function(r){ return r.hum && !r.hum.edited; }).map(function(r){ return humRedo(r.id); });
@@ -40919,7 +40923,7 @@
           phList(body, more, close);
         }
         paint();
-      }, { id:"sptrack" });
+      }, { id:"sptrack", onClose:function(){ setTimeout(function(){ var h = UI.e.th && UI.e.th[id]; if(h && !UI.pops.length && (!document.activeElement || document.activeElement === document.body)){ try { h.el.querySelector("button").focus({ preventScroll:true }); } catch(e){} } }, 0); } });
     }
     // the part of a track under the playhead, else its first
     function phRegionNear(t){
@@ -41617,7 +41621,7 @@
       if(hasKey){
         var row = el("div", "sp-chgrid");
         keyChords().forEach(function(c){ var b = btn("st-chord", null, "", function(){ choose(c.root, c.q); }); b.dataset.chord = chordName(c); b.appendChild(el("b", "", chordName(c))); b.appendChild(el("span", "", c.num)); row.appendChild(b); });
-        pal.appendChild(row);
+        pal.insertBefore(el("div", "sp-listh", "Chords of " + keyName(S.key)), null); pal.appendChild(row);
         var cur2 = chordAt(selTick);
         if(cur2){
           pal.appendChild(el("div", "sp-listh", "Colour of " + NOTE_NAMES[cur2.root]));
@@ -41627,7 +41631,6 @@
             b.setAttribute("aria-pressed", cur2.q === v[0] ? "true" : "false"); row2.appendChild(b); });
           pal.appendChild(row2);
         }
-        pal.appendChild(el("div", "sp-listh", "Chords of " + keyName(S.key)));
       } else {
         pal.appendChild(line("st-note", "With a key chosen, the list is the seven chords that belong together. Without one, every chord is here."));
         var kb = el("div", "sp-two");

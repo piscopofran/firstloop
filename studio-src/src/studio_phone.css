@@ -403,5 +403,4 @@
   html[data-sttouch="true"]:not([data-stphone]) .st-sheet .st-b,html[data-sttouch="true"]:not([data-stphone]) .st-pop .st-b{min-height:36px;}
   html[data-sttouch="true"]:not([data-stphone]) .st-mi{min-height:40px;font-size:14px;}
   html[data-sttouch="true"] .st-sheet input,html[data-sttouch="true"] .st-sheet textarea,html[data-sttouch="true"] .st-pop input{font-size:16px;}
-  html[data-sttouch="true"] .st:not([data-phone="true"]) .sp-notebar.touchbar{display:grid !important;}
   @media (prefers-reduced-motion:no-preference){ .sp-toast{transition:opacity .16s ease,transform .16s ease;} .sp-meter i,.sp-mixmeter i{transition:transform .05s linear;} }

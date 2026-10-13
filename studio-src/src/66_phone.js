@@ -21,6 +21,12 @@
       if(here && MOB.touch) de.dataset.sttouch = "true"; else delete de.dataset.sttouch;
       if(want) de.dataset.stphone = "true"; else { delete de.dataset.stphone; delete de.dataset.stasst; }
       UI.root.dataset.phone = want ? "true" : "false";
+      // a tablet on its side has the desk layout; with the Assistant docked beside it the bar would not fit, so the
+      // Assistant is folded away once (its tab at the top opens it again)
+      if(here && !want && MOB.touch && !PH.asstAuto && window.innerWidth < 1300 && document.body.classList.contains("has-assistant")){
+        PH.asstAuto = true;
+        try { asstSetCollapsed(true); setTimeout(function(){ layout(); tell("The Assistant is folded away to give the Studio room. “Assistant”, at the top, opens it."); }, 80); } catch(e){}
+      }
       if(want === was) return;
       geomApply(); UI.headSig = ""; toolSig = ""; closePops();
       if(want){
@@ -31,7 +37,7 @@
         phGo(PH.screen, { quiet:true });
       } else {
         if(PH.cap) phCapCancel();
-        PH.asst = false; PH.loupe = null; PH.res = null;
+        PH.asst = false; PH.loupe = null; PH.res = null; UI.edH = 0;
         if(PH.screen === "edit"){ UI.edOpen = true; if(UI.tab === "lyrics" || UI.tab === "notes" || UI.tab === "drums" || UI.tab === "take") UI.edOpen = true; }
         else if(PH.screen === "chords"){ UI.tab = "chords"; UI.edOpen = true; }
         else if(PH.screen === "mix"){ UI.tab = "mixer"; UI.edOpen = true; }

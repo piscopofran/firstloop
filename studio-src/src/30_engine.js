@@ -156,22 +156,28 @@
           super();
           var p = (o && o.processorOptions) || {};
           this.N = Math.max(8, Math.round((p.look || 0.005) * sampleRate)); this.ceil = p.ceiling || 0.891;
-          this.dl = new Float32Array(this.N); this.dr = new Float32Array(this.N); this.tg = new Float32Array(this.N); this.w = 0; this.env = 1;
+          this.dl = new Float32Array(this.N); this.dr = new Float32Array(this.N); this.w = 0; this.env = 1;
+          this.M = this.N + 1; this.qv = new Float32Array(this.M); this.qi = new Float64Array(this.M); this.qh = 0; this.qt = 0; this.qn = 0; this.cnt = 0;
           this.rel = Math.exp(-1 / (0.12 * sampleRate)); this.att = Math.exp(-1 / (this.N / 5)); this.red = 0; this.quiet = this.N + 1;
-          this.tg.fill(1);
         }
         process(inputs, outputs){
           var inp = inputs[0], out = outputs[0]; if(!out || !out.length) return true;
-          var L = inp && inp[0], R = inp && (inp[1] || inp[0]), ol = out[0], or = out[1] || out[0], n = ol.length, N = this.N, c = this.ceil, i, k, a, b, pk, g, mn;
+          var L = inp && inp[0], R = inp && (inp[1] || inp[0]), ol = out[0], or = out[1] || out[0], n = ol.length, N = this.N, c = this.ceil, i, a, b, pk, g, mn, M = this.M, qv = this.qv, qi = this.qi, t, e;
           for(i = 0; i < n; i++){
             a = L ? L[i] : 0; b = R ? R[i] : 0;
             pk = Math.abs(a) > Math.abs(b) ? Math.abs(a) : Math.abs(b);
             ol[i] = this.dl[this.w]; if(or !== ol) or[i] = this.dr[this.w];
-            this.dl[this.w] = a; this.dr[this.w] = b; this.tg[this.w] = pk > c ? c / pk : 1;
+            this.dl[this.w] = a; this.dr[this.w] = b;
             this.w = (this.w + 1) % N;
+            // the target of this sample joins the queue; anything in it that is not lower can never be the lowest again
+            qv[this.qt] = pk > c ? c / pk : 1; t = qv[this.qt];
+            while(this.qn > 0){ e = this.qt === 0 ? M - 1 : this.qt - 1; if(qv[e] >= t){ this.qt = e; this.qn--; } else break; }
+            qv[this.qt] = t; qi[this.qt] = this.cnt; this.qt = this.qt + 1 === M ? 0 : this.qt + 1; this.qn++;
+            while(qi[this.qh] <= this.cnt - N){ this.qh = this.qh + 1 === M ? 0 : this.qh + 1; this.qn--; }
+            this.cnt++;
             if(this.env === 1 && pk <= c && this.quiet > N){ continue; }
             if(pk > c) this.quiet = 0; else this.quiet = (this.quiet || 0) + 1;
-            mn = 1; for(k = 0; k < N; k++) if(this.tg[k] < mn) mn = this.tg[k];
+            mn = qv[this.qh];
             if(mn < this.env) this.env = mn + (this.env - mn) * this.att; else { this.env = 1 - (1 - this.env) * this.rel; if(this.env > 0.99999) this.env = 1; }
             g = this.env; ol[i] *= g; if(or !== ol) or[i] *= g;
           }
@@ -424,6 +430,7 @@
       } else if(d.kit){
         // "layers" (soft and loud hits of each piece, several of each) when the manifest has them, else the plain list of files
         var LY = d.def.layers && typeof d.def.layers === "object" ? d.def.layers : null, pcs = {};
+        if(LY && MOB.lean){ var LY2 = {}; Object.keys(LY).forEach(function(pc){ var ls = Array.isArray(LY[pc]) ? LY[pc].filter(function(l){ return l && Array.isArray(l.files) && l.files.length; }) : []; if(ls.length) LY2[pc] = [ls.reduce(function(a, b2){ return (b2.vel | 0 || 100) > (a.vel | 0 || 100) ? b2 : a; })]; }); LY = LY2; }
         Object.keys(d.def.pieces).forEach(function(pc){ pcs[pc] = 1; }); if(LY) Object.keys(LY).forEach(function(pc){ pcs[pc] = 1; });
         Object.keys(pcs).forEach(function(pc){
           if(!DRUM[pc]) return;
@@ -453,6 +460,7 @@
         var autoTune = d.def.tuning !== "keep" && !/(grand|upright)[-_ ]?piano/.test(id);
         var mid = d.range ? (d.range[0] + d.range[1]) / 2 : 60, order = d.def.samples.slice().sort(function(x, y){ return ((y && y.vel) || 100) - ((x && x.vel) || 100) || Math.abs(((x && x.note) || 0) - mid) - Math.abs(((y && y.note) || 0) - mid); });
         if(!MOB.lean) order = d.def.samples;
+        else { var topV = 0; order.forEach(function(s){ if(s && (s.vel | 0 || 100) > topV) topV = s.vel | 0 || 100; }); order = order.filter(function(s){ return s && (s.vel | 0 || 100) === topV; }); }
         order.forEach(function(s){
           if(!s || !s.file || !(s.note >= 0)) return;
           total++;

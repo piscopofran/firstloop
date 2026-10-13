@@ -792,7 +792,7 @@
       // peak of each track and of the master since the last look, 0..1+
       var out = { tracks:{}, master:0 }, G = ENG.G; if(!G) return out;
       var buf = levels.buf || (levels.buf = new Float32Array(512));
-      function peak(an){ var n = an.fftSize, b = buf.subarray(0, n), m = 0, i; an.getFloatTimeDomainData(b); for(i = 0; i < n; i++){ var v = Math.abs(b[i]); if(v > m) m = v; } return m; }
+      function peak(an){ var n = an.fftSize, b = buf.subarray(0, n), m = 0, i; if(!an.getFloatTimeDomainData) return 0; an.getFloatTimeDomainData(b); for(i = 0; i < n; i++){ var v = Math.abs(b[i]); if(v > m) m = v; } return m; }
       Object.keys(G.tracks).forEach(function(id){ if(G.tracks[id].meter) out.tracks[id] = peak(G.tracks[id].meter); });
       if(G.meter) out.master = peak(G.meter);
       return out;

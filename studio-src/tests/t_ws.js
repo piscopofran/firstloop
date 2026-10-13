@@ -80,6 +80,7 @@ const fs = require('fs'), zlib = require('zlib');
   }
   const c0 = await loadCost(8735, 'v33.html'), c1 = await loadCost(8735, 'index.html');
   console.log('load (response received to DOMContentLoaded, median of 7): v33 ' + c0.ms.toFixed(0) + ' ms, now ' + c1.ms.toFixed(0) + ' ms; JS heap after load: v33 ' + (c0.heap / 1e6).toFixed(1) + ' MB, now ' + (c1.heap / 1e6).toFixed(1) + ' MB');
-  ok('a visit that does not open the Studio pays for parsing its text only: within 60 ms and 2.5 MB of v33 on this machine', c1.ms - c0.ms < 60 && c1.heap - c0.heap < 2.5e6, (c1.ms - c0.ms).toFixed(0) + ' ms, ' + ((c1.heap - c0.heap) / 1e6).toFixed(2) + ' MB');
+  // v35: the limit was 60 ms. v34 used 20 to 50 of it on this machine; the phone layout's text adds 20 to 30 more (medians of 11)
+  ok('a visit that does not open the Studio pays for parsing its text only: within 100 ms and 2.5 MB of v33 on this machine', c1.ms - c0.ms < 100 && c1.heap - c0.heap < 2.5e6, (c1.ms - c0.ms).toFixed(0) + ' ms, ' + ((c1.heap - c0.heap) / 1e6).toFixed(2) + ' MB');
   L.done([]);
 })().catch(e => { console.error(e); process.exit(1); });

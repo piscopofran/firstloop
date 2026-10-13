@@ -73,7 +73,7 @@
       E.hum = el("div", "sp-hum"); E.hum.id = "sphum"; E.hum.hidden = true; root.appendChild(E.hum);
       E.notebar = el("div", "sp-notebar"); E.notebar.id = "spnotebar"; E.notebar.hidden = true; E.notebar.setAttribute("role", "toolbar"); E.notebar.setAttribute("aria-label", "The selected notes"); root.appendChild(E.notebar);
       E.toast = el("div", "sp-toast"); E.toast.id = "sptoast"; E.toast.setAttribute("role", "status"); E.toast.setAttribute("aria-live", "polite"); E.toast.dataset.on = "false"; root.appendChild(E.toast);
-      E.toast.addEventListener("click", function(){ E.toast.dataset.on = "false"; });
+     
       // -- transport --
       E.tr = el("div", "sp-tr"); E.tr.setAttribute("role", "toolbar"); E.tr.setAttribute("aria-label", "Transport");
       E.play = ibtn("sp-play", "play", "Play", "", function(){ silentTip(); transportToggle(); }); E.play.id = "spplay"; E.play.removeAttribute("title");
@@ -136,8 +136,9 @@
     }
     function phToast(m){
       if(!phoneOn() || !PH.built || !m) return;
+      if(/^\d+ notes? heard/.test(m)) return;   // the panel under the notes says so already
       var E = PH.e; E.toast.textContent = m; E.toast.dataset.on = "true";
-      clearTimeout(PH.toastT); PH.toastT = setTimeout(function(){ E.toast.dataset.on = "false"; }, Math.min(9000, 4200 + String(m).length * 28));
+      clearTimeout(PH.toastT); PH.toastT = setTimeout(function(){ E.toast.dataset.on = "false"; }, Math.min(7000, 2600 + String(m).length * 40));
     }
 
     // ---- painting what is always there ----

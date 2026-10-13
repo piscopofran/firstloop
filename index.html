@@ -2867,7 +2867,7 @@
   .st-resume[hidden]{display:none;}
   .st:not([data-phone="true"]) > .st-resume{position:absolute;left:0;right:0;bottom:0;z-index:20;}
   .sp-toast{position:absolute;left:10px;right:10px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--raised);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-2);padding:10px 12px;font-size:13.5px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none;opacity:0;transform:translateY(6px);}
-  .sp-toast[data-on="true"]{opacity:1;transform:none;pointer-events:auto;}
+  .sp-toast[data-on="true"]{opacity:1;transform:none;}   /* never in the way of a finger: what is under it can still be pressed */
   .st[data-screen="home"] .sp-toast{bottom:calc(14px + env(safe-area-inset-bottom,0px));}
   .st[data-notebar="on"] .sp-toast{bottom:calc(190px + env(safe-area-inset-bottom,0px));}
   .st[data-res="on"] .sp-toast{bottom:auto;top:calc(56px + env(safe-area-inset-top,0px));}
@@ -2935,6 +2935,10 @@
   .sp-check input{width:22px;height:22px;flex:none;}
   .sp-tone{border-top:1px solid var(--line);margin-top:6px;}
   .sp-tone summary{min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;}
+  .sp-tone summary{list-style:none;justify-content:space-between;}
+  .sp-tone summary::-webkit-details-marker{display:none;}
+  .sp-tone summary::after{content:"Low, mid, high";font-weight:400;font-size:13px;color:var(--ink-3);}
+  .sp-tone[open] summary::after{content:"Close";}
 
   /* buttons and fields grow to the size of a fingertip, here and in every sheet */
   .st[data-phone="true"] .st-b,html[data-stphone="true"] .st-sheet .st-b{min-height:44px;height:auto;min-width:44px;padding:0 12px;font-size:14px;}
@@ -2950,6 +2954,8 @@
   .sp-tools > *{flex:none;}
   .sp-tools .st-seg{display:inline-flex;}
   .sp-tools .st-seg .st-b{flex:none;padding:0 10px;}
+  .st[data-phone="true"] .sp-tools .st-seg{display:inline-flex;}
+  .st[data-phone="true"] .sp-tools .st-seg .st-b{flex:none;padding:0 12px;min-width:44px;white-space:nowrap;}
   .sp-ts{min-width:0;}
   .st[data-phone="true"] .st-roll,.st[data-phone="true"] .st-drum,.st[data-phone="true"] .st-take,.st[data-phone="true"] .st-tl{scrollbar-width:none;}
   .st[data-phone="true"] .st-cv::-webkit-scrollbar{display:none;}
@@ -3112,6 +3118,8 @@
   #assistant .sp-asstx .st-ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;}
   html[data-stphone="true"] .fb-panel{z-index:74;top:calc(8px + env(safe-area-inset-top,0px)) !important;}
 
+  /* the narrowest phones: the five places by name only */
+  @media (max-width:359px){ .st[data-phone="true"] .sp-navb .st-ico{display:none;} }
   /* a phone on its side: the wide piano roll; bars and tools take one line less */
   @media (orientation:landscape) and (max-height:520px){
     .st[data-phone="true"] .sp-nav{flex:0 1 auto;border-top:0;order:2;}
@@ -3159,9 +3167,28 @@
     .st[data-phone="true"] .sp-capbody > *{width:100%;}
     .st[data-phone="true"] .sp-hum > *{max-width:720px;margin-left:auto;margin-right:auto;}
   }
+  /* a phone on its side, after the tablet rules: bars four across again; the hummed result beside its notes; a narrower notice */
+  @media (orientation:landscape) and (max-height:520px){
+    .st[data-phone="true"] .sp-chbars{grid-template-columns:repeat(4,minmax(0,1fr));}
+    .st[data-phone="true"] .sp-chgrid{grid-template-columns:repeat(4,1fr);}
+    .st[data-phone="true"][data-res="on"] > .sp-hum{position:absolute;right:0;top:calc(45px + env(safe-area-inset-top,0px));bottom:0;width:50%;max-height:none;box-sizing:border-box;border-top:0;border-left:1px solid var(--line-2);padding-right:calc(12px + env(safe-area-inset-right,0px));z-index:4;}
+    .st[data-phone="true"][data-screen="edit"][data-res="on"] > .st-main{margin-right:50%;}
+    .st[data-phone="true"] .sp-toast{left:auto;right:calc(10px + env(safe-area-inset-right,0px));max-width:380px;}
+    .st[data-phone="true"][data-res="on"] .sp-toast{right:calc(50% + 10px);}
+  }
   /* any touch screen in the desk layout (a tablet on its side): the small controls get room for a finger */
   html[data-sttouch="true"] .st:not([data-phone="true"]) .st-b{min-height:30px;min-width:30px;}
   html[data-sttouch="true"] .st:not([data-phone="true"]) .st-bar{height:46px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-steps{height:42px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-step{height:32px;}
+  /* the smallest controls keep their size and get a larger area that answers a finger */
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-b.quiet,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-thname,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-thinst,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-ms,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-threc{position:relative;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-b.quiet::after,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-thname::after,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-thinst::after,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-ms::after,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-threc::after{content:"";position:absolute;inset:-7px -3px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-ms::after,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-threc::after{inset:-5px -1px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) #staddtrack{height:34px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-vol,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-pan{height:30px;margin-top:-7px;margin-bottom:-7px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-q{position:relative;width:22px;height:22px;}
+  html[data-sttouch="true"] .st:not([data-phone="true"]) .st-q::after{content:"";position:absolute;inset:-6px;}
   html[data-sttouch="true"] .st:not([data-phone="true"]) .st-bar .st-b{height:34px;min-width:36px;}
   html[data-sttouch="true"] .st:not([data-phone="true"]) .st-i,html[data-sttouch="true"] .st:not([data-phone="true"]) .st-s{height:34px;font-size:16px;}
   html[data-sttouch="true"] .st:not([data-phone="true"]) .st-tab{padding:0 16px;font-size:13px;}
@@ -36192,7 +36219,7 @@
       // peak of each track and of the master since the last look, 0..1+
       var out = { tracks:{}, master:0 }, G = ENG.G; if(!G) return out;
       var buf = levels.buf || (levels.buf = new Float32Array(512));
-      function peak(an){ var n = an.fftSize, b = buf.subarray(0, n), m = 0, i; an.getFloatTimeDomainData(b); for(i = 0; i < n; i++){ var v = Math.abs(b[i]); if(v > m) m = v; } return m; }
+      function peak(an){ var n = an.fftSize, b = buf.subarray(0, n), m = 0, i; if(!an.getFloatTimeDomainData) return 0; an.getFloatTimeDomainData(b); for(i = 0; i < n; i++){ var v = Math.abs(b[i]); if(v > m) m = v; } return m; }
       Object.keys(G.tracks).forEach(function(id){ if(G.tracks[id].meter) out.tracks[id] = peak(G.tracks[id].meter); });
       if(G.meter) out.master = peak(G.meter);
       return out;
@@ -37638,6 +37665,8 @@
       ARR.view = CanvasView(E.tl, { content:arrContent, paint:arrPaint, down:arrDown, hover:arrHover, dbl:arrDbl, zoom:function(f, p){ arrZoom(f, p.x); }, menu:arrMenu, tap:function(p, e){ if(phoneOn()) phArrTap(p, e); },
         onScroll:function(sl, st){ E.headList.style.transform = "translateY(" + (-st) + "px)"; } });
       E.tl.addEventListener("keydown", arrKeys);
+      // the names never scroll by themselves (a focused name can make the browser try): the move is handed to the tracks
+      E.headScroll.addEventListener("scroll", function(){ var d = E.headScroll.scrollTop; if(!d) return; E.headScroll.scrollTop = 0; E.tl.scrollTop += d; });
       splitDrag();
       window.addEventListener("keydown", keys, true);
       window.addEventListener("keyup", keysUp, true);
@@ -40531,7 +40560,7 @@ for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 
       E.hum = el("div", "sp-hum"); E.hum.id = "sphum"; E.hum.hidden = true; root.appendChild(E.hum);
       E.notebar = el("div", "sp-notebar"); E.notebar.id = "spnotebar"; E.notebar.hidden = true; E.notebar.setAttribute("role", "toolbar"); E.notebar.setAttribute("aria-label", "The selected notes"); root.appendChild(E.notebar);
       E.toast = el("div", "sp-toast"); E.toast.id = "sptoast"; E.toast.setAttribute("role", "status"); E.toast.setAttribute("aria-live", "polite"); E.toast.dataset.on = "false"; root.appendChild(E.toast);
-      E.toast.addEventListener("click", function(){ E.toast.dataset.on = "false"; });
+     
       // -- transport --
       E.tr = el("div", "sp-tr"); E.tr.setAttribute("role", "toolbar"); E.tr.setAttribute("aria-label", "Transport");
       E.play = ibtn("sp-play", "play", "Play", "", function(){ silentTip(); transportToggle(); }); E.play.id = "spplay"; E.play.removeAttribute("title");
@@ -40594,8 +40623,9 @@ for(k = Math.floor(G.t0 / bt); X(k * bt) < w; k++){ x = Math.round(X(k * bt)) + 
     }
     function phToast(m){
       if(!phoneOn() || !PH.built || !m) return;
+      if(/^\d+ notes? heard/.test(m)) return;   // the panel under the notes says so already
       var E = PH.e; E.toast.textContent = m; E.toast.dataset.on = "true";
-      clearTimeout(PH.toastT); PH.toastT = setTimeout(function(){ E.toast.dataset.on = "false"; }, Math.min(9000, 4200 + String(m).length * 28));
+      clearTimeout(PH.toastT); PH.toastT = setTimeout(function(){ E.toast.dataset.on = "false"; }, Math.min(7000, 2600 + String(m).length * 40));
     }
 
     // ---- painting what is always there ----

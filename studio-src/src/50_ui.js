@@ -340,6 +340,8 @@
       ARR.view = CanvasView(E.tl, { content:arrContent, paint:arrPaint, down:arrDown, hover:arrHover, dbl:arrDbl, zoom:function(f, p){ arrZoom(f, p.x); }, menu:arrMenu, tap:function(p, e){ if(phoneOn()) phArrTap(p, e); },
         onScroll:function(sl, st){ E.headList.style.transform = "translateY(" + (-st) + "px)"; } });
       E.tl.addEventListener("keydown", arrKeys);
+      // the names never scroll by themselves (a focused name can make the browser try): the move is handed to the tracks
+      E.headScroll.addEventListener("scroll", function(){ var d = E.headScroll.scrollTop; if(!d) return; E.headScroll.scrollTop = 0; E.tl.scrollTop += d; });
       splitDrag();
       window.addEventListener("keydown", keys, true);
       window.addEventListener("keyup", keysUp, true);
